@@ -10,6 +10,7 @@ import {
   type LabelRefs,
   type V3,
 } from './Dimensions';
+import { cssToken } from '../theme/cssToken';
 import { Wardrobe3D } from './Wardrobe3D';
 
 export const MM = 0.001;
@@ -41,6 +42,9 @@ export function Scene({
 }: SceneProps) {
   const { widthMm: W, depthMm: D } = view;
   const floor = 60; // m — large enough that its edge is always lost in the fog
+  // The 3D stage is always a neutral studio (tokens.css --stage-*), never a brand colour.
+  const stageBg = cssToken('--stage-bg', '#eef0f3');
+  const stageFloor = cssToken('--stage-floor', '#e6e8ec');
   return (
     <Canvas
       dpr={[1, 2]}
@@ -48,8 +52,8 @@ export function Scene({
       camera={{ fov: 32, near: 0.05, far: 200, position: [2, 1.6, 5] }}
       gl={{ antialias: true, preserveDrawingBuffer: false }}
     >
-      <color attach="background" args={['#eef0f3']} />
-      <fog attach="fog" args={['#eef0f3', 9, 24]} />
+      <color attach="background" args={[stageBg]} />
+      <fog attach="fog" args={[stageBg, 9, 24]} />
       <hemisphereLight args={['#ffffff', '#c9ccd2', 1.25]} />
       <directionalLight
         position={[2.5, 5, 4]}
@@ -72,7 +76,7 @@ export function Scene({
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.0005, 0]} receiveShadow>
         <planeGeometry args={[floor, floor]} />
-        <meshStandardMaterial color="#e6e8ec" roughness={1} />
+        <meshStandardMaterial color={stageFloor} roughness={1} />
       </mesh>
       <ContactShadows
         position={[0, 0.0005, 0]}

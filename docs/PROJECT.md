@@ -68,3 +68,17 @@ come in later batches.
 | tirqish              | зазор              | gap                      | `doorGap*Mm`        |
 | dekor                | декор              | decor (colour/pattern)   | `decorName`         |
 | korpus chuqurligi    | глубина корпуса    | carcass depth            | `carcassDepthMm`    |
+
+## Visual language
+
+Single source: `apps/web/src/theme/tokens.css` (each value is marked verified from the logo /
+dafna.uz CSS, or `[APPROX]`). Font: **Nunito Sans** (the site's font; the brief assumed Nunito),
+self-hosted via `@fontsource/nunito-sans`, latin + cyrillic, weights 400–800.
+
+- 3D stage is always a neutral studio (`--stage-*`); nothing coloured touches its edge.
+- Brand blue: primary actions, selection rings, progress. Graphite: text.
+- Option cards: one pastel per card type (`--card-*`); the selected card is an outlined card
+  (white fill, 2 px brand-blue border).
+- Radii 32/20/12, pills, circular icon buttons, floating frosted bottom nav, soft elevation,
+  press scale 0.97.
+- Still `[APPROX]`: `--accent-lavender` (not found on the dafna.uz home page).

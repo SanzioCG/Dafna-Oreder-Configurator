@@ -3,10 +3,10 @@ import { Line } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useRef, type MutableRefObject } from 'react';
 import { Vector3 } from 'three';
+import { cssToken } from '../theme/cssToken';
 
 export type V3 = [number, number, number];
 
-const COLOR = '#2b5d8a';
 const TICK = 40; // mm
 
 /** One dimension line in product mm coordinates. */
@@ -95,6 +95,7 @@ export function midpoint(d: DimSpec): V3 {
 /** Dimension lines, rendered inside the product group (mm coordinates). */
 export function DimensionLines({ dims, lineScale = 1 }: { dims: DimSpec[]; lineScale?: number }) {
   const w = (px: number) => px * lineScale;
+  const COLOR = cssToken('--brand-blue', '#009fe2');
   return (
     <group>
       {dims.map((d) => {
