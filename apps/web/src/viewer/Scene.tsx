@@ -22,7 +22,8 @@ export interface SceneProps {
   anchors: { key: string; world: V3 }[];
   labelRefs: LabelRefs;
   lineScale: number;
-  box: FrameBox;
+  product: FrameBox;
+  extent: FrameBox;
   resetToken: number;
   doorsOpen: boolean;
 }
@@ -37,7 +38,8 @@ export function Scene({
   anchors,
   labelRefs,
   lineScale,
-  box,
+  product,
+  extent,
   resetToken,
   doorsOpen,
 }: SceneProps) {
@@ -94,7 +96,7 @@ export function Scene({
         maxPolarAngle={Math.PI / 2 - 0.04}
         touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }}
       />
-      <CameraRig box={box} resetToken={resetToken} />
+      <CameraRig product={product} extent={extent} resetToken={resetToken} />
     </Canvas>
   );
 }

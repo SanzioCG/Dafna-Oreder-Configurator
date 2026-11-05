@@ -33,12 +33,12 @@
 
   /* ---- neutrals ---- [site] --color-neutral-* */
   /*
-   * One continuous page background for the whole screen (3D canvas is transparent on it).
-   * Decision: [site] --color-neutral-100 #eef0f2 instead of the site page bg #f7f8f9 / brief's
-   * #F5F6F8, because white and light-oak decors need a slightly darker neutral to stay legible
-   * (contrast brief asked for "#E9ECEF-ish"). Swap here if Dafna prefers the lighter one.
+   * One continuous page background behind everything (3D canvas is transparent on it).
+   * The sheet layout brief fixes #F5F6F8 (approximate). White/oak legibility relies on the
+   * dark edge outlines, key light and contact shadow; #eef0f2 ([site] neutral-100) is the
+   * fallback if the model looks too faint on the kiosk screen.
    */
-  --bg: #eef0f2;
+  --bg: #f5f6f8; /* [APPROX] per layout brief (sheet layout); site page bg is #f7f8f9 */
   --bg-site-page: #f7f8f9; /* [site] --color-bg-page, kept for reference */
   --surface: #ffffff;
   --neutral-100: #eef0f2;
@@ -73,6 +73,9 @@
   --border-outline: 0.125rem solid var(--brand-blue); /* outlined card: 2 px at 1080p */
   --shadow-soft: 0 0.5rem 1.75rem rgb(42 41 40 / 0.08), 0 0.125rem 0.375rem rgb(42 41 40 / 0.05);
   --shadow-float: 0 0.75rem 2.5rem rgb(42 41 40 / 0.14), 0 0.125rem 0.5rem rgb(42 41 40 / 0.06);
+  /* configurator sheet: 0 12px 32px rgba(42,41,40,.12) at 1080p, inset 24px from screen edges */
+  --shadow-sheet: 0 0.75rem 2rem rgb(42 41 40 / 0.12);
+  --sheet-inset: 1.5rem;
   --frost: rgb(255 255 255 / 0.72);
   --frost-blur: blur(1rem) saturate(1.4);
   --press-scale: 0.97;

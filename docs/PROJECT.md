@@ -75,16 +75,21 @@ Single source: `apps/web/src/theme/tokens.css` (each value is marked verified fr
 dafna.uz CSS, or `[APPROX]`). Font: **Nunito Sans** (the site's font; the brief assumed Nunito),
 self-hosted via `@fontsource/nunito-sans`, latin + cyrillic, weights 400–800.
 
-- **Single-layer layout:** one page background (`--bg`). Left zone (60%) = transparent 3D
-  canvas directly on the background, no frame, no floor plane (soft contact shadow only); the
-  only place where orbit gestures work. Right zone = cards floating on the background
-  (gap ≥ 24 px at 1080p), no panel container. Floating frosted bottom nav centred on the screen.
+- **Layout: common background + configurator sheet.** One page background (`--bg`) behind
+  everything. Left zone (60%) = transparent 3D canvas on the background, no frame, no floor
+  plane (soft contact shadow only); the only place where orbit gestures work; the camera frames
+  the product to ~70% of the zone height, centred (`viewer/framing.ts`); viewer controls
+  bottom-left. Right zone (40%) = ONE white configurator sheet (radius 32, `--shadow-sheet`,
+  inset 24 px from the screen edges) holding logo + language, step bar, step cards and the
+  Orqaga/Keyingi navigation, which is sticky at the bottom inside the sheet. Step content
+  scrolls inside the sheet if needed; the page never scrolls.
 - **Selection state contract** (all option buttons/cards): selected = solid brand-blue fill +
   white text; unselected = white fill + graphite text; disabled = 40% opacity + short reason.
   Pastels are card backgrounds (one per option-card type, `--card-*`) and never indicate state.
-- **Customer mode** disables door/interior options that would produce an engine error and
-  shows the reason; if a size change invalidates the selected option, it falls back to the
-  template default. Staff mode keeps every option selectable.
+- **Customer mode** disables every option that would produce an engine error or a
+  `SHELF_SPAN` warning and shows a short reason (e.g. "1 bo'lim" at width 1360); if a size
+  change makes the selected option blocked, it falls back to the template default (auto).
+  Staff mode keeps every option selectable and shows the issue.
 - **3D legibility:** dark edge outlines (light outlines on dark decors), one directional key
   light + hemisphere ambient, soft contact shadow under the footprint.
 - Radii 32/20/12, pills, circular icon buttons, soft elevation, press scale 0.97.

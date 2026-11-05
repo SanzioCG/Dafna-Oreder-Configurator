@@ -11,13 +11,13 @@ import { StaffPanel } from './StaffPanel';
 export const BRAND_LOGO_URL = `${import.meta.env.BASE_URL}brand/dafna-logo.svg`;
 
 /**
- * Cards of the right zone. Consecutive numeric parameters share one white card; each swatch
- * parameter gets a white card; each option parameter gets its own pastel card (one pastel per
+ * Step content cards inside the sheet. Consecutive numeric parameters share one neutral card;
+ * each swatch parameter gets a neutral card; each option parameter gets its own pastel card (one per
  * card type, see tokens.css --card-*). Pastel never indicates selection state.
  */
 interface CardGroup {
   key: string;
-  tone: 'white' | 'pastel';
+  tone: 'neutral' | 'pastel';
   defs: ParamDef[];
 }
 
@@ -26,12 +26,12 @@ export function groupIntoCards(defs: ParamDef[]): CardGroup[] {
   for (const def of defs) {
     const last = groups[groups.length - 1];
     if (def.type === 'int') {
-      if (last && last.tone === 'white' && last.defs[0]?.type === 'int') last.defs.push(def);
-      else groups.push({ key: def.key, tone: 'white', defs: [def] });
+      if (last && last.tone === 'neutral' && last.defs[0]?.type === 'int') last.defs.push(def);
+      else groups.push({ key: def.key, tone: 'neutral', defs: [def] });
     } else {
       groups.push({
         key: def.key,
-        tone: def.control === 'swatch' ? 'white' : 'pastel',
+        tone: def.control === 'swatch' ? 'neutral' : 'pastel',
         defs: [def],
       });
     }
@@ -160,7 +160,7 @@ export function StepPanel({ mode, config }: StepPanelProps) {
           ))}
         </div>
         {staff && (
-          <div className="card card-white">
+          <div className="card card-neutral">
             <StaffPanel params={config.params} result={config.result} />
           </div>
         )}

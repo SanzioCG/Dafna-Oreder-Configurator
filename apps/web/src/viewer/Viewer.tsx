@@ -72,10 +72,13 @@ export function Viewer({ view, invalid }: ViewerProps) {
   const hasDoors = view.result.panels.some((p) => p.role === 'door');
 
   // World space is metres with the product centred on the origin, standing on the floor (y=0).
-  const box = useMemo<FrameBox>(
+  const product = useMemo<FrameBox>(
+    () => ({ min: [(-W / 2) * MM, 0, (-D / 2) * MM], max: [(W / 2) * MM, H * MM, (D / 2) * MM] }),
+    [W, H, D],
+  );
+  const extent = useMemo<FrameBox>(
     () => ({
-      // extra room below the floor keeps the model above the centred floating nav
-      min: [(-W / 2) * MM, -DIMENSION_MARGIN.bottom * MM, (-D / 2) * MM],
+      min: [(-W / 2) * MM, 0, (-D / 2) * MM],
       max: [(W / 2 + DIMENSION_MARGIN.right) * MM, (H + DIMENSION_MARGIN.top) * MM, (D / 2) * MM],
     }),
     [W, H, D],
@@ -110,7 +113,8 @@ export function Viewer({ view, invalid }: ViewerProps) {
         anchors={anchors}
         labelRefs={labelRefs}
         lineScale={uiScale}
-        box={box}
+        product={product}
+        extent={extent}
         resetToken={resetToken}
         doorsOpen={hasDoors && doorsOpen}
       />

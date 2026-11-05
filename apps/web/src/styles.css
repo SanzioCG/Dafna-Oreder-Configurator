@@ -86,10 +86,11 @@ p {
 }
 
 /*
- * ---------- layout: single layer ----------
- * One page background. Left zone (60%): transparent 3D canvas, the only place where orbit
- * gestures work. Right zone: cards floating on the background, separated by whitespace.
- * No panel container, no divider, no viewport frame.
+ * ---------- layout: common background + configurator sheet ----------
+ * One page background behind everything. Left zone (60%): transparent 3D canvas directly on
+ * the background, no frame — the only place where orbit gestures work. Right zone (40%): ONE
+ * white configurator sheet holding everything configurator-related (logo + language, step
+ * bar, step cards, navigation). Nothing crosses the sheet edge; content scrolls inside it.
  */
 
 .app {
@@ -125,7 +126,7 @@ p {
   pointer-events: none;
 }
 
-/* bottom-left: stays clear of the centred floating nav */
+/* viewer controls: bottom-left of the 3D zone */
 .viewer-actions {
   position: absolute;
   left: 1.5rem;
@@ -201,22 +202,26 @@ p {
   font-weight: 700;
 }
 
-/* ---------- step panel (white card) ---------- */
+/* ---------- configurator sheet (right zone) ---------- */
 
-/* right zone: no background, no border — only cards float here */
+/* white sheet, radius 32, soft elevation, inset 24 px from the screen edges */
 .panel {
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  padding: 1.25rem 1.25rem 0 0.25rem;
+  margin: var(--sheet-inset) var(--sheet-inset) var(--sheet-inset) 0;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sheet);
+  overflow: hidden; /* nothing crosses the sheet edge */
 }
 
 .panel-header {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0 0.75rem 0.5rem;
+  padding: 0.9rem 1.5rem 0.55rem;
 }
 
 .brand {
@@ -256,8 +261,7 @@ p {
   gap: 0.25rem;
   padding: 0.25rem;
   border-radius: var(--radius-pill);
-  background: var(--surface);
-  box-shadow: var(--shadow-soft);
+  background: var(--bg);
 }
 
 .lang {
@@ -280,11 +284,10 @@ p {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0.4rem;
-  margin: 0 0.75rem;
-  padding: 0.4rem;
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-soft);
+  margin: 0 1.5rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  background: var(--bg);
 }
 
 .step-tab {
@@ -339,9 +342,9 @@ p {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* >= 24 px between cards at 1080p */
-  /* side padding leaves room for card shadows; bottom keeps the last card above the nav */
-  padding: 0.75rem 0.75rem 6.25rem;
+  gap: 0.85rem;
+  /* step content scrolls inside the sheet if needed (never the page) */
+  padding: 0.75rem 1.5rem 1rem;
   overflow-y: auto;
   touch-action: pan-y;
   overscroll-behavior: contain;
@@ -388,18 +391,21 @@ p {
 .controls {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* >= 24 px between cards */
+  gap: 1rem;
 }
 
-/* cards float on the page background, each with its own radius + soft elevation */
+/*
+ * Step content cards inside the sheet: flat (the sheet carries the elevation). Numeric and
+ * swatch cards are neutral, option cards pastel (one pastel per card type). Option buttons on
+ * them are white; selection = solid brand blue (contract unchanged).
+ */
 .card {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding: 0.8rem 1.4rem;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
-  background: var(--surface);
+  padding: 0.7rem 1.2rem;
+  border-radius: var(--radius-md);
+  background: var(--bg);
 }
 
 .card-pastel {
@@ -638,23 +644,15 @@ p {
   line-height: 1.15;
 }
 
-/* floating frosted bottom nav, centred across the full screen width */
+/* navigation: sticky at the bottom INSIDE the sheet (last flex child; content scrolls above) */
 .panel-footer {
-  position: fixed;
-  z-index: 10;
-  left: 50%;
-  bottom: 1.25rem;
-  width: min(46rem, calc(100vw - 2rem));
-  transform: translateX(-50%);
+  flex: none;
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.5rem;
-  border-radius: var(--radius-pill);
-  background: var(--frost);
-  backdrop-filter: var(--frost-blur);
-  -webkit-backdrop-filter: var(--frost-blur);
-  box-shadow: var(--shadow-float);
+  padding: 0.75rem 1.5rem 0.9rem;
+  border-top: 0.0625rem solid var(--line);
+  background: var(--surface);
 }
 
 .footer-hint {

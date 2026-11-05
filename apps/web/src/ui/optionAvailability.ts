@@ -1,11 +1,11 @@
 import { validate, type ParamDef, type ParamValue, type Params } from '@dafna/engine';
 import type { Mode } from '../mode';
-import { CATALOG, GUARDED_STEPS, TEMPLATE } from '../state/useConfigurator';
+import { CATALOG, TEMPLATE, isCustomerBlocking } from '../state/useConfigurator';
 
 /**
- * Customer mode: an option of a guarded step (doors, later interior) that would produce an
- * engine error is disabled. Returns the error code that blocks `option`, or null if selectable.
- * Staff mode keeps every option selectable (errors are shown in the staff panel instead).
+ * Customer mode: an enum option that would produce an engine error or a blocking warning
+ * (SHELF_SPAN) is disabled. Returns the issue code that blocks `option`, or null if
+ * selectable. Staff mode keeps every option selectable (issues show in the staff panel).
  */
 export function blockingIssue(
   def: ParamDef,
@@ -13,9 +13,9 @@ export function blockingIssue(
   params: Params,
   mode: Mode,
 ): string | null {
-  if (mode === 'staff' || !GUARDED_STEPS.includes(def.uiStep)) return null;
-  const error = validate({ ...params, [def.key]: option }, TEMPLATE, CATALOG).find(
-    (i) => i.severity === 'error',
+  if (mode === 'staff') return null;
+  const issue = validate({ ...params, [def.key]: option }, TEMPLATE, CATALOG).find(
+    isCustomerBlocking,
   );
-  return error?.code ?? null;
+  return issue?.code ?? null;
 }

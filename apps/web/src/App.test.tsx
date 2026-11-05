@@ -287,10 +287,43 @@ describe('Selection state contract', () => {
     expect(within(corpus).getAllByRole('radio', { checked: true }).length).toBe(1);
   });
 
-  it('option groups sit in pastel cards, numeric controls in a white card', () => {
+  it('option groups sit in pastel cards, numeric controls in a neutral card', () => {
     render(<App />);
-    expect(document.querySelector('.card-white[data-card="width"]')).toBeTruthy();
+    expect(document.querySelector('.card-neutral[data-card="width"]')).toBeTruthy();
     expect(document.querySelector('.card-pastel[data-card="sections"]')).toBeTruthy();
     expect(document.querySelectorAll('.card[data-card="height"]').length).toBe(0); // grouped
+  });
+});
+
+describe('Customer blocks SHELF_SPAN options (any step)', () => {
+  const sections = () => screen.getByRole('radiogroup', { name: uz['param.sections'] });
+  const opt = (n: string) =>
+    within(sections())
+      .getAllByRole('radio')
+      .find((r) => r.querySelector('.segment-label')?.textContent === n) as HTMLElement;
+
+  it('customer: "1" section is disabled with a reason at width 1360; 2-4 stay enabled', () => {
+    render(<App />);
+    expect(opt('1').hasAttribute('disabled')).toBe(true);
+    expect(opt('1').textContent).toContain(uz['reason.SHELF_SPAN']);
+    for (const n of ['2', '3', '4']) expect(opt(n).hasAttribute('disabled')).toBe(false);
+  });
+
+  it('staff: "1" stays selectable and shows the SHELF_SPAN warning', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    expect(opt('1').hasAttribute('disabled')).toBe(false);
+    fireEvent.click(opt('1'));
+    expect(screen.getByText('SHELF_SPAN')).toBeTruthy();
+  });
+
+  it('customer: widening resets sections=1 to auto instead of producing SHELF_SPAN', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '900'); // 1 section: 868 mm inner -> allowed
+    fireEvent.click(opt('1'));
+    expect(opt('1').getAttribute('aria-checked')).toBe('true');
+    typeInto(uz['param.width'], '1360');
+    expect(opt(uz['option.sections.auto']).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByTestId('viewer-stub').dataset.sections).toBe('656,656');
   });
 });

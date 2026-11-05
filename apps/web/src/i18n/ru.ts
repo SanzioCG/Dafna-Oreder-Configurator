@@ -60,6 +60,7 @@ export const ru: Messages = {
   'color.sameAsCorpus': 'Как корпус',
 
   'reason.DOOR_TOO_WIDE': 'Секция слишком широкая для одной двери',
+  'reason.SHELF_SPAN': 'Слишком широко для полки',
   'reason.default': 'Недоступно при этом размере',
 
   'control.decrease': 'Уменьшить',

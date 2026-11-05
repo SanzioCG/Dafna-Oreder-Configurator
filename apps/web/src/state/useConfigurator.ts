@@ -6,6 +6,7 @@ import {
   validate,
   wardrobeTemplate,
   type GenerateResult,
+  type Issue,
   type ParamValue,
   type Params,
 } from '@dafna/engine';
@@ -41,21 +42,30 @@ function toView(result: GenerateResult, p: Params): ViewGeometry {
   };
 }
 
-/** Wizard steps whose options are disabled for customers when they would produce an error. */
-export const GUARDED_STEPS = ['doors', 'interior'];
+/**
+ * Customer mode blocks every engine error plus these warnings: an option that would produce one
+ * is disabled (with a reason), and a change that would make the current option produce one
+ * resets that option. Staff mode keeps everything selectable and just shows the issue.
+ */
+export const CUSTOMER_BLOCKING_WARNINGS = ['SHELF_SPAN'];
+
+export function isCustomerBlocking(issue: Issue): boolean {
+  return issue.severity === 'error' || CUSTOMER_BLOCKING_WARNINGS.includes(issue.code);
+}
 
 /**
- * Customer mode never shows an invalid model: if a change (e.g. a wider wardrobe) makes a
- * guarded option invalid (e.g. doors = all_single -> DOOR_TOO_WIDE), that option is reset to its
- * template default (doors = auto, which is always valid).
+ * Customer mode never shows an invalid or blocked model: if a change (e.g. a wider wardrobe)
+ * makes a selected option blocked (doors = all_single -> DOOR_TOO_WIDE, sections = 1 ->
+ * SHELF_SPAN), that option is reset to its template default (auto, which is always valid).
+ * Only enum options are reset; numeric params are already clamped in customer mode.
  */
 export function repairCustomerParams(params: Params): Params {
   let out = params;
   for (let i = 0; i < 3; i++) {
     const keys = validate(out, TEMPLATE, CATALOG)
-      .filter((issue) => issue.severity === 'error' && issue.paramKey)
+      .filter((issue) => isCustomerBlocking(issue) && issue.paramKey)
       .map((issue) => getParamDef(TEMPLATE, issue.paramKey as string))
-      .filter((d) => d && GUARDED_STEPS.includes(d.uiStep) && out[d.key] !== d.default);
+      .filter((d) => d && d.type === 'enum' && d.customerVisible && out[d.key] !== d.default);
     if (keys.length === 0) return out;
     out = { ...out };
     for (const d of keys) if (d) out[d.key] = d.default;

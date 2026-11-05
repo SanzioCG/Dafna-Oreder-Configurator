@@ -59,6 +59,7 @@ export const uz = {
   'color.sameAsCorpus': 'Korpus bilan bir xil',
 
   'reason.DOOR_TOO_WIDE': "Bo'lim bitta eshik uchun juda keng",
+  'reason.SHELF_SPAN': 'Javon uchun juda keng',
   'reason.default': "Bu o'lchamda mumkin emas",
 
   'control.decrease': 'Kamaytirish',
