@@ -982,3 +982,19 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
     expect(screen.queryByRole('button', { name: uz['consultant.call'] })).toBeNull();
   });
 });
+
+describe('smart camera: preset change keeps the focus', () => {
+  it('changing the selected section preset issues no new camera command', () => {
+    render(<App />);
+    fireEvent.click(tab(uz['step.interior']));
+    const tabs = screen.getByRole('radiogroup', { name: uz['interior.sections'] });
+    fireEvent.click(within(tabs).getAllByRole('radio')[1] as HTMLElement);
+    const stub = screen.getByTestId('viewer-stub');
+    const before = stub.dataset.camera;
+    expect(before?.startsWith('selection:section-1')).toBe(true);
+    const presets = document.querySelector('.preset-grid') as HTMLElement;
+    fireEvent.click(presets.querySelector('[data-preset="shelves"]') as HTMLElement);
+    expect(stub.dataset.presets?.split(',')[1]).toBe('shelves');
+    expect(stub.dataset.camera).toBe(before);
+  });
+});

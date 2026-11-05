@@ -1,7 +1,7 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, type MutableRefObject } from 'react';
 import { PerspectiveCamera, Vector3 } from 'three';
-import { DeferredCommand, type CameraCommand } from './cameraCommands';
+import { CameraAnimator, DeferredCommand, type CameraCommand } from './cameraCommands';
 import {
   CAMERA_ANIM_MS,
   DEFAULT_VIEW_DIR,
@@ -35,13 +35,6 @@ interface Goal {
   dir: Vector3 | null;
 }
 
-interface Animation {
-  from: Pose;
-  to: Pose;
-  start: number;
-  ms: number;
-}
-
 /**
  * Imperative camera API for code inside the canvas (the presentation reveal uses it).
  * fitToModel / fitToSelection / resetCamera compute a pose and call animateCameraTo.
@@ -57,6 +50,8 @@ export interface CameraApi {
   setPose: (pose: Pose) => void;
   /** true while a timed move is running */
   isAnimating: () => boolean;
+  /** outline a selection (section / door id, null clears) with --primary-strong */
+  highlightSelection: (id: string | null) => void;
 }
 
 const v3 = (p: Vector3): [number, number, number] => [p.x, p.y, p.z];
@@ -65,8 +60,9 @@ const v3 = (p: Vector3): [number, number, number] => [p.x, p.y, p.z];
  * Frames the product to ~70% of the zone height, centred (see framing.ts): jumps on first
  * render, then follows size / viewport changes keeping the user's orbit direction (smooth
  * exponential approach), and runs explicit camera commands (D-3a smart camera) as timed
- * ease-in-out moves of 600 ms. A command never starts while the user touches the 3D zone
- * (`pointerDown`): it waits for release. A user gesture cancels any automatic move.
+ * ease-in-out moves of 600 ms. A new move cancels the running one (CameraAnimator). The
+ * camera never moves while the user touches the 3D zone (`pointerDown`): a command waits for
+ * release, and a pointer coming down stops a move in progress. Orbit / zoom stay available.
  */
 export function CameraRig({
   product,
@@ -76,6 +72,7 @@ export function CameraRig({
   pointerDown,
   apiRef,
   locked = false,
+  onHighlight,
 }: {
   /** the product itself (world metres) */
   product: FrameBox;
@@ -87,12 +84,14 @@ export function CameraRig({
   apiRef?: MutableRefObject<CameraApi | null>;
   /** presentation reveal: user orbit off, automatic re-framing paused */
   locked?: boolean;
+  /** highlightSelection(id) reports here (the viewer draws the outline) */
+  onHighlight?: (id: string | null) => void;
 }) {
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
   const controls = useThree((s) => s.controls) as unknown as Controls | null;
   const aspect = useThree((s) => s.size.width / Math.max(1, s.size.height));
   const goal = useRef<Goal | null>(null);
-  const anim = useRef<Animation | null>(null);
+  const animator = useRef(new CameraAnimator<Pose>(interpolatePose, easeInOutCubic));
   const initialised = useRef(false);
   const lastReset = useRef(resetToken);
   const deferred = useRef(new DeferredCommand<CameraCommand>());
@@ -130,7 +129,7 @@ export function CameraRig({
     const cancel = () => {
       if (!initialised.current) return;
       goal.current = null;
-      anim.current = null;
+      animator.current.cancel();
     };
     controls.addEventListener('start', cancel);
     return () => controls.removeEventListener('start', cancel);
@@ -154,11 +153,12 @@ export function CameraRig({
   const animateCameraTo = (pose: Pose, ms = CAMERA_ANIM_MS) => {
     goal.current = null;
     if (ms <= 0) {
-      anim.current = null;
+      animator.current.cancel();
       setPose(pose);
       return;
     }
-    anim.current = { from: currentPose(), to: pose, start: clock.current, ms };
+    // replaces (cancels) a running move, continuing from the current pose
+    animator.current.start(currentPose(), pose, clock.current, ms);
   };
 
   const [pMin, pMax] = [product.min, product.max];
@@ -180,7 +180,8 @@ export function CameraRig({
     },
     currentPose,
     setPose,
-    isAnimating: () => anim.current !== null,
+    isAnimating: () => animator.current.running,
+    highlightSelection: (id) => onHighlight?.(id),
   };
   if (apiRef) apiRef.current = api;
 
@@ -191,16 +192,20 @@ export function CameraRig({
     // start a queued command only when no finger / mouse is on the 3D zone
     if (initialised.current && !locked) {
       const c = deferred.current.take(pointerDown?.current ?? false);
-      if (c?.kind === 'model' || c?.kind === 'reset') api.fitToModel();
-      else if (c?.kind === 'selection') api.fitToSelection(c.box);
+      if (c?.kind === 'model' || c?.kind === 'reset') {
+        api.highlightSelection(null);
+        api.fitToModel();
+      } else if (c?.kind === 'selection') {
+        api.highlightSelection(c.id);
+        api.fitToSelection(c.box);
+      }
     }
 
-    const a = anim.current;
-    if (a) {
-      const t = (clock.current - a.start) / a.ms;
-      const pose = interpolatePose(a.from, a.to, easeInOutCubic(t));
+    // a finger / mouse on the 3D zone stops an automatic move (the user is in control)
+    if (pointerDown?.current && !locked) animator.current.cancel();
+    const pose = animator.current.sample(clock.current);
+    if (pose) {
       setPose(pose);
-      if (t >= 1) anim.current = null;
       return;
     }
 

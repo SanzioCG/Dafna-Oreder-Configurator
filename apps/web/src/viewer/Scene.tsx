@@ -2,7 +2,7 @@ import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { TOUCH } from 'three';
 import type { ViewGeometry } from '../state/useConfigurator';
-import type { MutableRefObject } from 'react';
+import { useState, type MutableRefObject } from 'react';
 import type { CameraCommand } from './cameraCommands';
 import { CameraRig, type CameraApi, type FrameBox } from './CameraRig';
 import { DimensionProjector, type DimRegistry } from './DimensionOverlay';
@@ -84,6 +84,9 @@ export function Scene({
   const { widthMm: W, depthMm: D } = view;
   // Single-layer layout: the canvas is transparent and sits on the page background
   // (tokens.css --bg); there is no floor plane, so no visible floor edge.
+  // highlightSelection(id) from the camera controller: "section-1" / "door-1" -> section 1
+  const [highlight, setHighlight] = useState<string | null>(null);
+  const highlightIndex = highlight ? Number(highlight.split('-')[1]) : null;
   const shadowColor = cssToken('--stage-shadow', '#2a2928');
   const shadowOpacity = Number(cssToken('--stage-shadow-opacity', '0.8')) || 0.8;
   return (
@@ -123,7 +126,7 @@ export function Scene({
         {interactive && (
           <SectionPicker
             boxes={sectionBoxes}
-            selected={selectedSection}
+            selected={highlightIndex ?? selectedSection}
             onTap={onSectionTap}
             lineScale={lineScale}
           />
@@ -170,6 +173,7 @@ export function Scene({
         pointerDown={pointerDown}
         apiRef={cameraApi}
         locked={cameraLocked}
+        onHighlight={setHighlight}
       />
     </Canvas>
   );

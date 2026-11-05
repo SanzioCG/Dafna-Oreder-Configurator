@@ -1,6 +1,6 @@
 import { Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
-import { DeferredCommand } from './cameraCommands';
+import { CameraAnimator, DeferredCommand } from './cameraCommands';
 import {
   CAMERA_ANIM_MS,
   SELECTION_VIEW_DIR,
@@ -121,5 +121,35 @@ describe('camera command deferral (never move while the pointer is down)', () =>
     expect(q.take(true)).toBeNull();
     expect(q.take(false)).toBe('section-2'); // after release
     expect(q.take(false)).toBeNull(); // started once
+  });
+});
+
+describe('camera animator: one move at a time', () => {
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+  it('eases from start to target and ends exactly on it', () => {
+    const anim = new CameraAnimator<number>(lerp, easeInOutCubic);
+    anim.start(0, 10, 0, 600);
+    expect(anim.sample(0)).toBe(0);
+    expect(anim.sample(300)).toBeCloseTo(5, 6);
+    expect(anim.sample(600)).toBe(10);
+    expect(anim.running).toBe(false);
+    expect(anim.sample(700)).toBeNull();
+  });
+
+  it('a new animation cancels the running one and continues from the current pose', () => {
+    const anim = new CameraAnimator<number>(lerp, easeInOutCubic);
+    anim.start(0, 10, 0, 600);
+    const mid = anim.sample(300) ?? NaN; // 5
+    anim.start(mid, -20, 300, 600);
+    expect(anim.sample(300)).toBeCloseTo(5, 6); // no jump
+    expect(anim.sample(900)).toBe(-20); // the first target (10) is never reached
+  });
+
+  it('cancel stops immediately (pointer down on the 3D zone)', () => {
+    const anim = new CameraAnimator<number>(lerp, easeInOutCubic);
+    anim.start(0, 10, 0, 600);
+    anim.cancel();
+    expect(anim.sample(100)).toBeNull();
   });
 });
