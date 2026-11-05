@@ -4,6 +4,36 @@
   customers and confetti over the whole screen
 - Date: 2026-11-05
 
+## D-4 update: presentation designer final
+
+These points supersede the matching points below.
+
+- **Removed:**
+  - confetti and particles (`Confetti.tsx`);
+  - the success icon;
+  - the summary card (`ConfigurationSummary` with its "o'zgartirish" rows);
+  - the dimension overlay in the presentation (`dimensionVisibility` hides primary too).
+- **Head:** "Ajoyib tanlov!" and the subtitle sit at the upper centre for the whole
+  presentation. Under them is one `--text-2` summary line built from the engine result, for
+  example "136 × 190 × 60 sm · Korpus: Oq · Eshik: Och eman".
+  - An open wardrobe has no door part.
+  - Staff see mm.
+- **Framing:** the wardrobe fills about 50 % of the screen height (`PRESENT_FILL` 0.5 / 0.55),
+  at a three-quarter angle.
+- **Platform** (`PresentationPlatform`):
+  - A minimal round disc with a restrained cyan rim and a soft floor halo.
+  - All its materials are unlit and it adds no light, so the wardrobe keeps its neutral
+    lighting and the decor colours do not shift.
+  - It sits outside the turntable, so it never slides during the turn.
+- **Timeline:** doors close (1.2 s), then one 360° turn (8 s, 0.3 s ramps). There is no
+  celebration phase.
+- **Actions:**
+  - "Tasdiqlash" (`--success`, `--ink` text, 64 px) is centred below the wardrobe and appears
+    when the doors finish closing.
+  - "Tahrirlash" is a text button and returns to step 3.
+  - "O'tkazib yuborish" is a small text button in the lower right.
+- Light and Dark versions were checked in the browser at 1080p.
+
 ## Context
 
 The configuration ends in a final presentation that must not look like another step. No backend

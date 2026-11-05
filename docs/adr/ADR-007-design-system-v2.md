@@ -1,8 +1,94 @@
 # ADR-007: Design system V2 (flat UI, semantic tokens, White / Dark, contrast gate)
 
 - Status: accepted (D-3a, "DAFNA Configurator V2"); replaces the pastel / sheet visual language
-  of the first D-3a draft (Nunito Sans, pastel card fills, Light default)
+  of the first D-3a draft (Nunito Sans, pastel card fills, Light default). **Component styling
+  superseded by V3 "Bold Bento" (D-4, section below).** The token architecture, Inter, lucide
+  icons, Dark default, staff-only theme switch and the contrast gate remain.
 - Date: 2026-11-05
+
+## D-4 update: design system V3 "Bold Bento"
+
+Goal: playful bold bento — colored rounded cards, chunky pills, a black selected state, and
+**no thin light / grey outlines anywhere**. The wardrobe stays the only photorealistic element.
+
+### Tokens
+
+Light values live in `tokens.css`, Dark values in `themes.css`.
+
+| Token        | Light     | Dark      | Use                      |
+| ------------ | --------- | --------- | ------------------------ |
+| `--bg`       | `#F5F6F8` | `#191D24` | page and panel           |
+| `--viewport` | `#EEF0F2` | `#242A33` | 3D zone                  |
+| `--text`     | `#191D24` | `#F4F5F2` | text on `--bg`           |
+| `--text-2`   | `#646A73` | `#8E949E` | secondary text on `--bg` |
+
+These tokens are the same in both themes:
+
+| Token                          | Value     | Use                                     |
+| ------------------------------ | --------- | --------------------------------------- |
+| `--ink`                        | `#191D24` | outlines, selected fill, text on pastel |
+| `--on-ink`                     | `#FFFFFF` | text on `--ink`                         |
+| `--paper`                      | `#FFFFFF` | unselected pill / card fill             |
+| `--primary`                    | `#009FE3` | "Keyingi"                               |
+| `--success`                    | `#20B85A` | "Tasdiqlash"                            |
+| `--on-primary`, `--on-success` | `#191D24` | text on action buttons                  |
+| `--step-size`                  | `#B9F0D3` | step 1 card (mint)                      |
+| `--step-color`                 | `#FFE680` | step 2 card (yellow)                    |
+| `--step-interior`              | `#CFC6FF` | step 3 card (lavender)                  |
+| `--step-review`                | `#009FE3` | step 4 (cyan)                           |
+| `--accent-peach`               | `#FDCDBD` | consultant, info cards                  |
+
+The error colour is `#C93838` (Light) and `#F06B6B` (Dark). The step colours are unconfirmed.
+
+### Shape
+
+- Cards have a 28 px radius. Pills and buttons are fully rounded.
+- Round icon buttons and steppers are 64 px.
+- Text is Inter with bold headings; sizes use tabular numerals.
+
+### Outline rules (enforced)
+
+| Element                                                         | Light                                 | Dark                      |
+| --------------------------------------------------------------- | ------------------------------------- | ------------------------- |
+| Inside colored cards: pills, steppers, toggles, chips, swatches | `--line-in-card`, 2 px `--ink`        | same                      |
+| Cards and buttons placed directly on the page                   | `--line-on-bg`, 2.5 px `--ink`        | none (separation by fill) |
+| Focus                                                           | `--focus-line`, 3 px `--ink`, no glow | same                      |
+
+- States:
+  - Selected: solid `--ink` fill + white text.
+  - Unselected: `--paper` fill + `--ink` text.
+  - Disabled: 50 % opacity, with a plain reason below.
+  - Pressed: scale 0.97.
+- Toggles: ON is an `--ink` track with a white knob; OFF is a `--paper` track with an
+  `--ink`-outlined knob.
+- Option icons sit in a round `--ink` badge with a white glyph.
+- Enforcement:
+  - `theme/lines.test.ts` checks the line token values.
+  - `theme/outline.test.ts` checks every `border` / `outline` in `styles.css`: each must be
+    `0`, `none` or a line token, with no width / colour overrides and no V2 grey tokens.
+
+### Contrast (gate, `theme/contrast.test.ts`)
+
+Text pairs, 4.5:1 or more:
+
+| Pair                | Ratio                    |
+| ------------------- | ------------------------ |
+| `--ink` on paper    | 16.90                    |
+| white on `--ink`    | 16.90                    |
+| `--ink` on mint     | 13.25                    |
+| `--ink` on yellow   | 13.59                    |
+| `--ink` on lavender | 10.60                    |
+| `--ink` on cyan     | 5.69                     |
+| `--ink` on peach    | 11.79                    |
+| `--ink` on success  | 6.49                     |
+| text on bg          | Light 15.63 / Dark 15.44 |
+| text-2 on bg        | Light 5.04 / Dark 5.54   |
+| error on bg         | Light 4.73 / Dark 5.65   |
+
+- Selected vs unselected (`--ink` vs `--paper`) and the toggle states must be 3:1 or more.
+- **Boundary contrast is not required for text-labelled controls.** An unselected pill is
+  identified by its label and the `--ink` / `--paper` inversion, not by a grey hairline. This
+  replaces the V2 `--border-control` 3:1 rule, and `--border-control` is no longer used.
 
 ## Context
 
