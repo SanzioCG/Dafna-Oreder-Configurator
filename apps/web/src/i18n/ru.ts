@@ -63,6 +63,9 @@ export const ru: Messages = {
   'reason.SHELF_SPAN': 'Слишком широко для полки',
   'reason.default': 'Недоступно при этом размере',
 
+  'toast.autoReset': '{param}: «{from}» → «{to}». Причина: {reason}.',
+  'toast.dismiss': 'Закрыть',
+
   'control.decrease': 'Уменьшить',
   'control.increase': 'Увеличить',
   'unit.mm': 'мм',

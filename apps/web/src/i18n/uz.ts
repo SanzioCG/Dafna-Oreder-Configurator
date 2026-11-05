@@ -62,6 +62,9 @@ export const uz = {
   'reason.SHELF_SPAN': 'Javon uchun juda keng',
   'reason.default': "Bu o'lchamda mumkin emas",
 
+  'toast.autoReset': '{param}: «{from}» → «{to}». Sabab: {reason}.',
+  'toast.dismiss': 'Yopish',
+
   'control.decrease': 'Kamaytirish',
   'control.increase': 'Oshirish',
   'unit.mm': 'mm',

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ru } from './i18n/ru';
 import { uz } from './i18n/uz';
@@ -325,5 +325,88 @@ describe('Customer blocks SHELF_SPAN options (any step)', () => {
     typeInto(uz['param.width'], '1360');
     expect(opt(uz['option.sections.auto']).getAttribute('aria-checked')).toBe('true');
     expect(screen.getByTestId('viewer-stub').dataset.sections).toBe('656,656');
+  });
+});
+
+describe('Auto-reset toast (customer choice is never changed silently)', () => {
+  const sections = () => screen.getByRole('radiogroup', { name: uz['param.sections'] });
+  const opt = (n: string) =>
+    within(sections())
+      .getAllByRole('radio')
+      .find((r) => r.querySelector('.segment-label')?.textContent === n) as HTMLElement;
+  const resetToOne = () => {
+    typeInto(uz['param.width'], '900');
+    fireEvent.click(opt('1'));
+    expect(screen.queryByTestId('reset-toast')).toBeNull(); // own choice: no toast
+    typeInto(uz['param.width'], '1360');
+  };
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('shows what changed and why, inside the sheet, in Uzbek', () => {
+    render(<App />);
+    resetToOne();
+    const toast = screen.getByRole('status');
+    expect(toast.closest('.panel')).toBeTruthy(); // inside the configurator sheet
+    expect(toast.textContent).toContain(
+      `${uz['param.sections']}: «1» → «${uz['option.sections.auto']}». Sabab: ${uz['reason.SHELF_SPAN']}.`,
+    );
+  });
+
+  it('is dismissible', () => {
+    render(<App />);
+    resetToOne();
+    fireEvent.click(screen.getByRole('button', { name: uz['toast.dismiss'] }));
+    expect(screen.queryByTestId('reset-toast')).toBeNull();
+  });
+
+  it('disappears after 3 s', () => {
+    vi.useFakeTimers();
+    render(<App />);
+    resetToOne();
+    expect(screen.getByTestId('reset-toast')).toBeTruthy();
+    act(() => vi.advanceTimersByTime(2900));
+    expect(screen.getByTestId('reset-toast')).toBeTruthy();
+    act(() => vi.advanceTimersByTime(200));
+    expect(screen.queryByTestId('reset-toast')).toBeNull();
+  });
+
+  it('is translated to Russian', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: uz['lang.ru'] }));
+    typeInto(ru['param.width'], '900');
+    const ruSections = screen.getByRole('radiogroup', { name: ru['param.sections'] });
+    const one = within(ruSections)
+      .getAllByRole('radio')
+      .find((r) => r.querySelector('.segment-label')?.textContent === '1') as HTMLElement;
+    fireEvent.click(one);
+    typeInto(ru['param.width'], '1360');
+    expect(screen.getByRole('status').textContent).toContain(
+      `${ru['param.sections']}: «1» → «${ru['option.sections.auto']}». Причина: ${ru['reason.SHELF_SPAN']}.`,
+    );
+  });
+
+  it('door preset reset is announced too; staff mode never auto-resets', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '1248');
+    fireEvent.click(tab(uz['step.doors']));
+    const preset = screen.getByRole('radiogroup', { name: uz['param.doors'] });
+    fireEvent.click(
+      within(preset).getByRole('radio', { name: new RegExp(uz['option.doors.all_single']) }),
+    );
+    fireEvent.click(tab(uz['step.size']));
+    typeInto(uz['param.width'], '1360');
+    expect(screen.getByRole('status').textContent).toContain(uz['reason.DOOR_TOO_WIDE']);
+    cleanup();
+
+    setUrl('?mode=staff');
+    render(<App />);
+    typeInto(uz['param.width'], '900');
+    fireEvent.click(within(sections()).getByRole('radio', { name: '1' }));
+    typeInto(uz['param.width'], '1360');
+    expect(screen.queryByTestId('reset-toast')).toBeNull();
+    expect(screen.getByText('SHELF_SPAN')).toBeTruthy();
   });
 });
