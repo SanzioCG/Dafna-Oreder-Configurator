@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": [
+    "server",
+    "src/lead",
+    "src/i18n/translate.ts",
+    "src/i18n/uz.ts",
+    "src/i18n/ru.ts",
+    "src/state/blocking.ts"
+  ]
+}
