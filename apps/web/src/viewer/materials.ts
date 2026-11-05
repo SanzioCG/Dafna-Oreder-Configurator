@@ -35,7 +35,7 @@ export function materialFor(id: string): MeshStandardMaterial {
 /**
  * Edge outline colour: dark on light decors (white, grey, beige, oak) so panels, door leaves
  * and the 3 mm gaps stay distinguishable; light on dark decors. Both tones are theme tokens
- * (--edge-on-light-decor / --edge-on-dark-decor): the dark theme uses lighter outlines.
+ * (--edge-on-light-decor = black in both themes; --edge-on-dark-decor is lighter in Dark).
  * Read at render time, so a theme switch re-colours them on the next render.
  */
 export function edgeColorFor(id: string): string {
@@ -44,5 +44,5 @@ export function edgeColorFor(id: string): string {
   const luminance = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
   return luminance < 0.35
     ? cssToken('--edge-on-dark-decor', '#b4b8be')
-    : cssToken('--edge-on-light-decor', '#33363b');
+    : cssToken('--edge-on-light-decor', '#000000');
 }
