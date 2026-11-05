@@ -40,6 +40,9 @@ export const uz = {
   'nav.back': 'Orqaga',
   'nav.readyReview': "Tayyor — ko'rib chiqish",
   'consultant.call': 'Konsultant chaqirish',
+  'consultant.message':
+    "Yaqin atrofdagi Dafna xodimiga murojaat qiling yoki qo'ng'iroq qiling: {phone}",
+  'consultant.close': 'Yopish',
   'nav.next': 'Keyingi',
   'nav.nextSoon': 'Keyingi bosqichlar tez orada',
 
@@ -160,6 +163,8 @@ export const uz = {
     "{sectionNumber}-bo'lim: tortma oldi {frontWidthMm} mm — {maxMm} mm dan keng",
   'issue.MIGRATION_DOORS_CHANGED':
     "{sectionNumber}-bo'lim eshigi yangi qoida bo'yicha o'zgardi: {from} → {to}",
+  'issue.MIGRATION_CONSTRUCTION_CHANGED':
+    'Tsokol konstruksiyasi yangilandi (shablon {from} → {to}): yon devorlar polgacha, tsokol taxtalari yon devorlar orasida.',
   'issue.MIGRATION_THICKNESS_UNAVAILABLE': "Katalogda {panelThickness} mm plita yo'q",
   'issue.UNSUPPORTED_SCHEMA': "Qo'llab-quvvatlanmaydigan buyurtma sxemasi: {schemaVersion}",
 } as const;

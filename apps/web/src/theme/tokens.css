@@ -15,10 +15,12 @@
   /* ---- semantic colours (White) ---- */
   --bg: #f5f6f8;
   --surface: #ffffff;
+  /* configuration panel, its header and footer (White: same as --surface) */
+  --panel: #ffffff;
   --text: #191d24;
   --text-2: #646a73;
-  /* decorative separators only (dividers, table rules) — not a component boundary */
-  --border: #d9dde2;
+  /* decorative lines only (dividers, table rules) — never a component boundary */
+  --divider: #d9dde2;
   /* boundary of interactive controls (inputs, unselected options, slider track): >= 3:1 */
   --border-control: #80868f;
   --primary: #009fe3; /* button / selected fills, brand accents (logo #009FE2) */
@@ -37,6 +39,8 @@
   --stage-shadow-opacity: 0.8;
   --edge-on-light-decor: #33363b; /* outlines on white / grey / beige / oak */
   --edge-on-dark-decor: #b4b8be; /* outlines on dark decors */
+  /* subtle rim / back light intensity (0 = off; Dark uses it to separate dark decors) */
+  --rim-light: 0;
   /* presentation particles (brief: #009FE3 / #20B85A / #FFFFFF) */
   --particle-1: #009fe3;
   --particle-2: #20b85a;

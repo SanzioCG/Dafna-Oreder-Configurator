@@ -16,8 +16,11 @@ type Pair = [fg: string, bg: string];
 const TEXT: Pair[] = [
   ['--text', '--bg'],
   ['--text', '--surface'],
+  ['--text', '--panel'],
   ['--text-2', '--bg'],
   ['--text-2', '--surface'],
+  ['--text-2', '--panel'],
+  ['--error', '--panel'],
   ['--on-primary', '--primary'],
   ['--on-success', '--success'],
   ['--error', '--bg'],
@@ -32,8 +35,11 @@ const UI_BOUNDARY: Pair[] = [
   ['--primary-strong', '--bg'], // focus ring, selected borders
   ['--primary-strong', '--surface'],
   ['--primary-strong', '--viewport-bg'], // dimension lines over the 3D background
+  ['--primary-strong', '--panel'],
   ['--border-control', '--bg'], // unselected controls, inputs, slider track
   ['--border-control', '--surface'],
+  ['--border-control', '--panel'],
+  ['--border-control', '--viewport-bg'], // floating buttons over the 3D
 ];
 
 describe('WCAG luminance helper', () => {

@@ -16,17 +16,18 @@ come in later batches.
 
 ## Batch plan
 
-| Batch | Scope                                                                                                                                                                                                 |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D-0   | Engine + shkaf carcass + 3D viewer + step UI                                                                                                                                                          |
-| D-1a  | Material catalog, colour step, depth definition (ADR-003), hinged overlay doors, order draft 0.1                                                                                                      |
-| D-1b  | Interior fill per section, door leaf/hinge rule fixes (ADR-006), production-ready panel fields, order draft 0.2 (ADR-005)                                                                             |
-| D-1c  | Leaves may share a partition (ADR-006 revised), hinge mount per leaf, default depth 600, order draft 0.3                                                                                              |
-| D-3a  | Design system V2 (tokens, White/Dark, Inter, contrast gate), redesigned steps, SVG dimension overlay, smart camera, full-screen presentation with 360° reveal, confirm entry, flow (ADR-007, ADR-008) |
-| D-2a  | Backend: projects, branches/devices, customer confirmation, status model, audit log, outbox, Telegram notification, sales panel                                                                       |
-| D-2b  | CRM adapter                                                                                                                                                                                           |
-| D-3b  | Contact form + submission, server-side PDF, QR, on-screen keyboard, idle timeout / session reset                                                                                                      |
-| later | Price, tumba, stol, website API                                                                                                                                                                       |
+| Batch  | Scope                                                                                                                                                                                                 |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-0    | Engine + shkaf carcass + 3D viewer + step UI                                                                                                                                                          |
+| D-1a   | Material catalog, colour step, depth definition (ADR-003), hinged overlay doors, order draft 0.1                                                                                                      |
+| D-1b   | Interior fill per section, door leaf/hinge rule fixes (ADR-006), production-ready panel fields, order draft 0.2 (ADR-005)                                                                             |
+| D-1c   | Leaves may share a partition (ADR-006 revised), hinge mount per leaf, default depth 600, order draft 0.3                                                                                              |
+| D-3a   | Design system V2 (tokens, White/Dark, Inter, contrast gate), redesigned steps, SVG dimension overlay, smart camera, full-screen presentation with 360° reveal, confirm entry, flow (ADR-007, ADR-008) |
+| D-3a.1 | Plinth construction (sides to the floor, ADR-009), Dark theme V2.1 Deep Graphite, consultant modal (1408), audit fixes                                                                                |
+| D-2a   | Backend: projects, branches/devices, customer confirmation, status model, audit log, outbox, Telegram notification, sales panel                                                                       |
+| D-2b   | CRM adapter                                                                                                                                                                                           |
+| D-3b   | Contact form + submission, server-side PDF, QR, on-screen keyboard, idle timeout / session reset                                                                                                      |
+| later  | Price, tumba, stol, website API                                                                                                                                                                       |
 
 ## Principles
 

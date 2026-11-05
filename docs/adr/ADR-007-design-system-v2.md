@@ -54,7 +54,7 @@ showroom (White) and a dimmed one (Dark), on 1080p and 4K screens.
      (try/catch storage) and never resets the configuration.
    - No customer toggle.
    - Logo: `dafna-logo.svg` on White, `dafna-logo-white.svg` on Dark (SVGs unchanged).
-   - 3D viewport: mid-dark neutral `#2E343D` (Dark) or light grey `#EEF0F2` (White).
+   - 3D viewport: graphite `#242A33` (Dark V2.1) or light grey `#EEF0F2` (White).
    - Lighting is identical in both themes, so decor colours render the same.
    - Edge outlines and the contact shadow switch tone per theme.
 7. **Automated contrast gate.**
@@ -85,10 +85,49 @@ showroom (White) and a dimmed one (Dark), on 1080p and 4K screens.
   - a fixed footer: Orqaga · "Tayyor — ko'rib chiqish" (steps 1–4) · Keyingi.
 - "Konsultant chaqirish" appears on every customer screen (configurator, presentation,
   contact).
-  - It only fires `kiosk.requestConsultant()`, a `dafna:consultant-request` window event
+  - It fires `kiosk.requestConsultant()` (D-3a.1: and opens the honest 1408 modal), a
+    `dafna:consultant-request` window event
     carrying the step / flow state and the configuration revision.
   - Delivery to staff comes with D-2a. No confirmation is shown until then, because nothing is
     delivered yet.
+
+## Dark theme V2.1 "Deep Graphite" (D-3a.1)
+
+- `--bg` / `--panel` (panel, header, footer): `#191D24`.
+- `--surface` (inputs, controls) and the 3D viewport: `#242A33`.
+- `--divider` `#363D47` (decorative only). `--text` `#F4F5F2`.
+- `--text-2` `#8E949E` (approved). `--primary` / `--primary-strong`: `#009FE3`.
+- `--border-control` is `#737A86`: the brief's example `#6B7380` measured only 3.02:1 on
+  `--surface`. White values are unchanged; `--border` was renamed `--divider`, and `--panel` was
+  added (White `#FFFFFF`).
+- Measured (WCAG):
+
+  | Pair                      | Ratio |
+  | ------------------------- | ----- |
+  | text on bg / panel        | 15.44 |
+  | text on surface           | 13.20 |
+  | text-2 on bg              | 5.54  |
+  | text-2 on surface         | 4.73  |
+  | border-control on bg      | 3.91  |
+  | border-control on surface | 3.34  |
+  | primary on bg             | 5.69  |
+  | primary on surface        | 4.86  |
+  | on-primary on primary     | 5.69  |
+  | error on surface          | 4.83  |
+
+- 3D Dark lighting:
+  - The key and hemisphere lights are the same as in White, so decor colours do not shift.
+  - A shadowless rim light from behind (`--rim-light`, Dark only) plus light edge outlines
+    (`#C9CED6` on dark decors) separate Antratsit from the background.
+  - The contact shadow is softened to 0.75 opacity.
+
+## Product decisions (D-3a.1)
+
+- UX-02: the SHELF_SPAN block stays for customers because of the physical sag risk. The 900 mm
+  value stays unconfirmed until Dafna confirms it.
+- UX-07: until D-2a, "Konsultant chaqirish" opens an honest modal with a close button: "Yaqin
+  atrofdagi Dafna xodimiga murojaat qiling yoki qo'ng'iroq qiling: 1408" (uz / ru). The internal
+  event is kept for D-2a; nothing claims a request was sent.
 
 ## Consequences
 

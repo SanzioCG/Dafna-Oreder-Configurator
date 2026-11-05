@@ -294,8 +294,8 @@ p {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  background: var(--surface);
-  border-left: var(--border-w) solid var(--border);
+  background: var(--panel);
+  border-left: var(--border-w) solid var(--divider);
   overflow: hidden;
 }
 
@@ -373,7 +373,7 @@ p {
   gap: var(--space-1);
   margin: 0 var(--space-5);
   padding-bottom: var(--space-3);
-  border-bottom: var(--border-w) solid var(--border);
+  border-bottom: var(--border-w) solid var(--divider);
 }
 
 .step-tab {
@@ -472,7 +472,7 @@ p {
   flex-direction: column;
   gap: var(--space-3);
   padding-top: var(--space-4);
-  border-top: var(--border-w) solid var(--border);
+  border-top: var(--border-w) solid var(--divider);
 }
 
 .controls > .card:first-child {
@@ -694,8 +694,8 @@ p {
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-5) var(--space-4);
-  border-top: var(--border-w) solid var(--border);
-  background: var(--surface);
+  border-top: var(--border-w) solid var(--divider);
+  background: var(--panel);
 }
 
 .footer-center {
@@ -832,7 +832,7 @@ p {
 .panels td {
   text-align: left;
   padding: var(--space-1) var(--space-2);
-  border-bottom: var(--border-w) solid var(--border);
+  border-bottom: var(--border-w) solid var(--divider);
 }
 
 /* ---------- material swatches ---------- */
@@ -1142,7 +1142,7 @@ p {
   column-gap: var(--space-3);
   align-items: center;
   padding: var(--space-2) 0;
-  border-bottom: var(--border-w) solid var(--border);
+  border-bottom: var(--border-w) solid var(--divider);
 }
 
 .summary-row dt {
@@ -1183,6 +1183,47 @@ p {
   margin-top: var(--space-2);
 }
 
+/* modal (consultant until D-2a): centred over everything, flat card */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+}
+
+.modal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: min(34rem, 90vw);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  border: var(--border-w) solid var(--divider);
+  background: var(--panel);
+  color: var(--text);
+  text-align: center;
+  box-shadow: var(--shadow-overlay);
+}
+
+.modal-card h2 {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+}
+
+.modal-card p {
+  font-size: var(--fs-lg);
+  line-height: var(--lh-snug);
+}
+
+.modal-icon {
+  width: 3rem;
+  height: 3rem;
+  color: var(--primary-strong);
+}
+
 /* contact (D-3b placeholder): over the presentation, nothing is submitted */
 .contact-placeholder {
   position: fixed;
@@ -1203,7 +1244,7 @@ p {
   border-radius: var(--radius-lg);
   background: var(--surface);
   color: var(--text);
-  border: var(--border-w) solid var(--border);
+  border: var(--border-w) solid var(--divider);
 }
 
 .contact-card h2 {

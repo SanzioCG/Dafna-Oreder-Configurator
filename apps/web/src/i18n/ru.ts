@@ -40,6 +40,8 @@ export const ru: Messages = {
 
   'nav.readyReview': 'Готово — просмотр',
   'consultant.call': 'Позвать консультанта',
+  'consultant.message': 'Обратитесь к ближайшему сотруднику Dafna или позвоните: {phone}',
+  'consultant.close': 'Закрыть',
   'nav.back': 'Назад',
   'nav.next': 'Далее',
   'nav.nextSoon': 'Следующие шаги скоро',
@@ -158,6 +160,8 @@ export const ru: Messages = {
     'Секция {sectionNumber}: фасад ящика {frontWidthMm} мм шире {maxMm} мм',
   'issue.MIGRATION_DOORS_CHANGED':
     'Дверь секции {sectionNumber} изменена по новому правилу: {from} → {to}',
+  'issue.MIGRATION_CONSTRUCTION_CHANGED':
+    'Конструкция цоколя обновлена (шаблон {from} → {to}): боковины до пола, планки цоколя между боковинами.',
   'issue.MIGRATION_THICKNESS_UNAVAILABLE': 'В каталоге нет плиты {panelThickness} мм',
   'issue.UNSUPPORTED_SCHEMA': 'Неподдерживаемая схема заказа: {schemaVersion}',
 };

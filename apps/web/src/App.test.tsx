@@ -1016,10 +1016,38 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
       expect(detail.where).toBe('size');
       expect(JSON.parse(detail.revision).width).toBe(2000);
       expect(input(uz['param.width']).value).toBe('2000');
-      expect(screen.queryByRole('status')).toBeNull(); // no fake confirmation
+      expect(screen.queryByRole('status')).toBeNull(); // no fake "sent" confirmation
     } finally {
       window.removeEventListener('dafna:consultant-request', on);
     }
+  });
+
+  it('consultant: honest modal (nearby employee or call 1408), closes, configuration kept', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '2000');
+    fireEvent.click(screen.getByRole('button', { name: uz['consultant.call'] }));
+    const dialog = screen.getByRole('dialog', { name: uz['consultant.call'] });
+    expect(dialog.textContent).toContain(
+      "Yaqin atrofdagi Dafna xodimiga murojaat qiling yoki qo'ng'iroq qiling: 1408",
+    );
+    fireEvent.click(within(dialog).getByRole('button', { name: uz['consultant.close'] }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    // Escape also closes it
+    fireEvent.click(screen.getByRole('button', { name: uz['consultant.call'] }));
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(input(uz['param.width']).value).toBe('2000');
+  });
+
+  it('consultant modal in Russian and in the presentation', () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: ru['lang.ru'] }));
+    fireEvent.click(tab(ru['step.review']));
+    fireEvent.click(screen.getByRole('button', { name: ru['consultant.call'] }));
+    expect(screen.getByRole('dialog').textContent).toContain(
+      'Обратитесь к ближайшему сотруднику Dafna или позвоните: 1408',
+    );
+    expect(document.querySelector('.app')?.getAttribute('data-flow')).toBe('presentation');
   });
 
   it('staff: no consultant button', () => {

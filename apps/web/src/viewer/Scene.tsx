@@ -105,6 +105,7 @@ export function Scene({
   const highlightIndex = highlight ? Number(highlight.split('-')[1]) : null;
   const shadowColor = cssToken('--stage-shadow', '#2a2928');
   const shadowOpacity = Number(cssToken('--stage-shadow-opacity', '0.8')) || 0.8;
+  const rimLight = Number(cssToken('--rim-light', '0')) || 0;
   return (
     <Canvas
       dpr={[1, 2]}
@@ -131,6 +132,13 @@ export function Scene({
         shadow-bias={-0.0004}
         shadow-normalBias={0.02}
       />
+      {/*
+        Rim / back light (Dark theme only, --rim-light): from behind and above, no shadows. It
+        lights top faces and the silhouette from behind, never the front faces the customer
+        judges the decor on, so decor colours do not shift; it separates dark decors
+        (Antratsit) from the graphite background.
+      */}
+      {rimLight > 0 && <directionalLight position={[1.8, 3.2, -4.5]} intensity={rimLight} />}
 
       <Turntable angle={turn}>
         <group scale={MM} position={[(-W / 2) * MM, 0, (-D / 2) * MM]}>

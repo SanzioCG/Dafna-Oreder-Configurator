@@ -16,6 +16,7 @@ import {
 } from '../src/index.js';
 import d0Default from './fixtures/d0-order-draft.default.json' with { type: 'json' };
 import d0T18 from './fixtures/d0-order-draft.w2000-t18.json' with { type: 'json' };
+import { toAdr009 } from './construction.js';
 
 const LDSP = [
   'ldsp_white_16',
@@ -26,7 +27,7 @@ const LDSP = [
   'ldsp_white_18',
 ];
 
-describe('wardrobe template v3 (0.4.0)', () => {
+describe('wardrobe template v4 (0.5.0)', () => {
   it('defines the parameters with the specified ranges and defaults', () => {
     const summary = T.parameters.map((d) => [
       d.key,
@@ -153,10 +154,8 @@ describe('wardrobe template v3 (0.4.0)', () => {
       'constant:drawerMaxFrontWidthMm',
       'constant:edgeBandId',
       'constant:edgeBandThicknessMm',
-      'rule:sides-on-plinth',
       'rule:top-bottom-between-sides',
       'rule:equal-sections-integer-mm',
-      'rule:plinth-front-back-strips',
       'rule:partitions-between-top-bottom',
       'rule:back-overlay-covers-carcass',
       'rule:plinth-front-under-carcass',
@@ -236,7 +235,7 @@ describe('toOrderDraft (dafna-order/0.3-draft)', () => {
   it('has the 0.2 schema, materials, doors and interior per section, rails', () => {
     expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');
     expect(draft.productType).toBe('wardrobe');
-    expect(draft.templateVersion).toBe('0.4.0');
+    expect(draft.templateVersion).toBe('0.5.0');
     expect(draft.catalogVersion).toBe('0.1.0');
     expect(draft.params).toEqual(params);
     expect(draft.materials.corpus?.id).toBe('ldsp_oak_light_16');
@@ -297,7 +296,7 @@ describe('D-0 order draft migration (chain D-0 -> 0.3)', () => {
     ['width 2000, 18 mm, recess 20', d0T18, 'ldsp_white_18'],
   ])('%s: same geometry, new material ids, schema 0.2', (_name, d0, corpus) => {
     const { draft, issues } = migrateOrderDraft(d0);
-    expect(issues).toEqual([]);
+    expect(issues.map((i) => i.code)).toEqual(['MIGRATION_CONSTRUCTION_CHANGED']);
     if (!draft) throw new Error('no draft');
     expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');
     expect(draft.migratedFrom).toBe('dafna-order/0-draft');
@@ -307,8 +306,9 @@ describe('D-0 order draft migration (chain D-0 -> 0.3)', () => {
     expect(draft.params.corpusMaterial).toBe(corpus);
     expect(draft.params.doors).toBe('none');
     expect('panelThickness' in draft.params).toBe(false);
-    // geometry identical to what D-0 produced
-    expect(draft.panels.map(geometry)).toEqual((d0.panels as Panel[]).map(geometry));
+    // geometry identical to what D-0 produced, except the ADR-009 construction (sides to the
+    // floor, plinth strips between the sides)
+    expect(draft.panels.map(geometry)).toEqual(toAdr009(d0.panels as Panel[]).map(geometry));
     const materialMap: Record<string, string> = { ldsp: corpus, hdf: 'hdf_white_3' };
     expect(draft.panels.map((p) => p.material)).toEqual(
       d0.panels.map((p) => materialMap[p.material]),

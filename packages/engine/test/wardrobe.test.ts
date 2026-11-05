@@ -32,7 +32,7 @@ function xExtent(p: Panel): [number, number] {
   return [p.position[0] - sizeX / 2, p.position[0] + sizeX / 2];
 }
 
-describe('carcass with default params and doors=none (D-0 geometry)', () => {
+describe('carcass with default params and doors=none (sides to the floor, ADR-009)', () => {
   const result = gen();
 
   it('has no issues', () => {
@@ -60,14 +60,16 @@ describe('carcass with default params and doors=none (D-0 geometry)', () => {
       ]),
     );
     expect(dims).toEqual({
-      'side-left': [1800, 513, 16, 'ldsp_white_16', 8, 1000, 259.5, 0, 0, 90],
-      'side-right': [1800, 513, 16, 'ldsp_white_16', 1352, 1000, 259.5, 0, 0, 90],
+      // sides run the full height to the floor
+      'side-left': [1900, 513, 16, 'ldsp_white_16', 8, 950, 259.5, 0, 0, 90],
+      'side-right': [1900, 513, 16, 'ldsp_white_16', 1352, 950, 259.5, 0, 0, 90],
       bottom: [1328, 513, 16, 'ldsp_white_16', 680, 108, 259.5, 0, 0, 0],
       top: [1328, 513, 16, 'ldsp_white_16', 680, 1892, 259.5, 0, 0, 0],
       'partition-1': [1768, 513, 16, 'ldsp_white_16', 680, 1000, 259.5, 0, 0, 90],
       back: [1360, 1800, 3, 'hdf_white_3', 680, 1000, 1.5, 90, 0, 0],
-      'plinth-front': [1360, 100, 16, 'ldsp_white_16', 680, 50, 508, 90, 0, 0],
-      'plinth-back': [1360, 100, 16, 'ldsp_white_16', 680, 50, 11, 90, 0, 0],
+      // plinth strips between the sides (1360 - 2 x 16)
+      'plinth-front': [1328, 100, 16, 'ldsp_white_16', 680, 50, 508, 90, 0, 0],
+      'plinth-back': [1328, 100, 16, 'ldsp_white_16', 680, 50, 11, 90, 0, 0],
     });
   });
 
@@ -109,12 +111,15 @@ describe('carcass with default params and doors=none (D-0 geometry)', () => {
 });
 
 describe('side height', () => {
-  it.each([60, 100, 150])('= height - plinthHeight when base=plinth (plinth %i)', (ph) => {
+  it.each([60, 100, 150])('= height (to the floor) also with a plinth (plinth %i)', (ph) => {
     for (const height of [1200, 1900, 2600]) {
       const r = gen({ base: 'plinth', plinthHeight: ph, height });
-      expect(byId(r.panels, 'side-left').lengthMm).toBe(height - ph);
-      expect(byId(r.panels, 'side-right').lengthMm).toBe(height - ph);
-      expect(byId(r.panels, 'side-left').position[1]).toBe(ph + (height - ph) / 2);
+      expect(byId(r.panels, 'side-left').lengthMm).toBe(height);
+      expect(byId(r.panels, 'side-right').lengthMm).toBe(height);
+      expect(byId(r.panels, 'side-left').position[1]).toBe(height / 2);
+      // the carcass bottom rests on the plinth strips at plinthHeight
+      expect(byId(r.panels, 'bottom').position[1]).toBe(ph + 8);
+      expect(r.dimensions?.carcassHeightMm).toBe(height - ph);
     }
   });
 
@@ -391,5 +396,73 @@ describe('determinism', () => {
     // without the back, the carcass takes the full depth
     expect(byId(r.panels, 'side-left').widthMm).toBe(516);
     expect(r.sections[0]?.innerDepthMm).toBe(516);
+  });
+});
+
+describe('plinth construction (ADR-009): sides to the floor, strips between the sides', () => {
+  const span = (p: Panel, axis: 0 | 1 | 2, size: number) => [
+    p.position[axis] - size / 2,
+    p.position[axis] + size / 2,
+  ];
+
+  it.each([16, 18])('%i mm board: strips fill exactly the gap between the sides', (t) => {
+    const r = gen({ corpusMaterial: t === 16 ? 'ldsp_white_16' : 'ldsp_white_18', width: 1500 });
+    for (const id of ['plinth-front', 'plinth-back']) {
+      const p = byId(r.panels, id);
+      expect(p.lengthMm).toBe(1500 - 2 * t);
+      expect(span(p, 0, p.lengthMm)).toEqual([t, 1500 - t]); // touches both sides, no overlap
+      expect(span(p, 1, p.widthMm)).toEqual([0, 100]); // floor to the carcass bottom
+    }
+    const left = byId(r.panels, 'side-left');
+    expect(span(left, 1, left.lengthMm)).toEqual([0, 1900]);
+    // the bottom board sits on the strips: no gap under the carcass
+    const bottom = byId(r.panels, 'bottom');
+    expect(span(bottom, 1, bottom.thicknessMm)[0]).toBe(100);
+  });
+
+  it.each([0, 40])(
+    'plinthRecess %i: only the front strip moves back, still between the sides',
+    (rec) => {
+      const r = gen({ plinthRecess: rec });
+      const front = byId(r.panels, 'plinth-front');
+      expect(front.position[2]).toBe(516 - rec - 8);
+      expect(front.lengthMm).toBe(1328);
+      expect(byId(r.panels, 'plinth-back').position[2]).toBe(11);
+    },
+  );
+
+  it('base=none is unchanged: sides to the floor, bottom on the floor, no plinth', () => {
+    const r = gen({ base: 'none' });
+    expect(byId(r.panels, 'side-left').lengthMm).toBe(1900);
+    expect(byId(r.panels, 'bottom').position[1]).toBe(8);
+    expect(r.panels.some((p) => p.role === 'plinth')).toBe(false);
+  });
+
+  it('overall dimensions are unchanged', () => {
+    for (const base of ['plinth', 'none'] as const) {
+      const r = gen({ base, width: 2000, height: 2100 });
+      expect([r.dimensions?.widthMm, r.dimensions?.heightMm, r.dimensions?.depthMm]).toEqual([
+        2000, 2100, 516,
+      ]);
+      const xs = r.panels.flatMap((p) => {
+        const len = p.rotation[2] === 90 ? p.thicknessMm : p.lengthMm;
+        return [p.position[0] - len / 2, p.position[0] + len / 2];
+      });
+      expect(Math.min(...xs)).toBe(0);
+      expect(Math.max(...xs)).toBe(2000);
+    }
+  });
+
+  it('door heights still cover the carcass only; the plinth stays visible below', () => {
+    const r = generate(T, { ...defaultParams(T), ...NO_INTERIOR });
+    const doors = r.panels.filter((p) => p.role === 'door');
+    expect(doors.length).toBeGreaterThan(0);
+    for (const d of doors) {
+      expect(d.widthMm).toBe(1900 - 100 - 2 * 1.5); // carcass height - 2 x edge gap
+      expect(d.position[1] - d.widthMm / 2).toBe(101.5); // starts above the plinth
+    }
+    // the partitions still run between the carcass bottom and top
+    const part = byId(r.panels, 'partition-1');
+    expect(part.lengthMm).toBe(1900 - 100 - 2 * 16);
   });
 });
