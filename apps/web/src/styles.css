@@ -646,6 +646,7 @@ p {
 
 /* navigation: sticky at the bottom INSIDE the sheet (last flex child; content scrolls above) */
 .panel-footer {
+  position: relative; /* anchors the reset toast just above the navigation */
   flex: none;
   display: flex;
   align-items: center;
@@ -653,6 +654,59 @@ p {
   padding: 0.75rem 1.5rem 0.9rem;
   border-top: 0.0625rem solid var(--line);
   background: var(--surface);
+}
+
+/*
+ * Auto-reset toast: inside the sheet (the sheet clips overflow, so it can never cross the
+ * sheet edge), floating just above the navigation. Graphite on white with a brand-blue accent
+ * bar: informational, not an error.
+ */
+.sheet-toast {
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  bottom: calc(100% + 0.75rem);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.6rem 0.6rem 1.1rem;
+  border-radius: var(--radius-md);
+  border-left: 0.35rem solid var(--accent);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-float);
+  font-size: 0.95rem;
+  font-weight: 600;
+  animation: toast-in 0.18s ease-out;
+}
+
+.sheet-toast ul {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sheet-toast-close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--bg);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
 }
 
 .footer-hint {

@@ -31,6 +31,9 @@ export interface Configurator {
   /** Last result that produced geometry — what the viewer shows. */
   view: ViewGeometry;
   hasErrors: boolean;
+  /** customer mode: options the app reset because of another change (shown as a toast) */
+  notice: ResetNotice | null;
+  dismissNotice: () => void;
 }
 
 function toView(result: GenerateResult, p: Params): ViewGeometry {
@@ -53,24 +56,53 @@ export function isCustomerBlocking(issue: Issue): boolean {
   return issue.severity === 'error' || CUSTOMER_BLOCKING_WARNINGS.includes(issue.code);
 }
 
+/** One option the app changed on its own (never silently: the UI shows a toast). */
+export interface AutoReset {
+  key: string;
+  from: ParamValue;
+  to: ParamValue;
+  /** issue code that blocked the old value, e.g. SHELF_SPAN */
+  code: string;
+}
+
+/** A batch of auto-resets caused by one customer change; `id` restarts the toast timer. */
+export interface ResetNotice {
+  id: number;
+  resets: AutoReset[];
+}
+
 /**
  * Customer mode never shows an invalid or blocked model: if a change (e.g. a wider wardrobe)
  * makes a selected option blocked (doors = all_single -> DOOR_TOO_WIDE, sections = 1 ->
  * SHELF_SPAN), that option is reset to its template default (auto, which is always valid).
  * Only enum options are reset; numeric params are already clamped in customer mode.
+ * Returns the repaired params and every reset made, so the UI can tell the customer.
  */
-export function repairCustomerParams(params: Params): Params {
+export function repairCustomerParams(params: Params): { params: Params; resets: AutoReset[] } {
   let out = params;
+  const resets: AutoReset[] = [];
   for (let i = 0; i < 3; i++) {
-    const keys = validate(out, TEMPLATE, CATALOG)
+    const blocked = validate(out, TEMPLATE, CATALOG)
       .filter((issue) => isCustomerBlocking(issue) && issue.paramKey)
-      .map((issue) => getParamDef(TEMPLATE, issue.paramKey as string))
-      .filter((d) => d && d.type === 'enum' && d.customerVisible && out[d.key] !== d.default);
-    if (keys.length === 0) return out;
+      .map((issue) => ({ issue, def: getParamDef(TEMPLATE, issue.paramKey as string) }))
+      .filter(
+        ({ def }) =>
+          def && def.type === 'enum' && def.customerVisible && out[def.key] !== def.default,
+      );
+    if (blocked.length === 0) break;
     out = { ...out };
-    for (const d of keys) if (d) out[d.key] = d.default;
+    for (const { issue, def } of blocked) {
+      if (!def || out[def.key] === def.default) continue;
+      resets.push({
+        key: def.key,
+        from: out[def.key] as ParamValue,
+        to: def.default,
+        code: issue.code,
+      });
+      out[def.key] = def.default;
+    }
   }
-  return out;
+  return { params: out, resets };
 }
 
 /**
@@ -79,16 +111,33 @@ export function repairCustomerParams(params: Params): Params {
  */
 export function useConfigurator(mode: Mode = 'customer'): Configurator {
   const [params, setParams] = useState<Params>(() => defaultParams(TEMPLATE));
+  const [notice, setNotice] = useState<ResetNotice | null>(null);
+  // Latest params for synchronous repair outside the state updater (updaters must stay pure).
+  const paramsRef = useRef(params);
+  paramsRef.current = params;
+  const noticeId = useRef(0);
+
   const setParam = useCallback(
     (key: string, value: ParamValue) => {
-      setParams((prev) => {
-        if (prev[key] === value) return prev;
-        const next = { ...prev, [key]: value };
-        return mode === 'customer' ? repairCustomerParams(next) : next;
-      });
+      const prev = paramsRef.current;
+      if (prev[key] === value) return;
+      let next: Params = { ...prev, [key]: value };
+      if (mode === 'customer') {
+        const repaired = repairCustomerParams(next);
+        next = repaired.params;
+        // the option the customer just picked is never "auto-reset" (it was enabled, so valid)
+        const resets = repaired.resets.filter((r) => r.key !== key);
+        if (resets.length > 0) {
+          noticeId.current += 1;
+          setNotice({ id: noticeId.current, resets });
+        }
+      }
+      paramsRef.current = next;
+      setParams(next);
     },
     [mode],
   );
+  const dismissNotice = useCallback(() => setNotice(null), []);
 
   const result = useMemo(() => generate(TEMPLATE, params), [params]);
   const hasErrors = result.issues.some((i) => i.severity === 'error');
@@ -107,5 +156,5 @@ export function useConfigurator(mode: Mode = 'customer'): Configurator {
     if (!hasErrors) lastValid.current = view;
   }, [hasErrors, view]);
 
-  return { params, setParam, result, view, hasErrors };
+  return { params, setParam, result, view, hasErrors, notice, dismissNotice };
 }

@@ -90,6 +90,9 @@ self-hosted via `@fontsource/nunito-sans`, latin + cyrillic, weights 400–800.
   `SHELF_SPAN` warning and shows a short reason (e.g. "1 bo'lim" at width 1360); if a size
   change makes the selected option blocked, it falls back to the template default (auto).
   Staff mode keeps every option selectable and shows the issue.
+- **Never change a customer choice silently:** every such auto-reset shows a short toast inside
+  the sheet, above the navigation (what changed and why, uz/ru), dismissible, gone after 3 s.
+  The same rules apply to every new option card (doors now, interior fill when it lands).
 - **3D legibility:** dark edge outlines (light outlines on dark decors), one directional key
   light + hemisphere ambient, soft contact shadow under the footprint.
 - Radii 32/20/12, pills, circular icon buttons, soft elevation, press scale 0.97.

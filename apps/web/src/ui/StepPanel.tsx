@@ -5,6 +5,7 @@ import type { Mode } from '../mode';
 import { TEMPLATE, type Configurator } from '../state/useConfigurator';
 import { STEPS, neighbourStep } from '../steps';
 import { ParamControl } from './ParamControl';
+import { ResetToast } from './ResetToast';
 import { StaffPanel } from './StaffPanel';
 
 /** Served from apps/web/public/brand (Vite copies public/ as-is; BASE_URL keeps it base-safe). */
@@ -167,6 +168,7 @@ export function StepPanel({ mode, config }: StepPanelProps) {
       </div>
 
       <footer className="panel-footer">
+        <ResetToast notice={config.notice} onDismiss={config.dismissNotice} />
         <button
           type="button"
           className="btn btn-secondary"
