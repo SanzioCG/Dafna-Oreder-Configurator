@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "dafna-order/0-draft",
+  "productType": "wardrobe",
+  "templateVersion": "0.1.0",
+  "params": {
+    "width": 1360,
+    "height": 1900,
+    "depth": 516,
+    "sections": "auto",
+    "panelThickness": 16,
+    "backPanel": "hdf_overlay",
+    "base": "plinth",
+    "plinthHeight": 100,
+    "plinthRecess": 0
+  },
+  "panels": [
+    {
+      "id": "side-left",
+      "role": "side",
+      "lengthMm": 1800,
+      "widthMm": 513,
+      "thicknessMm": 16,
+      "material": "ldsp",
+      "position": [8, 1000, 259.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "side-right",
+      "role": "side",
+      "lengthMm": 1800,
+      "widthMm": 513,
+      "thicknessMm": 16,
+      "material": "ldsp",
+      "position": [1352, 1000, 259.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "bottom",
+      "role": "bottom",
+      "lengthMm": 1328,
+      "widthMm": 513,
+      "thicknessMm": 16,
+      "material": "ldsp",
+      "position": [680, 108, 259.5],
+      "rotation": [0, 0, 0]
+    },
+    {
+      "id": "top",
+      "role": "top",
+      "lengthMm": 1328,
+      "widthMm": 513,
+      "thicknessMm": 16,
+      "material": "ldsp",
+      "position": [680, 1892, 259.5],
+      "rotation": [0, 0, 0]
+    },
+    {
+      "id": "partition-1",
+      "role": "partition",
+      "lengthMm": 1768,
+      "widthMm": 513,
+      "thicknessMm": 16,
+      "material": "ldsp",
+      "position": [680, 1000, 259.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "back",
+      "role": "back",
+      "lengthMm": 1360,
+      "widthMm": 1800,
+      "thicknessMm": 3,
+      "material": "hdf",
+      "position": [680, 1000, 1.5],
+      "rotation": [90, 0, 0]
+    },
+    {
+      "id": "plinth-front",
+      "role": "plinth",
+      "lengthMm": 1360,
+      "widthMm": 100,
+      "thicknessMm": 16,
+      "material": "ldsp",
+      "position": [680, 50, 508],
+      "rotation": [90, 0, 0]
+    },
+    {
+      "id": "plinth-back",
+      "role": "plinth",
+      "lengthMm": 1360,
+      "widthMm": 100,
+      "thicknessMm": 16,
+      "material": "ldsp",
+      "position": [680, 50, 11],
+      "rotation": [90, 0, 0]
+    }
+  ],
+  "sections": [
+    {
+      "index": 0,
+      "innerWidthMm": 656,
+      "innerHeightMm": 1768,
+      "innerDepthMm": 513,
+      "xStartMm": 16
+    },
+    {
+      "index": 1,
+      "innerWidthMm": 656,
+      "innerHeightMm": 1768,
+      "innerDepthMm": 513,
+      "xStartMm": 688
+    }
+  ],
+  "issues": [],
+  "generatedAt": "2026-11-05T10:00:00.000Z"
+}

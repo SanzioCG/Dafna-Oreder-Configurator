@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "dafna-order/0-draft",
+  "productType": "wardrobe",
+  "templateVersion": "0.1.0",
+  "params": {
+    "width": 2000,
+    "height": 1900,
+    "depth": 516,
+    "sections": "auto",
+    "panelThickness": 18,
+    "backPanel": "hdf_overlay",
+    "base": "plinth",
+    "plinthHeight": 100,
+    "plinthRecess": 20
+  },
+  "panels": [
+    {
+      "id": "side-left",
+      "role": "side",
+      "lengthMm": 1800,
+      "widthMm": 513,
+      "thicknessMm": 18,
+      "material": "ldsp",
+      "position": [9, 1000, 259.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "side-right",
+      "role": "side",
+      "lengthMm": 1800,
+      "widthMm": 513,
+      "thicknessMm": 18,
+      "material": "ldsp",
+      "position": [1991, 1000, 259.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "bottom",
+      "role": "bottom",
+      "lengthMm": 1964,
+      "widthMm": 513,
+      "thicknessMm": 18,
+      "material": "ldsp",
+      "position": [1000, 109, 259.5],
+      "rotation": [0, 0, 0]
+    },
+    {
+      "id": "top",
+      "role": "top",
+      "lengthMm": 1964,
+      "widthMm": 513,
+      "thicknessMm": 18,
+      "material": "ldsp",
+      "position": [1000, 1891, 259.5],
+      "rotation": [0, 0, 0]
+    },
+    {
+      "id": "partition-1",
+      "role": "partition",
+      "lengthMm": 1764,
+      "widthMm": 513,
+      "thicknessMm": 18,
+      "material": "ldsp",
+      "position": [670, 1000, 259.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "partition-2",
+      "role": "partition",
+      "lengthMm": 1764,
+      "widthMm": 513,
+      "thicknessMm": 18,
+      "material": "ldsp",
+      "position": [1331, 1000, 259.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "back",
+      "role": "back",
+      "lengthMm": 2000,
+      "widthMm": 1800,
+      "thicknessMm": 3,
+      "material": "hdf",
+      "position": [1000, 1000, 1.5],
+      "rotation": [90, 0, 0]
+    },
+    {
+      "id": "plinth-front",
+      "role": "plinth",
+      "lengthMm": 2000,
+      "widthMm": 100,
+      "thicknessMm": 18,
+      "material": "ldsp",
+      "position": [1000, 50, 487],
+      "rotation": [90, 0, 0]
+    },
+    {
+      "id": "plinth-back",
+      "role": "plinth",
+      "lengthMm": 2000,
+      "widthMm": 100,
+      "thicknessMm": 18,
+      "material": "ldsp",
+      "position": [1000, 50, 12],
+      "rotation": [90, 0, 0]
+    }
+  ],
+  "sections": [
+    {
+      "index": 0,
+      "innerWidthMm": 643,
+      "innerHeightMm": 1764,
+      "innerDepthMm": 513,
+      "xStartMm": 18
+    },
+    {
+      "index": 1,
+      "innerWidthMm": 643,
+      "innerHeightMm": 1764,
+      "innerDepthMm": 513,
+      "xStartMm": 679
+    },
+    {
+      "index": 2,
+      "innerWidthMm": 642,
+      "innerHeightMm": 1764,
+      "innerDepthMm": 513,
+      "xStartMm": 1340
+    }
+  ],
+  "issues": [],
+  "generatedAt": "2026-11-05T10:00:00.000Z"
+}
