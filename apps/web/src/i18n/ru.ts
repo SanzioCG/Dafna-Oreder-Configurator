@@ -29,6 +29,14 @@ export const ru: Messages = {
   'present.skip': 'Пропустить',
   'present.edit': 'Изменить конфигурацию',
   'present.confirm': 'Подтвердить конфигурацию',
+  'summary.title': 'Ваш шкаф',
+  'summary.size': 'Размер',
+  'summary.sectionsRow': 'Секции',
+  'summary.sectionsValue': '{count}: {list}',
+  'summary.change': 'изменить',
+  'contact.title': 'Контактные данные',
+  'contact.todo':
+    'TODO (D-3b): здесь будет форма контактов (имя, телефон) и отправка заказа. Пока ничего не отправляется.',
 
   'nav.back': 'Назад',
   'nav.next': 'Далее',

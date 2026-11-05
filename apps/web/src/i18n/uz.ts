@@ -28,6 +28,14 @@ export const uz = {
   'present.skip': "O'tkazib yuborish",
   'present.edit': 'Konfiguratsiyani tahrirlash',
   'present.confirm': 'Konfiguratsiyani tasdiqlash',
+  'summary.title': 'Sizning shkafingiz',
+  'summary.size': "O'lcham",
+  'summary.sectionsRow': "Bo'limlar",
+  'summary.sectionsValue': '{count} ta: {list}',
+  'summary.change': "o'zgartirish",
+  'contact.title': "Aloqa ma'lumotlari",
+  'contact.todo':
+    "TODO (D-3b): bu yerda kontakt formasi (ism, telefon) va buyurtmani yuborish bo'ladi. Hozircha hech narsa yuborilmaydi.",
 
   'nav.back': 'Orqaga',
   'nav.next': 'Keyingi',

@@ -1166,16 +1166,131 @@ p {
   padding: 0 2rem;
 }
 
-.present-actions {
+/* stable state: compact summary card on the right, never over the wardrobe centre */
+.present-summary {
   position: absolute;
   right: 2rem;
   bottom: 2rem;
+  width: 27rem;
+  max-height: calc(100% - 9rem);
+  overflow: auto;
   display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sheet);
+  animation: toast-in 0.25s ease-out;
+}
+
+.present-summary h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.present-summary dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 0.75rem;
+  align-items: center;
+  padding: 0.55rem 0;
+  border-bottom: 0.0625rem solid var(--line);
+}
+
+.summary-row dt {
+  grid-column: 1;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.summary-row dd {
+  grid-column: 1;
+  margin: 0.1rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-change {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-height: var(--tap);
+  padding: 0 0.9rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+/* primary confirm: solid green (--success) */
+.btn-success {
+  background: var(--success);
+  color: #fff;
+  min-height: 4rem;
+  font-size: 1.2rem;
+}
+
+/* contact (D-3b placeholder): over the presentation, nothing is submitted */
+.contact-placeholder {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  backdrop-filter: blur(0.5rem);
+}
+
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 1rem;
+  width: min(36rem, 90vw);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sheet);
+}
+
+.contact-card h2 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.contact-todo {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-weight: 700;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .present-title,
+  .present-summary,
   .sheet-toast {
     animation: none;
   }

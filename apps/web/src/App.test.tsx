@@ -752,3 +752,102 @@ describe('presentation mode and reveal', () => {
     }
   });
 });
+
+describe('summary card, confirm entry point and flow', () => {
+  const flow = () => document.querySelector('.app')?.getAttribute('data-flow');
+  const toStable = () => {
+    fireEvent.click(tab(uz['step.review']));
+    // unchanged configuration: no reveal, already stable
+    const skip = screen.queryByRole('button', { name: uz['present.skip'] });
+    if (skip) fireEvent.click(skip);
+  };
+  const row = (key: string) =>
+    screen.getByTestId('summary-card').querySelector(`[data-row="${key}"]`) as HTMLElement;
+
+  it('flow: configurator -> presentation -> ready_to_confirm (doors closed) -> contact', () => {
+    render(<App />);
+    expect(flow()).toBe('configurator');
+    fireEvent.click(tab(uz['step.review']));
+    expect(flow()).toBe('presentation');
+    expect(screen.queryByTestId('summary-card')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: uz['present.skip'] }));
+    expect(flow()).toBe('ready_to_confirm');
+    fireEvent.click(screen.getByRole('button', { name: uz['present.confirm'] }));
+    expect(flow()).toBe('contact');
+  });
+
+  it('summary values: size in cm, colours, sections + presets, doors', () => {
+    render(<App />);
+    toStable();
+    expect(row('size').querySelector('dd')?.textContent).toBe('136 × 190 × 60 sm');
+    expect(row('corpus').querySelector('dd')?.textContent).toBe(uz['decor.white']);
+    expect(row('doorColor').querySelector('dd')?.textContent).toBe(uz['decor.white']);
+    expect(row('sections').querySelector('dd')?.textContent).toBe(
+      `2 ta: ${uz['option.interior.rail_shelf']}, ${uz['option.interior.rail_shelf']}`,
+    );
+    expect(row('doors').querySelector('dd')?.textContent).toBe(
+      `${uz['option.doorSection.double']} × 2`,
+    );
+  });
+
+  it('staff summary in millimetres', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    toStable();
+    expect(row('size').querySelector('dd')?.textContent).toBe('1360 × 1900 × 600 mm');
+  });
+
+  it('"o\'zgartirish" returns to that step with the selection intact', () => {
+    render(<App />);
+    // pick section 2 on the interior step first
+    fireEvent.click(tab(uz['step.interior']));
+    const tabs = () => screen.getByRole('radiogroup', { name: uz['interior.sections'] });
+    fireEvent.click(within(tabs()).getAllByRole('radio')[1] as HTMLElement);
+    toStable();
+    fireEvent.click(within(row('sections')).getByRole('button'));
+    expect(flow()).toBe('configurator');
+    expect(tab(uz['step.interior']).getAttribute('aria-current')).toBe('step');
+    expect(within(tabs()).getAllByRole('radio')[1]?.getAttribute('aria-checked')).toBe('true');
+
+    const steps: [string, string][] = [
+      ['size', 'step.size'],
+      ['corpus', 'step.color'],
+      ['doors', 'step.doors'],
+    ];
+    for (const [key, stepKey] of steps) {
+      toStable();
+      fireEvent.click(within(row(key)).getByRole('button'));
+      expect(tab(uz[stepKey as 'step.size']).getAttribute('aria-current')).toBe('step');
+    }
+  });
+
+  it('edit keeps every parameter (nothing lost)', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '2000');
+    toStable();
+    fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
+    expect(screen.getByTestId('summary').textContent).toContain('2000 × 1900 × 600');
+    expect(tab(uz['step.doors']).getAttribute('aria-current')).toBe('step');
+  });
+
+  it('contact placeholder: customer sees "Tez orada", Orqaga returns; no fake order data', () => {
+    render(<App />);
+    toStable();
+    fireEvent.click(screen.getByRole('button', { name: uz['present.confirm'] }));
+    const dialog = screen.getByRole('dialog', { name: uz['contact.title'] });
+    expect(dialog.textContent).toContain(uz['step.comingSoon']);
+    expect(screen.queryByTestId('contact-todo')).toBeNull();
+    expect(dialog.textContent).not.toMatch(/\d{3,}/); // no invented order number
+    fireEvent.click(within(dialog).getByRole('button', { name: uz['nav.back'] }));
+    expect(flow()).toBe('ready_to_confirm');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('contact placeholder: staff sees the TODO marker', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    toStable();
+    fireEvent.click(screen.getByRole('button', { name: uz['present.confirm'] }));
+    expect(screen.getByTestId('contact-todo').textContent).toContain('TODO (D-3b)');
+  });
+});
