@@ -8,7 +8,9 @@ import { ConfigurationSummary } from './ui/ConfigurationSummary';
 import { ConsultantButton } from './ui/ConsultantButton';
 import { ConsultantModal } from './ui/ConsultantModal';
 import { nextFlow, type FlowEvent, type FlowState } from './state/flow';
-import { useConfigurator } from './state/useConfigurator';
+import { TEMPLATE, useConfigurator } from './state/useConfigurator';
+import { modelParams } from './state/presets';
+import { defaultParams } from '@dafna/engine';
 import { ThemeProvider } from './theme/ThemeProvider';
 import { StepPanel } from './ui/StepPanel';
 import { Viewer } from './viewer/Viewer';
@@ -26,7 +28,8 @@ const EDIT_STEP = 'doors';
 function Configurator({ mode }: { mode: Mode }) {
   const config = useConfigurator(mode);
   // shared by the sheet and the 3D view: the interior step opens the doors and selects sections
-  const [step, setStep] = useState('size');
+  // customers start on the ready-made models screen (step 0); staff go straight to step 1
+  const [step, setStep] = useState(mode === 'customer' ? 'start' : 'size');
   const [section, setSection] = useState(0);
   // every explicit selection (tab or 3D tap) bumps this: the smart camera frames the selection
   const [selectionSeq, setSelectionSeq] = useState(0);
@@ -130,6 +133,14 @@ function Configurator({ mode }: { mode: Mode }) {
         onSelectSection={selectSection}
         onCallConsultant={callConsultant}
         onReview={present}
+        onPickModel={(m) => {
+          config.setParams(modelParams(m));
+          setStep('size');
+        }}
+        onScratch={() => {
+          config.setParams(defaultParams(TEMPLATE));
+          setStep('size');
+        }}
       />
       {flow === 'contact' && <ContactPlaceholder mode={mode} onBack={() => dispatch('back')} />}
       {mode === 'customer' && inPresentation && (

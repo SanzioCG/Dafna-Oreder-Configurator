@@ -7,6 +7,8 @@ import { useTheme } from '../theme/ThemeProvider';
 import { Button, IconButton } from './Button';
 import { ConsultantButton } from './ConsultantButton';
 import { StepNavigation } from './StepNavigation';
+import { StartScreen } from '../start/StartScreen';
+import type { ReadyModel } from '../state/presets';
 import { ArrowLeftIcon, ArrowRightIcon, MoonIcon, SunIcon } from './icons';
 import { InteriorStep } from './InteriorStep';
 import { ParamControl } from './ParamControl';
@@ -57,6 +59,9 @@ interface StepPanelProps {
   onCallConsultant?: () => void;
   /** "Tayyor — ko'rib chiqish": straight to the presentation (blocking validation applies) */
   onReview?: () => void;
+  /** start screen: a ready-made model was picked / "Noldan boshlash" */
+  onPickModel?: (model: ReadyModel) => void;
+  onScratch?: () => void;
 }
 
 export function StepPanel({
@@ -69,6 +74,8 @@ export function StepPanel({
   hidden = false,
   onCallConsultant,
   onReview,
+  onPickModel,
+  onScratch,
 }: StepPanelProps) {
   const { t, lang, setLang } = useI18n();
   const { theme, toggleTheme, logoUrl } = useTheme();
@@ -138,7 +145,12 @@ export function StepPanel({
 
       <StepNavigation step={step} onStepChange={setStep} />
 
-      <div className={staff ? 'panel-body scrollable' : 'panel-body'}>
+      {step === 'start' && (
+        <div className="panel-body">
+          <StartScreen onPick={(m) => onPickModel?.(m)} onScratch={() => onScratch?.()} />
+        </div>
+      )}
+      <div className={staff ? 'panel-body scrollable' : 'panel-body'} hidden={step === 'start'}>
         <div className="step-intro">
           <h1>{t(`step.${step}.title`)}</h1>
           <p className="muted">{t(`step.${step}.hint`)}</p>
@@ -192,7 +204,7 @@ export function StepPanel({
         )}
       </div>
 
-      <footer className="panel-footer">
+      <footer className="panel-footer" hidden={step === 'start'}>
         <ResetToast notice={config.notice} onDismiss={config.dismissNotice} />
         <Button
           variant="text"

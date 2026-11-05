@@ -76,6 +76,14 @@ afterEach(() => {
 const tab = (label: string) =>
   within(screen.getByRole('navigation')).getByRole('button', { name: new RegExp(label) });
 
+/** Renders the app; customers land on the start screen (step 0) — continue from scratch. */
+function renderApp() {
+  const r = render(<App />);
+  const scratch = screen.queryByRole('button', { name: uz['start.scratch'] });
+  if (scratch) fireEvent.click(scratch);
+  return r;
+}
+
 function typeInto(label: string, value: string) {
   const input = screen.getByRole('textbox', { name: label });
   fireEvent.focus(input);
@@ -85,7 +93,7 @@ function typeInto(label: string, value: string) {
 
 describe('App (customer mode)', () => {
   it('renders in Uzbek with all five steps active (review = presentation)', () => {
-    render(<App />);
+    renderApp();
     expect(screen.getByText(uz['app.title'])).toBeTruthy();
     expect(screen.getByRole('button', { name: /O'lcham/ }).hasAttribute('disabled')).toBe(false);
     expect(screen.getByRole('button', { name: /Rang/ }).hasAttribute('disabled')).toBe(false);
@@ -99,7 +107,7 @@ describe('App (customer mode)', () => {
   });
 
   it('changing width regenerates the engine result', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '2000');
     const stub = screen.getByTestId('viewer-stub');
     expect(stub.dataset.sections).toBe('646,645,645');
@@ -108,7 +116,7 @@ describe('App (customer mode)', () => {
   });
 
   it('2400 mm with doors is valid (no hold, no toast)', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '2400');
     const stub = screen.getByTestId('viewer-stub');
     expect(stub.dataset.back).toBe('2400');
@@ -118,7 +126,7 @@ describe('App (customer mode)', () => {
   });
 
   it('hard-clamps out-of-range input and hides staff-only parameters', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '9999'); // clamped to 2400
     expect(screen.getByTestId('viewer-stub').dataset.back).toBe('2400');
     expect(screen.queryByRole('textbox', { name: uz['param.plinthRecess'] })).toBeNull();
@@ -127,7 +135,7 @@ describe('App (customer mode)', () => {
   });
 
   it('stepper buttons change the value by the template step', () => {
-    render(<App />);
+    renderApp();
     fireEvent.click(
       screen.getByRole('button', { name: `${uz['param.height']}: ${uz['control.increase']}` }),
     );
@@ -135,7 +143,7 @@ describe('App (customer mode)', () => {
   });
 
   it('switches language to Russian', () => {
-    render(<App />);
+    renderApp();
     fireEvent.click(screen.getByRole('button', { name: uz['lang.ru'] }));
     expect(screen.getByText(ru['app.title'])).toBeTruthy();
     expect(screen.getByRole('textbox', { name: ru['param.width'] })).toBeTruthy();
@@ -153,7 +161,7 @@ describe('App color step', () => {
   };
 
   it('corpus decor applies to carcass and (same as corpus) doors', () => {
-    render(<App />);
+    renderApp();
     openColorStep();
     // customer sees the 5 placeholder decors, not the staff-only 18 mm board
     expect(corpus().querySelectorAll('.swatch').length).toBe(5);
@@ -168,7 +176,7 @@ describe('App color step', () => {
   });
 
   it('"same as corpus" hides the door swatches; off shows them, on syncs the door again', () => {
-    render(<App />);
+    renderApp();
     openColorStep();
     const doorGroup = () => screen.queryByRole('radiogroup', { name: uz['param.doorMaterial'] });
     const toggle = () => screen.getByRole('switch', { name: uz['color.sameAsCorpus'] });
@@ -192,7 +200,7 @@ describe('App color step', () => {
 
   it('staff mode also offers the 18 mm board, and it changes the geometry', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     openColorStep();
     fireEvent.click(swatch(corpus(), 'ldsp_white_18'));
     expect(screen.getByTestId('viewer-stub').dataset.sections).toBe('653,653');
@@ -203,7 +211,7 @@ describe('App doors', () => {
   const sectionLabels = () => document.querySelectorAll('[data-dim^="section-"]').length;
 
   it('door toggle opens/closes doors; section widths only on the doors step while open', () => {
-    render(<App />);
+    renderApp();
     const stub = screen.getByTestId('viewer-stub');
     const button = screen.getByRole('button', { name: uz['viewer.doorsOpen'] });
     expect(stub.dataset.doorsOpen).toBe('false');
@@ -232,7 +240,7 @@ describe('App doors', () => {
   });
 
   it('doors step: "no doors" removes the leaves and the toggle, sections become visible', () => {
-    render(<App />);
+    renderApp();
     fireEvent.click(tab(uz['step.doors']));
     const preset = screen.getByRole('radiogroup', { name: uz['param.doors'] });
     fireEvent.click(within(preset).getByRole('radio', { name: uz['option.doors.none'] }));
@@ -248,13 +256,13 @@ describe('App doors', () => {
 describe('dimension overlay units', () => {
   it('staff sees millimetres', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('1360 mm');
     expect(document.querySelector('[data-dim="depth"]')?.textContent).toBe('600 mm');
   });
 
   it('interior step shows section widths (doors auto-open); one SVG overlay', () => {
-    render(<App />);
+    renderApp();
     fireEvent.click(tab(uz['step.interior']));
     expect(document.querySelectorAll('[data-dim^="section-"]').length).toBe(2);
     expect(document.querySelectorAll('[data-testid="dim-overlay"]').length).toBe(1);
@@ -264,7 +272,7 @@ describe('dimension overlay units', () => {
 describe('App (staff mode)', () => {
   it('shows the depth breakdown and per-section door overrides', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     expect(screen.getByTestId('hint-depth').textContent).toBe(
       'Orqa 3 + korpus 579 + tirqish 2 + eshik 16 = 600 mm',
     );
@@ -282,7 +290,7 @@ describe('App (staff mode)', () => {
 
   it('shows the stale-model banner while params are invalid', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     expect(screen.queryByRole('alert')).toBeNull();
     // explicit 2 sections (auto would switch to 3 sections for all-single doors)
     fireEvent.click(
@@ -302,7 +310,7 @@ describe('App (staff mode)', () => {
 
   it('shows all params, unconfirmed markers, issues and the download button', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     expect(screen.getByText(uz['mode.staff'])).toBeTruthy();
     expect(screen.getByRole('radiogroup', { name: uz['param.backPanel'] })).toBeTruthy();
     expect(screen.getByRole('textbox', { name: uz['param.plinthRecess'] })).toBeTruthy();
@@ -313,7 +321,7 @@ describe('App (staff mode)', () => {
 
   it('shows SHELF_SPAN warning and out-of-range errors from the engine', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     fireEvent.click(screen.getByRole('radio', { name: '1' }));
     expect(screen.getByText('SHELF_SPAN')).toBeTruthy();
     typeInto(uz['param.width'], '3000');
@@ -326,14 +334,14 @@ describe('App (staff mode)', () => {
 describe('Brand logo in the header', () => {
   it.each(['', '?mode=staff'])('Dark default: dafna-logo-white.svg (url "%s")', (search) => {
     setUrl(search);
-    render(<App />);
+    renderApp();
     const logo = within(screen.getByRole('banner')).getByRole('img', { name: 'Dafna' });
     expect(logo.getAttribute('src')).toBe('/brand/dafna-logo-white.svg');
   });
 
   it('White theme (kiosk config): dafna-logo.svg', () => {
     setUrl('?theme=white');
-    render(<App />);
+    renderApp();
     const logo = within(screen.getByRole('banner')).getByRole('img', { name: 'Dafna' });
     expect(logo.getAttribute('src')).toBe('/brand/dafna-logo.svg');
     delete document.documentElement.dataset.theme;
@@ -346,7 +354,7 @@ describe('Option availability (customer disables error-producing door options)',
     within(doorsPreset()).getByRole('radio', { name: new RegExp(name) });
 
   it('customer: "all single" is disabled with a reason when a leaf would exceed 600 mm', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '1207'); // 2 sections 580/579: section 1 single leaf = 601
     fireEvent.click(
       within(screen.getByRole('radiogroup', { name: uz['param.sections'] })).getByRole('radio', {
@@ -363,13 +371,13 @@ describe('Option availability (customer disables error-producing door options)',
 
   it('staff: the same option stays selectable', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     fireEvent.click(tab(uz['step.doors']));
     expect(option(uz['option.doors.all_single']).hasAttribute('disabled')).toBe(false);
   });
 
   it('customer: widening the wardrobe resets an option that became invalid (no stale model)', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '1206'); // 2 sections, leaves exactly 600 -> single doors allowed
     fireEvent.click(
       within(screen.getByRole('radiogroup', { name: uz['param.sections'] })).getByRole('radio', {
@@ -389,7 +397,7 @@ describe('Option availability (customer disables error-producing door options)',
 
 describe('Selection state contract', () => {
   it('"same as corpus" on: door swatches are hidden, the toggle carries the state', () => {
-    render(<App />);
+    renderApp();
     fireEvent.click(tab(uz['step.color']));
     expect(screen.queryByRole('radiogroup', { name: uz['param.doorMaterial'] })).toBeNull();
     expect(
@@ -400,7 +408,7 @@ describe('Selection state contract', () => {
   });
 
   it('flat groups: numeric controls share one group, no pastel / tone card classes', () => {
-    render(<App />);
+    renderApp();
     expect(document.querySelector('.card[data-card="width"]')).toBeTruthy();
     expect(document.querySelector('.card[data-card="sections"]')).toBeTruthy();
     expect(document.querySelectorAll('.card[data-card="height"]').length).toBe(0); // grouped
@@ -416,7 +424,7 @@ describe('Customer blocks SHELF_SPAN options (any step)', () => {
       .find((r) => r.querySelector('.segment-label')?.textContent === n) as HTMLElement;
 
   it('customer at 1360: "1" disabled (SHELF_SPAN), 2-4 enabled (shared partitions are fine)', () => {
-    render(<App />);
+    renderApp();
     expect(opt('1').hasAttribute('disabled')).toBe(true);
     expect(opt('1').textContent).toContain(uz['reason.SHELF_SPAN']);
     for (const n of ['2', '3', '4']) expect(opt(n).hasAttribute('disabled')).toBe(false);
@@ -424,14 +432,14 @@ describe('Customer blocks SHELF_SPAN options (any step)', () => {
 
   it('staff: "1" stays selectable and shows the SHELF_SPAN warning', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     expect(opt('1').hasAttribute('disabled')).toBe(false);
     fireEvent.click(opt('1'));
     expect(screen.getByText('SHELF_SPAN')).toBeTruthy();
   });
 
   it('customer: widening resets sections=1 to auto instead of producing SHELF_SPAN', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '900'); // 1 section: 868 mm inner -> allowed
     fireEvent.click(opt('1'));
     expect(opt('1').getAttribute('aria-checked')).toBe('true');
@@ -459,7 +467,7 @@ describe('Auto-reset toast (customer choice is never changed silently)', () => {
   });
 
   it('shows what changed and why, inside the sheet, in Uzbek', () => {
-    render(<App />);
+    renderApp();
     resetToOne();
     const toast = screen.getByRole('status');
     expect(toast.closest('.panel')).toBeTruthy(); // inside the configurator sheet
@@ -469,7 +477,7 @@ describe('Auto-reset toast (customer choice is never changed silently)', () => {
   });
 
   it('is dismissible', () => {
-    render(<App />);
+    renderApp();
     resetToOne();
     fireEvent.click(screen.getByRole('button', { name: uz['toast.dismiss'] }));
     expect(screen.queryByTestId('reset-toast')).toBeNull();
@@ -477,7 +485,7 @@ describe('Auto-reset toast (customer choice is never changed silently)', () => {
 
   it('disappears after 3 s', () => {
     vi.useFakeTimers();
-    render(<App />);
+    renderApp();
     resetToOne();
     expect(screen.getByTestId('reset-toast')).toBeTruthy();
     act(() => vi.advanceTimersByTime(2900));
@@ -487,7 +495,7 @@ describe('Auto-reset toast (customer choice is never changed silently)', () => {
   });
 
   it('is translated to Russian', () => {
-    render(<App />);
+    renderApp();
     fireEvent.click(screen.getByRole('button', { name: uz['lang.ru'] }));
     typeInto(ru['param.width'], '900');
     const ruSections = screen.getByRole('radiogroup', { name: ru['param.sections'] });
@@ -502,7 +510,7 @@ describe('Auto-reset toast (customer choice is never changed silently)', () => {
   });
 
   it('door preset reset is announced too; staff mode never auto-resets', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '1206');
     fireEvent.click(
       within(screen.getByRole('radiogroup', { name: uz['param.sections'] })).getByRole('radio', {
@@ -520,7 +528,7 @@ describe('Auto-reset toast (customer choice is never changed silently)', () => {
     cleanup();
 
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '900');
     fireEvent.click(within(sections()).getByRole('radio', { name: '1' }));
     typeInto(uz['param.width'], '1360');
@@ -542,7 +550,7 @@ describe('Interior step (D-1b)', () => {
   const openInterior = () => fireEvent.click(tab(uz['step.interior']));
 
   it('section tabs + preset cards; picking a preset updates the engine result', () => {
-    render(<App />);
+    renderApp();
     openInterior();
     expect(within(sectionTabs()).getAllByRole('radio').length).toBe(2);
     expect(card(1, 'auto').getAttribute('aria-checked')).toBe('true');
@@ -556,7 +564,7 @@ describe('Interior step (D-1b)', () => {
   });
 
   it('"apply to all" copies the selected section preset to every section', () => {
-    render(<App />);
+    renderApp();
     openInterior();
     fireEvent.click(card(1, 'empty'));
     fireEvent.click(screen.getByRole('button', { name: uz['interior.applyAll'] }));
@@ -567,7 +575,7 @@ describe('Interior step (D-1b)', () => {
   });
 
   it('tapping a section in 3D selects it (mock Scene)', () => {
-    render(<App />);
+    renderApp();
     openInterior();
     expect(stub().dataset.interactive).toBe('true');
     expect(stub().dataset.selectedSection).toBe('0');
@@ -579,7 +587,7 @@ describe('Interior step (D-1b)', () => {
   });
 
   it('customer: rail presets are enabled at the default size (depth 600)', () => {
-    render(<App />);
+    renderApp();
     openInterior();
     for (const p of ['rail', 'rail_shelf', 'rail_drawers']) {
       expect(card(1, p).hasAttribute('disabled'), p).toBe(false);
@@ -587,7 +595,7 @@ describe('Interior step (D-1b)', () => {
   });
 
   it('customer: rail presets are disabled with a reason when the carcass is too shallow', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.depth'], '516'); // carcass 495 < 530
     openInterior();
     for (const p of ['rail', 'rail_shelf', 'rail_drawers']) {
@@ -598,7 +606,7 @@ describe('Interior step (D-1b)', () => {
     cleanup();
     // staff: selectable, and the warning is shown
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     typeInto(uz['param.depth'], '516');
     openInterior();
     expect(card(1, 'rail').hasAttribute('disabled')).toBe(false);
@@ -608,7 +616,7 @@ describe('Interior step (D-1b)', () => {
   });
 
   it('customer: a preset made invalid by a size change is reset to auto, with a toast', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.depth'], '600'); // carcass 579: rail allowed
     openInterior();
     fireEvent.click(card(1, 'rail_shelf'));
@@ -625,7 +633,7 @@ describe('Interior step (D-1b)', () => {
   });
 
   it('doors open automatically on the step and the previous state comes back after it', () => {
-    render(<App />);
+    renderApp();
     expect(stub().dataset.doorsOpen).toBe('false');
     openInterior();
     expect(stub().dataset.doorsOpen).toBe('true');
@@ -647,14 +655,14 @@ describe('theme: kiosk default, staff-only switch', () => {
   });
 
   it('customer: Dark by default and no theme toggle', () => {
-    render(<App />);
+    renderApp();
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(screen.queryByRole('button', { name: uz['theme.dark'] })).toBeNull();
   });
 
   it('staff switch: White <-> Dark, logo swaps, the configuration is kept', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     const logo = () => screen.getByAltText(uz['app.brand']).getAttribute('src') ?? '';
     typeInto(uz['param.width'], '2000');
     fireEvent.click(tab(uz['step.color']));
@@ -674,15 +682,21 @@ describe('smart camera triggers (explicit selections only)', () => {
   const stub = () => screen.getByTestId('viewer-stub');
   const camera = () => (stub().dataset.camera ?? '').split('#')[0];
 
-  it('no camera command on load; entering the interior step does not move the camera', () => {
+  it('no camera command on load (staff); entering the interior step does not move it', () => {
+    setUrl('?mode=staff');
     render(<App />);
     expect(stub().dataset.camera).toBe('');
     fireEvent.click(tab(uz['step.interior']));
     expect(stub().dataset.camera).toBe('');
   });
 
+  it('customer: leaving the start screen frames the full model once', () => {
+    renderApp();
+    expect(camera()).toBe('model');
+  });
+
   it('section tab and 3D tap frame that section; the same section again re-frames it', () => {
-    render(<App />);
+    renderApp();
     fireEvent.click(tab(uz['step.interior']));
     const tabs = screen.getByRole('radiogroup', { name: uz['interior.sections'] });
     fireEvent.click(within(tabs).getAllByRole('radio')[1] as HTMLElement);
@@ -695,7 +709,7 @@ describe('smart camera triggers (explicit selections only)', () => {
   });
 
   it('doors step: tapping a section frames its door(s); size/colour steps use the full model', () => {
-    render(<App />);
+    renderApp();
     fireEvent.click(tab(uz['step.doors']));
     expect(stub().dataset.interactive).toBe('true');
     fireEvent.click(screen.getByTestId('section-hit-1'));
@@ -707,9 +721,10 @@ describe('smart camera triggers (explicit selections only)', () => {
   });
 
   it('changing a parameter never issues a camera command', () => {
-    render(<App />);
+    renderApp();
+    const before = stub().dataset.camera;
     typeInto(uz['param.width'], '2000');
-    expect(stub().dataset.camera).toBe('');
+    expect(stub().dataset.camera).toBe(before);
   });
 });
 
@@ -719,7 +734,7 @@ describe('presentation mode and reveal', () => {
   const toReview = () => fireEvent.click(tab(uz['step.review']));
 
   it('hides the sheet and step navigation; plays the full reveal with a skip button', () => {
-    render(<App />);
+    renderApp();
     toReview();
     expect(screen.queryByRole('navigation')).toBeNull(); // sheet hidden
     expect(document.querySelector('.app')?.classList.contains('presenting')).toBe(true);
@@ -733,7 +748,7 @@ describe('presentation mode and reveal', () => {
   });
 
   it('skip ends in the stable state: title, manual orbit, edit button', () => {
-    render(<App />);
+    renderApp();
     toReview();
     fireEvent.click(skip() as HTMLElement);
     expect(skip()).toBeNull();
@@ -744,7 +759,7 @@ describe('presentation mode and reveal', () => {
   });
 
   it('edit returns to the configurator; same configuration again: no animation', () => {
-    render(<App />);
+    renderApp();
     toReview();
     fireEvent.click(skip() as HTMLElement);
     fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
@@ -757,7 +772,7 @@ describe('presentation mode and reveal', () => {
   });
 
   it('after an edit the short version plays', () => {
-    render(<App />);
+    renderApp();
     toReview();
     fireEvent.click(skip() as HTMLElement);
     fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
@@ -772,7 +787,7 @@ describe('presentation mode and reveal', () => {
     const mm = vi.fn().mockReturnValue({ matches: true });
     vi.stubGlobal('matchMedia', mm);
     try {
-      render(<App />);
+      renderApp();
       toReview();
       expect(stub().dataset.reveal).toBe('instant');
       expect(skip()).toBeNull();
@@ -796,7 +811,7 @@ describe('summary card, confirm entry point and flow', () => {
     screen.getByTestId('summary-card').querySelector(`[data-row="${key}"]`) as HTMLElement;
 
   it('flow: configurator -> presentation -> ready_to_confirm (doors closed) -> contact', () => {
-    render(<App />);
+    renderApp();
     expect(flow()).toBe('configurator');
     fireEvent.click(tab(uz['step.review']));
     expect(flow()).toBe('presentation');
@@ -808,7 +823,7 @@ describe('summary card, confirm entry point and flow', () => {
   });
 
   it('summary values: size in mm, colours, sections + presets, doors', () => {
-    render(<App />);
+    renderApp();
     toStable();
     expect(row('size').querySelector('dd')?.textContent).toBe('1360 × 1900 × 600 mm');
     expect(row('corpus').querySelector('dd')?.textContent).toBe(uz['decor.white']);
@@ -823,13 +838,13 @@ describe('summary card, confirm entry point and flow', () => {
 
   it('staff summary in millimetres', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     toStable();
     expect(row('size').querySelector('dd')?.textContent).toBe('1360 × 1900 × 600 mm');
   });
 
   it('"o\'zgartirish" returns to that step with the selection intact', () => {
-    render(<App />);
+    renderApp();
     // pick section 2 on the interior step first
     fireEvent.click(tab(uz['step.interior']));
     const tabs = () => screen.getByRole('radiogroup', { name: uz['interior.sections'] });
@@ -853,7 +868,7 @@ describe('summary card, confirm entry point and flow', () => {
   });
 
   it('edit keeps every parameter (nothing lost)', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '2000');
     toStable();
     fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
@@ -862,7 +877,7 @@ describe('summary card, confirm entry point and flow', () => {
   });
 
   it('contact placeholder: customer sees "Tez orada", Orqaga returns; no fake order data', () => {
-    render(<App />);
+    renderApp();
     toStable();
     fireEvent.click(screen.getByRole('button', { name: uz['present.confirm'] }));
     const dialog = screen.getByRole('dialog', { name: uz['contact.title'] });
@@ -876,7 +891,7 @@ describe('summary card, confirm entry point and flow', () => {
 
   it('contact placeholder: staff sees the TODO marker', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     toStable();
     fireEvent.click(screen.getByRole('button', { name: uz['present.confirm'] }));
     expect(screen.getByTestId('contact-todo').textContent).toContain('TODO (D-3b)');
@@ -888,7 +903,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
   const slider = (label: string) => screen.getByRole('slider', { name: label });
 
   it('slider, input and ± share one state', () => {
-    render(<App />);
+    renderApp();
     fireEvent.keyDown(slider(uz['param.width']), { key: 'ArrowRight' });
     const afterSlider = input(uz['param.width']).value;
     expect(Number(afterSlider)).toBeGreaterThan(1360);
@@ -905,7 +920,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
   });
 
   it('± clamp to min/max (button disabled at the limit); min/max labels in mm', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '2400');
     const plus = screen.getByRole('button', {
       name: `${uz['param.width']}: ${uz['control.increase']}`,
@@ -916,7 +931,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
   });
 
   it('invalid typed values are corrected on blur (customer), with the reason shown', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '100');
     expect(input(uz['param.width']).value).toBe('600');
     expect(screen.getByTestId('range-width').textContent).toBe(
@@ -933,12 +948,12 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
   });
 
   it('valid typed values show no range message; staff gets no correction (engine error)', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '1500');
     expect(screen.queryByTestId('range-width')).toBeNull();
     cleanup();
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '100');
     expect(input(uz['param.width']).value).toBe('100');
     expect(screen.queryByTestId('range-width')).toBeNull();
@@ -947,7 +962,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
   it('the range message disappears after 5 s', () => {
     vi.useFakeTimers();
     try {
-      render(<App />);
+      renderApp();
       typeInto(uz['param.width'], '9999');
       expect(screen.getByTestId('range-width')).toBeTruthy();
       act(() => vi.advanceTimersByTime(5000));
@@ -958,7 +973,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
   });
 
   it('customer: no 18 mm material, no thickness, no back panel; staff sees them', () => {
-    render(<App />);
+    renderApp();
     expect(screen.queryByRole('radiogroup', { name: uz['param.backPanel'] })).toBeNull();
     fireEvent.click(tab(uz['step.color']));
     const corpus = screen.getByRole('radiogroup', { name: uz['param.corpusMaterial'] });
@@ -966,7 +981,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
     expect(corpus.textContent).not.toMatch(/\d+ mm/);
     cleanup();
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     expect(screen.getByRole('radiogroup', { name: uz['param.backPanel'] })).toBeTruthy();
     fireEvent.click(tab(uz['step.color']));
     const staffCorpus = screen.getByRole('radiogroup', { name: uz['param.corpusMaterial'] });
@@ -974,7 +989,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
   });
 
   it('disabled options show a human reason, never an error code', () => {
-    render(<App />);
+    renderApp();
     const disabled = Array.from(document.querySelectorAll('button:disabled')).filter((b) =>
       b.querySelector('.segment-reason'),
     );
@@ -986,7 +1001,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
   });
 
   it('"Tayyor — ko\'rib chiqish" and "Konsultant chaqirish" on customer steps 1–4', () => {
-    render(<App />);
+    renderApp();
     for (const key of ['step.size', 'step.color', 'step.interior', 'step.doors'] as const) {
       fireEvent.click(tab(uz[key]));
       expect(screen.getByRole('button', { name: uz['nav.readyReview'] })).toBeTruthy();
@@ -995,7 +1010,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
   });
 
   it('"Tayyor" jumps straight to the presentation with the current values', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '2000');
     fireEvent.click(screen.getByRole('button', { name: uz['nav.readyReview'] }));
     expect(document.querySelector('.app')?.getAttribute('data-flow')).toBe('presentation');
@@ -1008,7 +1023,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
     const on = (e: Event) => events.push(e);
     window.addEventListener('dafna:consultant-request', on);
     try {
-      render(<App />);
+      renderApp();
       typeInto(uz['param.width'], '2000');
       fireEvent.click(screen.getByRole('button', { name: uz['consultant.call'] }));
       expect(events).toHaveLength(1);
@@ -1023,7 +1038,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
   });
 
   it('consultant: honest modal (nearby employee or call 1408), closes, configuration kept', () => {
-    render(<App />);
+    renderApp();
     typeInto(uz['param.width'], '2000');
     fireEvent.click(screen.getByRole('button', { name: uz['consultant.call'] }));
     const dialog = screen.getByRole('dialog', { name: uz['consultant.call'] });
@@ -1040,7 +1055,7 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
   });
 
   it('consultant modal in Russian and in the presentation', () => {
-    render(<App />);
+    renderApp();
     fireEvent.click(screen.getByRole('button', { name: ru['lang.ru'] }));
     fireEvent.click(tab(ru['step.review']));
     fireEvent.click(screen.getByRole('button', { name: ru['consultant.call'] }));
@@ -1052,14 +1067,14 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
 
   it('staff: no consultant button', () => {
     setUrl('?mode=staff');
-    render(<App />);
+    renderApp();
     expect(screen.queryByRole('button', { name: uz['consultant.call'] })).toBeNull();
   });
 });
 
 describe('smart camera: preset change keeps the focus', () => {
   it('changing the selected section preset issues no new camera command', () => {
-    render(<App />);
+    renderApp();
     fireEvent.click(tab(uz['step.interior']));
     const tabs = screen.getByRole('radiogroup', { name: uz['interior.sections'] });
     fireEvent.click(within(tabs).getAllByRole('radio')[1] as HTMLElement);
@@ -1070,5 +1085,38 @@ describe('smart camera: preset change keeps the focus', () => {
     fireEvent.click(presets.querySelector('[data-preset="shelves"]') as HTMLElement);
     expect(stub.dataset.presets?.split(',')[1]).toBe('shelves');
     expect(stub.dataset.camera).toBe(before);
+  });
+});
+
+describe('start screen (step 0, customers)', () => {
+  it('customers start on "Shkafingizni tanlang" with 4 models and "Noldan boshlash"', () => {
+    render(<App />);
+    expect(screen.getByTestId('start-screen')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: uz['start.title'] })).toBeTruthy();
+    expect(document.querySelectorAll('[data-model]').length).toBe(4);
+    expect(screen.getAllByTestId('model-thumb').length).toBe(4);
+    for (const key of ['model.compact', 'model.classic', 'model.wide', 'model.large'] as const) {
+      expect(
+        screen.getByRole('button', { name: `${uz[key]}: ${uz['start.choose']}` }),
+      ).toBeTruthy();
+    }
+    expect(screen.getByRole('button', { name: uz['start.scratch'] })).toBeTruthy();
+  });
+
+  it('picking a model loads its params and goes to step 1', () => {
+    render(<App />);
+    fireEvent.click(
+      screen.getByRole('button', { name: `${uz['model.wide']}: ${uz['start.choose']}` }),
+    );
+    expect(screen.queryByTestId('start-screen')).toBeNull();
+    expect(tab(uz['step.size']).getAttribute('aria-current')).toBe('step');
+    expect(screen.getByTestId('summary').textContent).toContain('2000');
+  });
+
+  it('staff starts directly on step 1', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    expect(screen.queryByTestId('start-screen')).toBeNull();
+    expect(tab(uz['step.size']).getAttribute('aria-current')).toBe('step');
   });
 });
