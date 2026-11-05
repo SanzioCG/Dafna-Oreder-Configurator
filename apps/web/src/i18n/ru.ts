@@ -158,6 +158,8 @@ export const ru: Messages = {
     'Секция {sectionNumber}: фасад ящика {frontWidthMm} мм шире {maxMm} мм',
   'issue.MIGRATION_DOORS_CHANGED':
     'Дверь секции {sectionNumber} изменена по новому правилу: {from} → {to}',
+  'issue.MIGRATION_CONSTRUCTION_CHANGED':
+    'Конструкция цоколя обновлена (шаблон {from} → {to}): боковины до пола, планки цоколя между боковинами.',
   'issue.MIGRATION_THICKNESS_UNAVAILABLE': 'В каталоге нет плиты {panelThickness} мм',
   'issue.UNSUPPORTED_SCHEMA': 'Неподдерживаемая схема заказа: {schemaVersion}',
 };

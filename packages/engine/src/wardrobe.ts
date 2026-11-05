@@ -24,7 +24,7 @@ import type {
   Vec3,
 } from './types.js';
 
-export const WARDROBE_GENERATOR = 'wardrobe-carcass-v3';
+export const WARDROBE_GENERATOR = 'wardrobe-carcass-v4';
 
 /** Rotations (degrees, XYZ) from the panel local frame (L→X, T→Y, W→Z) to product axes. */
 const ROT_HORIZONTAL: Vec3 = [0, 0, 0]; // length X, thickness Y, width Z
@@ -452,25 +452,27 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
   const zMid = zC + Dc / 2;
   const corpus = layout.corpusMaterial.id;
 
+  // ADR-009: side panels run the full height to the floor (with or without plinth); the
+  // carcass bottom rests on the plinth strips, which sit between the sides.
   const panels: BasePanel[] = [
     {
       id: 'side-left',
       role: 'side',
-      lengthMm: Hc,
+      lengthMm: H,
       widthMm: Dc,
       thicknessMm: t,
       material: corpus,
-      position: [t / 2, ph + Hc / 2, zMid],
+      position: [t / 2, H / 2, zMid],
       rotation: ROT_VERTICAL_YZ,
     },
     {
       id: 'side-right',
       role: 'side',
-      lengthMm: Hc,
+      lengthMm: H,
       widthMm: Dc,
       thicknessMm: t,
       material: corpus,
-      position: [W - t / 2, ph + Hc / 2, zMid],
+      position: [W - t / 2, H / 2, zMid],
       rotation: ROT_VERTICAL_YZ,
     },
     {
@@ -528,7 +530,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
       {
         id: 'plinth-front',
         role: 'plinth',
-        lengthMm: W,
+        lengthMm: W - 2 * t,
         widthMm: ph,
         thicknessMm: t,
         material: corpus,
@@ -538,7 +540,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
       {
         id: 'plinth-back',
         role: 'plinth',
-        lengthMm: W,
+        lengthMm: W - 2 * t,
         widthMm: ph,
         thicknessMm: t,
         material: corpus,

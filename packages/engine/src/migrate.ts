@@ -170,6 +170,35 @@ function preserveDoors(
   return { params: out, issues };
 }
 
+/** Template version that introduced sides to the floor + plinth strips between the sides. */
+export const CONSTRUCTION_CHANGED_IN = '0.5.0';
+
+/** true if `version` (x.y.z) is older than `than`; unknown versions count as older. */
+export function templateBefore(version: string | null, than: string): boolean {
+  if (!version) return true;
+  const a = version.split('.').map(Number);
+  const b = than.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    const x = a[i] ?? 0;
+    const y = b[i] ?? 0;
+    if (x !== y) return x < y;
+  }
+  return false;
+}
+
+/** Current-schema params (any template of the same schema): copied over the defaults. */
+function migrateParamsCurrent(raw: unknown, template: Template): Params {
+  const src: Record<string, unknown> =
+    raw !== null && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const params: Params = { ...defaultParams(template) };
+  for (const [key, value] of Object.entries(src)) {
+    if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {
+      params[key] = value as ParamValue;
+    }
+  }
+  return params;
+}
+
 function sectionCountOf(d: Record<string, unknown>): number | null {
   return Array.isArray(d.sections) && d.sections.length > 0 ? d.sections.length : null;
 }
@@ -195,11 +224,13 @@ export function migrateOrderDraft(
   const catalog = options.catalog ?? materialsV0;
   const d = draft !== null && typeof draft === 'object' ? (draft as Record<string, unknown>) : {};
 
-  if (d.schemaVersion === ORDER_SCHEMA_VERSION)
+  const fromTemplate = typeof d.templateVersion === 'string' ? d.templateVersion : null;
+  if (d.schemaVersion === ORDER_SCHEMA_VERSION && fromTemplate === template.templateVersion)
     return { draft: d as unknown as OrderDraft, issues: [] };
 
   const schema = d.schemaVersion;
   if (
+    schema !== ORDER_SCHEMA_VERSION &&
     schema !== ORDER_SCHEMA_VERSION_D0 &&
     schema !== ORDER_SCHEMA_VERSION_01 &&
     schema !== ORDER_SCHEMA_VERSION_02
@@ -215,7 +246,10 @@ export function migrateOrderDraft(
   const issues: Issue[] = [];
   const count = sectionCountOf(d);
   let params: Params;
-  if (schema === ORDER_SCHEMA_VERSION_02) {
+  if (schema === ORDER_SCHEMA_VERSION) {
+    // same schema, older template (0.4.0): params unchanged, only the construction differs
+    params = migrateParamsCurrent(d.params, template);
+  } else if (schema === ORDER_SCHEMA_VERSION_02) {
     params = migrateParamsFrom02(d.params, count, { template });
   } else {
     let params01: unknown = d.params;
@@ -237,6 +271,17 @@ export function migrateOrderDraft(
   const result = generate(template, params, catalog);
   const errors = result.issues.filter((i) => i.severity === 'error');
   if (errors.length > 0) return { draft: null, issues: [...issues, ...errors] };
+
+  // ADR-009: drafts made before template 0.5.0 had the sides standing on the plinth. With a
+  // plinth the regenerated panels differ (side length, plinth strip length) — never silently.
+  if (params.base === 'plinth' && templateBefore(fromTemplate, CONSTRUCTION_CHANGED_IN)) {
+    issues.push(
+      makeIssue('MIGRATION_CONSTRUCTION_CHANGED', 'warning', 'base', {
+        from: fromTemplate ?? 'unknown',
+        to: template.templateVersion,
+      }),
+    );
+  }
 
   const generatedAt = typeof d.generatedAt === 'string' ? d.generatedAt : new Date(0).toISOString();
   const out = toOrderDraft(params, result, { template, catalog, now: () => new Date(generatedAt) });

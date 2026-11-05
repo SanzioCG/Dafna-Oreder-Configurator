@@ -1,4 +1,4 @@
-import wardrobeV3Json from '../templates/wardrobe.v3.json' with { type: 'json' };
+import wardrobeV4Json from '../templates/wardrobe.v4.json' with { type: 'json' };
 import type {
   Material,
   MaterialCatalog,
@@ -9,11 +9,11 @@ import type {
 } from './types.js';
 
 /**
- * The current wardrobe (shkaf) template: v3 (templateVersion 0.4.0, D-1c: shared partitions
- * allowed again, hinge mounts, default depth). Older templates (v0 D-0, v1 D-1a, v2 D-1b) are
- * kept as an archive only; older order drafts are migrated with migrateOrderDraft().
+ * The current wardrobe (shkaf) template: v4 (templateVersion 0.5.0, D-3a.1: sides to the floor,
+ * plinth strips between the sides — ADR-009). Older templates (v0 D-0, v1 D-1a, v2 D-1b,
+ * v3 D-1c) are kept as an archive only; older order drafts are migrated with migrateOrderDraft().
  */
-export const wardrobeTemplate: Template = wardrobeV3Json as Template;
+export const wardrobeTemplate: Template = wardrobeV4Json as Template;
 
 export function getParamDef(template: Template, key: string): ParamDef | undefined {
   return template.parameters.find((p) => p.key === key);
