@@ -1,43 +1,25 @@
 /*
- * DAFNA design system — DARK theme V2.1 "Deep Graphite" (the default kiosk theme, ADR-007).
- * Overrides the White tokens of tokens.css on <html data-theme="dark">.
- *
- * Panel / header / footer and the page use --bg; inputs and controls sit on --surface and are
- * identified by --border-control (>= 3:1 on both), not by the fill difference alone.
- * --text-2 #8E949E (approved). --border-control #737A86: the brief's example #6B7380 measured
- * only 3.02:1 on --surface; #737A86 keeps a margin (3.34:1 surface, 3.91:1 bg).
- * Every pair is checked by theme/contrast.test.ts.
+ * DAFNA design system V3 "Bold Bento" — DARK theme (default kiosk theme).
+ * Overrides tokens.css on <html data-theme="dark">. --ink / --paper / step colors / actions are
+ * theme-independent; only the page, viewport, page text and the on-page outline change.
+ * Dark: cards and buttons placed directly on the page have NO outline (separation by fill).
  */
 :root[data-theme='dark'] {
   color-scheme: dark;
 
   --bg: #191d24;
-  --panel: #191d24;
-  --surface: #242a33;
+  --viewport: #242a33;
   --text: #f4f5f2;
   --text-2: #8e949e;
-  --divider: #363d47;
-  --border-control: #737a86;
-  --primary: #009fe3;
-  --primary-strong: #009fe3;
-  --success: #20b85a;
   --error: #f06b6b;
-  --on-primary: #191d24;
-  --on-success: #191d24;
-  --disabled-fill: #2c333d;
-  --disabled-text: #6b727d;
 
-  /*
-   * 3D viewport: graphite #242A33 (not black). Same key + hemisphere lights as White, so decor
-   * colours do not shift; a subtle rim light from behind and light-toned edge outlines
-   * separate dark decors (Antratsit) from the background; natural contact shadow.
-   */
-  --viewport-bg: #242a33;
+  --line-on-bg: 0 solid transparent; /* Dark: no outline on page-level cards / buttons */
+
+  /* 3D: same key + hemisphere lights as Light (decor colours do not shift) */
   --stage-shadow: #000000;
   --stage-shadow-opacity: 0.75;
   --edge-on-light-decor: #8a9099;
   --edge-on-dark-decor: #c9ced6;
   --rim-light: 0.9;
-
-  --shadow-overlay: 0 0.25rem 1rem rgb(0 0 0 / 0.4);
+  --platform: #2e353f;
 }

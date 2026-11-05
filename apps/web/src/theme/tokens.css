@@ -1,71 +1,89 @@
 /*
- * DAFNA design system V2 (D-3a, ADR-007) — semantic tokens.
+ * DAFNA design system V3 "Bold Bento" (D-4, ADR-007) — semantic tokens, LIGHT theme + shared.
+ * Dark overrides: themes.css. Typography: typography.css.
  *
- * Flat 2D vector UI: solid fills, one radius scale, minimal shadows (floating overlays only),
- * no gradients, no pastel card fills. The wardrobe is the only photorealistic element.
- *
- * This file: shared scales + the WHITE theme (also the fallback). Dark overrides: themes.css.
- * Typography tokens: typography.css. Every text / background and boundary pair is checked by
- * theme/contrast.test.ts (WCAG 2.x, part of the gate): text >= 4.5:1, large text >= 3:1,
- * UI boundaries and focus indicators >= 3:1, in both themes.
+ * Style: colored rounded cards, chunky pills, black (--ink) selected state, NO thin light / grey
+ * outlines anywhere. Outline rules (enforced by theme/outline.test.ts on styles.css):
+ *   - inside colored cards (pills, steppers, toggles, chips): --line-in-card = 2 px --ink
+ *   - cards / buttons directly on the page: --line-on-bg = 2.5 px --ink (Light), none (Dark)
+ *   - selected = --ink fill + white text; unselected = --paper fill + --ink text
+ * Contrast pairs are checked by theme/contrast.test.ts (WCAG, both themes).
  */
 :root {
   color-scheme: light;
 
-  /* ---- semantic colours (White) ---- */
-  --bg: #f5f6f8;
-  --surface: #ffffff;
-  /* configuration panel, its header and footer (White: same as --surface) */
-  --panel: #ffffff;
-  --text: #191d24;
-  --text-2: #646a73;
-  /* decorative lines only (dividers, table rules) — never a component boundary */
-  --divider: #d9dde2;
-  /* boundary of interactive controls (inputs, unselected options, slider track): >= 3:1 */
-  --border-control: #80868f;
-  --primary: #009fe3; /* button / selected fills, brand accents (logo #009FE2) */
-  --primary-strong: #0090cf; /* focus ring, selected borders, dimension lines, UI boundaries */
-  --success: #20b85a;
-  --error: #c93838;
-  --on-primary: #191d24;
-  --on-success: #191d24;
-  /* neutral fill for disabled options (text stays readable but muted) */
-  --disabled-fill: #eceef1;
-  --disabled-text: #8a9099; /* disabled controls are exempt from WCAG contrast */
+  /* ---- page / panel / 3D ---- */
+  --bg: #f5f6f8; /* page and configuration panel */
+  --viewport: #eef0f2; /* 3D zone (neutral) */
+  --text: #191d24; /* text on --bg */
+  --text-2: #646a73; /* secondary text on --bg */
 
-  /* ---- 3D viewport ---- */
-  --viewport-bg: #eef0f2; /* neutral light grey (lighter grey failed 3:1 for dimension lines) */
+  /* ---- ink & paper (theme-independent) ---- */
+  --ink: #191d24; /* outlines, selected fill, text on pastel cards */
+  --on-ink: #ffffff; /* text / glyphs on --ink */
+  --paper: #ffffff; /* unselected pill / card fill */
+
+  /* ---- actions ---- */
+  --primary: #009fe3; /* "Keyingi" */
+  --on-primary: #191d24;
+  --success: #20b85a; /* "Tasdiqlash" */
+  --on-success: #191d24;
+  --error: #c93838;
+
+  /* ---- step colors (card fills, same in both themes; text on them is always --ink) ---- */
+  --step-size: #b9f0d3; /* mint — 1 "Joy" (unconfirmed) */
+  --step-color: #ffe680; /* yellow — 2 "Rang" (unconfirmed) */
+  --step-interior: #cfc6ff; /* lavender — 3 "Ichki" (unconfirmed) */
+  --step-review: #009fe3; /* cyan — 4 "Ko'rib chiqish" */
+  --accent-peach: #fdcdbd; /* consultant button, info cards */
+
+  /* ---- outline rules ---- */
+  --line-in-card: 0.125rem solid var(--ink); /* 2 px at 1080p */
+  --line-on-bg: 0.15625rem solid var(--ink); /* 2.5 px at 1080p (Light) */
+  --focus-line: 0.1875rem solid var(--ink); /* 3 px focus ring, no glow */
+
+  /* ---- 3D ---- */
   --stage-shadow: #2a2928;
   --stage-shadow-opacity: 0.8;
-  --edge-on-light-decor: #33363b; /* outlines on white / grey / beige / oak */
-  --edge-on-dark-decor: #b4b8be; /* outlines on dark decors */
-  /* subtle rim / back light intensity (0 = off; Dark uses it to separate dark decors) */
+  --edge-on-light-decor: #33363b;
+  --edge-on-dark-decor: #b4b8be;
   --rim-light: 0;
-  /* presentation particles (brief: #009FE3 / #20B85A / #FFFFFF) */
-  --particle-1: #009fe3;
-  --particle-2: #20b85a;
-  --particle-3: #ffffff;
+  --platform: #ffffff; /* presentation platform disc */
+  --platform-glow: #009fe3; /* restrained cyan light on the platform only */
 
-  /* ---- shape ---- */
-  --radius-sm: 0.5rem; /* 8 px at 1080p */
-  --radius: 0.75rem; /* 12 px: every control, swatch, tile */
-  --radius-lg: 1rem; /* 16 px: floating overlays */
+  /* ---- shape / size (1rem = 16 px at 1080p, 32 px at 4K) ---- */
+  --radius-card: 1.75rem; /* 28 px */
   --radius-pill: 999px;
-  --border-w: 0.0625rem; /* 1 px */
-  --border-w-active: 0.1875rem; /* 3 px: selected state differs by thickness, not colour only */
-  --focus-ring: 0.1875rem solid var(--primary-strong); /* 3 px */
-  --focus-halo: 0 0 0 0.375rem color-mix(in srgb, var(--primary-strong) 28%, transparent);
-  /* minimal elevation: only for overlays floating over the 3D (toast, summary, dialogs) */
-  --shadow-overlay: 0 0.25rem 1rem rgb(0 0 0 / 0.12);
-
-  /* ---- spacing / sizes (1rem = 16 px at 1080p, 32 px at 4K) ---- */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
   --space-5: 1.5rem;
   --space-6: 2rem;
-  --tap: 3rem; /* minimum touch target: 48 px at 1080p */
-  --tap-lg: 3.5rem;
+  --tap: 3rem; /* 48 px minimum touch target */
+  --tap-xl: 4rem; /* 64 px: round icon buttons, primary actions */
   --press-scale: 0.97;
+  --disabled-opacity: 0.5;
+
+  /* ---- V2 names kept as aliases until the V3 restyle (commit 2) ---- */
+  --surface: var(--paper);
+  --panel: var(--bg);
+  --divider: transparent;
+  --border-control: var(--ink);
+  --primary-strong: var(--ink);
+  --viewport-bg: var(--viewport);
+  --disabled-fill: var(--paper);
+  --disabled-text: var(--text-2);
+  --radius-sm: 0.75rem;
+  --radius: 999px;
+  --radius-lg: var(--radius-card);
+  --border-w: 0.125rem;
+  --border-w-active: 0.125rem;
+  --focus-ring: var(--focus-line);
+  --focus-halo: none;
+  --shadow-overlay: none;
+  --tap-lg: 3.5rem;
+  --particle-1: #009fe3;
+  --particle-2: #20b85a;
+  --particle-3: #ffffff;
 }
