@@ -1,0 +1,180 @@
+{
+  "templateId": "wardrobe",
+  "templateVersion": "0.1.0",
+  "productType": "wardrobe",
+  "generator": "wardrobe-carcass-v0",
+  "units": "mm",
+  "parameters": [
+    {
+      "key": "width",
+      "type": "int",
+      "default": 1360,
+      "min": 600,
+      "max": 2400,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.width",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "Overall product width, outer faces of the side panels."
+    },
+    {
+      "key": "height",
+      "type": "int",
+      "default": 1900,
+      "min": 1200,
+      "max": 2600,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.height",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "Overall product height from the floor, plinth included."
+    },
+    {
+      "key": "depth",
+      "type": "int",
+      "default": 516,
+      "min": 350,
+      "max": 650,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.depth",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "Overall product depth, back panel included (doors are not part of D-0)."
+    },
+    {
+      "key": "sections",
+      "type": "enum",
+      "default": "auto",
+      "options": ["auto", 1, 2, 3, 4],
+      "labelKey": "param.sections",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "auto = minimum section count that keeps each section inner width <= maxShelfSpanMm."
+    },
+    {
+      "key": "panelThickness",
+      "type": "enum",
+      "default": 16,
+      "options": [16, 18],
+      "unit": "mm",
+      "labelKey": "param.panelThickness",
+      "uiStep": "size",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "note": "Confirmed Dafna standard carcass board thickness. All carcass geometry derives from it."
+    },
+    {
+      "key": "backPanel",
+      "type": "enum",
+      "default": "hdf_overlay",
+      "options": ["none", "hdf_overlay"],
+      "labelKey": "param.backPanel",
+      "uiStep": "size",
+      "customerVisible": false,
+      "unconfirmed": true,
+      "note": "Assumed: HDF back nailed over the carcass back (overlay), thickness = constants.backPanelThicknessMm."
+    },
+    {
+      "key": "base",
+      "type": "enum",
+      "default": "plinth",
+      "options": ["plinth", "none"],
+      "labelKey": "param.base",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Assumed: plinth by default; 'none' = carcass bottom directly on the floor (no legs in v0)."
+    },
+    {
+      "key": "plinthHeight",
+      "type": "int",
+      "default": 100,
+      "min": 60,
+      "max": 150,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.plinthHeight",
+      "uiStep": "size",
+      "customerVisible": false,
+      "unconfirmed": true,
+      "note": "Assumed plinth height range and default. Used only when base = plinth."
+    },
+    {
+      "key": "plinthRecess",
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "unit": "mm",
+      "labelKey": "param.plinthRecess",
+      "uiStep": "size",
+      "customerVisible": false,
+      "unconfirmed": true,
+      "note": "Assumed: setback of the front plinth strip from the carcass front edge. Back strip is never recessed."
+    }
+  ],
+  "constants": {
+    "maxShelfSpanMm": {
+      "value": 900,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed maximum section inner width before shelves sag (SHELF_SPAN warning, sections=auto)."
+    },
+    "backPanelThicknessMm": {
+      "value": 3,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed HDF back panel thickness."
+    },
+    "carcassMaterial": {
+      "value": "ldsp",
+      "unconfirmed": true,
+      "note": "Assumed carcass, partition and plinth board material: laminated chipboard (LDSP)."
+    },
+    "backMaterial": {
+      "value": "hdf",
+      "unconfirmed": true,
+      "note": "Assumed back panel material: HDF."
+    }
+  },
+  "constructionRules": [
+    {
+      "id": "sides-on-plinth",
+      "unconfirmed": true,
+      "note": "Side panels run the full carcass height and stand on the plinth (carcass height = height - plinthHeight)."
+    },
+    {
+      "id": "top-bottom-between-sides",
+      "unconfirmed": true,
+      "note": "Top and bottom are fitted between the side panels (length = width - 2 x panelThickness)."
+    },
+    {
+      "id": "partitions-between-top-bottom",
+      "unconfirmed": true,
+      "note": "Vertical partitions are fitted between top and bottom and run the full carcass depth."
+    },
+    {
+      "id": "equal-sections-integer-mm",
+      "unconfirmed": true,
+      "note": "Sections share the inner width equally in whole millimetres; any remainder (< sections mm) goes +1 mm to the leftmost sections."
+    },
+    {
+      "id": "back-overlay-inside-depth",
+      "unconfirmed": true,
+      "note": "The overlay back panel is counted inside the overall depth: carcass depth = depth - backPanelThicknessMm. It covers the carcass only (width x carcass height), not the plinth."
+    },
+    {
+      "id": "plinth-front-back-strips",
+      "unconfirmed": true,
+      "note": "Plinth = front and back strips, full product width, board thickness = panelThickness. Front strip set back by plinthRecess, back strip flush with the carcass back. No side returns in v0."
+    }
+  ]
+}
