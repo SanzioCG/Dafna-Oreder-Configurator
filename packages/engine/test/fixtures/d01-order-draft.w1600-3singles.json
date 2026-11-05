@@ -1,0 +1,242 @@
+{
+  "schemaVersion": "dafna-order/0.1-draft",
+  "productType": "wardrobe",
+  "templateVersion": "0.2.0",
+  "catalogVersion": "0.1.0",
+  "params": {
+    "width": 1600,
+    "height": 1900,
+    "depth": 516,
+    "sections": 3,
+    "corpusMaterial": "ldsp_oak_light_16",
+    "doorMaterial": "ldsp_anthracite_16",
+    "backPanel": "hdf_overlay",
+    "base": "plinth",
+    "plinthHeight": 100,
+    "plinthRecess": 0,
+    "doors": "auto",
+    "doorSection1": "preset",
+    "doorSection2": "preset",
+    "doorSection3": "preset",
+    "doorSection4": "preset"
+  },
+  "materials": {
+    "corpus": {
+      "id": "ldsp_oak_light_16",
+      "kind": "ldsp",
+      "decorName": "decor.oakLight",
+      "thicknessMm": 16,
+      "colorHex": "#c9a77c",
+      "textureUrl": null,
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Placeholder wood decor (flat colour, no texture yet)."
+    },
+    "doors": {
+      "id": "ldsp_anthracite_16",
+      "kind": "ldsp",
+      "decorName": "decor.anthracite",
+      "thicknessMm": 16,
+      "colorHex": "#3b3e42",
+      "textureUrl": null,
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Placeholder decor until Dafna sends its decor list. Colour approximated."
+    },
+    "back": {
+      "id": "hdf_white_3",
+      "kind": "hdf",
+      "decorName": "decor.white",
+      "thicknessMm": 3,
+      "colorHex": "#efeee9",
+      "textureUrl": null,
+      "customerVisible": false,
+      "unconfirmed": true,
+      "note": "Assumed back panel: white HDF 3 mm."
+    }
+  },
+  "doors": [
+    {
+      "sectionIndex": 0,
+      "type": "single_left",
+      "leaves": ["door-1"]
+    },
+    {
+      "sectionIndex": 1,
+      "type": "single_right",
+      "leaves": ["door-2"]
+    },
+    {
+      "sectionIndex": 2,
+      "type": "single_left",
+      "leaves": ["door-3"]
+    }
+  ],
+  "dimensions": {
+    "widthMm": 1600,
+    "heightMm": 1900,
+    "depthMm": 516,
+    "carcassHeightMm": 1800,
+    "carcassDepthMm": 495,
+    "backThicknessMm": 3,
+    "doorThicknessMm": 16,
+    "doorGapFrontMm": 2,
+    "plinthHeightMm": 100
+  },
+  "panels": [
+    {
+      "id": "side-left",
+      "role": "side",
+      "lengthMm": 1800,
+      "widthMm": 495,
+      "thicknessMm": 16,
+      "material": "ldsp_oak_light_16",
+      "position": [8, 1000, 250.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "side-right",
+      "role": "side",
+      "lengthMm": 1800,
+      "widthMm": 495,
+      "thicknessMm": 16,
+      "material": "ldsp_oak_light_16",
+      "position": [1592, 1000, 250.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "bottom",
+      "role": "bottom",
+      "lengthMm": 1568,
+      "widthMm": 495,
+      "thicknessMm": 16,
+      "material": "ldsp_oak_light_16",
+      "position": [800, 108, 250.5],
+      "rotation": [0, 0, 0]
+    },
+    {
+      "id": "top",
+      "role": "top",
+      "lengthMm": 1568,
+      "widthMm": 495,
+      "thicknessMm": 16,
+      "material": "ldsp_oak_light_16",
+      "position": [800, 1892, 250.5],
+      "rotation": [0, 0, 0]
+    },
+    {
+      "id": "partition-1",
+      "role": "partition",
+      "lengthMm": 1768,
+      "widthMm": 495,
+      "thicknessMm": 16,
+      "material": "ldsp_oak_light_16",
+      "position": [536, 1000, 250.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "partition-2",
+      "role": "partition",
+      "lengthMm": 1768,
+      "widthMm": 495,
+      "thicknessMm": 16,
+      "material": "ldsp_oak_light_16",
+      "position": [1064, 1000, 250.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "back",
+      "role": "back",
+      "lengthMm": 1600,
+      "widthMm": 1800,
+      "thicknessMm": 3,
+      "material": "hdf_white_3",
+      "position": [800, 1000, 1.5],
+      "rotation": [90, 0, 0]
+    },
+    {
+      "id": "plinth-front",
+      "role": "plinth",
+      "lengthMm": 1600,
+      "widthMm": 100,
+      "thicknessMm": 16,
+      "material": "ldsp_oak_light_16",
+      "position": [800, 50, 490],
+      "rotation": [90, 0, 0]
+    },
+    {
+      "id": "plinth-back",
+      "role": "plinth",
+      "lengthMm": 1600,
+      "widthMm": 100,
+      "thicknessMm": 16,
+      "material": "ldsp_oak_light_16",
+      "position": [800, 50, 11],
+      "rotation": [90, 0, 0]
+    },
+    {
+      "id": "door-1",
+      "role": "door",
+      "lengthMm": 533,
+      "widthMm": 1797,
+      "thicknessMm": 16,
+      "material": "ldsp_anthracite_16",
+      "position": [268, 1000, 508],
+      "rotation": [90, 0, 0],
+      "sectionIndex": 0,
+      "hingeSide": "left"
+    },
+    {
+      "id": "door-2",
+      "role": "door",
+      "lengthMm": 525,
+      "widthMm": 1797,
+      "thicknessMm": 16,
+      "material": "ldsp_anthracite_16",
+      "position": [800, 1000, 508],
+      "rotation": [90, 0, 0],
+      "sectionIndex": 1,
+      "hingeSide": "right"
+    },
+    {
+      "id": "door-3",
+      "role": "door",
+      "lengthMm": 533,
+      "widthMm": 1797,
+      "thicknessMm": 16,
+      "material": "ldsp_anthracite_16",
+      "position": [1332, 1000, 508],
+      "rotation": [90, 0, 0],
+      "sectionIndex": 2,
+      "hingeSide": "left"
+    }
+  ],
+  "sections": [
+    {
+      "index": 0,
+      "innerWidthMm": 512,
+      "innerHeightMm": 1768,
+      "innerDepthMm": 495,
+      "xStartMm": 16,
+      "doorType": "single_left"
+    },
+    {
+      "index": 1,
+      "innerWidthMm": 512,
+      "innerHeightMm": 1768,
+      "innerDepthMm": 495,
+      "xStartMm": 544,
+      "doorType": "single_right"
+    },
+    {
+      "index": 2,
+      "innerWidthMm": 512,
+      "innerHeightMm": 1768,
+      "innerDepthMm": 495,
+      "xStartMm": 1072,
+      "doorType": "single_left"
+    }
+  ],
+  "issues": [],
+  "generatedAt": "2026-11-05T12:00:00.000Z"
+}

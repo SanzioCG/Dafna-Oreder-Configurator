@@ -219,7 +219,7 @@ describe('material catalog v0', () => {
   });
 });
 
-describe('toOrderDraft (dafna-order/0.1-draft)', () => {
+describe('toOrderDraft (dafna-order/0.2-draft)', () => {
   const params = {
     ...defaultParams(T),
     width: 2000,
@@ -229,8 +229,8 @@ describe('toOrderDraft (dafna-order/0.1-draft)', () => {
   const result = generate(T, params);
   const draft = toOrderDraft(params, result, { now: () => new Date('2026-11-05T10:00:00.000Z') });
 
-  it('has the 0.1 schema, materials used and doors per section', () => {
-    expect(draft.schemaVersion).toBe('dafna-order/0.1-draft');
+  it('has the 0.2 schema, materials, doors and interior per section, rails', () => {
+    expect(draft.schemaVersion).toBe('dafna-order/0.2-draft');
     expect(draft.productType).toBe('wardrobe');
     expect(draft.templateVersion).toBe('0.3.0');
     expect(draft.catalogVersion).toBe('0.1.0');
@@ -247,6 +247,16 @@ describe('toOrderDraft (dafna-order/0.1-draft)', () => {
     ]);
     expect(draft.dimensions).toEqual(result.dimensions);
     expect(draft.panels).toEqual(result.panels);
+    expect(draft.rails).toEqual(result.rails);
+    expect(
+      draft.interior.map((x) => [x.sectionIndex, x.preset, x.presetSource, x.shelves.length]),
+    ).toEqual([
+      [0, 'shelves', 'auto', 4],
+      [1, 'shelves', 'auto', 4],
+      [2, 'shelves', 'auto', 4],
+      [3, 'shelves', 'auto', 4],
+    ]);
+    expect(draft.panels.every((p) => p.edges && 'grainDirection' in p && p.operations)).toBe(true);
     expect(draft.sections).toEqual(result.sections);
     expect(draft.issues).toEqual(result.issues);
     expect(draft.generatedAt).toBe('2026-11-05T10:00:00.000Z');
@@ -268,7 +278,7 @@ describe('toOrderDraft (dafna-order/0.1-draft)', () => {
   });
 });
 
-describe('D-0 order draft migration', () => {
+describe('D-0 order draft migration (chain D-0 -> 0.1 -> 0.2)', () => {
   const geometry = (p: Panel) => [
     p.id,
     p.role,
@@ -282,12 +292,14 @@ describe('D-0 order draft migration', () => {
   it.each([
     ['default (16 mm)', d0Default, 'ldsp_white_16'],
     ['width 2000, 18 mm, recess 20', d0T18, 'ldsp_white_18'],
-  ])('%s: same geometry, new material ids, schema 0.1', (_name, d0, corpus) => {
+  ])('%s: same geometry, new material ids, schema 0.2', (_name, d0, corpus) => {
     const { draft, issues } = migrateOrderDraft(d0);
     expect(issues).toEqual([]);
     if (!draft) throw new Error('no draft');
-    expect(draft.schemaVersion).toBe('dafna-order/0.1-draft');
+    expect(draft.schemaVersion).toBe('dafna-order/0.2-draft');
     expect(draft.migratedFrom).toBe('dafna-order/0-draft');
+    expect(draft.params.interior1).toBe('empty');
+    expect(draft.rails).toEqual([]);
     expect(draft.generatedAt).toBe(d0.generatedAt);
     expect(draft.params.corpusMaterial).toBe(corpus);
     expect(draft.params.doors).toBe('none');

@@ -282,8 +282,20 @@ export interface OrderDraftDoor {
   leaves: string[];
 }
 
-export const ORDER_SCHEMA_VERSION = 'dafna-order/0.1-draft';
+export const ORDER_SCHEMA_VERSION = 'dafna-order/0.2-draft';
+export const ORDER_SCHEMA_VERSION_01 = 'dafna-order/0.1-draft';
 export const ORDER_SCHEMA_VERSION_D0 = 'dafna-order/0-draft';
+
+/** Interior of one section in the order draft (D-1b). */
+export interface OrderDraftInterior {
+  sectionIndex: number;
+  preset: InteriorPreset;
+  presetSource: 'auto' | 'chosen';
+  shelves: ShelfSummary[];
+  rails: RailSummary[];
+  drawers: DrawerSummary[];
+  clearHangingHeightMm: number | null;
+}
 
 export interface OrderDraft {
   schemaVersion: typeof ORDER_SCHEMA_VERSION;
@@ -293,8 +305,13 @@ export interface OrderDraft {
   params: Params;
   materials: OrderDraftMaterials;
   doors: OrderDraftDoor[];
+  /** interior per section (0.2) */
+  interior: OrderDraftInterior[];
   dimensions: Dimensions | null;
+  /** panels incl. edges / grainDirection / operations (0.2) */
   panels: Panel[];
+  /** hanging rails (0.2) */
+  rails: Rail[];
   sections: Section[];
   issues: Issue[];
   generatedAt: string;

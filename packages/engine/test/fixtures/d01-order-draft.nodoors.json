@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "dafna-order/0.1-draft",
+  "productType": "wardrobe",
+  "templateVersion": "0.2.0",
+  "catalogVersion": "0.1.0",
+  "params": {
+    "width": 1800,
+    "height": 1900,
+    "depth": 600,
+    "sections": "auto",
+    "corpusMaterial": "ldsp_white_16",
+    "doorMaterial": "same_as_corpus",
+    "backPanel": "hdf_overlay",
+    "base": "plinth",
+    "plinthHeight": 100,
+    "plinthRecess": 0,
+    "doors": "none",
+    "doorSection1": "preset",
+    "doorSection2": "preset",
+    "doorSection3": "preset",
+    "doorSection4": "preset"
+  },
+  "materials": {
+    "corpus": {
+      "id": "ldsp_white_16",
+      "kind": "ldsp",
+      "decorName": "decor.white",
+      "thicknessMm": 16,
+      "colorHex": "#f3f2ee",
+      "textureUrl": null,
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Placeholder decor until Dafna sends its decor list. Colour approximated."
+    },
+    "doors": null,
+    "back": {
+      "id": "hdf_white_3",
+      "kind": "hdf",
+      "decorName": "decor.white",
+      "thicknessMm": 3,
+      "colorHex": "#efeee9",
+      "textureUrl": null,
+      "customerVisible": false,
+      "unconfirmed": true,
+      "note": "Assumed back panel: white HDF 3 mm."
+    }
+  },
+  "doors": [
+    {
+      "sectionIndex": 0,
+      "type": "none",
+      "leaves": []
+    },
+    {
+      "sectionIndex": 1,
+      "type": "none",
+      "leaves": []
+    }
+  ],
+  "dimensions": {
+    "widthMm": 1800,
+    "heightMm": 1900,
+    "depthMm": 600,
+    "carcassHeightMm": 1800,
+    "carcassDepthMm": 597,
+    "backThicknessMm": 3,
+    "doorThicknessMm": 0,
+    "doorGapFrontMm": 0,
+    "plinthHeightMm": 100
+  },
+  "panels": [
+    {
+      "id": "side-left",
+      "role": "side",
+      "lengthMm": 1800,
+      "widthMm": 597,
+      "thicknessMm": 16,
+      "material": "ldsp_white_16",
+      "position": [8, 1000, 301.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "side-right",
+      "role": "side",
+      "lengthMm": 1800,
+      "widthMm": 597,
+      "thicknessMm": 16,
+      "material": "ldsp_white_16",
+      "position": [1792, 1000, 301.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "bottom",
+      "role": "bottom",
+      "lengthMm": 1768,
+      "widthMm": 597,
+      "thicknessMm": 16,
+      "material": "ldsp_white_16",
+      "position": [900, 108, 301.5],
+      "rotation": [0, 0, 0]
+    },
+    {
+      "id": "top",
+      "role": "top",
+      "lengthMm": 1768,
+      "widthMm": 597,
+      "thicknessMm": 16,
+      "material": "ldsp_white_16",
+      "position": [900, 1892, 301.5],
+      "rotation": [0, 0, 0]
+    },
+    {
+      "id": "partition-1",
+      "role": "partition",
+      "lengthMm": 1768,
+      "widthMm": 597,
+      "thicknessMm": 16,
+      "material": "ldsp_white_16",
+      "position": [900, 1000, 301.5],
+      "rotation": [0, 0, 90]
+    },
+    {
+      "id": "back",
+      "role": "back",
+      "lengthMm": 1800,
+      "widthMm": 1800,
+      "thicknessMm": 3,
+      "material": "hdf_white_3",
+      "position": [900, 1000, 1.5],
+      "rotation": [90, 0, 0]
+    },
+    {
+      "id": "plinth-front",
+      "role": "plinth",
+      "lengthMm": 1800,
+      "widthMm": 100,
+      "thicknessMm": 16,
+      "material": "ldsp_white_16",
+      "position": [900, 50, 592],
+      "rotation": [90, 0, 0]
+    },
+    {
+      "id": "plinth-back",
+      "role": "plinth",
+      "lengthMm": 1800,
+      "widthMm": 100,
+      "thicknessMm": 16,
+      "material": "ldsp_white_16",
+      "position": [900, 50, 11],
+      "rotation": [90, 0, 0]
+    }
+  ],
+  "sections": [
+    {
+      "index": 0,
+      "innerWidthMm": 876,
+      "innerHeightMm": 1768,
+      "innerDepthMm": 597,
+      "xStartMm": 16,
+      "doorType": "none"
+    },
+    {
+      "index": 1,
+      "innerWidthMm": 876,
+      "innerHeightMm": 1768,
+      "innerDepthMm": 597,
+      "xStartMm": 908,
+      "doorType": "none"
+    }
+  ],
+  "issues": [],
+  "generatedAt": "2026-11-05T12:00:00.000Z"
+}
