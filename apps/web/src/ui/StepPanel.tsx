@@ -1,24 +1,26 @@
 import type { ParamDef } from '@dafna/engine';
 import { LANGS, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
-import { TEMPLATE, type Configurator } from '../state/useConfigurator';
-import { neighbourStep } from '../steps';
-import { useTheme } from '../theme/ThemeProvider';
-import { Button, IconButton } from './Button';
-import { ConsultantButton } from './ConsultantButton';
-import { StepNavigation } from './StepNavigation';
-import { StartScreen } from '../start/StartScreen';
 import type { ReadyModel } from '../state/presets';
+import { TEMPLATE, type Configurator } from '../state/useConfigurator';
+import { STEPS, neighbourStep } from '../steps';
+import { StartScreen } from '../start/StartScreen';
+import { useTheme } from '../theme/ThemeProvider';
+import { formatSize, unitSystemFor } from '../viewer/dimensions';
+import { Button, IconButton } from './Button';
+import { ColorStep } from './ColorStep';
+import { ConsultantButton } from './ConsultantButton';
 import { ArrowLeftIcon, ArrowRightIcon, MoonIcon, SunIcon } from './icons';
 import { InteriorStep } from './InteriorStep';
 import { ParamControl } from './ParamControl';
 import { ResetToast } from './ResetToast';
+import { SizeStep } from './SizeStep';
 import { StaffPanel } from './StaffPanel';
+import { StepNavigation } from './StepNavigation';
 
 /**
- * Control groups inside the panel (design system V2: no fills, no nested cards — groups are
- * separated by spacing and a divider). Consecutive numeric parameters share one group; each
- * swatch or option parameter gets its own group.
+ * Staff engineering controls are generated from the template: consecutive numeric parameters
+ * share one group; each option / swatch parameter gets its own group.
  */
 interface CardGroup {
   key: string;
@@ -34,11 +36,7 @@ export function groupIntoCards(defs: ParamDef[]): CardGroup[] {
       if (last && last.tone === 'numeric') last.defs.push(def);
       else groups.push({ key: def.key, tone: 'numeric', defs: [def] });
     } else {
-      groups.push({
-        key: def.key,
-        tone: 'option',
-        defs: [def],
-      });
+      groups.push({ key: def.key, tone: 'option', defs: [def] });
     }
   }
   return groups;
@@ -53,7 +51,7 @@ interface StepPanelProps {
   /** selected section on the interior step (shared with the 3D view) */
   selectedSection: number;
   onSelectSection: (index: number) => void;
-  /** presentation mode: the sheet and step navigation are hidden (state is kept) */
+  /** presentation mode: the panel and step navigation are hidden (state is kept) */
   hidden?: boolean;
   /** "Konsultant chaqirish" hook (customer screens) */
   onCallConsultant?: () => void;
@@ -64,6 +62,12 @@ interface StepPanelProps {
   onScratch?: () => void;
 }
 
+/**
+ * Configuration panel (design system V3, ADR-010): header (logo, language pill, consultant),
+ * step pills, ONE colored card per step, fixed footer (Orqaga · Tayyor — ko'rib chiqish ·
+ * Keyingi). Staff additionally get the template's engineering parameters of the step and the
+ * staff panel (issues, order draft JSON).
+ */
 export function StepPanel({
   mode,
   config,
@@ -82,16 +86,18 @@ export function StepPanel({
   const staff = mode === 'staff';
   const prev = neighbourStep(step, -1);
   const next = neighbourStep(step, 1);
+  const stepDef = STEPS.find((s) => s.key === step);
 
-  // UI is generated from the template: parameters of this step, filtered by mode.
+  // staff: template parameters of this step (interior also carries the door overrides)
   const sectionCount = config.view.result.sections.length;
-  const defs = TEMPLATE.parameters.filter(
-    (d) =>
-      d.uiStep === step &&
-      (staff || d.customerVisible) &&
-      (d.appliesToSection === undefined || d.appliesToSection <= sectionCount),
-  );
-  // Staff: depth = back + carcass + door gap + door (ADR-003), e.g. "3 + 495 + 2 + 16 = 516".
+  const uiSteps = stepDef?.uiSteps ?? [];
+  const defs = staff
+    ? TEMPLATE.parameters.filter(
+        (d) =>
+          uiSteps.includes(d.uiStep) &&
+          (d.appliesToSection === undefined || d.appliesToSection <= sectionCount),
+      )
+    : [];
   const dims = config.result.dimensions;
   const hints: Record<string, string | undefined> =
     staff && dims
@@ -108,6 +114,9 @@ export function StepPanel({
   const errorKeys = new Set(
     config.result.issues.filter((i) => i.severity === 'error').map((i) => i.paramKey),
   );
+  const units = unitSystemFor(mode);
+  const unit = t(units === 'cm' ? 'unit.cm' : 'unit.mm');
+  const v = config.view;
 
   return (
     <aside className="panel" hidden={hidden}>
@@ -147,24 +156,23 @@ export function StepPanel({
 
       {step === 'start' && (
         <div className="panel-body">
-          <StartScreen onPick={(m) => onPickModel?.(m)} onScratch={() => onScratch?.()} />
+          <StartScreen
+            mode={mode}
+            onPick={(m) => onPickModel?.(m)}
+            onScratch={() => onScratch?.()}
+          />
         </div>
       )}
-      <div className={staff ? 'panel-body scrollable' : 'panel-body'} hidden={step === 'start'}>
-        <div className="step-intro">
-          <h1>{t(`step.${step}.title`)}</h1>
-          <p className="muted">{t(`step.${step}.hint`)}</p>
-          <p className="summary" data-testid="summary">
-            <span className="summary-label">{t('summary.overall')}:</span>{' '}
-            <strong>
-              {config.view.widthMm} × {config.view.heightMm} × {config.view.depthMm} {t('unit.mm')}
-            </strong>
-            <span className="summary-sections">
-              {t('summary.sections', { count: sectionCount })}
-            </span>
-          </p>
-        </div>
+      <div className="panel-body" hidden={step === 'start'}>
+        <p className="summary" data-testid="summary">
+          <strong>{formatSize(v.widthMm, v.heightMm, v.depthMm, units, unit)}</strong>
+          <span className="summary-sections">
+            {t(staff ? 'summary.sections' : 'c.parts', { count: sectionCount })}
+          </span>
+        </p>
         <div className="controls">
+          {step === 'size' && <SizeStep mode={mode} config={config} />}
+          {step === 'color' && <ColorStep mode={mode} config={config} />}
           {step === 'interior' && (
             <InteriorStep
               mode={mode}
@@ -173,7 +181,7 @@ export function StepPanel({
               onSelect={onSelectSection}
             />
           )}
-          {step !== 'interior' &&
+          {staff &&
             groupIntoCards(defs).map((group) => (
               <section key={group.key} className="card" data-card={group.defs[0]?.key}>
                 {group.defs.map((def) => (
@@ -205,7 +213,7 @@ export function StepPanel({
       </div>
 
       <footer className="panel-footer" hidden={step === 'start'}>
-        <ResetToast notice={config.notice} onDismiss={config.dismissNotice} />
+        <ResetToast notice={config.notice} onDismiss={config.dismissNotice} mode={mode} />
         <Button
           variant="text"
           disabled={!prev}
@@ -227,15 +235,14 @@ export function StepPanel({
             </Button>
           )}
         </div>
-        <button
-          type="button"
-          className="btn btn-primary"
+        <Button
+          variant="primary"
           disabled={!next}
+          iconAfter={<ArrowRightIcon />}
           onClick={() => next && setStep(next.key)}
         >
           {t('nav.next')}
-          <ArrowRightIcon />
-        </button>
+        </Button>
       </footer>
     </aside>
   );

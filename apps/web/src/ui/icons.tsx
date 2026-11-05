@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  ChevronDown,
   CircleCheck,
   Headset,
   Minus,
@@ -32,6 +33,7 @@ const lucide = (C: (p: LucideProps) => ReactNode) =>
 export const ArrowLeftIcon = lucide(ArrowLeft);
 export const ArrowRightIcon = lucide(ArrowRight);
 export const CheckIcon = lucide(Check);
+export const ChevronIcon = lucide(ChevronDown);
 export const CloseIcon = lucide(X);
 export const MinusIcon = lucide(Minus);
 export const PlusIcon = lucide(Plus);

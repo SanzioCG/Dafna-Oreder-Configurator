@@ -1,7 +1,10 @@
 import { useI18n } from '../i18n/I18n';
 import { STEPS } from '../steps';
 
-/** StepNavigation: the five numbered steps; the current one uses the selection contract. */
+/**
+ * StepNavigation: the four step pills (number dot in the step colour). The current one uses the
+ * selection contract (--ink fill, white text).
+ */
 export function StepNavigation({
   step,
   onStepChange,
@@ -21,7 +24,9 @@ export function StepNavigation({
           aria-current={s.key === step ? 'step' : undefined}
           onClick={() => onStepChange(s.key)}
         >
-          <span className="step-num">{i + 1}</span>
+          <span className="step-num" style={{ '--step': s.color } as React.CSSProperties}>
+            {i + 1}
+          </span>
           <span className="step-label">{t(s.labelKey)}</span>
           {!s.enabled && <span className="step-soon">{t('step.comingSoon')}</span>}
         </button>

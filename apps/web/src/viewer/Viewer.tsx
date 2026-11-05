@@ -115,6 +115,7 @@ function useUiScale(): number {
 /** Viewer shell: 3D scene + DOM overlays (dimension labels, buttons, banners). */
 export function Viewer({
   view,
+  mode = 'customer',
   invalid,
   activeStep = 'size',
   selectedSection = null,
@@ -165,7 +166,7 @@ export function Viewer({
 
   const sections = view.result.sections;
   // Dimension values come from the engine output only (result.dimensions / sections).
-  const units = unitSystemFor();
+  const units = unitSystemFor(mode);
   const unitLabel = t(units === 'cm' ? 'unit.cm' : 'unit.mm');
   const engineSize = view.result.dimensions ?? { widthMm: W, heightMm: H, depthMm: D };
   const visibility = dimensionVisibility({

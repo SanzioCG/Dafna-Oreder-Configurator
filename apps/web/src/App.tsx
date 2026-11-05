@@ -23,7 +23,7 @@ export function prefersReducedMotion(): boolean {
 }
 
 /** The step the configurator returns to from the presentation (last configurator step). */
-const EDIT_STEP = 'doors';
+const EDIT_STEP = 'interior';
 
 function Configurator({ mode }: { mode: Mode }) {
   const config = useConfigurator(mode);
@@ -37,7 +37,7 @@ function Configurator({ mode }: { mode: Mode }) {
     setSection(i);
     setSelectionSeq((n) => n + 1);
   };
-  const picking = step === 'interior' || step === 'doors';
+  const picking = step === 'interior';
 
   // ---- customer flow (state machine, see state/flow.ts) ----
   const [flow, setFlow] = useState<FlowState>('configurator');

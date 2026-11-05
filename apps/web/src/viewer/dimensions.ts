@@ -30,22 +30,33 @@ export interface DimSpec {
 export type UnitSystem = 'cm' | 'mm';
 
 /**
- * Units shown in the UI. Design system V2: millimetres in both modes (the first D-3a draft
- * showed centimetres to customers). The cm formatter stays for a possible switch back.
+ * Units shown in the UI (D-4): customers see whole centimetres, staff millimetres. The engine
+ * always works in mm.
  */
-export function unitSystemFor(): UnitSystem {
-  return 'mm';
+export function unitSystemFor(mode: 'customer' | 'staff'): UnitSystem {
+  return mode === 'staff' ? 'mm' : 'cm';
 }
 
 /**
- * Formats an engine length (mm). cm: one decimal at most, decimal comma (uz/ru), e.g.
- * 1360 -> "136 sm", 656 -> "65,6 sm"; mm: integer as is, e.g. "1360 mm".
+ * mm -> display units. cm: rounded to the nearest whole centimetre (half up), so 1365 -> 137,
+ * 656 -> 66. Customer steppers move in 10 mm steps, so customer-set sizes are exact.
+ */
+export function toDisplay(mm: number, units: UnitSystem): number {
+  return units === 'cm' ? Math.round(mm / 10) : mm;
+}
+
+/** display units -> mm (cm x 10). */
+export function fromDisplay(value: number, units: UnitSystem): number {
+  return units === 'cm' ? Math.round(value * 10) : value;
+}
+
+/**
+ * Formats an engine length (mm). cm: whole centimetres (toDisplay rounding), e.g.
+ * 1360 -> "136 sm", 656 -> "66 sm"; mm: as is (half millimetres with a decimal comma).
  */
 export function formatLength(mm: number, units: UnitSystem, unitLabel: string): string {
   if (units === 'mm') return `${Math.round(mm * 2) / 2} ${unitLabel}`.replace('.', ',');
-  const cm = Math.round(mm) / 10;
-  const text = Number.isInteger(cm) ? String(cm) : cm.toFixed(1).replace('.', ',');
-  return `${text} ${unitLabel}`;
+  return `${toDisplay(mm, 'cm')} ${unitLabel}`;
 }
 
 /** Overall size as one string, e.g. "136 × 190 × 60 sm". */

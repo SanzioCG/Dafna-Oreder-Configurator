@@ -1,4 +1,5 @@
 import { useI18n } from '../i18n/I18n';
+import type { Mode } from '../mode';
 import { READY_MODELS, modelParams, type ReadyModel } from '../state/presets';
 import { Button } from '../ui/Button';
 import { ArrowRightIcon } from '../ui/icons';
@@ -11,14 +12,16 @@ import { ModelThumbnail } from './ModelThumbnail';
  * engine params and continues to step 1.
  */
 export function StartScreen({
+  mode,
   onPick,
   onScratch,
 }: {
+  mode: Mode;
   onPick: (model: ReadyModel) => void;
   onScratch: () => void;
 }) {
   const { t } = useI18n();
-  const units = unitSystemFor();
+  const units = unitSystemFor(mode);
   const unit = t(units === 'cm' ? 'unit.cm' : 'unit.mm');
   return (
     <div className="start" data-testid="start-screen">
