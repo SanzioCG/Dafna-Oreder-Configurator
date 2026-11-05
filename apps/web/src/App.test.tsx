@@ -609,3 +609,61 @@ describe('reset toast timing', () => {
     }
   });
 });
+
+describe('presentation — designer final (D-4)', () => {
+  const skip = () => screen.queryByRole('button', { name: uz['present.skip'] });
+
+  it('no particles, no success icon, no dimension overlay; title + summary line', () => {
+    renderApp();
+    fireEvent.click(tab(uz['step.color']));
+    fireEvent.click(toggle(uz['c.doorsOther']));
+    fireEvent.click(
+      (
+        screen.getByRole('radiogroup', { name: uz['param.doorMaterial'] }) as HTMLElement
+      ).querySelector('[data-material="ldsp_oak_light_16"]') as HTMLElement,
+    );
+    fireEvent.click(tab(uz['step.review']));
+    expect(document.querySelector('.confetti, canvas.confetti')).toBeNull();
+    expect(document.querySelector('.present-title-icon')).toBeNull();
+    expect(document.querySelectorAll('[data-dim]').length).toBe(0);
+    const head = screen.getByTestId('present-title');
+    expect(head.textContent).toContain(uz['present.title']);
+    expect(head.textContent).toContain(uz['present.subtitle']);
+    expect(screen.getByTestId('present-summary-line').textContent).toBe(
+      '136 × 190 × 60 sm · Korpus: Oq · Eshik: Och eman',
+    );
+  });
+
+  it('open wardrobe: the summary line has no door part', () => {
+    renderApp();
+    fireEvent.click(tab(uz['step.interior']));
+    fireEvent.click(toggle(uz['c.withDoors']));
+    fireEvent.click(tab(uz['step.review']));
+    expect(screen.getByTestId('present-summary-line').textContent).toBe(
+      '136 × 190 × 60 sm · Korpus: Oq',
+    );
+  });
+
+  it('"Tasdiqlash" (success) appears only after the doors close; skip is a text button', () => {
+    renderApp();
+    fireEvent.click(tab(uz['step.review']));
+    expect(screen.queryByRole('button', { name: uz['present.confirm'] })).toBeNull();
+    expect(skip()?.className).toContain('btn-text');
+    fireEvent.click(skip() as HTMLElement);
+    const confirm = screen.getByRole('button', { name: uz['present.confirm'] });
+    expect(confirm.className).toContain('btn-success');
+    expect(screen.getByRole('button', { name: uz['present.edit'] }).className).toContain(
+      'btn-text',
+    );
+    expect(skip()).toBeNull();
+  });
+
+  it('staff summary line in mm', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    fireEvent.click(tab(uz['step.review']));
+    expect(screen.getByTestId('present-summary-line').textContent).toBe(
+      '1360 × 1900 × 600 mm · Korpus: Oq · Eshik: Oq',
+    );
+  });
+});

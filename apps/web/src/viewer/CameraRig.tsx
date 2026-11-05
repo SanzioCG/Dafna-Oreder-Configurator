@@ -41,7 +41,8 @@ interface Goal {
  */
 export interface CameraApi {
   animateCameraTo: (pose: Pose, ms?: number) => void;
-  fitToModel: (ms?: number) => Pose;
+  /** `fill`: presentation framing (PRESENT_FILL); default: configurator framing */
+  fitToModel: (ms?: number, fill?: { height: number; width: number }) => Pose;
   fitToSelection: (box: FrameBox, ms?: number) => Pose;
   resetCamera: () => void;
   /** current pose (for scripted moves around it) */
@@ -165,8 +166,10 @@ export function CameraRig({
   const productBox: FrameBox = { min: pMin, max: pMax };
   const api: CameraApi = {
     animateCameraTo,
-    fitToModel: (ms) => {
-      const pose = fitToModelPose(productBox, extent, camera.fov, aspect);
+    fitToModel: (ms, fill) => {
+      const pose = fill
+        ? fitToModelPose(productBox, productBox, camera.fov, aspect, undefined, fill)
+        : fitToModelPose(productBox, extent, camera.fov, aspect);
       animateCameraTo(pose, ms);
       return pose;
     },

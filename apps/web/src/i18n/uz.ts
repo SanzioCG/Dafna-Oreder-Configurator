@@ -34,6 +34,8 @@ export const uz = {
   'present.title': 'Ajoyib tanlov!',
   'present.subtitle': "Siz o'z shkafingiz dizaynini muvaffaqiyatli yaratdingiz.",
   'present.skip': "O'tkazib yuborish",
+  'present.corpus': 'Korpus',
+  'present.door': 'Eshik',
   'present.edit': 'Konfiguratsiyani tahrirlash',
   'present.confirm': 'Konfiguratsiyani tasdiqlash',
   'summary.title': 'Sizning shkafingiz',

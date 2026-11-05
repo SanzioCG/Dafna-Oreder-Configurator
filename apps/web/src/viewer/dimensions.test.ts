@@ -30,14 +30,14 @@ describe('formatting', () => {
 describe('visibility per step', () => {
   const v = (step: string, doorsOpen: boolean, presentation = false, hasDoors = true) =>
     dimensionVisibility({ step, presentation, hasDoors, doorsOpen });
-  it('primary always; secondary only on interior/doors with sections visible, never presenting', () => {
+  it('primary in the configurator; secondary on interior/doors; nothing in the presentation', () => {
     expect(v('size', true)).toEqual({ primary: true, secondary: false });
     expect(v('color', true)).toEqual({ primary: true, secondary: false });
     expect(v('interior', true)).toEqual({ primary: true, secondary: true });
     expect(v('doors', true)).toEqual({ primary: true, secondary: true });
     expect(v('doors', false)).toEqual({ primary: true, secondary: false });
     expect(v('doors', false, false, false)).toEqual({ primary: true, secondary: true });
-    expect(v('interior', true, true)).toEqual({ primary: true, secondary: false });
+    expect(v('interior', true, true)).toEqual({ primary: false, secondary: false }); // D-4: none
   });
 });
 

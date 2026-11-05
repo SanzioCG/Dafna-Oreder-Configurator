@@ -89,7 +89,8 @@ export function dimensionVisibility(opts: {
 }): DimVisibility {
   const sectionsVisible = !opts.hasDoors || opts.doorsOpen;
   return {
-    primary: true,
+    // D-4: no dimension overlay at all in the presentation
+    primary: !opts.presentation,
     secondary:
       !opts.presentation && (opts.step === 'interior' || opts.step === 'doors') && sectionsVisible,
   };

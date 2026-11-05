@@ -9,14 +9,14 @@
  *   c) turn      8.0 s  exactly ONE 360° turn of the wardrobe around its vertical axis, constant
  *                       angular velocity with 0.3 s linear-acceleration ramps, ending at the
  *                       three-quarter showcase angle (the back panel is seen once)
- *   d) celebrate 1.5 s  small particles from the upper sides + title "Ajoyib tanlov!"
+ * (D-4: no celebration phase and no particles — the title is shown for the whole presentation.)
  * Short version (presented again after an edit): doors close only (brief open, close, settle —
  * 1.5 s), no turn, no particles. Same revision again: no animation. prefers-reduced-motion:
  * final state directly.
  */
 
 export type RevealKind = 'full' | 'short' | 'none' | 'instant';
-export type RevealPhase = 'showcase' | 'close' | 'turn' | 'settle' | 'celebrate' | 'done';
+export type RevealPhase = 'showcase' | 'close' | 'turn' | 'settle' | 'done';
 
 /** One full turn (radians). */
 export const TURN_RAD = 2 * Math.PI;
@@ -51,7 +51,6 @@ export const TIMELINES: Record<'full' | 'short', Segment[]> = {
     { phase: 'showcase', ms: 800 },
     { phase: 'close', ms: 1200 },
     { phase: 'turn', ms: TURN_MS },
-    { phase: 'celebrate', ms: 1300 },
   ],
   short: [
     { phase: 'showcase', ms: 300 },
@@ -92,8 +91,6 @@ export interface RevealSample {
   /** wardrobe rotation around its vertical axis, radians (0 = showcase angle) */
   turnRad: number;
   doorsClosed: boolean;
-  /** ms since the celebration started (confetti), null outside it */
-  confettiMs: number | null;
   title: boolean;
   done: boolean;
 }
@@ -103,7 +100,6 @@ export const FINAL_SAMPLE: RevealSample = {
   door: 0,
   turnRad: 0,
   doorsClosed: true,
-  confettiMs: null,
   title: true,
   done: true,
 };
@@ -120,7 +116,6 @@ export function sampleReveal(kind: RevealKind, t: number, startDoor = 0): Reveal
       const base = {
         phase: seg.phase,
         turnRad: 0,
-        confettiMs: null,
         title: false,
         done: false,
         doorsClosed: closedSeen,
@@ -134,8 +129,6 @@ export function sampleReveal(kind: RevealKind, t: number, startDoor = 0): Reveal
           return { ...base, door: 0, turnRad: turnAngle(t - t0, seg.ms) };
         case 'settle':
           return { ...base, door: 0 };
-        case 'celebrate':
-          return { ...base, door: 0, confettiMs: t - t0, title: true };
         default:
           return { ...base, door: 0 };
       }

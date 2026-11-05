@@ -35,6 +35,8 @@ export const ru: Messages = {
   'present.title': 'Отличный выбор!',
   'present.subtitle': 'Вы успешно создали дизайн своего шкафа.',
   'present.skip': 'Пропустить',
+  'present.corpus': 'Корпус',
+  'present.door': 'Дверь',
   'present.edit': 'Изменить конфигурацию',
   'present.confirm': 'Подтвердить конфигурацию',
   'summary.title': 'Ваш шкаф',

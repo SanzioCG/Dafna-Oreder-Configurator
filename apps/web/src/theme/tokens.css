@@ -64,9 +64,4 @@
   --tap-xl: 4rem; /* 64 px: round icon buttons, primary actions */
   --press-scale: 0.97;
   --disabled-opacity: 0.5;
-
-  /* ---- presentation particles (removed with the final presentation) ---- */
-  --particle-1: #009fe3;
-  --particle-2: #20b85a;
-  --particle-3: #ffffff;
 }

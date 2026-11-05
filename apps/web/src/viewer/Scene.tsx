@@ -9,7 +9,7 @@ import { CameraRig, type CameraApi, type FrameBox } from './CameraRig';
 import { DimensionProjector, type DimRegistry } from './DimensionOverlay';
 import type { DimSpec, V3 } from './dimensions';
 import { cssToken } from '../theme/cssToken';
-import type { ConfettiHandle } from '../presentation/Confetti';
+import { PresentationPlatform } from '../presentation/PresentationPlatform';
 import { RevealDriver } from '../presentation/RevealDriver';
 import type { RevealDirector, RevealEvent, RevealKind } from '../presentation/reveal';
 import { SectionPicker, type SectionBox } from './SectionPicker';
@@ -63,7 +63,6 @@ export interface SceneProps {
     director: RevealDirector;
     generation: number;
     kind: RevealKind;
-    confetti: MutableRefObject<ConfettiHandle | null>;
     onEvents: (events: RevealEvent[]) => void;
   } | null;
   /** current UI theme: re-renders the scene so themed colours (edges, shadow) update */
@@ -188,10 +187,11 @@ export function Scene({
           cameraApi={cameraApi}
           doorOverride={doorOverride}
           turn={turn}
-          confetti={reveal.confetti}
           onEvents={reveal.onEvents}
         />
       )}
+      {/* presentation: static platform (outside the turntable, never slides during the turn) */}
+      {reveal && <PresentationPlatform widthM={W * MM} depthM={D * MM} />}
       <CameraRig
         product={product}
         extent={extent}

@@ -1278,132 +1278,67 @@ p {
   -webkit-user-drag: none;
 }
 
-.confetti {
+/* headline + subtitle + one summary line, upper centre */
+.present-head {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: 50%;
+  top: var(--space-6);
+  transform: translateX(-50%);
+  width: min(60rem, 80%);
+  text-align: center;
+  color: var(--text);
   pointer-events: none;
-}
-
-.present-title {
-  position: absolute;
-  left: var(--space-6);
-  top: 6rem;
-  max-width: 30rem;
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-card);
-  background: var(--paper);
-  color: var(--ink);
-  border: var(--line-on-bg);
   animation: toast-in 0.3s ease-out;
 }
 
-.present-title-icon {
-  flex: none;
-  width: 3rem;
-  height: 3rem;
-  color: var(--success);
-}
-
-.present-title h2 {
-  font-size: var(--fs-2xl);
+.present-head h2 {
+  font-size: var(--fs-3xl);
   font-weight: var(--fw-bold);
   letter-spacing: var(--ls-tight);
+  line-height: var(--lh-tight);
 }
 
-.present-title p {
-  margin-top: var(--space-1);
-  font-size: var(--fs-sm);
-}
-
-.present-skip {
-  position: absolute;
-  right: var(--space-6);
-  top: var(--space-5);
-}
-
-.present-summary {
-  position: absolute;
-  right: var(--space-6);
-  bottom: var(--space-6);
-  width: 27rem;
-  max-height: calc(100% - 9rem);
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-5);
-  border-radius: var(--radius-card);
-  background: var(--paper);
-  color: var(--ink);
-  border: var(--line-on-bg);
-  animation: toast-in 0.25s ease-out;
-}
-
-.present-summary h3 {
+.present-sub {
+  margin-top: var(--space-2);
   font-size: var(--fs-lg);
-  font-weight: var(--fw-bold);
 }
 
-.present-summary dl {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.summary-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  column-gap: var(--space-3);
-  align-items: center;
-  padding: var(--space-1) 0;
-}
-
-.summary-row dt {
-  grid-column: 1;
-  font-size: var(--fs-2xs);
-}
-
-.summary-row dd {
-  grid-column: 1;
-  margin: 0.1rem 0 0;
+.present-line {
+  margin-top: var(--space-2);
   font-size: var(--fs-md);
-  font-weight: var(--fw-bold);
+  color: var(--text-2);
   font-variant-numeric: tabular-nums;
 }
 
-.summary-change {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  min-height: var(--tap);
-  padding: 0 var(--space-3);
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--ink);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-bold);
-  text-decoration: underline;
-  text-decoration-thickness: 0.125rem;
-  text-underline-offset: 0.25em;
-}
-
-.summary-actions {
+/* "Tasdiqlash" centred below the wardrobe, "Tahrirlash" as a text button */
+.present-actions {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-6);
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-2);
+  animation: toast-in 0.25s ease-out;
+}
+
+.present-actions .btn-success {
+  min-width: 20rem;
+}
+
+/* small text button, lower right, during the animation */
+.present-skip {
+  position: absolute;
+  right: var(--space-6);
+  bottom: var(--space-5);
+  font-size: var(--fs-sm);
 }
 
 .present-consultant {
   position: fixed;
   right: var(--space-6);
-  top: 5.5rem;
+  top: var(--space-5);
   z-index: 30;
 }
 
@@ -1470,8 +1405,8 @@ p {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .present-title,
-  .present-summary,
+  .present-head,
+  .present-actions,
   .sheet-toast {
     animation: none;
   }

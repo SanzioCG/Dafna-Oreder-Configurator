@@ -4,7 +4,6 @@ import {
   ArrowRight,
   Check,
   ChevronDown,
-  CircleCheck,
   Headset,
   Minus,
   Moon,
@@ -44,8 +43,6 @@ export const InfoIcon = lucide(Info);
 export const ConsultantIcon = lucide(Headset);
 /** "Markazlash": frame the model */
 export const ReframeIcon = lucide(Scan);
-/** presentation success badge (coloured by CSS: --success) */
-export const SuccessIcon = lucide(CircleCheck);
 
 /* ---------- custom interior preset icons (Lucide geometry: 24×24, stroke 2) ---------- */
 

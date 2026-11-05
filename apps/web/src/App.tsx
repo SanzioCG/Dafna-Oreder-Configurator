@@ -4,7 +4,8 @@ import { installKioskGuards, requestConsultant } from './kiosk';
 import { parseMode, type Mode } from './mode';
 import { ContactPlaceholder } from './presentation/ContactPlaceholder';
 import { planReveal, type RevealEvent, type RevealKind } from './presentation/reveal';
-import { ConfigurationSummary } from './ui/ConfigurationSummary';
+import { Button } from './ui/Button';
+import { useI18n } from './i18n/I18n';
 import { ConsultantButton } from './ui/ConsultantButton';
 import { ConsultantModal } from './ui/ConsultantModal';
 import { nextFlow, type FlowEvent, type FlowState } from './state/flow';
@@ -27,6 +28,7 @@ const EDIT_STEP = 'interior';
 
 function Configurator({ mode }: { mode: Mode }) {
   const config = useConfigurator(mode);
+  const { t } = useI18n();
   // shared by the sheet and the 3D view: the interior step opens the doors and selects sections
   // customers start on the ready-made models screen (step 0); staff go straight to step 1
   const [step, setStep] = useState(mode === 'customer' ? 'start' : 'size');
@@ -113,13 +115,14 @@ function Configurator({ mode }: { mode: Mode }) {
         onRevealEvents={onRevealEvents}
         presentationContent={
           flow === 'ready_to_confirm' ? (
-            <ConfigurationSummary
-              config={config}
-              mode={mode}
-              onEditStep={edit}
-              onConfirm={() => dispatch('confirm')}
-              onEdit={() => edit()}
-            />
+            <div className="present-actions" data-testid="present-actions">
+              <Button variant="success" large onClick={() => dispatch('confirm')}>
+                {t('present.confirm')}
+              </Button>
+              <Button variant="text" onClick={() => edit()}>
+                {t('present.edit')}
+              </Button>
+            </div>
           ) : null
         }
       />

@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useRef, type MutableRefObject } from 'react';
 import type { CameraApi } from '../viewer/CameraRig';
-import type { ConfettiHandle } from './Confetti';
+import { PRESENT_FILL } from '../viewer/framing';
 import type { RevealDirector, RevealEvent } from './reveal';
 
 /**
@@ -17,7 +17,6 @@ export function RevealDriver({
   cameraApi,
   doorOverride,
   turn,
-  confetti,
   onEvents,
 }: {
   director: RevealDirector;
@@ -27,7 +26,6 @@ export function RevealDriver({
   doorOverride: MutableRefObject<number | null>;
   /** wardrobe turn angle (radians), read by the turntable group and the overlay */
   turn: MutableRefObject<number>;
-  confetti: MutableRefObject<ConfettiHandle | null>;
   onEvents: (events: RevealEvent[]) => void;
 }) {
   const onEventsRef = useRef(onEvents);
@@ -36,14 +34,13 @@ export function RevealDriver({
 
   useEffect(
     () => () => {
-      // unmount (leaving the presentation): release the doors, clear the confetti. The
+      // unmount (leaving the presentation): release the doors, reset the turn. The
       // director itself is owned (started / cancelled) by <Viewer>: StrictMode re-mounts this
       // component in development, which must not stop a reveal that just started.
       doorOverride.current = null;
       turn.current = 0;
-      confetti.current?.draw(null);
     },
-    [doorOverride, turn, confetti],
+    [doorOverride, turn],
   );
 
   useFrame((_, dt) => {
@@ -52,12 +49,11 @@ export function RevealDriver({
     if (applied.current !== generation) {
       applied.current = generation;
       // showcase (presentation framing) pose, computed once per run from the current viewport
-      api.fitToModel(director.isRunning ? undefined : 0);
+      api.fitToModel(director.isRunning ? undefined : 0, PRESENT_FILL);
       if (!director.isRunning) {
         // none / instant / skipped: final state directly
         doorOverride.current = 0;
         turn.current = 0;
-        confetti.current?.draw(null);
       }
     }
     if (!director.isRunning) return;
@@ -65,7 +61,6 @@ export function RevealDriver({
     const { sample, events } = director.tick(Math.min(dt, 0.25) * 1000);
     doorOverride.current = sample.door;
     turn.current = sample.turnRad % (2 * Math.PI);
-    confetti.current?.draw(sample.confettiMs);
     if (events.length > 0) onEventsRef.current(events);
   });
 

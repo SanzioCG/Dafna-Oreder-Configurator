@@ -68,6 +68,10 @@ export function fitDistance(
   fov: number,
   aspect: number,
   dir: Vector3,
+  fill: { height: number; width: number } = {
+    height: PRODUCT_HEIGHT_FILL,
+    width: PRODUCT_WIDTH_FILL,
+  },
 ): number {
   const center = boxCenter(product);
   const productPts = corners(product);
@@ -77,8 +81,8 @@ export function fitDistance(
     const e = projectedSpan(extentPts, fov, aspect, center, dir, d);
     const lim = EXTENT_FILL;
     return (
-      p.maxY - p.minY <= 2 * PRODUCT_HEIGHT_FILL &&
-      p.maxX - p.minX <= 2 * PRODUCT_WIDTH_FILL &&
+      p.maxY - p.minY <= 2 * fill.height &&
+      p.maxX - p.minX <= 2 * fill.width &&
       e.minX >= -lim &&
       e.maxX <= lim &&
       e.minY >= -lim &&
@@ -130,9 +134,16 @@ export function fitToModelPose(
   fov: number,
   aspect: number,
   dir: Vector3 = DEFAULT_VIEW_DIR,
+  fill?: { height: number; width: number },
 ): Pose {
-  return poseAt(boxCenter(product), dir, fitDistance(product, extent, fov, aspect, dir));
+  return poseAt(boxCenter(product), dir, fitDistance(product, extent, fov, aspect, dir, fill));
 }
+
+/**
+ * Presentation framing (D-4): the wardrobe fills ~50 % of the screen height (45–55 % brief),
+ * three-quarter angle, so the title above and "Tasdiqlash" below have room.
+ */
+export const PRESENT_FILL = { height: 0.5, width: 0.55 };
 
 /**
  * fitToSelection: a section (or its door) framed frontally, centred on the selection box.
