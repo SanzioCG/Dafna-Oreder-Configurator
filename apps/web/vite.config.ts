@@ -11,7 +11,8 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    // CSS is not processed in tests, except the token files read by theme/contrast.test.ts
-    css: { include: [/theme[/\\](tokens|themes)\.css/] },
+    // CSS is not processed in tests, except the files read as ?raw by the design-system tests
+    // (contrast.test / lines.test: token files; outline.test: styles.css)
+    css: { include: [/theme[/\\](tokens|themes)\.css/, /src[/\\]styles\.css/] },
   },
 });

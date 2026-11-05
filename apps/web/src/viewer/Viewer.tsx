@@ -7,11 +7,12 @@ import {
   type PointerEvent,
   type ReactNode,
 } from 'react';
-import { Confetti, type ConfettiHandle } from '../presentation/Confetti';
+import { getMaterial } from '@dafna/engine';
+import { CATALOG } from '../state/useConfigurator';
 import { RevealDirector, type RevealEvent, type RevealKind } from '../presentation/reveal';
 import { useI18n } from '../i18n/I18n';
 import { useTheme } from '../theme/ThemeProvider';
-import { ReframeIcon, SuccessIcon } from '../ui/icons';
+import { ReframeIcon } from '../ui/icons';
 import { StatusMessage } from '../ui/StatusMessage';
 import type { CameraApi } from './CameraRig';
 import type { ViewGeometry } from '../state/useConfigurator';
@@ -23,6 +24,7 @@ import {
   buildDimensions,
   dimensionVisibility,
   formatLength,
+  formatSize,
   unitSystemFor,
   type V3,
 } from './dimensions';
@@ -115,6 +117,7 @@ function useUiScale(): number {
 /** Viewer shell: 3D scene + DOM overlays (dimension labels, buttons, banners). */
 export function Viewer({
   view,
+  mode = 'customer',
   invalid,
   activeStep = 'size',
   selectedSection = null,
@@ -165,7 +168,7 @@ export function Viewer({
 
   const sections = view.result.sections;
   // Dimension values come from the engine output only (result.dimensions / sections).
-  const units = unitSystemFor();
+  const units = unitSystemFor(mode);
   const unitLabel = t(units === 'cm' ? 'unit.cm' : 'unit.mm');
   const engineSize = view.result.dimensions ?? { widthMm: W, heightMm: H, depthMm: D };
   const visibility = dimensionVisibility({
@@ -262,12 +265,24 @@ export function Viewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only an explicit selection moves the camera
   }, [selectionSeq]);
 
+  // presentation summary line, e.g. "136 × 190 × 60 sm · Korpus: Oq · Eshik: Och eman"
+  const decor = (id: string | undefined) => {
+    const m = id ? getMaterial(CATALOG, id) : undefined;
+    return m ? t(m.decorName) : '';
+  };
+  const corpusId = view.result.panels.find((p) => p.role === 'side')?.material;
+  const doorId = view.result.panels.find((p) => p.role === 'door')?.material;
+  const presentSummaryLine = [
+    formatSize(engineSize.widthMm, engineSize.heightMm, engineSize.depthMm, units, unitLabel),
+    `${t('present.corpus')}: ${decor(corpusId)}`,
+    ...(doorId ? [`${t('present.door')}: ${decor(doorId)}`] : []),
+  ].join(' · ');
+
   // ---- presentation reveal (driven in the render loop; React hears discrete events) ----
   const [director] = useState(() => new RevealDirector());
   const [generation, setGeneration] = useState(0);
   const [revealUi, setRevealUi] = useState<RevealUi>(REVEAL_IDLE);
   const doorOverride = useRef<number | null>(null);
-  const confettiRef = useRef<ConfettiHandle | null>(null);
   const cameraApi = useRef<CameraApi | null>(null);
   const onRevealEventsRef = useRef(onRevealEvents);
   onRevealEventsRef.current = onRevealEvents;
@@ -340,7 +355,6 @@ export function Viewer({
                 director,
                 generation,
                 kind: presentation.kind,
-                confetti: confettiRef,
                 onEvents: handleRevealEvents,
               }
             : null
@@ -351,18 +365,15 @@ export function Viewer({
       {presenting && (
         <>
           <img className="present-logo" src={logoUrl} alt={t('app.brand')} draggable={false} />
-          <Confetti ref={confettiRef} />
-          {revealUi.title && (
-            <div className="present-title" role="status" data-testid="present-title">
-              <SuccessIcon className="present-title-icon" />
-              <div>
-                <h2>{t('present.title')}</h2>
-                <p>{t('present.subtitle')}</p>
-              </div>
-            </div>
-          )}
+          <div className="present-head" data-testid="present-title">
+            <h2>{t('present.title')}</h2>
+            <p className="present-sub">{t('present.subtitle')}</p>
+            <p className="present-line" data-testid="present-summary-line">
+              {presentSummaryLine}
+            </p>
+          </div>
           {revealUi.running && (
-            <button type="button" className="btn btn-floating present-skip" onClick={skipReveal}>
+            <button type="button" className="btn btn-text present-skip" onClick={skipReveal}>
               {t('present.skip')}
             </button>
           )}

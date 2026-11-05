@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'success' | 'ghost' | 'floating';
+type Variant = 'primary' | 'secondary' | 'success' | 'ghost' | 'text' | 'floating';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -14,8 +14,9 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 /**
- * Design system V2 button: solid fill, one radius, no shadow. `primary` = --primary fill with
- * --on-primary text; `success` = the confirm action; `secondary` = surface + control border.
+ * Design system V3 button (pill). `primary` = --primary fill + --ink text ("Keyingi");
+ * `success` = "Tasdiqlash"; `secondary` = --paper pill + --ink text (outline per the rules);
+ * `text` = text button ("Orqaga", "Tayyor — ko'rib chiqish", "Tahrirlash").
  */
 export function Button({
   variant = 'secondary',
@@ -52,7 +53,7 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon: ReactNode;
 }
 
-/** Square icon-only button (48 px min touch target), e.g. ± steppers, theme switch. */
+/** Round icon-only button (64 px at 1080p), e.g. ± steppers, theme switch. */
 export function IconButton({ label, icon, className, type = 'button', ...rest }: IconButtonProps) {
   return (
     <button

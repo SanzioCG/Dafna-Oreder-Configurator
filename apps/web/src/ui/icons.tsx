@@ -3,7 +3,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  CircleCheck,
+  ChevronDown,
   Headset,
   Minus,
   Moon,
@@ -32,6 +32,7 @@ const lucide = (C: (p: LucideProps) => ReactNode) =>
 export const ArrowLeftIcon = lucide(ArrowLeft);
 export const ArrowRightIcon = lucide(ArrowRight);
 export const CheckIcon = lucide(Check);
+export const ChevronIcon = lucide(ChevronDown);
 export const CloseIcon = lucide(X);
 export const MinusIcon = lucide(Minus);
 export const PlusIcon = lucide(Plus);
@@ -42,8 +43,6 @@ export const InfoIcon = lucide(Info);
 export const ConsultantIcon = lucide(Headset);
 /** "Markazlash": frame the model */
 export const ReframeIcon = lucide(Scan);
-/** presentation success badge (coloured by CSS: --success) */
-export const SuccessIcon = lucide(CircleCheck);
 
 /* ---------- custom interior preset icons (Lucide geometry: 24×24, stroke 2) ---------- */
 
@@ -106,7 +105,7 @@ export function PresetIcon({
       {auto && (
         <g>
           <circle cx="19" cy="19" r="4.5" fill="currentColor" stroke="none" />
-          <path d="M17.3 21l1.7-4 1.7 4M17.8 19.8h2.4" strokeWidth={1.4} stroke="var(--surface)" />
+          <path d="M17.3 21l1.7-4 1.7 4M17.8 19.8h2.4" strokeWidth={1.4} stroke="var(--paper)" />
         </g>
       )}
     </PresetSvg>

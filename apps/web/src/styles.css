@@ -1,17 +1,16 @@
 /*
- * DAFNA configurator — styles on the V2 design system (ADR-007).
- * Flat 2D vector UI: solid fills, one radius scale, no gradients, no pastel card fills, no
- * nested cards; shadows only on overlays floating over the 3D. Colours come ONLY from the
- * semantic tokens (theme/tokens.css + theme/themes.css), type from theme/typography.css.
+ * DAFNA configurator — styles on design system V3 "Bold Bento" (ADR-007).
+ * Colored rounded cards, chunky pills, black (--ink) selected state. NO thin light / grey
+ * outlines: every border / outline below is `0`, `none` or one of the line tokens
+ * (--line-in-card, --line-on-bg, --focus-line) — enforced by theme/outline.test.ts.
  *
- * Kiosk sizing: 1rem = 16 px at 1920x1080 and 32 px at 3840x2160 (whichever axis is tighter).
- * Minimum tap target: 3rem = 48 px at 1080p, scales with the screen.
+ *   inside colored cards ........ var(--line-in-card)  2 px --ink, both themes
+ *   directly on the page ......... var(--line-on-bg)    2.5 px --ink Light, none Dark
+ *   selected ..................... --ink fill + --on-ink text (colour-independent)
+ *   unselected ................... --paper fill + --ink text
+ *   disabled ..................... 50 % opacity + plain-language reason below
  *
- * Selection state contract (every option button / tile / swatch):
- *   unselected = --surface fill, 1 px --border-control border, --text
- *   selected   = --primary fill, --on-primary text, 3 px --primary-strong border
- *                (differs by fill AND border thickness, not colour only)
- *   disabled   = --disabled-fill, --disabled-text, short human reason always visible
+ * Kiosk sizing: 1rem = 16 px at 1920x1080 and 32 px at 3840x2160.
  */
 @import './theme/typography.css';
 @import './theme/tokens.css';
@@ -28,7 +27,7 @@ body,
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
-  touch-action: none; /* no browser pinch-zoom / pan on the page itself */
+  touch-action: none;
   -webkit-user-select: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -55,7 +54,7 @@ button {
   transition:
     transform 0.1s ease,
     background-color 0.15s ease,
-    border-color 0.15s ease;
+    color 0.15s ease;
 }
 
 button:not(:disabled):active,
@@ -67,11 +66,9 @@ button:disabled {
   cursor: default;
 }
 
-/* focus: 3 px --primary-strong ring + soft outer halo */
 :focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 0.125rem;
-  box-shadow: var(--focus-halo);
+  outline: var(--focus-line);
+  outline-offset: 0.1875rem;
 }
 
 h1,
@@ -85,18 +82,34 @@ p {
   color: var(--text-2);
 }
 
-/* lucide + custom icons: sized by the font, stroke = currentColor */
 .icon {
   flex: none;
   width: 1.25em;
   height: 1.25em;
 }
 
-/* ---------- layout: 3D viewport + configuration panel ---------- */
+/* round --ink badge with a white glyph (option icons, consultant headset) */
+.icon-badge {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.icon-badge .icon {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+/* ---------- layout: 3D zone ~60 % | panel ~40 % ---------- */
 
 .app {
   display: grid;
-  grid-template-columns: 65fr 35fr; /* 3D viewport ~65 % | configuration panel ~35 % */
+  grid-template-columns: 60fr 40fr;
   height: 100vh;
   height: 100dvh;
   background: var(--bg);
@@ -106,7 +119,7 @@ p {
   position: relative;
   min-width: 0;
   overflow: hidden;
-  background: var(--viewport-bg);
+  background: var(--viewport);
 }
 
 .viewer canvas {
@@ -127,7 +140,6 @@ p {
   left: var(--space-5);
   bottom: var(--space-5);
   display: flex;
-  align-items: flex-end;
   gap: var(--space-3);
 }
 
@@ -138,7 +150,7 @@ p {
   justify-content: center;
   align-items: flex-start;
   padding-top: var(--space-5);
-  background: color-mix(in srgb, var(--viewport-bg) 60%, transparent);
+  background: color-mix(in srgb, var(--viewport) 60%, transparent);
   pointer-events: none;
 }
 
@@ -149,42 +161,61 @@ p {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  min-height: var(--tap-lg);
+  min-height: var(--tap);
   padding: 0 var(--space-5);
-  border: var(--border-w) solid transparent;
-  border-radius: var(--radius);
+  border: 0;
+  border-radius: var(--radius-pill);
   font-size: var(--fs-lg);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
   white-space: nowrap;
 }
 
+/* "Keyingi": --primary pill on the page */
 .btn-primary {
+  min-height: var(--tap-xl);
+  padding: 0 var(--space-6);
   background: var(--primary);
-  border-color: var(--primary-strong);
   color: var(--on-primary);
+  border: var(--line-on-bg);
 }
 
+/* "Tasdiqlash" */
 .btn-success {
+  min-height: var(--tap-xl);
+  padding: 0 var(--space-6);
   background: var(--success);
   color: var(--on-success);
+  border: var(--line-on-bg);
 }
 
-.btn-secondary {
-  background: var(--surface);
-  border-color: var(--border-control);
-  color: var(--text);
+/* --paper pill on the page (Light: 2.5 px --ink outline, Dark: none) */
+.btn-secondary,
+.btn-floating {
+  background: var(--paper);
+  color: var(--ink);
+  border: var(--line-on-bg);
 }
 
+/* --paper pill inside a colored card */
+.card .btn-secondary {
+  border: var(--line-in-card);
+}
+
+/* text buttons ("Orqaga", "Tayyor — ko'rib chiqish", "Tahrirlash") */
+.btn-text,
 .btn-ghost {
+  min-height: var(--tap);
+  padding: 0 var(--space-3);
   background: transparent;
   color: var(--text);
+  text-decoration: underline;
+  text-decoration-thickness: 0.125rem;
+  text-underline-offset: 0.25em;
 }
 
 .btn:disabled {
-  background: var(--disabled-fill);
-  border-color: transparent;
-  color: var(--disabled-text);
+  opacity: var(--disabled-opacity);
 }
 
 .btn-wide {
@@ -192,81 +223,79 @@ p {
 }
 
 .btn-lg {
-  min-height: 4rem;
-}
-
-/* buttons floating over the 3D viewport */
-.btn-floating {
-  min-height: var(--tap);
-  background: var(--surface);
-  border-color: var(--border-control);
-  color: var(--text);
+  min-height: var(--tap-xl);
 }
 
 .btn-floating[aria-pressed='true'] {
-  background: var(--primary);
-  border: var(--border-w-active) solid var(--primary-strong);
-  color: var(--on-primary);
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
+/* round icon buttons (min 64 px at 1080p) */
 .icon-btn {
   display: inline-grid;
   place-items: center;
   flex: none;
-  width: var(--tap);
-  height: var(--tap);
+  width: var(--tap-xl);
+  height: var(--tap-xl);
   padding: 0;
-  border: var(--border-w) solid var(--border-control);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
+  border: var(--line-on-bg);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.card .icon-btn {
+  border: var(--line-in-card);
+}
+
+.icon-btn .icon {
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
 .icon-btn:disabled {
-  background: var(--disabled-fill);
-  border-color: transparent;
-  color: var(--disabled-text);
+  opacity: var(--disabled-opacity);
 }
 
 .icon-btn[aria-pressed='true'] {
-  background: var(--primary);
-  border: var(--border-w-active) solid var(--primary-strong);
-  color: var(--on-primary);
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
-/* ---------- status messages (toast, notes, banners) ---------- */
+/* "Konsultant chaqirish": peach pill, --ink text, headset in an --ink badge */
+.consultant-btn {
+  min-height: var(--tap);
+  padding: 0 var(--space-4) 0 var(--space-1);
+  background: var(--accent-peach);
+  color: var(--ink);
+  border: var(--line-on-bg);
+  font-size: var(--fs-sm);
+}
+
+/* ---------- status messages (peach info card) ---------- */
 
 .status {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border: var(--border-w) solid var(--border-control);
-  border-left: var(--border-w-active) solid var(--primary-strong);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
+  border-radius: var(--radius-card);
+  background: var(--accent-peach);
+  color: var(--ink);
+  border: var(--line-on-bg);
   font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
+  font-weight: var(--fw-semibold);
 }
 
-.status-error {
-  border-left-color: var(--error);
-}
-
-.status-error .status-icon {
-  color: var(--error);
-}
-
-.status-success {
-  border-left-color: var(--success);
+.card .status {
+  border: var(--line-in-card);
 }
 
 .status-icon {
   flex: none;
   width: 1.4rem;
   height: 1.4rem;
-  color: var(--primary-strong);
 }
 
 .status-body {
@@ -280,11 +309,8 @@ p {
   list-style: none;
 }
 
-/* staff: invalid params -> the 3D shows the last valid model, washed out, with a banner */
 .viewer-invalid {
-  box-shadow: var(--shadow-overlay);
   font-size: var(--fs-lg);
-  font-weight: var(--fw-semibold);
 }
 
 /* ---------- configuration panel ---------- */
@@ -294,8 +320,7 @@ p {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  background: var(--panel);
-  border-left: var(--border-w) solid var(--divider);
+  background: var(--bg);
   overflow: hidden;
 }
 
@@ -319,7 +344,6 @@ p {
   margin-right: auto;
 }
 
-/* dafna-logo.svg is 3969 x 1287 (≈ 3.08 : 1); height drives the size */
 .brand-logo {
   display: block;
   height: 2.5rem;
@@ -338,80 +362,90 @@ p {
   font-weight: var(--fw-bold);
   letter-spacing: var(--ls-wide);
   text-transform: uppercase;
-  color: var(--text);
   padding: var(--space-1) var(--space-3);
-  border: var(--border-w) solid var(--border-control);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
+/* language segmented pill */
 .lang-switch {
   display: flex;
-  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  border: var(--line-on-bg);
 }
 
 .lang {
-  min-height: var(--tap);
-  min-width: 5.5rem;
+  min-height: calc(var(--tap) - 0.5rem);
+  min-width: 4.75rem;
   padding: 0 var(--space-3);
-  border: var(--border-w) solid var(--border-control);
-  border-radius: var(--radius);
-  background: var(--surface);
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink);
   font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .lang.active {
-  background: var(--primary);
-  border: var(--border-w-active) solid var(--primary-strong);
-  color: var(--on-primary);
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
-/* step navigation: numbered tabs */
+/* step pills */
 .steps {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--space-1);
+  display: flex;
+  gap: var(--space-2);
   margin: 0 var(--space-5);
   padding-bottom: var(--space-3);
-  border-bottom: var(--border-w) solid var(--divider);
 }
 
 .step-tab {
+  flex: 1;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
-  min-height: 4rem;
-  padding: var(--space-2) var(--space-1);
-  border: var(--border-w) solid transparent;
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--text-2);
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-semibold);
+  justify-content: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: var(--tap);
+  padding: var(--space-1) var(--space-3);
+  border: var(--line-on-bg);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
-  text-align: center;
 }
 
 .step-tab.active {
-  background: var(--primary);
-  border: var(--border-w-active) solid var(--primary-strong);
-  color: var(--on-primary);
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
 .step-tab:disabled {
-  color: var(--disabled-text);
+  opacity: var(--disabled-opacity);
 }
 
 .step-num {
-  display: grid;
+  display: inline-grid;
   place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  flex: none;
+  width: 1.6rem;
+  height: 1.6rem;
   border-radius: 50%;
-  border: var(--border-w) solid currentColor;
+  background: var(--step, var(--ink));
+  color: var(--ink);
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
+}
+
+.step-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .step-soon {
@@ -423,9 +457,8 @@ p {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
-  /* step content scrolls inside the panel (never the page) */
-  padding: var(--space-4) var(--space-5) var(--space-5);
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5) var(--space-5);
   overflow-y: auto;
   touch-action: pan-y;
   overscroll-behavior: contain;
@@ -444,7 +477,7 @@ p {
 }
 
 .summary {
-  margin-top: var(--space-3);
+  margin-top: var(--space-2);
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -463,21 +496,37 @@ p {
 .controls {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
-/* control groups: no fill, no nesting — separated by spacing and a divider */
+/* ---------- cards: one colored card per step (bento) ---------- */
+
 .card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding-top: var(--space-4);
-  border-top: var(--border-w) solid var(--divider);
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--radius-card);
+  background: var(--card-fill, var(--paper));
+  color: var(--ink);
+  border: var(--line-on-bg);
 }
 
-.controls > .card:first-child {
-  padding-top: 0;
-  border-top: 0;
+.card .muted {
+  color: var(--ink);
+  opacity: 0.75;
+}
+
+.card[data-step='size'] {
+  --card-fill: var(--step-size);
+}
+
+.card[data-step='color'] {
+  --card-fill: var(--step-color);
+}
+
+.card[data-step='interior'] {
+  --card-fill: var(--step-interior);
 }
 
 .param {
@@ -510,12 +559,12 @@ p {
 
 .param-label {
   font-size: var(--fs-lg);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
 }
 
 .param-note {
   font-size: var(--fs-xs);
-  color: var(--text-2);
+  opacity: 0.8;
 }
 
 .param-hint {
@@ -525,7 +574,7 @@ p {
 }
 
 .param-error .number-field {
-  border: var(--border-w-active) solid var(--error);
+  background: var(--accent-peach);
 }
 
 .badge-unconfirmed,
@@ -534,22 +583,26 @@ p {
   font-weight: var(--fw-bold);
   letter-spacing: var(--ls-wide);
   padding: 0.1rem var(--space-2);
-  border-radius: var(--radius-sm);
-  border: var(--border-w) solid var(--border-control);
+  border-radius: var(--radius-pill);
   text-transform: uppercase;
   white-space: nowrap;
 }
 
 .badge-unconfirmed {
-  border-color: var(--error);
-  color: var(--error);
+  background: var(--accent-peach);
+  color: var(--ink);
 }
 
-/* ---------- dimension control: [−] input [+], slider, min / max ---------- */
+.badge-staff {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+/* ---------- steppers, numeric field, slider ---------- */
 
 .param-row {
   display: grid;
-  grid-template-columns: var(--tap) 9.5rem var(--tap);
+  grid-template-columns: var(--tap-xl) 9rem var(--tap-xl);
   gap: var(--space-2);
   align-items: center;
 }
@@ -557,15 +610,12 @@ p {
 .number-field {
   display: flex;
   align-items: center;
-  height: var(--tap);
+  height: var(--tap-xl);
   padding: 0 var(--space-3);
-  border: var(--border-w) solid var(--border-control);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.number-field:focus-within {
-  border: var(--border-w-active) solid var(--primary-strong);
+  border: var(--line-in-card);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink);
 }
 
 .number-field input {
@@ -579,17 +629,13 @@ p {
   text-align: center;
   font-variant-numeric: tabular-nums;
   background: transparent;
-  color: var(--text);
+  color: var(--ink);
   user-select: text;
 }
 
-.number-field input:focus-visible {
-  box-shadow: none;
-}
-
 .number-unit {
-  color: var(--text-2);
   font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
 }
 
 .slider {
@@ -597,7 +643,7 @@ p {
   height: var(--tap);
   display: flex;
   align-items: center;
-  padding: 0 1.125rem; /* half thumb, so the thumb never leaves the slider */
+  padding: 0 1.25rem;
   touch-action: none;
   cursor: pointer;
 }
@@ -605,45 +651,46 @@ p {
 .slider-track {
   position: relative;
   flex: 1;
-  height: 0.5rem;
+  height: 0.75rem;
   border-radius: var(--radius-pill);
-  background: var(--bg);
-  border: var(--border-w) solid var(--border-control);
+  background: var(--paper);
+  border: var(--line-in-card);
 }
 
 .slider-fill {
   position: absolute;
-  inset: -0.0625rem auto -0.0625rem -0.0625rem;
+  inset: 0 auto 0 0;
   border-radius: var(--radius-pill);
-  background: var(--primary);
+  background: var(--ink);
 }
 
 .slider-thumb {
   position: absolute;
   top: 50%;
-  width: 2.25rem;
-  height: 2.25rem;
-  margin: -1.125rem 0 0 -1.125rem; /* centre without transform, so :active can scale */
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: -1.25rem 0 0 -1.25rem;
   border-radius: 50%;
-  background: var(--surface);
-  border: var(--border-w-active) solid var(--primary-strong);
+  background: var(--paper);
+  border: var(--line-in-card);
   transition: transform 0.1s ease;
 }
 
 .slider-scale {
   display: flex;
   justify-content: space-between;
-  padding: 0 1.125rem;
+  padding: 0 1.25rem;
   margin-top: calc(var(--space-2) * -1);
   font-size: var(--fs-2xs);
-  color: var(--text-2);
+  font-weight: var(--fw-semibold);
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- selection grid (segmented options) ---------- */
+/* ---------- pills (selection grid) ---------- */
 
 .segmented {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
 }
 
@@ -654,48 +701,91 @@ p {
   align-items: center;
   justify-content: center;
   gap: 0.15rem;
-  min-height: var(--tap-lg);
-  padding: var(--space-1) var(--space-2);
-  border: var(--border-w) solid var(--border-control);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
+  min-width: var(--tap-xl);
+  min-height: var(--tap);
+  padding: var(--space-2) var(--space-3);
+  border: var(--line-in-card);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink);
   font-size: var(--fs-md);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
 }
 
 .segment.active {
-  background: var(--primary);
-  border: var(--border-w-active) solid var(--primary-strong);
-  color: var(--on-primary);
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
 .segment:disabled {
-  background: var(--disabled-fill);
-  border-color: transparent;
-  color: var(--disabled-text);
+  opacity: var(--disabled-opacity);
 }
 
-/* the reason is always visible on a disabled option, never an error code */
 .segment-reason {
   font-size: var(--fs-2xs);
   font-weight: var(--fw-medium);
   line-height: var(--lh-tight);
-  color: var(--text-2);
 }
 
-/* ---------- panel footer: Orqaga / Keyingi ---------- */
+/* ---------- toggles: pill with round knob ---------- */
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  text-align: left;
+}
+
+.toggle-track {
+  position: relative;
+  flex: none;
+  width: 3.75rem;
+  height: 2.25rem;
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  border: var(--line-in-card);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 0.125rem;
+  left: 0.125rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--paper);
+  border: var(--line-in-card);
+  transition: transform 0.15s;
+}
+
+.toggle.on .toggle-track {
+  background: var(--ink);
+}
+
+.toggle.on .toggle-knob {
+  transform: translateX(1.5rem);
+  border: 0;
+  background: var(--on-ink);
+}
+
+/* ---------- panel footer ---------- */
 
 .panel-footer {
-  position: relative; /* anchors the reset toast just above the navigation */
+  position: relative;
   flex: none;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-5) var(--space-4);
-  border-top: var(--border-w) solid var(--divider);
-  background: var(--panel);
+  background: var(--bg);
 }
 
 .footer-center {
@@ -705,42 +795,17 @@ p {
   min-width: 0;
 }
 
-/* "Tayyor — ko'rib chiqish": secondary action between Orqaga / Keyingi */
 .btn-review {
-  min-height: var(--tap-lg);
-  padding: 0 var(--space-3);
-  font-size: var(--fs-md);
   white-space: normal;
   text-align: center;
-  text-decoration: underline;
-  text-decoration-color: var(--primary-strong);
-  text-decoration-thickness: 0.125rem;
-  text-underline-offset: 0.25em;
 }
 
-/* "Konsultant chaqirish" (header on configurator screens, bottom-left in presentation) */
-.consultant-btn {
-  min-height: var(--tap);
-  padding: 0 var(--space-3);
-  font-size: var(--fs-sm);
-}
-
-/* presentation / contact: top-right, under the skip button; above the contact overlay */
-.present-consultant {
-  position: fixed;
-  right: var(--space-6);
-  top: 5.5rem;
-  z-index: 30;
-}
-
-/* auto-reset toast: inside the panel, floating just above the navigation */
 .sheet-toast {
   position: absolute;
   left: var(--space-5);
   right: var(--space-5);
   bottom: calc(100% + var(--space-3));
   z-index: 5;
-  box-shadow: var(--shadow-overlay);
   animation: toast-in 0.18s ease-out;
 }
 
@@ -752,9 +817,9 @@ p {
   height: var(--tap);
   padding: 0;
   border: 0;
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--text);
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
 @keyframes toast-in {
@@ -765,6 +830,40 @@ p {
 }
 
 /* ---------- staff ---------- */
+
+/* "Xodim sozlamalari": --paper card on the page (outline per the page rule) */
+.staff-card {
+  gap: var(--space-3);
+}
+
+.staff-toggle {
+  align-self: flex-start;
+  color: var(--ink);
+  font-size: var(--fs-lg);
+}
+
+.staff-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.staff-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.staff-card .segment,
+.staff-card .number-field,
+.staff-card .icon-btn,
+.staff-card .swatch,
+.staff-card .slider-track,
+.staff-card .slider-thumb,
+.staff-card .toggle-track,
+.staff-card .btn-secondary {
+  border: var(--line-in-card);
+}
 
 .staff {
   display: flex;
@@ -794,27 +893,18 @@ p {
   flex-wrap: wrap;
   gap: var(--space-1) var(--space-2);
   padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  border: var(--border-w) solid var(--border-control);
-  border-left-width: var(--border-w-active);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.issue-error {
+  background: var(--accent-peach);
 }
 
 .issue code {
   margin-left: auto;
   font-size: var(--fs-2xs);
-  color: var(--text-2);
-}
-
-.issue-error {
-  border-left-color: var(--error);
-}
-
-.issue-error .issue-severity {
-  color: var(--error);
-}
-
-.issue-warning {
-  border-left-color: var(--primary-strong);
 }
 
 .issue-severity {
@@ -823,7 +913,8 @@ p {
 
 .panels {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0 0.125rem;
   font-size: var(--fs-xs);
   font-variant-numeric: tabular-nums;
 }
@@ -832,7 +923,8 @@ p {
 .panels td {
   text-align: left;
   padding: var(--space-1) var(--space-2);
-  border-bottom: var(--border-w) solid var(--divider);
+  background: var(--paper);
+  color: var(--ink);
 }
 
 /* ---------- material swatches ---------- */
@@ -840,12 +932,12 @@ p {
 .swatch-picker {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .swatches {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(6.25rem, 1fr));
   gap: var(--space-3);
 }
 
@@ -854,18 +946,16 @@ p {
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-1) var(--space-3);
-  border: var(--border-w) solid var(--border-control);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
+  padding: var(--space-3) var(--space-2);
+  border: var(--line-in-card);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+  color: var(--ink);
 }
 
-/* selected swatch: 3 px --primary-strong border + check mark (decor colour stays visible) */
 .swatch.selected {
-  border: var(--border-w-active) solid var(--primary-strong);
-  padding: calc(var(--space-2) - 0.125rem) calc(var(--space-1) - 0.125rem)
-    calc(var(--space-3) - 0.125rem);
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
 .swatch-chip {
@@ -874,19 +964,22 @@ p {
   place-items: center;
   width: 4.5rem;
   height: 4.5rem;
-  border-radius: var(--radius-sm);
-  border: var(--border-w) solid var(--border-control);
+  border-radius: 50%;
+  border: var(--line-in-card);
+}
+
+.swatch.selected .swatch-chip {
+  border: 0;
 }
 
 .swatch-check {
   display: grid;
   place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: 50%;
-  background: var(--primary);
-  color: var(--on-primary);
-  border: 0.125rem solid var(--surface);
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
 .swatch-check .icon {
@@ -896,7 +989,7 @@ p {
 
 .swatch-name {
   font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   text-align: center;
   line-height: var(--lh-tight);
 }
@@ -904,54 +997,9 @@ p {
 .swatch-name small {
   display: block;
   font-weight: var(--fw-regular);
-  color: var(--text-2);
 }
 
-.toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: var(--tap);
-  padding: 0 var(--space-1);
-  border: 0;
-  background: transparent;
-  font-size: var(--fs-md);
-  font-weight: var(--fw-semibold);
-  align-self: flex-start;
-}
-
-.toggle-track {
-  position: relative;
-  width: 3.25rem;
-  height: 1.9rem;
-  border-radius: var(--radius-pill);
-  background: var(--bg);
-  border: var(--border-w) solid var(--border-control);
-  transition: background 0.15s;
-}
-
-.toggle-knob {
-  position: absolute;
-  top: 0.15rem;
-  left: 0.15rem;
-  width: 1.45rem;
-  height: 1.45rem;
-  border-radius: 50%;
-  background: var(--border-control);
-  transition: transform 0.15s;
-}
-
-.toggle.on .toggle-track {
-  background: var(--primary);
-  border-color: var(--primary-strong);
-}
-
-.toggle.on .toggle-knob {
-  background: var(--on-primary);
-  transform: translateX(1.35rem);
-}
-
-/* ---------- interior presets ---------- */
+/* ---------- interior options ---------- */
 
 .preset-grid {
   display: grid;
@@ -966,23 +1014,20 @@ p {
   gap: var(--space-1);
   min-height: 6.5rem;
   padding: var(--space-3) var(--space-1) var(--space-2);
-  border: var(--border-w) solid var(--border-control);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
+  border: var(--line-in-card);
+  border-radius: var(--radius-card);
+  background: var(--paper);
+  color: var(--ink);
   text-align: center;
 }
 
 .preset-card.active {
-  background: var(--primary);
-  border: var(--border-w-active) solid var(--primary-strong);
-  color: var(--on-primary);
+  background: var(--ink);
+  color: var(--on-ink);
 }
 
 .preset-card:disabled {
-  background: var(--disabled-fill);
-  border-color: transparent;
-  color: var(--disabled-text);
+  opacity: var(--disabled-opacity);
 }
 
 .preset-illustration {
@@ -992,7 +1037,7 @@ p {
 
 .preset-label {
   font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   line-height: var(--lh-tight);
 }
 
@@ -1001,7 +1046,182 @@ p {
   font-weight: var(--fw-medium);
 }
 
-/* ---------- dimension overlay (one SVG, refs per frame) ---------- */
+/* ---------- step cards (D-4 simplified flow) ---------- */
+
+.step-card {
+  gap: var(--space-5);
+}
+
+.card-head h2 {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--ls-tight);
+  line-height: var(--lh-tight);
+}
+
+.card-head p {
+  margin-top: var(--space-1);
+  font-size: var(--fs-md);
+}
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.chip {
+  font-variant-numeric: tabular-nums;
+}
+
+.disclosure {
+  align-self: flex-start;
+  padding: 0 var(--space-2);
+  color: var(--ink);
+}
+
+.chevron {
+  transition: transform 0.15s;
+}
+
+.chevron.open {
+  transform: rotate(180deg);
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.toggle-label {
+  min-width: 0;
+}
+
+/* interior options: icon badge + title + one-line hint */
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap-xl);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  border: var(--line-in-card);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+}
+
+.option-row.active {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+/* on a selected row the badge inverts: white disc, --ink glyph */
+.option-row.active .option-badge {
+  background: var(--on-ink);
+  color: var(--ink);
+}
+
+.option-row:disabled {
+  opacity: var(--disabled-opacity);
+}
+
+.option-badge {
+  width: 3rem;
+  height: 3rem;
+}
+
+.option-badge .icon {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.option-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.option-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  line-height: var(--lh-tight);
+}
+
+.option-hint {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+}
+
+.tag {
+  padding: 0.1rem var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+}
+
+/* ---------- start screen (step 0): ready-made models ---------- */
+
+.start {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.model-grid {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.model-card {
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.model-thumb {
+  display: block;
+  width: 100%;
+  height: 8.5rem;
+}
+
+.model-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.model-meta h2 {
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+}
+
+.model-width {
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-body[hidden],
+.panel-footer[hidden] {
+  display: none;
+}
+
+/* ---------- dimension overlay ---------- */
 
 .dim-overlay {
   position: absolute;
@@ -1014,31 +1234,31 @@ p {
 
 .dim-line,
 .dim-tick {
-  stroke: var(--primary-strong);
-  stroke-width: 0.125rem;
+  stroke: var(--primary);
+  stroke-width: 0.15625rem;
   stroke-linecap: round;
 }
 
 .dim-secondary .dim-line {
-  stroke-width: 0.094rem;
+  stroke-width: 0.125rem;
 }
 
 .dim-ext {
-  stroke: var(--primary-strong);
+  stroke: var(--primary);
   stroke-width: 0.0625rem;
-  stroke-opacity: 0.5;
+  stroke-opacity: 0.6;
 }
 
 .dim-label rect {
-  fill: var(--surface);
-  stroke: var(--primary-strong);
-  stroke-width: 0.0625rem;
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 0.125rem;
 }
 
 .dim-label text {
-  fill: var(--text);
+  fill: var(--ink);
   font-family: var(--font-sans);
-  font-weight: var(--fw-semibold);
+  font-weight: var(--fw-bold);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1058,157 +1278,109 @@ p {
   -webkit-user-drag: none;
 }
 
-.confetti {
+/* headline + subtitle + one summary line, upper centre */
+.present-head {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.present-title {
-  position: absolute;
-  left: var(--space-6);
-  top: 6rem;
-  max-width: 30rem;
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-5) var(--space-4) var(--space-4);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
+  left: 50%;
+  top: var(--space-6);
+  transform: translateX(-50%);
+  width: min(60rem, 80%);
+  text-align: center;
   color: var(--text);
-  box-shadow: var(--shadow-overlay);
+  pointer-events: none;
   animation: toast-in 0.3s ease-out;
 }
 
-.present-title-icon {
-  flex: none;
-  width: 3rem;
-  height: 3rem;
-  color: var(--success);
-}
-
-.present-title h2 {
-  font-size: var(--fs-2xl);
+.present-head h2 {
+  font-size: var(--fs-3xl);
   font-weight: var(--fw-bold);
   letter-spacing: var(--ls-tight);
+  line-height: var(--lh-tight);
 }
 
-.present-title p {
-  margin-top: var(--space-1);
-  color: var(--text-2);
-  font-size: var(--fs-sm);
-}
-
-.present-skip {
-  position: absolute;
-  right: var(--space-6);
-  top: var(--space-5);
-}
-
-.present-summary {
-  position: absolute;
-  right: var(--space-6);
-  bottom: var(--space-6);
-  width: 27rem;
-  max-height: calc(100% - 9rem);
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-5);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-overlay);
-  animation: toast-in 0.25s ease-out;
-}
-
-.present-summary h3 {
+.present-sub {
+  margin-top: var(--space-2);
   font-size: var(--fs-lg);
-  font-weight: var(--fw-bold);
 }
 
-.present-summary dl {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.summary-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  column-gap: var(--space-3);
-  align-items: center;
-  padding: var(--space-2) 0;
-  border-bottom: var(--border-w) solid var(--divider);
-}
-
-.summary-row dt {
-  grid-column: 1;
-  font-size: var(--fs-2xs);
-  color: var(--text-2);
-}
-
-.summary-row dd {
-  grid-column: 1;
-  margin: 0.1rem 0 0;
+.present-line {
+  margin-top: var(--space-2);
   font-size: var(--fs-md);
-  font-weight: var(--fw-semibold);
+  color: var(--text-2);
   font-variant-numeric: tabular-nums;
 }
 
-.summary-change {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  min-height: var(--tap);
-  padding: 0 var(--space-3);
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--text);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
-  text-decoration: underline;
-  text-decoration-color: var(--primary-strong);
-  text-decoration-thickness: 0.125rem;
-  text-underline-offset: 0.25em;
-}
-
-.summary-actions {
+/* "Tasdiqlash" centred below the wardrobe, "Tahrirlash" as a text button */
+.present-actions {
+  position: absolute;
+  left: 50%;
+  bottom: var(--space-6);
+  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-2);
-  margin-top: var(--space-2);
+  animation: toast-in 0.25s ease-out;
 }
 
-/* modal (consultant until D-2a): centred over everything, flat card */
-.modal-backdrop {
+.present-actions .btn-success {
+  min-width: 20rem;
+}
+
+/* small text button, lower right, during the animation */
+.present-skip {
+  position: absolute;
+  right: var(--space-6);
+  bottom: var(--space-5);
+  font-size: var(--fs-sm);
+}
+
+.present-consultant {
+  position: fixed;
+  right: var(--space-6);
+  top: var(--space-5);
+  z-index: 30;
+}
+
+/* ---------- modal + contact placeholder ---------- */
+
+.modal-backdrop,
+.contact-placeholder {
   position: fixed;
   inset: 0;
   z-index: 40;
   display: grid;
   place-items: center;
-  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
 }
 
-.modal-card {
+.contact-placeholder {
+  z-index: 20;
+}
+
+.modal-card,
+.contact-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-4);
   width: min(34rem, 90vw);
   padding: var(--space-6);
-  border-radius: var(--radius-lg);
-  border: var(--border-w) solid var(--divider);
-  background: var(--panel);
-  color: var(--text);
+  border-radius: var(--radius-card);
+  background: var(--accent-peach);
+  color: var(--ink);
+  border: var(--line-on-bg);
   text-align: center;
-  box-shadow: var(--shadow-overlay);
 }
 
-.modal-card h2 {
+.contact-card {
+  align-items: flex-start;
+  text-align: left;
+  background: var(--paper);
+}
+
+.modal-card h2,
+.contact-card h2 {
   font-size: var(--fs-2xl);
   font-weight: var(--fw-bold);
 }
@@ -1221,40 +1393,20 @@ p {
 .modal-icon {
   width: 3rem;
   height: 3rem;
-  color: var(--primary-strong);
 }
 
-/* contact (D-3b placeholder): over the presentation, nothing is submitted */
-.contact-placeholder {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  background: color-mix(in srgb, var(--bg) 85%, transparent);
-}
-
-.contact-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-4);
-  width: min(36rem, 90vw);
-  padding: var(--space-6);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  color: var(--text);
-  border: var(--border-w) solid var(--divider);
-}
-
-.contact-card h2 {
-  font-size: var(--fs-2xl);
+.contact-todo {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--accent-peach);
+  color: var(--ink);
   font-weight: var(--fw-bold);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .present-title,
-  .present-summary,
+  .present-head,
+  .present-actions,
   .sheet-toast {
     animation: none;
   }

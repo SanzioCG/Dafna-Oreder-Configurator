@@ -32,7 +32,7 @@ export function SectionPicker({
   onTap: (index: number) => void;
   lineScale: number;
 }) {
-  const blue = cssToken('--primary-strong', '#0090cf');
+  const blue = cssToken('--primary', '#009fe3');
   const sel = boxes.find((b) => b.index === selected);
   return (
     <group>

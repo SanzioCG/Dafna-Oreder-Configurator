@@ -33,16 +33,25 @@ export function installKioskGuards(): () => void {
 
 export type Theme = 'light' | 'dark';
 
+/** The `?theme=` URL override is for staff and development only (D-4). */
+export function themeUrlOverrideAllowed(
+  search: string = typeof window === 'undefined' ? '' : window.location.search,
+  dev: boolean = import.meta.env.DEV,
+): boolean {
+  return dev || new URLSearchParams(search).get('mode') === 'staff';
+}
+
 /**
- * Kiosk default theme: build-time env `VITE_KIOSK_THEME=dark|white` (per kiosk deployment),
- * overridable per URL with `?theme=dark|white` (useful for testing a device). Default: DARK.
+ * Kiosk default theme: build-time env `VITE_KIOSK_THEME=dark|white` (per kiosk deployment).
+ * `?theme=dark|light|white` overrides it only in staff mode or a dev build. Default: DARK.
  * Staff can switch it on the device (stored per device); customers have no theme toggle.
  */
 export function kioskDefaultTheme(
   search: string = typeof window === 'undefined' ? '' : window.location.search,
   env: string | undefined = import.meta.env.VITE_KIOSK_THEME as string | undefined,
+  allowUrl: boolean = themeUrlOverrideAllowed(search),
 ): Theme {
-  const fromUrl = new URLSearchParams(search).get('theme');
+  const fromUrl = allowUrl ? new URLSearchParams(search).get('theme') : null;
   const value = fromUrl ?? env;
   // V2: Dark is the default kiosk theme; 'white' / 'light' select the White theme
   return value === 'white' || value === 'light' ? 'light' : 'dark';

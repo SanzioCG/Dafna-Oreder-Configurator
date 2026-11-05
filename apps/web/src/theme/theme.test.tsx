@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { kioskDefaultTheme } from '../kiosk';
+import { kioskDefaultTheme, themeUrlOverrideAllowed } from '../kiosk';
 import {
   LOGO_URL,
   THEME_STORAGE_KEY,
@@ -92,5 +92,16 @@ describe('ThemeProvider', () => {
     act(() => screen.getByText('toggle').click());
     expect(screen.getByTestId('theme').textContent).toBe('light');
     expect(document.documentElement.dataset.theme).toBe('light');
+  });
+});
+
+describe('?theme URL override (D-4: staff / dev only)', () => {
+  it('customer production build ignores ?theme; staff or dev may override', () => {
+    expect(kioskDefaultTheme('?theme=light', undefined, false)).toBe('dark');
+    expect(kioskDefaultTheme('?theme=light', 'white', false)).toBe('light'); // env still applies
+    expect(kioskDefaultTheme('?theme=light', undefined, true)).toBe('light');
+    expect(themeUrlOverrideAllowed('?theme=light', false)).toBe(false);
+    expect(themeUrlOverrideAllowed('?mode=staff&theme=light', false)).toBe(true);
+    expect(themeUrlOverrideAllowed('', true)).toBe(true);
   });
 });

@@ -8,15 +8,19 @@ import {
   labelSize,
   resolveLabelOverlaps,
   unitSystemFor,
+  fromDisplay,
+  toDisplay,
   type LabelBox,
 } from './dimensions';
 
 describe('formatting', () => {
-  it('V2: mm in both modes; cm formatter kept (decimal comma)', () => {
-    expect(unitSystemFor()).toBe('mm');
+  it('D-4: customers whole centimetres, staff millimetres', () => {
+    expect(unitSystemFor('customer')).toBe('cm');
+    expect(unitSystemFor('staff')).toBe('mm');
     expect(formatLength(1360, 'cm', 'sm')).toBe('136 sm');
-    expect(formatLength(656, 'cm', 'sm')).toBe('65,6 sm');
-    expect(formatLength(645, 'cm', 'см')).toBe('64,5 см');
+    expect(formatLength(656, 'cm', 'sm')).toBe('66 sm'); // whole cm, half up
+    expect(formatLength(645, 'cm', 'см')).toBe('65 см');
+    expect(formatLength(644, 'cm', 'см')).toBe('64 см');
     expect(formatLength(1360, 'mm', 'mm')).toBe('1360 mm');
     expect(formatLength(337.5, 'mm', 'mm')).toBe('337,5 mm');
     expect(formatSize(1360, 1900, 600, 'cm', 'sm')).toBe('136 × 190 × 60 sm');
@@ -26,14 +30,14 @@ describe('formatting', () => {
 describe('visibility per step', () => {
   const v = (step: string, doorsOpen: boolean, presentation = false, hasDoors = true) =>
     dimensionVisibility({ step, presentation, hasDoors, doorsOpen });
-  it('primary always; secondary only on interior/doors with sections visible, never presenting', () => {
+  it('primary in the configurator; secondary on interior/doors; nothing in the presentation', () => {
     expect(v('size', true)).toEqual({ primary: true, secondary: false });
     expect(v('color', true)).toEqual({ primary: true, secondary: false });
     expect(v('interior', true)).toEqual({ primary: true, secondary: true });
     expect(v('doors', true)).toEqual({ primary: true, secondary: true });
     expect(v('doors', false)).toEqual({ primary: true, secondary: false });
     expect(v('doors', false, false, false)).toEqual({ primary: true, secondary: true });
-    expect(v('interior', true, true)).toEqual({ primary: true, secondary: false });
+    expect(v('interior', true, true)).toEqual({ primary: false, secondary: false }); // D-4: none
   });
 });
 
@@ -106,5 +110,18 @@ describe('label collision avoidance', () => {
 
   it('label size grows with the font', () => {
     expect(labelSize('136 sm', 32).w).toBeGreaterThan(1.9 * labelSize('136 sm', 16).w);
+  });
+});
+
+describe('cm <-> mm conversion (customer steppers move 10 mm)', () => {
+  it('toDisplay / fromDisplay round-trip on 10 mm steps', () => {
+    for (let mm = 600; mm <= 2400; mm += 10) {
+      expect(fromDisplay(toDisplay(mm, 'cm'), 'cm')).toBe(mm);
+    }
+    expect(toDisplay(1365, 'cm')).toBe(137);
+    expect(toDisplay(1364, 'cm')).toBe(136);
+    expect(fromDisplay(136, 'cm')).toBe(1360);
+    expect(toDisplay(1365, 'mm')).toBe(1365);
+    expect(fromDisplay(1365, 'mm')).toBe(1365);
   });
 });

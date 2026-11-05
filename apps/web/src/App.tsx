@@ -4,11 +4,14 @@ import { installKioskGuards, requestConsultant } from './kiosk';
 import { parseMode, type Mode } from './mode';
 import { ContactPlaceholder } from './presentation/ContactPlaceholder';
 import { planReveal, type RevealEvent, type RevealKind } from './presentation/reveal';
-import { ConfigurationSummary } from './ui/ConfigurationSummary';
+import { Button } from './ui/Button';
+import { useI18n } from './i18n/I18n';
 import { ConsultantButton } from './ui/ConsultantButton';
 import { ConsultantModal } from './ui/ConsultantModal';
 import { nextFlow, type FlowEvent, type FlowState } from './state/flow';
-import { useConfigurator } from './state/useConfigurator';
+import { TEMPLATE, useConfigurator } from './state/useConfigurator';
+import { modelParams } from './state/presets';
+import { defaultParams } from '@dafna/engine';
 import { ThemeProvider } from './theme/ThemeProvider';
 import { StepPanel } from './ui/StepPanel';
 import { Viewer } from './viewer/Viewer';
@@ -21,12 +24,14 @@ export function prefersReducedMotion(): boolean {
 }
 
 /** The step the configurator returns to from the presentation (last configurator step). */
-const EDIT_STEP = 'doors';
+const EDIT_STEP = 'interior';
 
 function Configurator({ mode }: { mode: Mode }) {
   const config = useConfigurator(mode);
+  const { t } = useI18n();
   // shared by the sheet and the 3D view: the interior step opens the doors and selects sections
-  const [step, setStep] = useState('size');
+  // customers start on the ready-made models screen (step 0); staff go straight to step 1
+  const [step, setStep] = useState(mode === 'customer' ? 'start' : 'size');
   const [section, setSection] = useState(0);
   // every explicit selection (tab or 3D tap) bumps this: the smart camera frames the selection
   const [selectionSeq, setSelectionSeq] = useState(0);
@@ -34,7 +39,7 @@ function Configurator({ mode }: { mode: Mode }) {
     setSection(i);
     setSelectionSeq((n) => n + 1);
   };
-  const picking = step === 'interior' || step === 'doors';
+  const picking = step === 'interior';
 
   // ---- customer flow (state machine, see state/flow.ts) ----
   const [flow, setFlow] = useState<FlowState>('configurator');
@@ -110,13 +115,14 @@ function Configurator({ mode }: { mode: Mode }) {
         onRevealEvents={onRevealEvents}
         presentationContent={
           flow === 'ready_to_confirm' ? (
-            <ConfigurationSummary
-              config={config}
-              mode={mode}
-              onEditStep={edit}
-              onConfirm={() => dispatch('confirm')}
-              onEdit={() => edit()}
-            />
+            <div className="present-actions" data-testid="present-actions">
+              <Button variant="success" large onClick={() => dispatch('confirm')}>
+                {t('present.confirm')}
+              </Button>
+              <Button variant="text" onClick={() => edit()}>
+                {t('present.edit')}
+              </Button>
+            </div>
           ) : null
         }
       />
@@ -130,6 +136,14 @@ function Configurator({ mode }: { mode: Mode }) {
         onSelectSection={selectSection}
         onCallConsultant={callConsultant}
         onReview={present}
+        onPickModel={(m) => {
+          config.setParams(modelParams(m));
+          setStep('size');
+        }}
+        onScratch={() => {
+          config.setParams(defaultParams(TEMPLATE));
+          setStep('size');
+        }}
       />
       {flow === 'contact' && <ContactPlaceholder mode={mode} onBack={() => dispatch('back')} />}
       {mode === 'customer' && inPresentation && (

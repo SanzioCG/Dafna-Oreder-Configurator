@@ -24,6 +24,7 @@ come in later batches.
 | D-1c   | Leaves may share a partition (ADR-006 revised), hinge mount per leaf, default depth 600, order draft 0.3                                                                                              |
 | D-3a   | Design system V2 (tokens, White/Dark, Inter, contrast gate), redesigned steps, SVG dimension overlay, smart camera, full-screen presentation with 360° reveal, confirm entry, flow (ADR-007, ADR-008) |
 | D-3a.1 | Plinth construction (sides to the floor, ADR-009), Dark theme V2.1 Deep Graphite, consultant modal (1408), audit fixes                                                                                |
+| D-4    | Bold Bento design system (Dark + Light), simplified customer flow (start screen, 4 steps, plain language, cm), staff settings cards, presentation final (ADR-007, ADR-010)                            |
 | D-2a   | Backend: projects, branches/devices, customer confirmation, status model, audit log, outbox, Telegram notification, sales panel                                                                       |
 | D-2b   | CRM adapter                                                                                                                                                                                           |
 | D-3b   | Contact form + submission, server-side PDF, QR, on-screen keyboard, idle timeout / session reset                                                                                                      |
@@ -75,32 +76,45 @@ come in later batches.
 | kromka (ABS)         | кромка (ABS)         | edge band                | `edges`             |
 | tola yo'nalishi      | направление текстуры | grain direction          | `grainDirection`    |
 
-## Visual language (design system V2, ADR-007)
+## Visual language (design system V3 "Bold Bento", ADR-007)
 
-Single source: `apps/web/src/theme/` — `tokens.css` (shared scales + White), `themes.css` (Dark),
-`typography.css` (Inter, self-hosted latin + cyrillic). Every text / background and boundary
-pair is checked by `theme/contrast.test.ts` (WCAG; part of the gate).
+Single source: `apps/web/src/theme/`.
 
-- **Flat 2D vector UI:** solid fills, one radius scale, no gradients, no pastel card fills, no
-  nested cards; shadows only on overlays over the 3D. The wardrobe is the only photorealistic
-  element.
-- **Layout:** 3D viewport ~65 % | configuration panel ~35 % (surface colour): logo,
-  "Konsultant chaqirish" (customers), language, StepNavigation (5 steps), independently
-  scrolling step content, fixed footer Orqaga · "Tayyor — ko'rib chiqish" · Keyingi. The page
-  never scrolls; nothing is hard-coded to one resolution (1 rem = 16 px at 1080p, 32 px at 4K).
-- **Selection contract:** selected = `--primary` fill + 3 px `--primary-strong` border (differs by
-  border thickness, not colour only); unselected = surface + 1 px control border; disabled =
-  neutral fill + muted text + a short human reason (never an error code). Focus: 3 px ring + halo.
-- **Themes:** Dark is the default kiosk theme (`VITE_KIOSK_THEME=dark|white`, `?theme=`); staff
-  can switch it, customers cannot; switching never resets the configuration. Logo variant per
-  theme. 3D lighting is the same in both themes; viewport background, edge outlines and contact
-  shadow are themed.
-- **Icons:** lucide-react + custom interior preset icons (24×24, 2 px). No emoji.
-- **Units:** millimetres in both modes; the engine is the source of every dimension.
-- **Customer mode** disables every option that would produce an engine error or a
-  `SHELF_SPAN` / `RAIL_DEPTH_SHORT` / `RAIL_HEIGHT_SHORT` / `DRAWER_SECTION_TOO_WIDE` warning and
-  shows a short reason; staff mode keeps everything selectable and shows the issue. Hidden from
-  customers: order draft JSON, debug info, rule ids, validation logs, unconfirmed markers.
-- **Never change a customer choice silently:** every auto-reset shows a toast (ResetToast on
-  StatusMessage), dismissible, gone after 3 s.
-- **Dimension overlay / smart camera / presentation / flow:** see ADR-008.
+- `tokens.css` holds Light plus the shared tokens, `themes.css` holds Dark, `typography.css` holds
+  Inter.
+- `theme/contrast.test.ts` checks every text / background and state pair (WCAG).
+- `theme/lines.test.ts` and `theme/outline.test.ts` enforce the outline rules.
+- All three run in the gate.
+
+Rules:
+
+- **Bold bento:** colored rounded cards (28 px), chunky pills, round 64 px icon buttons, and a
+  black (`--ink`) selected state with white text. No thin light / grey outlines anywhere. The
+  wardrobe is the only photorealistic element.
+- **Outlines:**
+  - Inside colored cards: 2 px `--ink`.
+  - Directly on the page: 2.5 px `--ink` in Light, none in Dark.
+  - Focus: 3 px `--ink`, no glow.
+- **Layout:**
+  - The 3D zone takes about 60 % and stays neutral (`--viewport`).
+  - The panel takes about 40 % (`--bg`). It holds the header (logo per theme, language pill,
+    peach "Konsultant chaqirish"), the step pills, one colored card per step, and a fixed footer
+    (Orqaga · Tayyor — ko'rib chiqish · Keyingi).
+  - The page never scrolls.
+- **Customer flow** (ADR-010): start screen with ready-made models, then Joy (mint), Rang
+  (yellow), Ichki (lavender) and Ko'rib chiqish (cyan).
+  - Plain language: no codes and no engineering words.
+  - Sizes are shown in whole centimetres.
+- **Staff:** the same steps and look, plus a collapsible "Xodim sozlamalari" card in each step
+  (all engine parameters, issues, order draft JSON). Staff see millimetres.
+- **Themes:**
+  - Dark is the default kiosk theme (`VITE_KIOSK_THEME=dark|white`).
+  - Only staff can switch it. `?theme=` works only in staff mode or a dev build.
+  - Switching never resets the configuration.
+- **Customer mode** disables every option that would produce an engine error or a customer-
+  blocking warning. A plain reason is shown, for example "Bu kenglikda javon egilib qoladi".
+  Staff mode keeps every option selectable and shows the issue.
+- **Never change a customer choice silently:** every auto-reset shows a peach toast in plain
+  words. It is dismissible and disappears after 3 s.
+- **Dimension overlay / smart camera / presentation / flow:** see ADR-008. The presentation shows
+  no dimension overlay and no particles; the wardrobe stands on a minimal platform.

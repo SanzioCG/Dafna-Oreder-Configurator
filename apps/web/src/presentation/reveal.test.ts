@@ -11,7 +11,6 @@ import {
   totalMs,
   type RevealEvent,
 } from './reveal';
-import { CONFETTI_MS, SIDE_BAND, makePieces, piecePosition } from './Confetti';
 
 describe('planReveal: once per configuration revision', () => {
   it('first time full, same revision none, after an edit short, reduced motion instant', () => {
@@ -26,14 +25,13 @@ describe('planReveal: once per configuration revision', () => {
 describe('sequence order (full)', () => {
   const phaseAt = (t: number) => sampleReveal('full', t).phase;
 
-  it('showcase -> close -> turn -> celebrate -> done; total 11.3 s', () => {
+  it('showcase -> close -> turn -> done; total 10 s (no celebration phase)', () => {
     expect(phaseAt(0)).toBe('showcase');
     expect(phaseAt(900)).toBe('close');
     expect(phaseAt(2100)).toBe('turn');
     expect(phaseAt(9999)).toBe('turn');
-    expect(phaseAt(10000)).toBe('celebrate');
-    expect(phaseAt(totalMs('full'))).toBe('done');
-    expect(totalMs('full')).toBe(11300);
+    expect(phaseAt(10000)).toBe('done');
+    expect(totalMs('full')).toBe(10000);
   });
 
   it('doors: open during the showcase, closed (1.2 s, eased) before the turn', () => {
@@ -69,34 +67,21 @@ describe('sequence order (full)', () => {
     expect(sampleReveal('full', 1999).turnRad).toBe(0);
     expect(sampleReveal('full', 2000 + TURN_MS / 2).turnRad).toBeCloseTo(Math.PI, 6);
     expect(sampleReveal('full', 2000 + TURN_MS - 1).turnRad).toBeGreaterThan(TURN_RAD - 0.001);
-    expect(sampleReveal('full', 2000 + TURN_MS).turnRad).toBe(0); // celebration: showcase angle
+    expect(sampleReveal('full', 2000 + TURN_MS).turnRad).toBe(0); // done: showcase angle
     expect(sampleReveal('full', totalMs('full')).turnRad).toBe(0);
   });
 
-  it('particles: small, from the upper sides, never over the model centre', () => {
-    for (const p of makePieces()) {
-      expect(p.y).toBeLessThan(0.3);
-      for (let ms = 0; ms < CONFETTI_MS; ms += 50) {
-        const { x } = piecePosition(p, ms / 1000);
-        expect(x < SIDE_BAND || x > 1 - SIDE_BAND).toBe(true);
-      }
+  it('no particles and no confetti field in the sample (D-4)', () => {
+    for (let t = 0; t <= totalMs('full'); t += 250) {
+      expect('confettiMs' in sampleReveal('full', t)).toBe(false);
     }
   });
 
-  it('particles only in the celebration (1.3 s), with the title', () => {
-    expect(sampleReveal('full', 9000).confettiMs).toBeNull();
-    expect(sampleReveal('full', 9000).title).toBe(false);
-    const c = sampleReveal('full', 10500);
-    expect(c.confettiMs).toBe(500);
-    expect(c.title).toBe(true);
-  });
-
-  it('short version: ≤ 1.5 s, doors close only, no turn, no particles', () => {
+  it('short version: ≤ 1.5 s, doors close only, no turn', () => {
     expect(totalMs('short')).toBeLessThanOrEqual(1500);
     for (let t = 0; t < totalMs('short'); t += 20) {
       const s = sampleReveal('short', t, 1);
       expect(s.turnRad).toBe(0);
-      expect(s.confettiMs).toBeNull();
     }
     expect(sampleReveal('short', 1250).doorsClosed).toBe(true);
     expect(sampleReveal('short', totalMs('short'))).toEqual(FINAL_SAMPLE);

@@ -4,42 +4,38 @@ import themesCss from './themes.css?raw';
 import tokensCss from './tokens.css?raw';
 
 /*
- * Automated contrast gate (D-3a design system V2). Computes WCAG relative luminance from the
- * token VALUES in tokens.css (White) and themes.css (Dark) and fails below:
- *   text 4.5:1 · large text 3:1 · UI boundaries and focus indicators 3:1
+ * Automated contrast gate (design system V3 "Bold Bento"). Computes WCAG relative luminance
+ * from the token VALUES in tokens.css (Light + shared) and themes.css (Dark):
+ *   text 4.5:1 · selected vs unselected / toggle states 3:1.
+ * Boundary contrast is not required for text-labelled controls (ADR-007): unselected pills are
+ * identified by their label and the --ink outline / fill inversion, not by a grey hairline.
  */
-const white = tokensFromCss(tokensCss, ':root');
-const dark = { ...white, ...tokensFromCss(themesCss, ":root[data-theme='dark']") };
-const THEMES = { white, dark } as const;
+const light = tokensFromCss(tokensCss, ':root');
+const dark = { ...light, ...tokensFromCss(themesCss, ":root[data-theme='dark']") };
+const THEMES = { light, dark } as const;
 
 type Pair = [fg: string, bg: string];
 const TEXT: Pair[] = [
   ['--text', '--bg'],
-  ['--text', '--surface'],
-  ['--text', '--panel'],
   ['--text-2', '--bg'],
-  ['--text-2', '--surface'],
-  ['--text-2', '--panel'],
-  ['--error', '--panel'],
+  ['--error', '--bg'],
+  ['--ink', '--paper'], // unselected pills / cards
+  ['--on-ink', '--ink'], // selected pills (white on ink)
+  ['--ink', '--step-size'],
+  ['--ink', '--step-color'],
+  ['--ink', '--step-interior'],
+  ['--ink', '--step-review'],
+  ['--ink', '--accent-peach'],
   ['--on-primary', '--primary'],
   ['--on-success', '--success'],
-  ['--error', '--bg'],
-  ['--error', '--surface'],
-  ['--text', '--viewport-bg'], // viewport overlays without their own pill (hints)
+  ['--text', '--viewport'], // viewport hint text
 ];
-const LARGE_TEXT: Pair[] = [
-  ['--primary-strong', '--surface'], // large accent headings / numbers
-  ['--text-2', '--viewport-bg'],
-];
-const UI_BOUNDARY: Pair[] = [
-  ['--primary-strong', '--bg'], // focus ring, selected borders
-  ['--primary-strong', '--surface'],
-  ['--primary-strong', '--viewport-bg'], // dimension lines over the 3D background
-  ['--primary-strong', '--panel'],
-  ['--border-control', '--bg'], // unselected controls, inputs, slider track
-  ['--border-control', '--surface'],
-  ['--border-control', '--panel'],
-  ['--border-control', '--viewport-bg'], // floating buttons over the 3D
+const STATE: Pair[] = [
+  ['--ink', '--paper'], // selected vs unselected fill
+  ['--ink', '--step-size'], // selected pill vs its card
+  ['--ink', '--step-color'],
+  ['--ink', '--step-interior'],
+  ['--paper', '--ink'], // toggle OFF track vs ON track
 ];
 
 describe('WCAG luminance helper', () => {
@@ -57,19 +53,10 @@ describe.each(Object.entries(THEMES))('%s theme contrast', (_name, tokens) => {
     if (!v) throw new Error(`token ${t} missing`);
     return v;
   };
-  const check = (pairs: Pair[], min: number) =>
-    pairs.map(([fg, bg]) => {
-      const ratio = contrastRatio(value(fg), value(bg));
-      return { pair: `${fg} on ${bg}`, ratio: Number(ratio.toFixed(2)), ok: ratio >= min };
-    });
-
   it.each(TEXT)('text %s on %s >= 4.5:1', (fg, bg) => {
-    expect(check([[fg, bg]], 4.5)[0]).toMatchObject({ ok: true });
+    expect(contrastRatio(value(fg), value(bg))).toBeGreaterThanOrEqual(4.5);
   });
-  it.each(LARGE_TEXT)('large text %s on %s >= 3:1', (fg, bg) => {
-    expect(check([[fg, bg]], 3)[0]).toMatchObject({ ok: true });
-  });
-  it.each(UI_BOUNDARY)('UI boundary / focus %s on %s >= 3:1', (fg, bg) => {
-    expect(check([[fg, bg]], 3)[0]).toMatchObject({ ok: true });
+  it.each(STATE)('state %s vs %s >= 3:1', (a, b) => {
+    expect(contrastRatio(value(a), value(b))).toBeGreaterThanOrEqual(3);
   });
 });
