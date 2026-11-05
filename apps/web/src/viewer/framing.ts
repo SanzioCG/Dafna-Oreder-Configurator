@@ -134,16 +134,28 @@ export function fitToModelPose(
   fov: number,
   aspect: number,
   dir: Vector3 = DEFAULT_VIEW_DIR,
-  fill?: { height: number; width: number },
+  fill?: { height: number; width: number; lift?: number },
 ): Pose {
-  return poseAt(boxCenter(product), dir, fitDistance(product, extent, fov, aspect, dir, fill));
+  const pose = poseAt(
+    boxCenter(product),
+    dir,
+    fitDistance(product, extent, fov, aspect, dir, fill),
+  );
+  const lift = fill?.lift ?? 0;
+  if (!lift) return pose;
+  // look at a point below the centre: the product moves UP on screen (camera direction kept)
+  const dy = -lift * (product.max[1] - product.min[1]);
+  return {
+    target: [pose.target[0], pose.target[1] + dy, pose.target[2]],
+    position: [pose.position[0], pose.position[1] + dy, pose.position[2]],
+  };
 }
 
 /**
- * Presentation framing (D-4): the wardrobe fills ~50 % of the screen height (45–55 % brief),
- * three-quarter angle, so the title above and "Tasdiqlash" below have room.
+ * Presentation framing (D-4.1): the wardrobe fills ~45 % of the screen height, three-quarter
+ * angle, lifted a little so the title stays above it and the platform clears "Tasdiqlash".
  */
-export const PRESENT_FILL = { height: 0.5, width: 0.55 };
+export const PRESENT_FILL = { height: 0.45, width: 0.5, lift: 0.14 };
 
 /**
  * fitToSelection: a section (or its door) framed frontally, centred on the selection box.

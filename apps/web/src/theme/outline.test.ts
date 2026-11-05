@@ -39,6 +39,10 @@ describe('stylesheet outline rules', () => {
     expect(bad).toEqual([]);
   });
 
+  it('no underlined text anywhere (D-4.1)', () => {
+    expect(stylesCss).not.toMatch(/text-decoration[^;]*underline/);
+  });
+
   it('no border-color / border-width / outline-color overrides, no V2 grey tokens', () => {
     expect(stylesCss).not.toMatch(/^\s*(border|outline)-(color|width|style)\s*:/m);
     expect(stylesCss).not.toMatch(/--border-control|--divider|--primary-strong|--surface\b/);

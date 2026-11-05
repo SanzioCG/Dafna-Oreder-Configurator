@@ -3,12 +3,16 @@
  * applies the sample (door progress, turn angle) through refs; React only hears about the few
  * discrete events (doors closed, title, done).
  *
- * Full sequence (first time a configuration revision is presented):
- *   a) showcase  0.8 s  camera to the three-quarter showcase pose, doors open (if any)
- *   b) close     1.2 s  doors close around their real hinge pivots, ease-in-out
- *   c) turn      8.0 s  exactly ONE 360° turn of the wardrobe around its vertical axis, constant
+ * Full sequence (first time a configuration revision is presented) — 8 s in total (D-4.1):
+ *   a) showcase  0.6 s  camera to the three-quarter showcase pose, doors open (if any)
+ *   b) close     1.0 s  doors close around their real hinge pivots, ease-in-out
+ *   c) turn      3.0 s  exactly ONE 360° turn of the wardrobe around its vertical axis, constant
  *                       angular velocity with 0.3 s linear-acceleration ramps, ending at the
  *                       three-quarter showcase angle (the back panel is seen once)
+ *   d) tour      2.8 s  camera visits 3 viewpoints: closer from the left, closer from the right,
+ *                       zoom out (presentation/tour.ts)
+ *   e) settle    0.6 s  camera back to the showcase pose
+ *   + candy shower over the whole screen during the 360° turn: from 0.3 s into it, 2.6 s long
  * (D-4: no celebration phase and no particles — the title is shown for the whole presentation.)
  * Short version (presented again after an edit): doors close only (brief open, close, settle —
  * 1.5 s), no turn, no particles. Same revision again: no animation. prefers-reduced-motion:
@@ -16,11 +20,17 @@
  */
 
 export type RevealKind = 'full' | 'short' | 'none' | 'instant';
-export type RevealPhase = 'showcase' | 'close' | 'turn' | 'settle' | 'done';
+export type RevealPhase = 'showcase' | 'close' | 'turn' | 'tour' | 'settle' | 'done';
 
 /** One full turn (radians). */
 export const TURN_RAD = 2 * Math.PI;
-export const TURN_MS = 8000;
+export const TURN_MS = 3000;
+/** camera tour after the turn: 3 legs (showcase -> 1 -> 2 -> 3) */
+export const TOUR_MS = 2800;
+export const TOUR_LEGS = 3;
+/** candy shower: starts 0.3 s into the 360° turn (1.6 s + 0.3 s) and ends before the turn does */
+export const CANDY_FROM_MS = 1900;
+export const CANDY_MS = 2600;
 /** ease-in / ease-out ramp of the turn (linear acceleration) */
 export const TURN_RAMP_MS = 300;
 
@@ -48,9 +58,11 @@ interface Segment {
 
 export const TIMELINES: Record<'full' | 'short', Segment[]> = {
   full: [
-    { phase: 'showcase', ms: 800 },
-    { phase: 'close', ms: 1200 },
+    { phase: 'showcase', ms: 600 },
+    { phase: 'close', ms: 1000 },
     { phase: 'turn', ms: TURN_MS },
+    { phase: 'tour', ms: TOUR_MS },
+    { phase: 'settle', ms: 600 },
   ],
   short: [
     { phase: 'showcase', ms: 300 },
@@ -90,6 +102,13 @@ export interface RevealSample {
   door: number;
   /** wardrobe rotation around its vertical axis, radians (0 = showcase angle) */
   turnRad: number;
+  /**
+   * camera between tour keyframes (0 = showcase, 1..3 = tour shots): from -> to at progress t
+   * (0..1, linear; the driver eases). null = camera stays at the showcase pose.
+   */
+  shot: { from: number; to: number; t: number } | null;
+  /** ms since the candy celebration started (full reveal only), null outside it */
+  confettiMs: number | null;
   doorsClosed: boolean;
   title: boolean;
   done: boolean;
@@ -99,6 +118,8 @@ export const FINAL_SAMPLE: RevealSample = {
   phase: 'done',
   door: 0,
   turnRad: 0,
+  shot: null,
+  confettiMs: null,
   doorsClosed: true,
   title: true,
   done: true,
@@ -116,6 +137,11 @@ export function sampleReveal(kind: RevealKind, t: number, startDoor = 0): Reveal
       const base = {
         phase: seg.phase,
         turnRad: 0,
+        shot: null,
+        confettiMs:
+          kind === 'full' && t >= CANDY_FROM_MS && t < CANDY_FROM_MS + CANDY_MS
+            ? t - CANDY_FROM_MS
+            : null,
         title: false,
         done: false,
         doorsClosed: closedSeen,
@@ -127,8 +153,21 @@ export function sampleReveal(kind: RevealKind, t: number, startDoor = 0): Reveal
           return { ...base, door: 1 - easeInOut(p) };
         case 'turn':
           return { ...base, door: 0, turnRad: turnAngle(t - t0, seg.ms) };
+        case 'tour': {
+          const leg = Math.min(TOUR_LEGS - 1, Math.floor(p * TOUR_LEGS));
+          return {
+            ...base,
+            door: 0,
+            shot: { from: leg, to: leg + 1, t: p * TOUR_LEGS - leg },
+          };
+        }
         case 'settle':
-          return { ...base, door: 0 };
+          // full: back from the last tour shot to the showcase pose; short: nothing to move
+          return {
+            ...base,
+            door: 0,
+            shot: kind === 'full' ? { from: TOUR_LEGS, to: 0, t: p } : null,
+          };
         default:
           return { ...base, door: 0 };
       }

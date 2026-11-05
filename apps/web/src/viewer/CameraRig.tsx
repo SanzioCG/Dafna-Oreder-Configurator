@@ -5,6 +5,7 @@ import { CameraAnimator, DeferredCommand, type CameraCommand } from './cameraCom
 import {
   CAMERA_ANIM_MS,
   DEFAULT_VIEW_DIR,
+  PRESENT_FILL,
   boxCenter,
   easeInOutCubic,
   fitDistance,
@@ -42,7 +43,7 @@ interface Goal {
 export interface CameraApi {
   animateCameraTo: (pose: Pose, ms?: number) => void;
   /** `fill`: presentation framing (PRESENT_FILL); default: configurator framing */
-  fitToModel: (ms?: number, fill?: { height: number; width: number }) => Pose;
+  fitToModel: (ms?: number, fill?: { height: number; width: number; lift?: number }) => Pose;
   fitToSelection: (box: FrameBox, ms?: number) => Pose;
   resetCamera: () => void;
   /** current pose (for scripted moves around it) */
@@ -73,6 +74,7 @@ export function CameraRig({
   pointerDown,
   apiRef,
   locked = false,
+  presenting = false,
   onHighlight,
 }: {
   /** the product itself (world metres) */
@@ -85,6 +87,11 @@ export function CameraRig({
   apiRef?: MutableRefObject<CameraApi | null>;
   /** presentation reveal: user orbit off, automatic re-framing paused */
   locked?: boolean;
+  /**
+   * presentation: the reveal owns the framing (PRESENT_FILL). No automatic configurator
+   * re-frame; "Markazlash" / double tap return to the presentation framing.
+   */
+  presenting?: boolean;
   /** highlightSelection(id) reports here (the viewer draws the outline) */
   onHighlight?: (id: string | null) => void;
 }) {
@@ -106,6 +113,23 @@ export function CameraRig({
     const [p, e] = JSON.parse(key) as [FrameBox, FrameBox];
     const reset = lastReset.current !== resetToken;
     lastReset.current = resetToken;
+    if (presenting) {
+      goal.current = null; // never re-apply the configurator framing in the presentation
+      if (reset && initialised.current) {
+        animator.current.start(
+          {
+            position: [camera.position.x, camera.position.y, camera.position.z],
+            target: controls
+              ? [controls.target.x, controls.target.y, controls.target.z]
+              : [0, 0, 0],
+          },
+          fitToModelPose(p, p, camera.fov, aspect, DEFAULT_VIEW_DIR, PRESENT_FILL),
+          clock.current,
+          CAMERA_ANIM_MS,
+        );
+      }
+      return;
+    }
     const keepDir = !reset && initialised.current && controls;
     const dir = keepDir
       ? camera.position.clone().sub(controls.target).normalize()
@@ -115,7 +139,7 @@ export function CameraRig({
       distance: fitDistance(p, e, camera.fov, aspect, dir),
       dir: keepDir ? null : DEFAULT_VIEW_DIR.clone(),
     };
-  }, [key, aspect, camera, controls, resetToken]);
+  }, [key, aspect, camera, controls, resetToken, presenting]);
 
   // explicit commands: queued; started in the frame loop once no pointer is down
   useEffect(() => {

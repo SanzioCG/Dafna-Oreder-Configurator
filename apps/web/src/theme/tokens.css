@@ -50,6 +50,11 @@
   --rim-light: 0;
   --platform: #ffffff; /* presentation platform disc */
   --platform-glow: #009fe3; /* restrained cyan light on the platform only */
+  /* "candy" celebration particles: Dafna colours */
+  --particle-1: #009fe3;
+  --particle-2: #ffffff;
+  --particle-3: #99e0ff;
+  --particle-4: #2a2928;
 
   /* ---- shape / size (1rem = 16 px at 1080p, 32 px at 4K) ---- */
   --radius-card: 1.75rem; /* 28 px */
