@@ -26,6 +26,20 @@ export function StepPanel({ mode, config }: StepPanelProps) {
       (staff || d.customerVisible) &&
       (d.appliesToSection === undefined || d.appliesToSection <= sectionCount),
   );
+  // Staff: depth = back + carcass + door gap + door (ADR-003), e.g. "3 + 495 + 2 + 16 = 516".
+  const dims = config.result.dimensions;
+  const hints: Record<string, string | undefined> =
+    staff && dims
+      ? {
+          depth: t('staff.depth', {
+            back: dims.backThicknessMm,
+            carcass: dims.carcassDepthMm,
+            gap: dims.doorGapFrontMm,
+            door: dims.doorThicknessMm,
+            depth: dims.depthMm,
+          }),
+        }
+      : {};
   const errorKeys = new Set(
     config.result.issues.filter((i) => i.severity === 'error').map((i) => i.paramKey),
   );
@@ -94,6 +108,13 @@ export function StepPanel({ mode, config }: StepPanelProps) {
               hasError={errorKeys.has(def.key)}
               onChange={config.setParam}
               params={config.params}
+              hint={
+                hints[def.key] ? (
+                  <p className="param-hint" data-testid={`hint-${def.key}`}>
+                    {hints[def.key]}
+                  </p>
+                ) : undefined
+              }
             />
           ))}
         </div>

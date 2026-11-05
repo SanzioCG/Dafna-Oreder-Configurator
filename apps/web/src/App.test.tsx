@@ -1,15 +1,17 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ru } from './i18n/ru';
 import { uz } from './i18n/uz';
-import type { ViewGeometry } from './state/useConfigurator';
+import type { SceneProps } from './viewer/Scene';
 
-// WebGL is not available in jsdom: replace the 3D viewer with a stub that exposes the
-// engine result it receives.
-vi.mock('./viewer/Viewer', () => ({
-  Viewer: ({ view }: { view: ViewGeometry }) => (
+// WebGL is not available in jsdom: replace only the 3D scene with a stub that exposes what it
+// receives. The viewer shell (buttons, dimension labels, banners) is the real one.
+vi.mock('./viewer/Scene', () => ({
+  MM: 0.001,
+  Scene: ({ view, doorsOpen }: SceneProps) => (
     <div
       data-testid="viewer-stub"
+      data-doors-open={String(doorsOpen)}
       data-panels={view.result.panels.length}
       data-sections={view.result.sections.map((s) => s.innerWidthMm).join(',')}
       data-back={view.result.panels.find((p) => p.id === 'back')?.lengthMm}
@@ -32,6 +34,9 @@ afterEach(() => {
   setUrl('');
 });
 
+const tab = (label: string) =>
+  within(screen.getByRole('navigation')).getByRole('button', { name: new RegExp(label) });
+
 function typeInto(label: string, value: string) {
   const input = screen.getByRole('textbox', { name: label });
   fireEvent.focus(input);
@@ -40,12 +45,13 @@ function typeInto(label: string, value: string) {
 }
 
 describe('App (customer mode)', () => {
-  it('renders in Uzbek with size and color steps active, later steps disabled', () => {
+  it('renders in Uzbek with size, color and doors steps active, others disabled', () => {
     render(<App />);
     expect(screen.getByText(uz['app.title'])).toBeTruthy();
     expect(screen.getByRole('button', { name: /O'lcham/ }).hasAttribute('disabled')).toBe(false);
     expect(screen.getByRole('button', { name: /Rang/ }).hasAttribute('disabled')).toBe(false);
-    for (const key of ['step.interior', 'step.doors', 'step.review'] as const) {
+    expect(tab(uz['step.doors']).hasAttribute('disabled')).toBe(false);
+    for (const key of ['step.interior', 'step.review'] as const) {
       expect(
         screen.getByRole('button', { name: new RegExp(uz[key]) }).hasAttribute('disabled'),
       ).toBe(true);
@@ -90,7 +96,7 @@ describe('App (customer mode)', () => {
 });
 
 describe('App color step', () => {
-  const openColorStep = () => fireEvent.click(screen.getByRole('button', { name: /Rang/ }));
+  const openColorStep = () => fireEvent.click(tab(uz['step.color']));
   const corpus = () => screen.getByRole('radiogroup', { name: uz['param.corpusMaterial'] });
   const doorSwatches = () => screen.getByRole('radiogroup', { name: uz['param.doorMaterial'] });
   const swatch = (group: HTMLElement, id: string) => {
@@ -136,7 +142,73 @@ describe('App color step', () => {
   });
 });
 
+describe('App doors', () => {
+  const sectionLabels = () => document.querySelectorAll('[data-dim^="section-"]').length;
+
+  it('door toggle opens/closes doors; section widths only show while open', () => {
+    render(<App />);
+    const stub = screen.getByTestId('viewer-stub');
+    const button = screen.getByRole('button', { name: uz['viewer.doorsOpen'] });
+    expect(stub.dataset.doorsOpen).toBe('false');
+    expect(sectionLabels()).toBe(0);
+    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('1360 mm');
+
+    fireEvent.click(button);
+    expect(stub.dataset.doorsOpen).toBe('true');
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(button.textContent).toBe(uz['viewer.doorsClose']);
+    expect(sectionLabels()).toBe(2);
+
+    fireEvent.click(button);
+    expect(stub.dataset.doorsOpen).toBe('false');
+    expect(sectionLabels()).toBe(0);
+  });
+
+  it('doors step: "no doors" removes the leaves and the toggle, sections become visible', () => {
+    render(<App />);
+    fireEvent.click(tab(uz['step.doors']));
+    const preset = screen.getByRole('radiogroup', { name: uz['param.doors'] });
+    fireEvent.click(within(preset).getByRole('radio', { name: uz['option.doors.none'] }));
+    expect(screen.getByTestId('viewer-stub').dataset.panels).toBe('8');
+    expect(screen.queryByRole('button', { name: uz['viewer.doorsOpen'] })).toBeNull();
+    expect(sectionLabels()).toBe(2);
+    // per-section overrides are staff-only
+    expect(screen.queryByRole('radiogroup', { name: "1-bo'lim eshigi" })).toBeNull();
+  });
+});
+
 describe('App (staff mode)', () => {
+  it('shows the depth breakdown and per-section door overrides', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    expect(screen.getByTestId('hint-depth').textContent).toBe(
+      'Orqa 3 + korpus 495 + tirqish 2 + eshik 16 = 516 mm',
+    );
+    fireEvent.click(tab(uz['step.doors']));
+    expect(screen.getByRole('radiogroup', { name: "1-bo'lim eshigi" })).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: "2-bo'lim eshigi" })).toBeTruthy();
+    expect(screen.queryByRole('radiogroup', { name: "3-bo'lim eshigi" })).toBeNull();
+    const s1 = screen.getByRole('radiogroup', { name: "1-bo'lim eshigi" });
+    expect(
+      within(s1)
+        .getAllByRole('radio')
+        .map((r) => r.textContent),
+    ).toEqual(['Umumiy', "Yo'q", 'Chap ilmoq', "O'ng ilmoq", 'Ikki tabaqali']);
+  });
+
+  it('shows the stale-model banner while params are invalid', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    expect(screen.queryByRole('alert')).toBeNull();
+    fireEvent.click(tab(uz['step.doors']));
+    const preset = screen.getByRole('radiogroup', { name: uz['param.doors'] });
+    fireEvent.click(within(preset).getByRole('radio', { name: uz['option.doors.all_single'] }));
+    expect(screen.getByRole('alert').textContent).toContain(uz['viewer.invalid']);
+    expect(screen.getAllByText('DOOR_TOO_WIDE').length).toBe(2);
+    fireEvent.click(within(preset).getByRole('radio', { name: uz['option.doors.auto'] }));
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
   it('shows all params, unconfirmed markers, issues and the download button', () => {
     setUrl('?mode=staff');
     render(<App />);

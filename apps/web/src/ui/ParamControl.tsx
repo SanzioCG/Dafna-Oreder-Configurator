@@ -32,6 +32,8 @@ export function ParamControl({
   const { t } = useI18n();
   const label = t(def.labelKey, { n: def.appliesToSection });
   const staff = mode === 'staff';
+  // Option labels are keyed by the label key, so doorSection1..4 share option.doorSection.*
+  const optionKey = def.labelKey.replace(/^param\./, '');
 
   const header = (
     <div className="param-header">
@@ -126,7 +128,9 @@ export function ParamControl({
           value={value}
           onChange={(v) => onChange(def.key, v)}
           label={(v) =>
-            def.unit && typeof v === 'number' ? `${v} ${t('unit.mm')}` : optionLabel(t, def.key, v)
+            def.unit && typeof v === 'number'
+              ? `${v} ${t('unit.mm')}`
+              : optionLabel(t, optionKey, v)
           }
           ariaLabel={label}
         />
@@ -143,7 +147,7 @@ export function ParamControl({
         options={[false, true]}
         value={Boolean(value)}
         onChange={(v) => onChange(def.key, v)}
-        label={(v) => optionLabel(t, def.key, v)}
+        label={(v) => optionLabel(t, optionKey, v)}
         ariaLabel={label}
       />
       {note}

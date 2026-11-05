@@ -9,7 +9,7 @@ export const STEPS: StepDef[] = [
   { key: 'size', labelKey: 'step.size', enabled: true },
   { key: 'color', labelKey: 'step.color', enabled: true },
   { key: 'interior', labelKey: 'step.interior', enabled: false },
-  { key: 'doors', labelKey: 'step.doors', enabled: false },
+  { key: 'doors', labelKey: 'step.doors', enabled: true },
   { key: 'review', labelKey: 'step.review', enabled: false },
 ];
 

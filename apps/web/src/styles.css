@@ -108,22 +108,49 @@ p {
 }
 
 .viewer-invalid {
-  position: absolute;
-  left: 50%;
-  top: 1.25rem;
-  transform: translateX(-50%);
-  background: var(--error-soft);
-  color: var(--error);
-  padding: 0.6rem 1.1rem;
+  background: var(--error);
+  color: #fff;
+  padding: 0.9rem 1.6rem;
   border-radius: var(--radius);
-  font-weight: 600;
-  pointer-events: none;
+  font-size: 1.25rem;
+  font-weight: 700;
+  box-shadow: 0 0.3rem 1rem rgb(180 35 24 / 0.3);
 }
 
-.reframe {
+.viewer-actions {
   position: absolute;
   right: 1.5rem;
   bottom: 1.25rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+/* large, primary-looking: the main way to look inside on the kiosk */
+.btn-doors {
+  min-height: 4rem;
+  padding: 0 2rem;
+  font-size: 1.2rem;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.btn-doors.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* staff: params invalid -> the 3D shows the last valid (stale) model */
+.viewer-stale {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 1.25rem;
+  background: rgb(238 240 243 / 0.55);
+  box-shadow: inset 0 0 0 0.35rem var(--error);
+  pointer-events: none;
 }
 
 .dim-labels {
@@ -743,4 +770,11 @@ p {
 
 .toggle.on .toggle-knob {
   transform: translateX(1.35rem);
+}
+
+.param-hint {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
 }
