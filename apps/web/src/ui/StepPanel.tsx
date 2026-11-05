@@ -6,6 +6,9 @@ import { STEPS, neighbourStep } from '../steps';
 import { ParamControl } from './ParamControl';
 import { StaffPanel } from './StaffPanel';
 
+/** Served from apps/web/public/brand (Vite copies public/ as-is; BASE_URL keeps it base-safe). */
+export const BRAND_LOGO_URL = `${import.meta.env.BASE_URL}brand/dafna-logo.svg`;
+
 interface StepPanelProps {
   mode: Mode;
   config: Configurator;
@@ -48,7 +51,7 @@ export function StepPanel({ mode, config }: StepPanelProps) {
     <aside className="panel">
       <header className="panel-header">
         <div className="brand">
-          <span className="brand-name">{t('app.brand')}</span>
+          <img className="brand-logo" src={BRAND_LOGO_URL} alt={t('app.brand')} draggable={false} />
           <span className="brand-title">{t('app.title')}</span>
         </div>
         {staff && <span className="mode-badge">{t('mode.staff')}</span>}
