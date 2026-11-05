@@ -2,9 +2,11 @@ import type { ParamDef } from '@dafna/engine';
 import { LANGS, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import { TEMPLATE, type Configurator } from '../state/useConfigurator';
-import { STEPS, neighbourStep } from '../steps';
+import { neighbourStep } from '../steps';
 import { useTheme } from '../theme/ThemeProvider';
-import { IconButton } from './Button';
+import { Button, IconButton } from './Button';
+import { ConsultantButton } from './ConsultantButton';
+import { StepNavigation } from './StepNavigation';
 import { ArrowLeftIcon, ArrowRightIcon, MoonIcon, SunIcon } from './icons';
 import { InteriorStep } from './InteriorStep';
 import { ParamControl } from './ParamControl';
@@ -12,13 +14,13 @@ import { ResetToast } from './ResetToast';
 import { StaffPanel } from './StaffPanel';
 
 /**
- * Step content cards inside the sheet. Consecutive numeric parameters share one neutral card;
- * each swatch parameter gets a neutral card; each option parameter gets its own pastel card (one per
- * card type, see tokens.css --card-*). Pastel never indicates selection state.
+ * Control groups inside the panel (design system V2: no fills, no nested cards — groups are
+ * separated by spacing and a divider). Consecutive numeric parameters share one group; each
+ * swatch or option parameter gets its own group.
  */
 interface CardGroup {
   key: string;
-  tone: 'neutral' | 'pastel';
+  tone: 'numeric' | 'option';
   defs: ParamDef[];
 }
 
@@ -27,12 +29,12 @@ export function groupIntoCards(defs: ParamDef[]): CardGroup[] {
   for (const def of defs) {
     const last = groups[groups.length - 1];
     if (def.type === 'int') {
-      if (last && last.tone === 'neutral' && last.defs[0]?.type === 'int') last.defs.push(def);
-      else groups.push({ key: def.key, tone: 'neutral', defs: [def] });
+      if (last && last.tone === 'numeric') last.defs.push(def);
+      else groups.push({ key: def.key, tone: 'numeric', defs: [def] });
     } else {
       groups.push({
         key: def.key,
-        tone: def.control === 'swatch' ? 'neutral' : 'pastel',
+        tone: 'option',
         defs: [def],
       });
     }
@@ -51,6 +53,10 @@ interface StepPanelProps {
   onSelectSection: (index: number) => void;
   /** presentation mode: the sheet and step navigation are hidden (state is kept) */
   hidden?: boolean;
+  /** "Konsultant chaqirish" hook (customer screens) */
+  onCallConsultant?: () => void;
+  /** "Tayyor — ko'rib chiqish": straight to the presentation (blocking validation applies) */
+  onReview?: () => void;
 }
 
 export function StepPanel({
@@ -61,6 +67,8 @@ export function StepPanel({
   selectedSection,
   onSelectSection,
   hidden = false,
+  onCallConsultant,
+  onReview,
 }: StepPanelProps) {
   const { t, lang, setLang } = useI18n();
   const { theme, toggleTheme, logoUrl } = useTheme();
@@ -112,6 +120,7 @@ export function StepPanel({
             icon={theme === 'dark' ? <MoonIcon /> : <SunIcon />}
           />
         )}
+        {!staff && onCallConsultant && <ConsultantButton onCall={onCallConsultant} />}
         <div className="lang-switch" role="group" aria-label={t('lang.label')}>
           {LANGS.map((l) => (
             <button
@@ -127,22 +136,7 @@ export function StepPanel({
         </div>
       </header>
 
-      <nav className="steps" aria-label={t('nav.steps')}>
-        {STEPS.map((s, i) => (
-          <button
-            key={s.key}
-            type="button"
-            className={s.key === step ? 'step-tab active' : 'step-tab'}
-            disabled={!s.enabled}
-            aria-current={s.key === step ? 'step' : undefined}
-            onClick={() => setStep(s.key)}
-          >
-            <span className="step-num">{i + 1}</span>
-            <span className="step-label">{t(s.labelKey)}</span>
-            {!s.enabled && <span className="step-soon">{t('step.comingSoon')}</span>}
-          </button>
-        ))}
-      </nav>
+      <StepNavigation step={step} onStepChange={setStep} />
 
       <div className={staff ? 'panel-body scrollable' : 'panel-body'}>
         <div className="step-intro">
@@ -169,11 +163,7 @@ export function StepPanel({
           )}
           {step !== 'interior' &&
             groupIntoCards(defs).map((group) => (
-              <section
-                key={group.key}
-                className={`card card-${group.tone}`}
-                data-card={group.defs[0]?.key}
-              >
+              <section key={group.key} className="card" data-card={group.defs[0]?.key}>
                 {group.defs.map((def) => (
                   <ParamControl
                     key={def.key}
@@ -196,7 +186,7 @@ export function StepPanel({
             ))}
         </div>
         {staff && (
-          <div className="card card-neutral">
+          <div className="card">
             <StaffPanel params={config.params} result={config.result} />
           </div>
         )}
@@ -213,7 +203,19 @@ export function StepPanel({
           <ArrowLeftIcon />
           {t('nav.back')}
         </button>
-        <div className="footer-hint muted">{!next && t('nav.nextSoon')}</div>
+        <div className="footer-center">
+          {onReview && step !== 'review' && (
+            <Button
+              variant="ghost"
+              className="btn-review"
+              disabled={config.hasErrors}
+              onClick={onReview}
+              data-testid="ready-review"
+            >
+              {t('nav.readyReview')}
+            </Button>
+          )}
+        </div>
         <button
           type="button"
           className="btn btn-primary"

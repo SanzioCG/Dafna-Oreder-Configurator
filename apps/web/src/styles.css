@@ -96,7 +96,7 @@ p {
 
 .app {
   display: grid;
-  grid-template-columns: 60fr 40fr;
+  grid-template-columns: 65fr 35fr; /* 3D viewport ~65 % | configuration panel ~35 % */
   height: 100vh;
   height: 100dvh;
   background: var(--bg);
@@ -698,10 +698,39 @@ p {
   background: var(--surface);
 }
 
-.footer-hint {
+.footer-center {
   flex: 1;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+/* "Tayyor — ko'rib chiqish": secondary action between Orqaga / Keyingi */
+.btn-review {
+  min-height: var(--tap-lg);
+  padding: 0 var(--space-3);
+  font-size: var(--fs-md);
+  white-space: normal;
   text-align: center;
-  font-size: var(--fs-xs);
+  text-decoration: underline;
+  text-decoration-color: var(--primary-strong);
+  text-decoration-thickness: 0.125rem;
+  text-underline-offset: 0.25em;
+}
+
+/* "Konsultant chaqirish" (header on configurator screens, bottom-left in presentation) */
+.consultant-btn {
+  min-height: var(--tap);
+  padding: 0 var(--space-3);
+  font-size: var(--fs-sm);
+}
+
+/* presentation / contact: top-right, under the skip button; above the contact overlay */
+.present-consultant {
+  position: fixed;
+  right: var(--space-6);
+  top: 5.5rem;
+  z-index: 30;
 }
 
 /* auto-reset toast: inside the panel, floating just above the navigation */

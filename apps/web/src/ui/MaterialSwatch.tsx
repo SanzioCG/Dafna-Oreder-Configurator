@@ -4,7 +4,7 @@ import type { Mode } from '../mode';
 import { CATALOG } from '../state/useConfigurator';
 import { CheckIcon } from './icons';
 
-interface SwatchPickerProps {
+interface MaterialSwatchProps {
   /** material ids, possibly including 'same_as_corpus' */
   options: readonly ParamValue[];
   value: ParamValue;
@@ -20,14 +20,14 @@ interface SwatchPickerProps {
  * a toggle sits above the swatches; tapping a swatch turns it off and selects that decor.
  * Staff-only catalog entries (customerVisible=false) are hidden in customer mode.
  */
-export function SwatchPicker({
+export function MaterialSwatch({
   options,
   value,
   corpusValue,
   mode,
   label,
   onChange,
-}: SwatchPickerProps) {
+}: MaterialSwatchProps) {
   const { t } = useI18n();
   const hasSame = options.includes(SAME_AS_CORPUS);
   const same = hasSame && value === SAME_AS_CORPUS;

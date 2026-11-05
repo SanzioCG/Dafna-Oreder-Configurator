@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { I18nProvider } from './i18n/I18n';
-import { installKioskGuards } from './kiosk';
+import { installKioskGuards, requestConsultant } from './kiosk';
 import { parseMode, type Mode } from './mode';
 import { ContactPlaceholder } from './presentation/ContactPlaceholder';
 import { planReveal, type RevealEvent, type RevealKind } from './presentation/reveal';
 import { SummaryCard } from './presentation/SummaryCard';
+import { ConsultantButton } from './ui/ConsultantButton';
 import { nextFlow, type FlowEvent, type FlowState } from './state/flow';
 import { useConfigurator } from './state/useConfigurator';
 import { ThemeProvider } from './theme/ThemeProvider';
@@ -87,6 +88,9 @@ function Configurator({ mode }: { mode: Mode }) {
   };
 
   const inPresentation = flow !== 'configurator';
+  // never touches the configuration; delivery to staff comes with the backend (D-2a)
+  const callConsultant = () =>
+    requestConsultant(inPresentation ? flow : step, JSON.stringify(config.params));
   return (
     <div className={`app mode-${mode}${inPresentation ? ' presenting' : ''}`} data-flow={flow}>
       <Viewer
@@ -119,8 +123,13 @@ function Configurator({ mode }: { mode: Mode }) {
         hidden={inPresentation}
         selectedSection={section}
         onSelectSection={selectSection}
+        onCallConsultant={callConsultant}
+        onReview={present}
       />
       {flow === 'contact' && <ContactPlaceholder mode={mode} onBack={() => dispatch('back')} />}
+      {mode === 'customer' && inPresentation && (
+        <ConsultantButton className="present-consultant" onCall={callConsultant} />
+      )}
     </div>
   );
 }

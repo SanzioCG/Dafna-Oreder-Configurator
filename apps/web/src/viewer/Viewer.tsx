@@ -32,7 +32,7 @@ import type { SectionBox } from './SectionPicker';
 
 interface ViewerProps {
   view: ViewGeometry;
-  /** customer sees cm, staff mm */
+  /** customer / staff (units are mm in both modes since design system V2) */
   mode?: Mode;
   invalid: boolean;
   /** current wizard step: 'interior' opens the doors and enables section picking */
@@ -115,7 +115,6 @@ function useUiScale(): number {
 /** Viewer shell: 3D scene + DOM overlays (dimension labels, buttons, banners). */
 export function Viewer({
   view,
-  mode = 'customer',
   invalid,
   activeStep = 'size',
   selectedSection = null,
@@ -166,7 +165,7 @@ export function Viewer({
 
   const sections = view.result.sections;
   // Dimension values come from the engine output only (result.dimensions / sections).
-  const units = unitSystemFor(mode);
+  const units = unitSystemFor();
   const unitLabel = t(units === 'cm' ? 'unit.cm' : 'unit.mm');
   const engineSize = view.result.dimensions ?? { widthMm: W, heightMm: H, depthMm: D };
   const visibility = dimensionVisibility({

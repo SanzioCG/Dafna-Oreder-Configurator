@@ -29,9 +29,12 @@ export interface DimSpec {
 
 export type UnitSystem = 'cm' | 'mm';
 
-/** Customer sees centimetres, staff millimetres (D-3a decision). */
-export function unitSystemFor(mode: 'customer' | 'staff'): UnitSystem {
-  return mode === 'staff' ? 'mm' : 'cm';
+/**
+ * Units shown in the UI. Design system V2: millimetres in both modes (the first D-3a draft
+ * showed centimetres to customers). The cm formatter stays for a possible switch back.
+ */
+export function unitSystemFor(): UnitSystem {
+  return 'mm';
 }
 
 /**

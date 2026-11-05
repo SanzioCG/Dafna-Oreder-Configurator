@@ -47,3 +47,26 @@ export function kioskDefaultTheme(
   // V2: Dark is the default kiosk theme; 'white' / 'light' select the White theme
   return value === 'white' || value === 'light' ? 'light' : 'dark';
 }
+
+/** Event fired by "Konsultant chaqirish" (D-2a will deliver it to staff). */
+export const CONSULTANT_EVENT = 'dafna:consultant-request';
+
+export interface ConsultantRequest {
+  /** wizard step / flow state the customer is on */
+  where: string;
+  /** configuration revision (serialized params) — so staff can open the same configuration */
+  revision: string;
+  at: string;
+}
+
+/**
+ * Consultant call hook: dispatches a window event; nothing is sent anywhere yet (no backend).
+ * Returns the request so callers / tests can inspect it.
+ */
+export function requestConsultant(where: string, revision: string): ConsultantRequest {
+  const detail: ConsultantRequest = { where, revision, at: new Date().toISOString() };
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(CONSULTANT_EVENT, { detail }));
+  }
+  return detail;
+}

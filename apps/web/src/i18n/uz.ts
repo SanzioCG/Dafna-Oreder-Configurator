@@ -38,6 +38,8 @@ export const uz = {
     "TODO (D-3b): bu yerda kontakt formasi (ism, telefon) va buyurtmani yuborish bo'ladi. Hozircha hech narsa yuborilmaydi.",
 
   'nav.back': 'Orqaga',
+  'nav.readyReview': "Tayyor — ko'rib chiqish",
+  'consultant.call': 'Konsultant chaqirish',
   'nav.next': 'Keyingi',
   'nav.nextSoon': 'Keyingi bosqichlar tez orada',
 

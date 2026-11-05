@@ -198,10 +198,10 @@ describe('App doors', () => {
     const button = screen.getByRole('button', { name: uz['viewer.doorsOpen'] });
     expect(stub.dataset.doorsOpen).toBe('false');
     expect(sectionLabels()).toBe(0);
-    // customer: centimetres, from the engine's overall dimensions
-    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('136 sm');
-    expect(document.querySelector('[data-dim="height"]')?.textContent).toBe('190 sm');
-    expect(document.querySelector('[data-dim="depth"]')?.textContent).toBe('60 sm');
+    // millimetres in both modes, from the engine's overall dimensions
+    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('1360 mm');
+    expect(document.querySelector('[data-dim="height"]')?.textContent).toBe('1900 mm');
+    expect(document.querySelector('[data-dim="depth"]')?.textContent).toBe('600 mm');
     // size step: section widths stay hidden even with open doors
     fireEvent.click(button);
     expect(sectionLabels()).toBe(0);
@@ -214,7 +214,7 @@ describe('App doors', () => {
     expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(button.textContent).toBe(uz['viewer.doorsClose']);
     expect(sectionLabels()).toBe(2);
-    expect(document.querySelector('[data-dim="section-0"]')?.textContent).toBe('65,6 sm');
+    expect(document.querySelector('[data-dim="section-0"]')?.textContent).toBe('656 mm');
 
     fireEvent.click(button);
     expect(stub.dataset.doorsOpen).toBe('false');
@@ -387,11 +387,12 @@ describe('Selection state contract', () => {
     expect(within(corpus).getAllByRole('radio', { checked: true }).length).toBe(1);
   });
 
-  it('option groups sit in pastel cards, numeric controls in a neutral card', () => {
+  it('flat groups: numeric controls share one group, no pastel / tone card classes', () => {
     render(<App />);
-    expect(document.querySelector('.card-neutral[data-card="width"]')).toBeTruthy();
-    expect(document.querySelector('.card-pastel[data-card="sections"]')).toBeTruthy();
+    expect(document.querySelector('.card[data-card="width"]')).toBeTruthy();
+    expect(document.querySelector('.card[data-card="sections"]')).toBeTruthy();
     expect(document.querySelectorAll('.card[data-card="height"]').length).toBe(0); // grouped
+    expect(document.querySelectorAll('.card-pastel, .card-neutral').length).toBe(0);
   });
 });
 
@@ -794,10 +795,10 @@ describe('summary card, confirm entry point and flow', () => {
     expect(flow()).toBe('contact');
   });
 
-  it('summary values: size in cm, colours, sections + presets, doors', () => {
+  it('summary values: size in mm, colours, sections + presets, doors', () => {
     render(<App />);
     toStable();
-    expect(row('size').querySelector('dd')?.textContent).toBe('136 × 190 × 60 sm');
+    expect(row('size').querySelector('dd')?.textContent).toBe('1360 × 1900 × 600 mm');
     expect(row('corpus').querySelector('dd')?.textContent).toBe(uz['decor.white']);
     expect(row('doorColor').querySelector('dd')?.textContent).toBe(uz['decor.white']);
     expect(row('sections').querySelector('dd')?.textContent).toBe(
@@ -867,5 +868,117 @@ describe('summary card, confirm entry point and flow', () => {
     toStable();
     fireEvent.click(screen.getByRole('button', { name: uz['present.confirm'] }));
     expect(screen.getByTestId('contact-todo').textContent).toContain('TODO (D-3b)');
+  });
+});
+
+describe('V2 steps: DimensionControl, customer visibility, global actions', () => {
+  const input = (label: string) => screen.getByRole('textbox', { name: label }) as HTMLInputElement;
+  const slider = (label: string) => screen.getByRole('slider', { name: label });
+
+  it('slider, input and ± share one state', () => {
+    render(<App />);
+    fireEvent.keyDown(slider(uz['param.width']), { key: 'ArrowRight' });
+    const afterSlider = input(uz['param.width']).value;
+    expect(Number(afterSlider)).toBeGreaterThan(1360);
+    expect(slider(uz['param.width']).getAttribute('aria-valuenow')).toBe(afterSlider);
+    typeInto(uz['param.width'], '1500');
+    expect(slider(uz['param.width']).getAttribute('aria-valuenow')).toBe('1500');
+    fireEvent.click(
+      screen.getByRole('button', { name: `${uz['param.width']}: ${uz['control.decrease']}` }),
+    );
+    expect(Number(input(uz['param.width']).value)).toBeLessThan(1500);
+    expect(slider(uz['param.width']).getAttribute('aria-valuenow')).toBe(
+      input(uz['param.width']).value,
+    );
+  });
+
+  it('± clamp to min/max (button disabled at the limit); min/max labels in mm', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '2400');
+    const plus = screen.getByRole('button', {
+      name: `${uz['param.width']}: ${uz['control.increase']}`,
+    });
+    expect(plus.hasAttribute('disabled')).toBe(true);
+    expect(input(uz['param.width']).value).toBe('2400');
+    expect(screen.getByTestId('scale-width').textContent).toBe('600 mm2400 mm');
+  });
+
+  it('invalid typed values are corrected on blur (customer)', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '100');
+    expect(input(uz['param.width']).value).toBe('600');
+    typeInto(uz['param.height'], '99999');
+    expect(input(uz['param.height']).value).toBe('2600');
+  });
+
+  it('customer: no 18 mm material, no thickness, no back panel; staff sees them', () => {
+    render(<App />);
+    expect(screen.queryByRole('radiogroup', { name: uz['param.backPanel'] })).toBeNull();
+    fireEvent.click(tab(uz['step.color']));
+    const corpus = screen.getByRole('radiogroup', { name: uz['param.corpusMaterial'] });
+    expect(corpus.querySelector('[data-material="ldsp_white_18"]')).toBeNull();
+    expect(corpus.textContent).not.toMatch(/\d+ mm/);
+    cleanup();
+    setUrl('?mode=staff');
+    render(<App />);
+    expect(screen.getByRole('radiogroup', { name: uz['param.backPanel'] })).toBeTruthy();
+    fireEvent.click(tab(uz['step.color']));
+    const staffCorpus = screen.getByRole('radiogroup', { name: uz['param.corpusMaterial'] });
+    expect(staffCorpus.querySelector('[data-material="ldsp_white_18"]')).not.toBeNull();
+  });
+
+  it('disabled options show a human reason, never an error code', () => {
+    render(<App />);
+    const disabled = Array.from(document.querySelectorAll('button:disabled')).filter((b) =>
+      b.querySelector('.segment-reason'),
+    );
+    expect(disabled.length).toBeGreaterThan(0);
+    for (const b of disabled) {
+      expect(b.textContent).not.toMatch(/[A-Z]{3,}_[A-Z_]+/);
+      expect(b.querySelector('.segment-reason')?.textContent?.length).toBeGreaterThan(3);
+    }
+  });
+
+  it('"Tayyor — ko\'rib chiqish" and "Konsultant chaqirish" on customer steps 1–4', () => {
+    render(<App />);
+    for (const key of ['step.size', 'step.color', 'step.interior', 'step.doors'] as const) {
+      fireEvent.click(tab(uz[key]));
+      expect(screen.getByRole('button', { name: uz['nav.readyReview'] })).toBeTruthy();
+      expect(screen.getByRole('button', { name: uz['consultant.call'] })).toBeTruthy();
+    }
+  });
+
+  it('"Tayyor" jumps straight to the presentation with the current values', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '2000');
+    fireEvent.click(screen.getByRole('button', { name: uz['nav.readyReview'] }));
+    expect(document.querySelector('.app')?.getAttribute('data-flow')).toBe('presentation');
+    // consultant stays reachable in the presentation
+    expect(screen.getByRole('button', { name: uz['consultant.call'] })).toBeTruthy();
+  });
+
+  it('"Konsultant chaqirish" fires the hook event and never changes the configuration', () => {
+    const events: Event[] = [];
+    const on = (e: Event) => events.push(e);
+    window.addEventListener('dafna:consultant-request', on);
+    try {
+      render(<App />);
+      typeInto(uz['param.width'], '2000');
+      fireEvent.click(screen.getByRole('button', { name: uz['consultant.call'] }));
+      expect(events).toHaveLength(1);
+      const detail = (events[0] as CustomEvent).detail as { where: string; revision: string };
+      expect(detail.where).toBe('size');
+      expect(JSON.parse(detail.revision).width).toBe(2000);
+      expect(input(uz['param.width']).value).toBe('2000');
+      expect(screen.queryByRole('status')).toBeNull(); // no fake confirmation
+    } finally {
+      window.removeEventListener('dafna:consultant-request', on);
+    }
+  });
+
+  it('staff: no consultant button', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    expect(screen.queryByRole('button', { name: uz['consultant.call'] })).toBeNull();
   });
 });

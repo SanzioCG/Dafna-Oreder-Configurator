@@ -1,4 +1,4 @@
-interface SegmentedProps<T> {
+interface SelectionGridProps<T> {
   options: readonly T[];
   value: T;
   onChange: (value: T) => void;
@@ -9,18 +9,18 @@ interface SegmentedProps<T> {
 }
 
 /**
- * Option buttons for enum parameters. Selection state contract: selected = solid brand-blue
- * fill + white text; unselected = white fill + graphite text; disabled = 40% opacity + a short
- * reason. The card behind the buttons may be pastel, but pastel never indicates state.
+ * SelectionGrid (design system V2): option buttons for enum parameters. Selection contract:
+ * selected = --primary fill + 3 px --primary-strong border; unselected = surface + control
+ * border; disabled = neutral fill, muted text and a short human reason (never an error code).
  */
-export function Segmented<T extends string | number | boolean>({
+export function SelectionGrid<T extends string | number | boolean>({
   options,
   value,
   onChange,
   label,
   ariaLabel,
   disabledReason,
-}: SegmentedProps<T>) {
+}: SelectionGridProps<T>) {
   return (
     <div className="segmented" role="radiogroup" aria-label={ariaLabel}>
       {options.map((o) => {

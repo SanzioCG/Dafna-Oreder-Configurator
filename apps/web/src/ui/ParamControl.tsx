@@ -2,13 +2,10 @@ import { clampParam, type ParamDef, type ParamValue, type Params } from '@dafna/
 import type { ReactNode } from 'react';
 import { optionLabel, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
-import { IconButton } from './Button';
-import { MinusIcon, PlusIcon } from './icons';
-import { NumberField } from './NumberField';
+import { DimensionControl } from './DimensionControl';
 import { blockingIssue } from './optionAvailability';
-import { Segmented } from './Segmented';
-import { Slider } from './Slider';
-import { SwatchPicker } from './SwatchPicker';
+import { SelectionGrid } from './SelectionGrid';
+import { MaterialSwatch } from './MaterialSwatch';
 
 interface ParamControlProps {
   def: ParamDef;
@@ -58,7 +55,7 @@ export function ParamControl({
     return (
       <div className={hasError ? 'param param-error' : 'param'} data-param={def.key}>
         {header}
-        <SwatchPicker
+        <MaterialSwatch
           options={def.options ?? []}
           value={value}
           corpusValue={params.corpusMaterial ?? ''}
@@ -76,43 +73,22 @@ export function ParamControl({
     const max = def.max ?? 100000;
     const step = def.step ?? 1;
     const num = typeof value === 'number' ? value : Number(def.default);
-    const set = (n: number) => onChange(def.key, n);
-    const bump = (dir: 1 | -1) => set(clampParam(def, num + dir * step));
     return (
-      <div className={hasError ? 'param param-error' : 'param'} data-param={def.key}>
-        <div className="param-top">
-          {header}
-          <div className="param-row">
-            <IconButton
-              label={`${label}: ${t('control.decrease')}`}
-              icon={<MinusIcon />}
-              disabled={num <= min}
-              onClick={() => bump(-1)}
-            />
-            <NumberField
-              value={num}
-              min={min}
-              max={max}
-              clamp={!staff}
-              onCommit={set}
-              label={label}
-              unit={t('unit.mm')}
-            />
-            <IconButton
-              label={`${label}: ${t('control.increase')}`}
-              icon={<PlusIcon />}
-              disabled={num >= max}
-              onClick={() => bump(1)}
-            />
-          </div>
-        </div>
-        <Slider min={min} max={max} step={step} value={num} onChange={set} label={label} />
-        <div className="slider-scale" aria-hidden="true">
-          <span>{min}</span>
-          <span>{max}</span>
-        </div>
-        {note}
-      </div>
+      <DimensionControl
+        paramKey={def.key}
+        label={label}
+        header={header}
+        value={num}
+        min={min}
+        max={max}
+        step={step}
+        clamp={!staff}
+        onChange={(n) => onChange(def.key, n)}
+        clampValue={(n) => clampParam(def, n)}
+        unit={t('unit.mm')}
+        hasError={hasError}
+        note={note}
+      />
     );
   }
 
@@ -120,7 +96,7 @@ export function ParamControl({
     return (
       <div className={hasError ? 'param param-error' : 'param'} data-param={def.key}>
         {header}
-        <Segmented
+        <SelectionGrid
           options={def.options ?? []}
           value={value}
           onChange={(v) => onChange(def.key, v)}
@@ -146,7 +122,7 @@ export function ParamControl({
   return (
     <div className="param" data-param={def.key}>
       {header}
-      <Segmented
+      <SelectionGrid
         options={[false, true]}
         value={Boolean(value)}
         onChange={(v) => onChange(def.key, v)}

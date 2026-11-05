@@ -35,7 +35,7 @@ function doorsValue(t: Translate, types: DoorType[]): string {
 export function summaryRows(config: Configurator, mode: Mode, t: Translate): SummaryRow[] {
   const r = config.view.result;
   const dims = r.dimensions;
-  const units = unitSystemFor(mode);
+  const units = unitSystemFor();
   const unit = t(units === 'cm' ? 'unit.cm' : 'unit.mm');
   const size = dims
     ? formatSize(dims.widthMm, dims.heightMm, dims.depthMm, units, unit)
