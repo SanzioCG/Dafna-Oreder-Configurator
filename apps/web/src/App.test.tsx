@@ -231,3 +231,12 @@ describe('App (staff mode)', () => {
     expect(screen.getByTestId('viewer-stub').dataset.panels).toBe('9'); // 1 section, double door
   });
 });
+
+describe('Brand logo in the header', () => {
+  it.each(['', '?mode=staff'])('shows dafna-logo.svg (url "%s")', (search) => {
+    setUrl(search);
+    render(<App />);
+    const logo = within(screen.getByRole('banner')).getByRole('img', { name: 'Dafna' });
+    expect(logo.getAttribute('src')).toBe('/brand/dafna-logo.svg');
+  });
+});
