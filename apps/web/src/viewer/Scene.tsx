@@ -8,6 +8,9 @@ import { CameraRig, type CameraApi, type FrameBox } from './CameraRig';
 import { DimensionProjector, type DimRegistry } from './DimensionOverlay';
 import type { DimSpec, V3 } from './dimensions';
 import { cssToken } from '../theme/cssToken';
+import type { ConfettiHandle } from '../presentation/Confetti';
+import { RevealDriver } from '../presentation/RevealDriver';
+import type { RevealDirector, RevealEvent, RevealKind } from '../presentation/reveal';
 import { SectionPicker, type SectionBox } from './SectionPicker';
 import { SoftFloorShadow } from './SoftFloorShadow';
 import { Wardrobe3D } from './Wardrobe3D';
@@ -38,6 +41,16 @@ export interface SceneProps {
   cameraApi?: MutableRefObject<CameraApi | null>;
   /** presentation reveal: user orbit off */
   cameraLocked?: boolean;
+  /** scripted door progress (reveal), null = follow doorsOpen */
+  doorOverride?: MutableRefObject<number | null>;
+  /** presentation reveal driver (null outside the presentation) */
+  reveal?: {
+    director: RevealDirector;
+    generation: number;
+    kind: RevealKind;
+    confetti: MutableRefObject<ConfettiHandle | null>;
+    onEvents: (events: RevealEvent[]) => void;
+  } | null;
   /** current UI theme: re-renders the scene so themed colours (edges, shadow) update */
   theme?: string;
 }
@@ -65,6 +78,8 @@ export function Scene({
   pointerDown,
   cameraApi,
   cameraLocked = false,
+  doorOverride,
+  reveal = null,
 }: SceneProps) {
   const { widthMm: W, depthMm: D } = view;
   // Single-layer layout: the canvas is transparent and sits on the page background
@@ -99,7 +114,12 @@ export function Scene({
       />
 
       <group scale={MM} position={[(-W / 2) * MM, 0, (-D / 2) * MM]}>
-        <Wardrobe3D panels={view.result.panels} rails={view.result.rails} doorsOpen={doorsOpen} />
+        <Wardrobe3D
+          panels={view.result.panels}
+          rails={view.result.rails}
+          doorsOpen={doorsOpen}
+          doorOverride={doorOverride}
+        />
         {interactive && (
           <SectionPicker
             boxes={sectionBoxes}
@@ -132,6 +152,16 @@ export function Scene({
         maxPolarAngle={Math.PI / 2 - 0.04}
         touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }}
       />
+      {reveal && cameraApi && doorOverride && (
+        <RevealDriver
+          director={reveal.director}
+          generation={reveal.generation}
+          cameraApi={cameraApi}
+          doorOverride={doorOverride}
+          confetti={reveal.confetti}
+          onEvents={reveal.onEvents}
+        />
+      )}
       <CameraRig
         product={product}
         extent={extent}

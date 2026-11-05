@@ -16,9 +16,13 @@ vi.mock('./viewer/Scene', () => ({
     selectedSection,
     onSectionTap,
     cameraCommand,
+    reveal,
+    cameraLocked,
   }: SceneProps) => (
     <div
       data-testid="viewer-stub"
+      data-reveal={reveal ? reveal.kind : ''}
+      data-camera-locked={String(Boolean(cameraLocked))}
       data-camera={
         cameraCommand
           ? `${cameraCommand.kind}${cameraCommand.kind === 'selection' ? ':' + cameraCommand.id : ''}#${cameraCommand.seq}`
@@ -80,18 +84,14 @@ function typeInto(label: string, value: string) {
 }
 
 describe('App (customer mode)', () => {
-  it('renders in Uzbek with size, color and doors steps active, others disabled', () => {
+  it('renders in Uzbek with all five steps active (review = presentation)', () => {
     render(<App />);
     expect(screen.getByText(uz['app.title'])).toBeTruthy();
     expect(screen.getByRole('button', { name: /O'lcham/ }).hasAttribute('disabled')).toBe(false);
     expect(screen.getByRole('button', { name: /Rang/ }).hasAttribute('disabled')).toBe(false);
     expect(tab(uz['step.doors']).hasAttribute('disabled')).toBe(false);
     expect(tab(uz['step.interior']).hasAttribute('disabled')).toBe(false);
-    for (const key of ['step.review'] as const) {
-      expect(
-        screen.getByRole('button', { name: new RegExp(uz[key]) }).hasAttribute('disabled'),
-      ).toBe(true);
-    }
+    expect(tab(uz['step.review']).hasAttribute('disabled')).toBe(false);
     const stub = screen.getByTestId('viewer-stub');
     // D-1c: 1360 mm -> 2 sections with double doors (shared partition allowed)
     expect(stub.dataset.panels).toBe('12'); // 8 carcass + 4 door leaves
@@ -679,5 +679,76 @@ describe('smart camera triggers (explicit selections only)', () => {
     render(<App />);
     typeInto(uz['param.width'], '2000');
     expect(stub().dataset.camera).toBe('');
+  });
+});
+
+describe('presentation mode and reveal', () => {
+  const stub = () => screen.getByTestId('viewer-stub');
+  const skip = () => screen.queryByRole('button', { name: uz['present.skip'] });
+  const toReview = () => fireEvent.click(tab(uz['step.review']));
+
+  it('hides the sheet and step navigation; plays the full reveal with a skip button', () => {
+    render(<App />);
+    toReview();
+    expect(screen.queryByRole('navigation')).toBeNull(); // sheet hidden
+    expect(document.querySelector('.app')?.classList.contains('presenting')).toBe(true);
+    expect(stub().dataset.reveal).toBe('full');
+    expect(stub().dataset.cameraLocked).toBe('true');
+    expect(skip()).not.toBeNull();
+    // the confirm area only after the doors have closed
+    expect(screen.queryByRole('button', { name: uz['present.edit'] })).toBeNull();
+    // logo top-left in presentation
+    expect(document.querySelector('.present-logo')).not.toBeNull();
+  });
+
+  it('skip ends in the stable state: title, manual orbit, edit button', () => {
+    render(<App />);
+    toReview();
+    fireEvent.click(skip() as HTMLElement);
+    expect(skip()).toBeNull();
+    expect(screen.getByTestId('present-title').textContent).toContain(uz['present.title']);
+    expect(screen.getByTestId('present-title').textContent).toContain(uz['present.subtitle']);
+    expect(stub().dataset.cameraLocked).toBe('false');
+    expect(screen.getByRole('button', { name: uz['present.edit'] })).toBeTruthy();
+  });
+
+  it('edit returns to the configurator; same configuration again: no animation', () => {
+    render(<App />);
+    toReview();
+    fireEvent.click(skip() as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
+    expect(screen.getByRole('navigation')).toBeTruthy();
+    expect(stub().dataset.reveal).toBe('');
+    toReview();
+    expect(stub().dataset.reveal).toBe('none');
+    expect(skip()).toBeNull();
+    expect(screen.getByTestId('present-title')).toBeTruthy();
+  });
+
+  it('after an edit the short version plays', () => {
+    render(<App />);
+    toReview();
+    fireEvent.click(skip() as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
+    fireEvent.click(tab(uz['step.size']));
+    typeInto(uz['param.width'], '2000');
+    toReview();
+    expect(stub().dataset.reveal).toBe('short');
+    expect(skip()).not.toBeNull();
+  });
+
+  it('prefers-reduced-motion: final state directly (no skip, title shown)', () => {
+    const mm = vi.fn().mockReturnValue({ matches: true });
+    vi.stubGlobal('matchMedia', mm);
+    try {
+      render(<App />);
+      toReview();
+      expect(stub().dataset.reveal).toBe('instant');
+      expect(skip()).toBeNull();
+      expect(screen.getByTestId('present-title')).toBeTruthy();
+      expect(mm).toHaveBeenCalledWith('(prefers-reduced-motion: reduce)');
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

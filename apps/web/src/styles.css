@@ -1092,3 +1092,91 @@ p {
   width: 1.4rem;
   height: 1.4rem;
 }
+
+/* ---------- presentation mode ("Ko'rib chiqish", D-3a) ---------- */
+
+/* the sheet and step navigation hide; the 3D zone fills the screen */
+.app.presenting {
+  grid-template-columns: 1fr;
+}
+
+.panel[hidden],
+.viewer-actions[hidden] {
+  display: none;
+}
+
+.present-logo {
+  position: absolute;
+  left: 2rem;
+  top: 1.75rem;
+  height: 3rem;
+  width: auto;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* title: top-left under the logo (the top centre holds the width dimension) */
+.present-title {
+  position: absolute;
+  left: 2rem;
+  top: 6rem;
+  max-width: 30rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.75rem 0.9rem 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-float);
+  animation: toast-in 0.3s ease-out;
+}
+
+.present-title-icon {
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+}
+
+.present-title h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.present-title p {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+/* skip: top-right, away from the stable-state actions (bottom-right) */
+.present-skip {
+  position: absolute;
+  right: 2rem;
+  top: 1.75rem;
+  padding: 0 2rem;
+}
+
+.present-actions {
+  position: absolute;
+  right: 2rem;
+  bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .present-title,
+  .sheet-toast {
+    animation: none;
+  }
+}

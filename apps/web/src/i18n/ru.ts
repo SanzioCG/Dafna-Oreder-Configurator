@@ -24,6 +24,12 @@ export const ru: Messages = {
   'step.doors.title': 'Выберите двери',
   'step.doors.hint': 'Тип дверей для всех секций. Откройте двери, чтобы увидеть секции.',
 
+  'present.title': 'Отличный выбор!',
+  'present.subtitle': 'Вы успешно создали дизайн своего шкафа.',
+  'present.skip': 'Пропустить',
+  'present.edit': 'Изменить конфигурацию',
+  'present.confirm': 'Подтвердить конфигурацию',
+
   'nav.back': 'Назад',
   'nav.next': 'Далее',
   'nav.nextSoon': 'Следующие шаги скоро',

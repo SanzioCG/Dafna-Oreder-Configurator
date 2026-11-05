@@ -23,6 +23,12 @@ export const uz = {
   'step.doors.title': 'Eshiklarni tanlang',
   'step.doors.hint': "Eshik turi barcha bo'limlar uchun. Ichini ko'rish uchun eshiklarni oching.",
 
+  'present.title': 'Ajoyib tanlov!',
+  'present.subtitle': "Siz o'z shkafingiz dizaynini muvaffaqiyatli yaratdingiz.",
+  'present.skip': "O'tkazib yuborish",
+  'present.edit': 'Konfiguratsiyani tahrirlash',
+  'present.confirm': 'Konfiguratsiyani tasdiqlash',
+
   'nav.back': 'Orqaga',
   'nav.next': 'Keyingi',
   'nav.nextSoon': 'Keyingi bosqichlar tez orada',

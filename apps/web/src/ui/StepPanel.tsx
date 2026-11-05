@@ -48,6 +48,8 @@ interface StepPanelProps {
   /** selected section on the interior step (shared with the 3D view) */
   selectedSection: number;
   onSelectSection: (index: number) => void;
+  /** presentation mode: the sheet and step navigation are hidden (state is kept) */
+  hidden?: boolean;
 }
 
 export function StepPanel({
@@ -57,6 +59,7 @@ export function StepPanel({
   onStepChange: setStep,
   selectedSection,
   onSelectSection,
+  hidden = false,
 }: StepPanelProps) {
   const { t, lang, setLang } = useI18n();
   const { theme, toggleTheme, logoUrl } = useTheme();
@@ -91,7 +94,7 @@ export function StepPanel({
   );
 
   return (
-    <aside className="panel">
+    <aside className="panel" hidden={hidden}>
       <header className="panel-header">
         <div className="brand">
           <img className="brand-logo" src={logoUrl} alt={t('app.brand')} draggable={false} />

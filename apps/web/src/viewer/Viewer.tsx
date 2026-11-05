@@ -1,7 +1,18 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
+import { Confetti, type ConfettiHandle } from '../presentation/Confetti';
+import { RevealDirector, type RevealEvent, type RevealKind } from '../presentation/reveal';
 import { useI18n } from '../i18n/I18n';
 import { useTheme } from '../theme/ThemeProvider';
-import { ReframeIcon, WarningIcon } from '../ui/icons';
+import { ReframeIcon, SuccessIcon, WarningIcon } from '../ui/icons';
+import type { CameraApi } from './CameraRig';
 import type { ViewGeometry } from '../state/useConfigurator';
 import type { FrameBox } from './CameraRig';
 import type { Mode } from '../mode';
@@ -30,7 +41,21 @@ interface ViewerProps {
   onSelectSection?: (index: number) => void;
   /** increments on every explicit section selection (tab or 3D tap): frames that section */
   selectionSeq?: number;
+  /** presentation mode ("Ko'rib chiqish"): the reveal to play; null = configurator */
+  presentation?: { kind: RevealKind; runId: number } | null;
+  /** discrete reveal events (doors closed, title, done) */
+  onRevealEvents?: (events: RevealEvent[]) => void;
+  /** stable-state content (summary, confirm / edit), shown as soon as the doors have closed */
+  presentationContent?: ReactNode;
 }
+
+interface RevealUi {
+  running: boolean;
+  title: boolean;
+  doorsClosed: boolean;
+}
+
+const REVEAL_IDLE: RevealUi = { running: false, title: false, doorsClosed: false };
 
 /**
  * Detects a double tap (touch or mouse) without interfering with orbit gestures, and tracks
@@ -95,9 +120,13 @@ export function Viewer({
   selectedSection = null,
   onSelectSection,
   selectionSeq = 0,
+  presentation = null,
+  onRevealEvents,
+  presentationContent,
 }: ViewerProps) {
   const { t } = useI18n();
-  const { theme } = useTheme();
+  const { theme, logoUrl } = useTheme();
+  const presenting = presentation !== null;
   const [resetToken, setResetToken] = useState(0);
   const [doorsOpen, setDoorsOpen] = useState(false);
   // Interior step: doors open automatically; leaving the step restores the previous state.
@@ -141,7 +170,7 @@ export function Viewer({
   const engineSize = view.result.dimensions ?? { widthMm: W, heightMm: H, depthMm: D };
   const visibility = dimensionVisibility({
     step: activeStep,
-    presentation: false,
+    presentation: presenting,
     hasDoors,
     doorsOpen,
   });
@@ -222,8 +251,56 @@ export function Viewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only an explicit selection moves the camera
   }, [selectionSeq]);
 
+  // ---- presentation reveal (driven in the render loop; React hears discrete events) ----
+  const [director] = useState(() => new RevealDirector());
+  const [generation, setGeneration] = useState(0);
+  const [revealUi, setRevealUi] = useState<RevealUi>(REVEAL_IDLE);
+  const doorOverride = useRef<number | null>(null);
+  const confettiRef = useRef<ConfettiHandle | null>(null);
+  const cameraApi = useRef<CameraApi | null>(null);
+  const onRevealEventsRef = useRef(onRevealEvents);
+  onRevealEventsRef.current = onRevealEvents;
+
+  const handleRevealEvents = useCallback((events: RevealEvent[]) => {
+    if (events.length === 0) return;
+    setRevealUi((prev) => ({
+      running: prev.running && !events.includes('done'),
+      title: prev.title || events.includes('title'),
+      doorsClosed: prev.doorsClosed || events.includes('doorsClosed'),
+    }));
+    onRevealEventsRef.current?.(events);
+  }, []);
+
+  const runId = presentation?.runId ?? null;
+  useEffect(() => {
+    if (!presentation) {
+      director.cancel();
+      setRevealUi(REVEAL_IDLE);
+      return;
+    }
+    director.cancel();
+    director.start(presentation.kind, hasDoors && doorsOpen ? 1 : 0);
+    setDoorsOpen(false); // the reveal ends with closed doors; they stay closed afterwards
+    setGeneration((g) => g + 1);
+    if (director.isRunning) {
+      setRevealUi({ running: true, title: false, doorsClosed: false });
+    } else {
+      // none / instant (reduced motion): final state directly
+      setRevealUi(REVEAL_IDLE);
+      handleRevealEvents(director.skip());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one start per presentation run
+  }, [runId]);
+
+  const skipReveal = () => {
+    const events = director.skip();
+    setGeneration((g) => g + 1);
+    setRevealUi((prev) => ({ ...prev, running: false }));
+    handleRevealEvents(events);
+  };
+
   return (
-    <div className="viewer" {...tap} data-testid="viewer">
+    <div className={presenting ? 'viewer presenting' : 'viewer'} {...tap} data-testid="viewer">
       <Scene
         view={view}
         dims={dims}
@@ -242,11 +319,47 @@ export function Viewer({
         selectedSection={selectedSection}
         onSectionTap={(i) => onSelectSection?.(i)}
         theme={theme}
+        cameraApi={cameraApi}
+        cameraLocked={revealUi.running}
+        doorOverride={doorOverride}
+        reveal={
+          presenting
+            ? {
+                director,
+                generation,
+                kind: presentation.kind,
+                confetti: confettiRef,
+                onEvents: handleRevealEvents,
+              }
+            : null
+        }
       />
       <DimensionSvg dims={dims} registry={dimRegistry} remPx={remPx} />
 
-      <div className="viewer-actions">
-        {hasDoors && (
+      {presenting && (
+        <>
+          <img className="present-logo" src={logoUrl} alt={t('app.brand')} draggable={false} />
+          <Confetti ref={confettiRef} />
+          {revealUi.title && (
+            <div className="present-title" role="status" data-testid="present-title">
+              <SuccessIcon className="present-title-icon" />
+              <div>
+                <h2>{t('present.title')}</h2>
+                <p>{t('present.subtitle')}</p>
+              </div>
+            </div>
+          )}
+          {revealUi.running && (
+            <button type="button" className="btn btn-floating present-skip" onClick={skipReveal}>
+              {t('present.skip')}
+            </button>
+          )}
+          {revealUi.doorsClosed && presentationContent}
+        </>
+      )}
+
+      <div className="viewer-actions" hidden={presenting && revealUi.running}>
+        {hasDoors && !presenting && (
           <button
             type="button"
             className={
@@ -263,7 +376,7 @@ export function Viewer({
           {t('viewer.reframe')}
         </button>
       </div>
-      <p className="viewer-hint">{t('viewer.hint')}</p>
+      {!presenting && <p className="viewer-hint">{t('viewer.hint')}</p>}
       {invalid && (
         <div className="viewer-stale" role="alert">
           <p className="viewer-invalid">
