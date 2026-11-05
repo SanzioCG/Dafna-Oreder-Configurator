@@ -14,6 +14,7 @@ import {
   unitSystemFor,
   type V3,
 } from './dimensions';
+import type { CameraCommand, CameraRequest } from './cameraCommands';
 import { MM, Scene } from './Scene';
 import type { SectionBox } from './SectionPicker';
 
@@ -27,20 +28,30 @@ interface ViewerProps {
   /** selected section on the interior step (null elsewhere) */
   selectedSection?: number | null;
   onSelectSection?: (index: number) => void;
+  /** increments on every explicit section selection (tab or 3D tap): frames that section */
+  selectionSeq?: number;
 }
 
-/** Detects a double tap (touch or mouse) without interfering with orbit gestures. */
-function useDoubleTap(onDoubleTap: () => void) {
+/**
+ * Detects a double tap (touch or mouse) without interfering with orbit gestures, and tracks
+ * whether a pointer is down on the 3D zone (`pointerDown`): camera moves wait for release.
+ */
+function useDoubleTap(onDoubleTap: () => void, pointerDown: { current: boolean }) {
   const down = useRef<{ x: number; y: number; t: number } | null>(null);
   const lastTap = useRef<{ x: number; y: number; t: number } | null>(null);
   const active = useRef(0);
+  const sync = () => {
+    pointerDown.current = active.current > 0;
+  };
   return {
     onPointerDown: (e: PointerEvent) => {
       active.current += 1;
+      sync();
       down.current = active.current === 1 ? { x: e.clientX, y: e.clientY, t: e.timeStamp } : null;
     },
     onPointerUp: (e: PointerEvent) => {
       active.current = Math.max(0, active.current - 1);
+      sync();
       const d = down.current;
       down.current = null;
       if (!d || e.timeStamp - d.t > 300 || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 12) {
@@ -57,6 +68,7 @@ function useDoubleTap(onDoubleTap: () => void) {
     },
     onPointerCancel: () => {
       active.current = Math.max(0, active.current - 1);
+      sync();
       down.current = null;
     },
   };
@@ -82,6 +94,7 @@ export function Viewer({
   activeStep = 'size',
   selectedSection = null,
   onSelectSection,
+  selectionSeq = 0,
 }: ViewerProps) {
   const { t } = useI18n();
   const { theme } = useTheme();
@@ -103,7 +116,8 @@ export function Viewer({
     }
   }, [interior]);
   const reframe = () => setResetToken((n) => n + 1);
-  const tap = useDoubleTap(reframe);
+  const pointerDown = useRef(false);
+  const tap = useDoubleTap(reframe, pointerDown);
   const { widthMm: W, heightMm: H, depthMm: D } = view;
   const hasDoors = view.result.panels.some((p) => p.role === 'door');
 
@@ -173,6 +187,41 @@ export function Viewer({
     }));
   }, [view.result.dimensions, view.result.panels, sections, H]);
 
+  // ---- smart camera: explicit selections only ----
+  const picking = activeStep === 'interior' || activeStep === 'doors';
+  const [cameraCommand, setCameraCommand] = useState<CameraCommand | null>(null);
+  const commandSeq = useRef(0);
+  const issue = (c: CameraRequest) => {
+    commandSeq.current += 1;
+    setCameraCommand({ ...c, seq: commandSeq.current });
+  };
+  // dimensions / colours steps: full-model view (on entering the step, not on first render)
+  const prevStep = useRef(activeStep);
+  useEffect(() => {
+    if (prevStep.current === activeStep) return;
+    prevStep.current = activeStep;
+    if (activeStep === 'size' || activeStep === 'color') issue({ kind: 'model' });
+  }, [activeStep]);
+  // a section picked (tab or 3D tap): frame it (interior) or its door(s) (doors step)
+  const lastSelectionSeq = useRef(selectionSeq);
+  useEffect(() => {
+    if (lastSelectionSeq.current === selectionSeq) return;
+    lastSelectionSeq.current = selectionSeq;
+    const b = sectionBoxes.find((s) => s.index === selectedSection);
+    if (!b || !picking) return;
+    const t = view.result.panels.find((p) => p.id === 'side-left')?.thicknessMm ?? 16;
+    const doorsStep = activeStep === 'doors';
+    const mm: [number, number, number, number, number, number] = doorsStep
+      ? [b.x0 - t / 2, b.x1 + t / 2, b.y0 - t, b.y1 + t, D - 30, D]
+      : [b.x0, b.x1, b.y0, b.y1, b.z0, D];
+    const box: FrameBox = {
+      min: [(mm[0] - W / 2) * MM, mm[2] * MM, (mm[4] - D / 2) * MM],
+      max: [(mm[1] - W / 2) * MM, mm[3] * MM, (mm[5] - D / 2) * MM],
+    };
+    issue({ kind: 'selection', box, id: `${doorsStep ? 'door' : 'section'}-${b.index}` });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only an explicit selection moves the camera
+  }, [selectionSeq]);
+
   return (
     <div className="viewer" {...tap} data-testid="viewer">
       <Scene
@@ -186,7 +235,9 @@ export function Viewer({
         extent={extent}
         resetToken={resetToken}
         doorsOpen={hasDoors && doorsOpen}
-        interactive={interior}
+        interactive={picking}
+        cameraCommand={cameraCommand}
+        pointerDown={pointerDown}
         sectionBoxes={sectionBoxes}
         selectedSection={selectedSection}
         onSectionTap={(i) => onSelectSection?.(i)}

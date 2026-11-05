@@ -12,6 +12,13 @@ function Configurator({ mode }: { mode: Mode }) {
   // shared by the sheet and the 3D view: the interior step opens the doors and selects sections
   const [step, setStep] = useState('size');
   const [section, setSection] = useState(0);
+  // every explicit selection (tab or 3D tap) bumps this: the smart camera frames the selection
+  const [selectionSeq, setSelectionSeq] = useState(0);
+  const selectSection = (i: number) => {
+    setSection(i);
+    setSelectionSeq((n) => n + 1);
+  };
+  const picking = step === 'interior' || step === 'doors';
   return (
     <div className={`app mode-${mode}`}>
       <Viewer
@@ -19,8 +26,9 @@ function Configurator({ mode }: { mode: Mode }) {
         mode={mode}
         invalid={config.hasErrors}
         activeStep={step}
-        selectedSection={step === 'interior' ? section : null}
-        onSelectSection={setSection}
+        selectedSection={picking ? section : null}
+        onSelectSection={selectSection}
+        selectionSeq={selectionSeq}
       />
       <StepPanel
         mode={mode}
@@ -28,7 +36,7 @@ function Configurator({ mode }: { mode: Mode }) {
         step={step}
         onStepChange={setStep}
         selectedSection={section}
-        onSelectSection={setSection}
+        onSelectSection={selectSection}
       />
     </div>
   );

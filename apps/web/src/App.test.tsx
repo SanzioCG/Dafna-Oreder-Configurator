@@ -15,9 +15,15 @@ vi.mock('./viewer/Scene', () => ({
     sectionBoxes,
     selectedSection,
     onSectionTap,
+    cameraCommand,
   }: SceneProps) => (
     <div
       data-testid="viewer-stub"
+      data-camera={
+        cameraCommand
+          ? `${cameraCommand.kind}${cameraCommand.kind === 'selection' ? ':' + cameraCommand.id : ''}#${cameraCommand.seq}`
+          : ''
+      }
       data-doors-open={String(doorsOpen)}
       data-interactive={String(interactive)}
       data-selected-section={String(selectedSection)}
@@ -630,5 +636,48 @@ describe('theme toggle in the sheet header', () => {
     expect(
       screen.getByRole('button', { name: uz['theme.dark'] }).getAttribute('aria-pressed'),
     ).toBe('true');
+  });
+});
+
+describe('smart camera triggers (explicit selections only)', () => {
+  const stub = () => screen.getByTestId('viewer-stub');
+  const camera = () => (stub().dataset.camera ?? '').split('#')[0];
+
+  it('no camera command on load; entering the interior step does not move the camera', () => {
+    render(<App />);
+    expect(stub().dataset.camera).toBe('');
+    fireEvent.click(tab(uz['step.interior']));
+    expect(stub().dataset.camera).toBe('');
+  });
+
+  it('section tab and 3D tap frame that section; the same section again re-frames it', () => {
+    render(<App />);
+    fireEvent.click(tab(uz['step.interior']));
+    const tabs = screen.getByRole('radiogroup', { name: uz['interior.sections'] });
+    fireEvent.click(within(tabs).getAllByRole('radio')[1] as HTMLElement);
+    expect(camera()).toBe('selection:section-1');
+    const seq = stub().dataset.camera;
+    fireEvent.click(screen.getByTestId('section-hit-0'));
+    expect(camera()).toBe('selection:section-0');
+    fireEvent.click(screen.getByTestId('section-hit-0'));
+    expect(stub().dataset.camera).not.toBe(seq);
+  });
+
+  it('doors step: tapping a section frames its door(s); size/colour steps use the full model', () => {
+    render(<App />);
+    fireEvent.click(tab(uz['step.doors']));
+    expect(stub().dataset.interactive).toBe('true');
+    fireEvent.click(screen.getByTestId('section-hit-1'));
+    expect(camera()).toBe('selection:door-1');
+    fireEvent.click(tab(uz['step.color']));
+    expect(camera()).toBe('model');
+    fireEvent.click(tab(uz['step.size']));
+    expect(camera()).toBe('model');
+  });
+
+  it('changing a parameter never issues a camera command', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '2000');
+    expect(stub().dataset.camera).toBe('');
   });
 });

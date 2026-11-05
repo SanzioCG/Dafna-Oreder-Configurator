@@ -2,7 +2,9 @@ import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { TOUCH } from 'three';
 import type { ViewGeometry } from '../state/useConfigurator';
-import { CameraRig, type FrameBox } from './CameraRig';
+import type { MutableRefObject } from 'react';
+import type { CameraCommand } from './cameraCommands';
+import { CameraRig, type CameraApi, type FrameBox } from './CameraRig';
 import { DimensionProjector, type DimRegistry } from './DimensionOverlay';
 import type { DimSpec, V3 } from './dimensions';
 import { cssToken } from '../theme/cssToken';
@@ -28,6 +30,14 @@ export interface SceneProps {
   sectionBoxes: SectionBox[];
   selectedSection: number | null;
   onSectionTap: (index: number) => void;
+  /** explicit camera move (smart camera) */
+  cameraCommand?: CameraCommand | null;
+  /** true while a pointer is down on the 3D zone (camera moves wait for release) */
+  pointerDown?: MutableRefObject<boolean>;
+  /** imperative camera API for scripted sequences (presentation) */
+  cameraApi?: MutableRefObject<CameraApi | null>;
+  /** presentation reveal: user orbit off */
+  cameraLocked?: boolean;
   /** current UI theme: re-renders the scene so themed colours (edges, shadow) update */
   theme?: string;
 }
@@ -51,6 +61,10 @@ export function Scene({
   sectionBoxes,
   selectedSection,
   onSectionTap,
+  cameraCommand = null,
+  pointerDown,
+  cameraApi,
+  cameraLocked = false,
 }: SceneProps) {
   const { widthMm: W, depthMm: D } = view;
   // Single-layer layout: the canvas is transparent and sits on the page background
@@ -118,7 +132,15 @@ export function Scene({
         maxPolarAngle={Math.PI / 2 - 0.04}
         touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }}
       />
-      <CameraRig product={product} extent={extent} resetToken={resetToken} />
+      <CameraRig
+        product={product}
+        extent={extent}
+        resetToken={resetToken}
+        command={cameraCommand}
+        pointerDown={pointerDown}
+        apiRef={cameraApi}
+        locked={cameraLocked}
+      />
     </Canvas>
   );
 }
