@@ -105,6 +105,8 @@ export const ru: Messages = {
   'toast.dismiss': 'Закрыть',
 
   'control.decrease': 'Уменьшить',
+  'control.outOfRange':
+    '{label}: допустимо {min}–{max} {unit}. {typed} не принято, установлено {applied} {unit}.',
   'control.increase': 'Увеличить',
   'unit.mm': 'мм',
   'unit.cm': 'см',

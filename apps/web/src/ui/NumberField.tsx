@@ -7,6 +7,8 @@ interface NumberFieldProps {
   /** customer mode: always clamp. staff mode: commit out-of-range values to show engine errors. */
   clamp: boolean;
   onCommit: (value: number) => void;
+  /** a typed value outside [min, max] was corrected on commit (customer mode) */
+  onCorrected?: (typed: number, applied: number) => void;
   label: string;
   unit: string;
 }
@@ -17,7 +19,16 @@ const INT = /^\d{1,5}$/;
  * Integer field synced with the slider. While typing, values inside [min, max] are applied
  * immediately; on blur / Enter the value is committed (clamped in customer mode).
  */
-export function NumberField({ value, min, max, clamp, onCommit, label, unit }: NumberFieldProps) {
+export function NumberField({
+  value,
+  min,
+  max,
+  clamp,
+  onCommit,
+  onCorrected,
+  label,
+  unit,
+}: NumberFieldProps) {
   const [draft, setDraft] = useState<string | null>(null);
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -33,7 +44,9 @@ export function NumberField({ value, min, max, clamp, onCommit, label, unit }: N
     if (draft === null) return;
     if (INT.test(draft)) {
       const n = Number(draft);
-      onCommit(clamp ? Math.min(max, Math.max(min, n)) : n);
+      const applied = clamp ? Math.min(max, Math.max(min, n)) : n;
+      onCommit(applied);
+      if (applied !== n) onCorrected?.(n, applied);
     }
     setDraft(null);
   };

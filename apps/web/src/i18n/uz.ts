@@ -104,6 +104,8 @@ export const uz = {
   'toast.dismiss': 'Yopish',
 
   'control.decrease': 'Kamaytirish',
+  'control.outOfRange':
+    "{label} {min}–{max} {unit} oralig'ida bo'lishi kerak. {typed} qabul qilinmadi, {applied} {unit} qo'yildi.",
   'control.increase': 'Oshirish',
   'unit.mm': 'mm',
   'unit.cm': 'sm',
