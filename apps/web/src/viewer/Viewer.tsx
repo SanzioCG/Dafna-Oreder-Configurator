@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type PointerEvent,
+  type MutableRefObject,
   type ReactNode,
 } from 'react';
 import { getMaterial } from '@dafna/engine';
@@ -29,6 +30,7 @@ import {
   type V3,
 } from './dimensions';
 import type { CameraCommand, CameraRequest } from './cameraCommands';
+import type { CaptureFn } from './renderCapture';
 import { MM, Scene } from './Scene';
 import type { SectionBox } from './SectionPicker';
 
@@ -50,6 +52,8 @@ interface ViewerProps {
   onRevealEvents?: (events: RevealEvent[]) => void;
   /** stable-state content (summary, confirm / edit), shown as soon as the doors have closed */
   presentationContent?: ReactNode;
+  /** filled with a PNG capture of the 3D view (contact screen, D-5) */
+  captureRef?: MutableRefObject<CaptureFn | null>;
 }
 
 interface RevealUi {
@@ -126,6 +130,7 @@ export function Viewer({
   presentation = null,
   onRevealEvents,
   presentationContent,
+  captureRef,
 }: ViewerProps) {
   const { t } = useI18n();
   const { theme, logoUrl } = useTheme();
@@ -329,6 +334,7 @@ export function Viewer({
   return (
     <div className={presenting ? 'viewer presenting' : 'viewer'} {...tap} data-testid="viewer">
       <Scene
+        capture={captureRef}
         view={view}
         dims={dims}
         dimRegistry={dimRegistry}

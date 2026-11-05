@@ -555,9 +555,8 @@ describe('presentation and flow', () => {
     expect(flow()).toBe('ready_to_confirm');
     fireEvent.click(screen.getByRole('button', { name: uz['present.confirm'] }));
     expect(flow()).toBe('contact');
-    expect(screen.getByRole('dialog', { name: uz['contact.title'] }).textContent).toContain(
-      uz['step.comingSoon'],
-    );
+    expect(screen.getByRole('dialog', { name: uz['contact.title'] })).toBeTruthy();
+    expect(screen.getByTestId('contact-submit')).toBeTruthy();
   });
 
   it('the review pill opens the presentation; edit returns to step 3 with nothing lost', () => {

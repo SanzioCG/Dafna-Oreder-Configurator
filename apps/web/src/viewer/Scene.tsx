@@ -14,6 +14,7 @@ import { PresentationPlatform } from '../presentation/PresentationPlatform';
 import { RevealDriver } from '../presentation/RevealDriver';
 import type { RevealDirector, RevealEvent, RevealKind } from '../presentation/reveal';
 import { SectionPicker, type SectionBox } from './SectionPicker';
+import { RenderCapture, type CaptureFn } from './renderCapture';
 import { SoftFloorShadow } from './SoftFloorShadow';
 import { Wardrobe3D } from './Wardrobe3D';
 
@@ -69,6 +70,8 @@ export interface SceneProps {
   } | null;
   /** current UI theme: re-renders the scene so themed colours (edges, shadow) update */
   theme?: string;
+  /** filled with a PNG capture of the 3D view (contact screen, D-5) */
+  capture?: MutableRefObject<CaptureFn | null>;
 }
 
 /**
@@ -97,6 +100,7 @@ export function Scene({
   doorOverride,
   turn,
   reveal = null,
+  capture,
 }: SceneProps) {
   const { widthMm: W, depthMm: D } = view;
   // Single-layer layout: the canvas is transparent and sits on the page background
@@ -207,6 +211,7 @@ export function Scene({
         presenting={reveal !== null}
         onHighlight={setHighlight}
       />
+      <RenderCapture target={capture} />
     </Canvas>
   );
 }

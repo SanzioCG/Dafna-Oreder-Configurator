@@ -7,6 +7,7 @@
   },
   "include": [
     "server",
+    "vite.config.ts",
     "src/lead",
     "src/i18n/translate.ts",
     "src/i18n/uz.ts",

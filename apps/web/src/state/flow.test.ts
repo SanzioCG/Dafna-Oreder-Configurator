@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { isPresenting, nextFlow, type FlowEvent, type FlowState } from './flow';
 
-const STATES: FlowState[] = ['configurator', 'presentation', 'ready_to_confirm', 'contact'];
-const EVENTS: FlowEvent[] = ['present', 'doorsClosed', 'confirm', 'edit', 'back'];
+const STATES: FlowState[] = [
+  'configurator',
+  'presentation',
+  'ready_to_confirm',
+  'contact',
+  'submitted',
+];
+const EVENTS: FlowEvent[] = ['present', 'doorsClosed', 'confirm', 'edit', 'back', 'submitted'];
 
 describe('flow state machine', () => {
   it('happy path: configurator -> presentation -> ready_to_confirm -> contact', () => {
@@ -10,6 +16,11 @@ describe('flow state machine', () => {
     expect(nextFlow('presentation', 'doorsClosed')).toBe('ready_to_confirm');
     expect(nextFlow('ready_to_confirm', 'confirm')).toBe('contact');
     expect(nextFlow('contact', 'back')).toBe('ready_to_confirm');
+    expect(nextFlow('contact', 'submitted')).toBe('submitted');
+  });
+
+  it('submitted is terminal (the session reset remounts the app)', () => {
+    for (const e of EVENTS) expect(nextFlow('submitted', e)).toBeNull();
   });
 
   it('editing returns to the configurator from the presentation states', () => {
@@ -25,6 +36,7 @@ describe('flow state machine', () => {
       'ready_to_confirm:confirm',
       'ready_to_confirm:edit',
       'contact:back',
+      'contact:submitted',
     ]);
     for (const s of STATES) {
       for (const e of EVENTS) {
