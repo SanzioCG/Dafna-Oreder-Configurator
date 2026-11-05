@@ -16,17 +16,17 @@ come in later batches.
 
 ## Batch plan
 
-| Batch | Scope                                                                                                                                                         |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D-0   | Engine + shkaf carcass + 3D viewer + step UI                                                                                                                  |
-| D-1a  | Material catalog, colour step, depth definition (ADR-003), hinged overlay doors, order draft 0.1                                                              |
-| D-1b  | Interior fill per section, door leaf/hinge rule fixes (ADR-006), production-ready panel fields, order draft 0.2 (ADR-005)                                     |
-| D-1c  | Leaves may share a partition (ADR-006 revised), hinge mount per leaf, default depth 600, order draft 0.3                                                      |
-| D-3a  | Light/dark themes, SVG dimension overlay (cm customer / mm staff), smart camera, presentation + reveal, summary + confirm entry, flow state machine (ADR-007) |
-| D-2a  | Backend: projects, branches/devices, customer confirmation, status model, audit log, outbox, Telegram notification, sales panel                               |
-| D-2b  | CRM adapter                                                                                                                                                   |
-| D-3b  | Contact form + submission, server-side PDF, QR, on-screen keyboard, idle timeout / session reset                                                              |
-| later | Price, tumba, stol, website API                                                                                                                               |
+| Batch | Scope                                                                                                                                                                                                 |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-0   | Engine + shkaf carcass + 3D viewer + step UI                                                                                                                                                          |
+| D-1a  | Material catalog, colour step, depth definition (ADR-003), hinged overlay doors, order draft 0.1                                                                                                      |
+| D-1b  | Interior fill per section, door leaf/hinge rule fixes (ADR-006), production-ready panel fields, order draft 0.2 (ADR-005)                                                                             |
+| D-1c  | Leaves may share a partition (ADR-006 revised), hinge mount per leaf, default depth 600, order draft 0.3                                                                                              |
+| D-3a  | Design system V2 (tokens, White/Dark, Inter, contrast gate), redesigned steps, SVG dimension overlay, smart camera, full-screen presentation with 360° reveal, confirm entry, flow (ADR-007, ADR-008) |
+| D-2a  | Backend: projects, branches/devices, customer confirmation, status model, audit log, outbox, Telegram notification, sales panel                                                                       |
+| D-2b  | CRM adapter                                                                                                                                                                                           |
+| D-3b  | Contact form + submission, server-side PDF, QR, on-screen keyboard, idle timeout / session reset                                                                                                      |
+| later | Price, tumba, stol, website API                                                                                                                                                                       |
 
 ## Principles
 
@@ -74,42 +74,32 @@ come in later batches.
 | kromka (ABS)         | кромка (ABS)         | edge band                | `edges`             |
 | tola yo'nalishi      | направление текстуры | grain direction          | `grainDirection`    |
 
-## Visual language
+## Visual language (design system V2, ADR-007)
 
-Single source: `apps/web/src/theme/tokens.css` (each value is marked verified from the logo /
-dafna.uz CSS, or `[APPROX]`). Font: **Nunito Sans** (the site's font; the brief assumed Nunito),
-self-hosted via `@fontsource/nunito-sans`, latin + cyrillic, weights 400–800.
+Single source: `apps/web/src/theme/` — `tokens.css` (shared scales + White), `themes.css` (Dark),
+`typography.css` (Inter, self-hosted latin + cyrillic). Every text / background and boundary
+pair is checked by `theme/contrast.test.ts` (WCAG; part of the gate).
 
-- **Layout: common background + configurator sheet.** One page background (`--bg`) behind
-  everything. Left zone (60%) = transparent 3D canvas on the background, no frame, no floor
-  plane (soft contact shadow only); the only place where orbit gestures work; the camera frames
-  the product to ~70% of the zone height, centred (`viewer/framing.ts`); viewer controls
-  bottom-left. Right zone (40%) = ONE white configurator sheet (radius 32, `--shadow-sheet`,
-  inset 24 px from the screen edges) holding logo + language, step bar, step cards and the
-  Orqaga/Keyingi navigation, which is sticky at the bottom inside the sheet. Step content
-  scrolls inside the sheet if needed; the page never scrolls.
-- **Selection state contract** (all option buttons/cards): selected = solid brand-blue fill +
-  white text; unselected = white fill + graphite text; disabled = 40% opacity + short reason.
-  Pastels are card backgrounds (one per option-card type, `--card-*`) and never indicate state.
+- **Flat 2D vector UI:** solid fills, one radius scale, no gradients, no pastel card fills, no
+  nested cards; shadows only on overlays over the 3D. The wardrobe is the only photorealistic
+  element.
+- **Layout:** 3D viewport ~65 % | configuration panel ~35 % (surface colour): logo,
+  "Konsultant chaqirish" (customers), language, StepNavigation (5 steps), independently
+  scrolling step content, fixed footer Orqaga · "Tayyor — ko'rib chiqish" · Keyingi. The page
+  never scrolls; nothing is hard-coded to one resolution (1 rem = 16 px at 1080p, 32 px at 4K).
+- **Selection contract:** selected = `--primary` fill + 3 px `--primary-strong` border (differs by
+  border thickness, not colour only); unselected = surface + 1 px control border; disabled =
+  neutral fill + muted text + a short human reason (never an error code). Focus: 3 px ring + halo.
+- **Themes:** Dark is the default kiosk theme (`VITE_KIOSK_THEME=dark|white`, `?theme=`); staff
+  can switch it, customers cannot; switching never resets the configuration. Logo variant per
+  theme. 3D lighting is the same in both themes; viewport background, edge outlines and contact
+  shadow are themed.
+- **Icons:** lucide-react + custom interior preset icons (24×24, 2 px). No emoji.
+- **Units:** millimetres in both modes; the engine is the source of every dimension.
 - **Customer mode** disables every option that would produce an engine error or a
-  `SHELF_SPAN` / `RAIL_DEPTH_SHORT` / `RAIL_HEIGHT_SHORT` / `DRAWER_SECTION_TOO_WIDE` warning and shows a short reason (e.g. "1 bo'lim" at width 1360); if a size
-  change makes the selected option blocked, it falls back to the template default (auto).
-  Staff mode keeps every option selectable and shows the issue.
-- **Never change a customer choice silently:** every such auto-reset shows a short toast inside
-  the sheet, above the navigation (what changed and why, uz/ru), dismissible, gone after 3 s.
-  The same rules apply to every new option card (doors now, interior fill when it lands).
-- **3D legibility:** dark edge outlines (light outlines on dark decors), one directional key
-  light + hemisphere ambient, soft contact shadow under the footprint.
-- Radii 32/20/12, pills, circular icon buttons, soft elevation, press scale 0.97.
-- **Themes (D-3a):** light (default) and dark via `<html data-theme>`; dark overrides only in
-  `theme/tokens.dark.css`. Kiosk default from `VITE_KIOSK_THEME` / `?theme=`, per-device toggle in
-  the sheet header; the session reset (D-3b) must call `resetTheme()`. Logo: `dafna-logo-white.svg`
-  on dark. No emoji in UI text — inline SVG icons (`ui/icons.tsx`).
-- **Units:** customers see centimetres ("136 sm"), staff millimetres; the engine stays in mm.
-- **Dimension overlay:** one SVG, refs per frame; overall W/H/D always, section widths on the
-  interior/doors steps only (ADR-007).
-- **Smart camera:** moves only on explicit selection, never while the 3D zone is touched.
-- **Presentation ("Ko'rib chiqish"):** sheet hidden, reveal once per configuration revision, skip
-  always visible, reduced motion respected; summary card + confirm; flow
-  `configurator → presentation → ready_to_confirm → contact` (ADR-007).
-- Still `[APPROX]`: `--accent-lavender` (not found on the dafna.uz home page).
+  `SHELF_SPAN` / `RAIL_DEPTH_SHORT` / `RAIL_HEIGHT_SHORT` / `DRAWER_SECTION_TOO_WIDE` warning and
+  shows a short reason; staff mode keeps everything selectable and shows the issue. Hidden from
+  customers: order draft JSON, debug info, rule ids, validation logs, unconfirmed markers.
+- **Never change a customer choice silently:** every auto-reset shows a toast (ResetToast on
+  StatusMessage), dismissible, gone after 3 s.
+- **Dimension overlay / smart camera / presentation / flow:** see ADR-008.
