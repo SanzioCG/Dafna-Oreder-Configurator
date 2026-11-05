@@ -194,19 +194,18 @@ export function StepPanel({
 
       <footer className="panel-footer">
         <ResetToast notice={config.notice} onDismiss={config.dismissNotice} />
-        <button
-          type="button"
-          className="btn btn-secondary"
+        <Button
+          variant="text"
           disabled={!prev}
+          icon={<ArrowLeftIcon />}
           onClick={() => prev && setStep(prev.key)}
         >
-          <ArrowLeftIcon />
           {t('nav.back')}
-        </button>
+        </Button>
         <div className="footer-center">
           {onReview && step !== 'review' && (
             <Button
-              variant="ghost"
+              variant="text"
               className="btn-review"
               disabled={config.hasErrors}
               onClick={onReview}

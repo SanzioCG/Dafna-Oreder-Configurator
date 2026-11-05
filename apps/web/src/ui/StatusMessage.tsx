@@ -5,7 +5,7 @@ export type StatusTone = 'info' | 'error' | 'success';
 
 /**
  * One status line (toast, inline note, banner): icon + text on the surface, a 3 px accent bar
- * on the left (--primary-strong / --error / --success). Human text only — never an error code.
+ * (V3: peach info card, --ink text). Human text only — never an error code.
  */
 export function StatusMessage({
   tone = 'info',

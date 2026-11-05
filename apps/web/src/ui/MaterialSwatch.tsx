@@ -3,6 +3,7 @@ import { useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import { CATALOG } from '../state/useConfigurator';
 import { CheckIcon } from './icons';
+import { Toggle } from './Toggle';
 
 interface MaterialSwatchProps {
   /** material ids, possibly including 'same_as_corpus' */
@@ -42,18 +43,9 @@ export function MaterialSwatch({
   return (
     <div className="swatch-picker">
       {hasSame && (
-        <button
-          type="button"
-          role="switch"
-          aria-checked={same}
-          className={same ? 'toggle on' : 'toggle'}
-          onClick={() => onChange(same ? corpusValue : SAME_AS_CORPUS)}
-        >
-          <span className="toggle-track" aria-hidden="true">
-            <span className="toggle-knob" />
-          </span>
+        <Toggle checked={same} onChange={(on) => onChange(on ? SAME_AS_CORPUS : corpusValue)}>
           {t('color.sameAsCorpus')}
-        </button>
+        </Toggle>
       )}
       {/* same as corpus: the door follows the corpus decor; door swatches are hidden */}
       {!same && (

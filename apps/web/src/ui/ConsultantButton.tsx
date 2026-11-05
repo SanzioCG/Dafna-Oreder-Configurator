@@ -19,7 +19,11 @@ export function ConsultantButton({
     <Button
       variant="secondary"
       className={className ? `consultant-btn ${className}` : 'consultant-btn'}
-      icon={<ConsultantIcon />}
+      icon={
+        <span className="icon-badge">
+          <ConsultantIcon />
+        </span>
+      }
       onClick={onCall}
       data-testid="consultant-button"
     >

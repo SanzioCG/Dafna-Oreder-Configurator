@@ -65,24 +65,7 @@
   --press-scale: 0.97;
   --disabled-opacity: 0.5;
 
-  /* ---- V2 names kept as aliases until the V3 restyle (commit 2) ---- */
-  --surface: var(--paper);
-  --panel: var(--bg);
-  --divider: transparent;
-  --border-control: var(--ink);
-  --primary-strong: var(--ink);
-  --viewport-bg: var(--viewport);
-  --disabled-fill: var(--paper);
-  --disabled-text: var(--text-2);
-  --radius-sm: 0.75rem;
-  --radius: 999px;
-  --radius-lg: var(--radius-card);
-  --border-w: 0.125rem;
-  --border-w-active: 0.125rem;
-  --focus-ring: var(--focus-line);
-  --focus-halo: none;
-  --shadow-overlay: none;
-  --tap-lg: 3.5rem;
+  /* ---- presentation particles (removed with the final presentation) ---- */
   --particle-1: #009fe3;
   --particle-2: #20b85a;
   --particle-3: #ffffff;

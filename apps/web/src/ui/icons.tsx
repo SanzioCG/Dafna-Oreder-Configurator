@@ -106,7 +106,7 @@ export function PresetIcon({
       {auto && (
         <g>
           <circle cx="19" cy="19" r="4.5" fill="currentColor" stroke="none" />
-          <path d="M17.3 21l1.7-4 1.7 4M17.8 19.8h2.4" strokeWidth={1.4} stroke="var(--surface)" />
+          <path d="M17.3 21l1.7-4 1.7 4M17.8 19.8h2.4" strokeWidth={1.4} stroke="var(--paper)" />
         </g>
       )}
     </PresetSvg>

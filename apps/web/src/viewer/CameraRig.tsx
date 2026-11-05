@@ -50,7 +50,7 @@ export interface CameraApi {
   setPose: (pose: Pose) => void;
   /** true while a timed move is running */
   isAnimating: () => boolean;
-  /** outline a selection (section / door id, null clears) with --primary-strong */
+  /** outline a selection (section / door id, null clears) (SectionPicker, --primary) */
   highlightSelection: (id: string | null) => void;
 }
 

@@ -10,8 +10,8 @@ interface SelectionGridProps<T> {
 
 /**
  * SelectionGrid (design system V2): option buttons for enum parameters. Selection contract:
- * selected = --primary fill + 3 px --primary-strong border; unselected = surface + control
- * border; disabled = neutral fill, muted text and a short human reason (never an error code).
+ * selected = --ink fill + white text; unselected = --paper pill + 2 px --ink outline;
+ * disabled = 50 % opacity and a short human reason below (never an error code).
  */
 export function SelectionGrid<T extends string | number | boolean>({
   options,
