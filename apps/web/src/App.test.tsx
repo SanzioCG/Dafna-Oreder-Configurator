@@ -12,7 +12,8 @@ vi.mock('./viewer/Scene', () => ({
     <div
       data-testid="viewer-stub"
       data-doors-open={String(doorsOpen)}
-      data-panels={view.result.panels.length}
+      data-panels={view.result.panels.filter((p) => !INTERIOR_ROLES.has(p.role)).length}
+      data-interior-panels={view.result.panels.filter((p) => INTERIOR_ROLES.has(p.role)).length}
       data-sections={view.result.sections.map((s) => s.innerWidthMm).join(',')}
       data-back={view.result.panels.find((p) => p.id === 'back')?.lengthMm}
       data-corpus={view.result.panels.find((p) => p.id === 'side-left')?.material}
@@ -23,6 +24,13 @@ vi.mock('./viewer/Scene', () => ({
   ),
 }));
 
+const INTERIOR_ROLES = new Set([
+  'shelf',
+  'drawer_front',
+  'drawer_side',
+  'drawer_back',
+  'drawer_bottom',
+]);
 const { App } = await import('./App');
 
 function setUrl(search: string) {

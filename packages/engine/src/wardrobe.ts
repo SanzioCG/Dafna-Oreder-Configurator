@@ -1,5 +1,11 @@
 import { getMaterial, materialsV0 } from './catalog.js';
 import { planDoors, type DoorLeaf, type DoorPlan, type HingeConflict } from './doors.js';
+import {
+  resolveInterior,
+  type InteriorConstants,
+  type InteriorPlan,
+  type SectionBox,
+} from './interior.js';
 import { makeIssue, resolveParams } from './params.js';
 import { getNumberConstant, getParamDef, getStringConstant, wardrobeTemplate } from './template.js';
 import type {
@@ -10,7 +16,9 @@ import type {
   Material,
   MaterialCatalog,
   Panel,
+  PanelEdges,
   Params,
+  Rail,
   Section,
   Template,
   Vec3,
@@ -68,6 +76,11 @@ export interface WardrobeLayout {
   maxShelfSpanMm: number;
   maxSingleLeafWidthMm: number;
   maxDoorHeightMm: number;
+  /** interior plan per section ('auto' resolved) */
+  interior: (InteriorPlan & { source: 'auto' | 'chosen' })[];
+  interiorMin: { railDepth: number; railHeight: number; drawerWidth: number };
+  drawerFrontSetbackMm: number;
+  edgeBand: { bandId: string; thicknessMm: number };
 }
 
 /** Split `total` whole millimetres into `n` parts differing by at most 1 mm (extra mm leftmost). */
@@ -136,6 +149,30 @@ function doorPlanValid(plan: DoorPlan, maxLeaf: number): boolean {
   return plan.leaves.every((l) => plan.types[l.sectionIndex] === 'double' || l.widthMm <= maxLeaf);
 }
 
+export function interiorConstants(template: Template): InteriorConstants {
+  const n = (name: string) => getNumberConstant(template, name);
+  return {
+    shelfPitchTargetMm: n('shelfPitchTargetMm'),
+    shelfFrontSetbackMm: n('shelfFrontSetbackMm'),
+    railTopShelfDropMm: n('railTopShelfDropMm'),
+    railAxisDropMm: n('railAxisDropMm'),
+    railDiameterMm: n('railDiameterMm'),
+    drawerFrontHeightMm: n('drawerFrontHeightMm'),
+    drawerCount: n('drawerCountPerSection'),
+    drawerGapMm: n('drawerGapMm'),
+    drawerFrontSetbackMm: n('drawerFrontSetbackMm'),
+    drawerSlideClearanceMm: n('drawerSlideClearanceMm'),
+    drawerBoxHeightReductionMm: n('drawerBoxHeightReductionMm'),
+    drawerBackClearanceMm: n('drawerBackClearanceMm'),
+    drawerSlideMinMm: n('drawerSlideMinMm'),
+    drawerSlideMaxMm: n('drawerSlideMaxMm'),
+    drawerSlideStepMm: n('drawerSlideStepMm'),
+    railMinDepthMm: n('railMinDepthMm'),
+    railMinHangingHeightMm: n('railMinHangingHeightMm'),
+    drawerMaxFrontWidthMm: n('drawerMaxFrontWidthMm'),
+  };
+}
+
 /** Derives all dimensions from a complete, valid parameter set. */
 export function computeLayout(
   template: Template,
@@ -185,6 +222,29 @@ export function computeLayout(
   const carcassHeightMm = heightMm - plinthHeightMm;
   const carcassDepthMm = depthMm - backThicknessMm - doorThicknessMm - doorGapFrontMm;
 
+  const ic = interiorConstants(template);
+  let xs = t;
+  const interior = sectionInnerWidthsMm.map((innerW, index) => {
+    const box: SectionBox = {
+      index,
+      xStart: xs,
+      innerW,
+      yBottom: plinthHeightMm + t,
+      yTop: heightMm - t,
+      zBack: backThicknessMm,
+      innerDepth: carcassDepthMm,
+      t,
+    };
+    xs += innerW + t;
+    const choice = params[`interior${index + 1}`];
+    return resolveInterior(
+      box,
+      typeof choice === 'string' ? choice : 'auto',
+      doors.types[index] ?? 'none',
+      ic,
+    );
+  });
+
   return {
     widthMm,
     heightMm,
@@ -218,6 +278,17 @@ export function computeLayout(
     maxShelfSpanMm: getNumberConstant(template, 'maxShelfSpanMm'),
     maxSingleLeafWidthMm,
     maxDoorHeightMm: getNumberConstant(template, 'maxDoorHeightMm'),
+    interior,
+    drawerFrontSetbackMm: ic.drawerFrontSetbackMm,
+    interiorMin: {
+      railDepth: ic.railMinDepthMm,
+      railHeight: ic.railMinHangingHeightMm,
+      drawerWidth: ic.drawerMaxFrontWidthMm,
+    },
+    edgeBand: {
+      bandId: getStringConstant(template, 'edgeBandId'),
+      thicknessMm: getNumberConstant(template, 'edgeBandThicknessMm'),
+    },
   };
 }
 
@@ -298,6 +369,28 @@ function layoutIssues(layout: WardrobeLayout): Issue[] {
       }),
     );
   }
+  // interior warnings (only for explicitly chosen presets; 'auto' never warns)
+  layout.interior.forEach((plan, index) => {
+    for (const code of plan.warnings) {
+      const s = layout.sectionInnerWidthsMm;
+      const values: Record<string, number | string> = {
+        sectionIndex: index,
+        sectionNumber: index + 1,
+        preset: plan.preset,
+      };
+      if (code === 'RAIL_DEPTH_SHORT') {
+        values.innerDepthMm = layout.carcassDepthMm;
+        values.minMm = layout.interiorMin.railDepth;
+      } else if (code === 'RAIL_HEIGHT_SHORT') {
+        values.clearHangingHeightMm = plan.clearHangingHeightMm ?? 0;
+        values.minMm = layout.interiorMin.railHeight;
+      } else if (code === 'DRAWER_SECTION_TOO_WIDE') {
+        values.frontWidthMm = plan.drawers[0]?.frontWidthMm ?? s[index] ?? 0;
+        values.maxMm = layout.interiorMin.drawerWidth;
+      }
+      issues.push(makeIssue(code, 'warning', `interior${index + 1}`, values));
+    }
+  });
   if (layout.hasDoors && layout.doorHeightMm > layout.maxDoorHeightMm) {
     issues.push(
       makeIssue('DOOR_TOO_HEIGHT', 'warning', 'height', {
@@ -350,13 +443,28 @@ function buildSections(layout: WardrobeLayout): Section[] {
       innerDepthMm: layout.carcassDepthMm,
       xStartMm: x,
       doorType: layout.doorTypes[index] ?? 'none',
+      preset: layout.interior[index]?.preset ?? 'empty',
+      presetSource: layout.interior[index]?.source ?? 'auto',
+      shelves: layout.interior[index]?.shelves ?? [],
+      rails: layout.interior[index]?.rails ?? [],
+      drawers: layout.interior[index]?.drawers ?? [],
+      clearHangingHeightMm: layout.interior[index]?.clearHangingHeightMm ?? null,
     });
     x += w + t;
   });
   return sections;
 }
 
+/** Panel before the production fields are added. */
+type BasePanel = Omit<Panel, 'edges' | 'grainDirection' | 'operations'>;
+
 function buildPanels(layout: WardrobeLayout, sections: Section[]): Panel[] {
+  return [...buildCarcassAndDoors(layout, sections), ...buildInterior(layout, sections)].map((p) =>
+    withProductionFields(p, layout),
+  );
+}
+
+function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): BasePanel[] {
   const t = layout.panelThicknessMm;
   const W = layout.widthMm;
   const H = layout.heightMm;
@@ -367,7 +475,7 @@ function buildPanels(layout: WardrobeLayout, sections: Section[]): Panel[] {
   const zMid = zC + Dc / 2;
   const corpus = layout.corpusMaterial.id;
 
-  const panels: Panel[] = [
+  const panels: BasePanel[] = [
     {
       id: 'side-left',
       role: 'side',
@@ -482,6 +590,146 @@ function buildPanels(layout: WardrobeLayout, sections: Section[]): Panel[] {
   return panels;
 }
 
+/** Shelves and internal drawers, section by section (left to right, bottom to top). */
+function buildInterior(layout: WardrobeLayout, sections: Section[]): BasePanel[] {
+  const t = layout.panelThicknessMm;
+  const zBack = layout.carcassBackZMm;
+  const zFront = layout.carcassFrontZMm;
+  const corpus = layout.corpusMaterial.id;
+  const hdf = layout.backMaterial;
+  const out: BasePanel[] = [];
+  for (const s of sections) {
+    const plan = layout.interior[s.index];
+    if (!plan) continue;
+    const xMid = s.xStartMm + s.innerWidthMm / 2;
+    // drawers first (they are at the bottom), then shelves bottom to top
+    for (const d of plan.drawers) {
+      const frontFaceZ = zFront - layoutDrawerSetback(layout);
+      const boxBackZ = frontFaceZ - t - d.boxDepthMm;
+      const boxBottomY = d.frontYMm + (d.frontHeightMm - d.boxHeightMm) / 2;
+      const boxLeft = xMid - d.boxWidthMm / 2;
+      const extra = { sectionIndex: s.index };
+      out.push(
+        {
+          id: `${d.id}-front`,
+          role: 'drawer_front',
+          lengthMm: d.frontWidthMm,
+          widthMm: d.frontHeightMm,
+          thicknessMm: t,
+          material: corpus,
+          position: [xMid, d.frontYMm + d.frontHeightMm / 2, frontFaceZ - t / 2],
+          rotation: ROT_VERTICAL_XY,
+          ...extra,
+        },
+        {
+          id: `${d.id}-side-left`,
+          role: 'drawer_side',
+          lengthMm: d.boxHeightMm,
+          widthMm: d.boxDepthMm,
+          thicknessMm: t,
+          material: corpus,
+          position: [boxLeft + t / 2, boxBottomY + d.boxHeightMm / 2, boxBackZ + d.boxDepthMm / 2],
+          rotation: ROT_VERTICAL_YZ,
+          ...extra,
+        },
+        {
+          id: `${d.id}-side-right`,
+          role: 'drawer_side',
+          lengthMm: d.boxHeightMm,
+          widthMm: d.boxDepthMm,
+          thicknessMm: t,
+          material: corpus,
+          position: [
+            boxLeft + d.boxWidthMm - t / 2,
+            boxBottomY + d.boxHeightMm / 2,
+            boxBackZ + d.boxDepthMm / 2,
+          ],
+          rotation: ROT_VERTICAL_YZ,
+          ...extra,
+        },
+        {
+          id: `${d.id}-back`,
+          role: 'drawer_back',
+          lengthMm: d.boxWidthMm - 2 * t,
+          widthMm: d.boxHeightMm,
+          thicknessMm: t,
+          material: corpus,
+          position: [xMid, boxBottomY + d.boxHeightMm / 2, boxBackZ + t / 2],
+          rotation: ROT_VERTICAL_XY,
+          ...extra,
+        },
+        {
+          id: `${d.id}-bottom`,
+          role: 'drawer_bottom',
+          lengthMm: d.boxWidthMm,
+          widthMm: d.boxDepthMm,
+          thicknessMm: hdf.thicknessMm,
+          material: hdf.id,
+          position: [xMid, boxBottomY - hdf.thicknessMm / 2, boxBackZ + d.boxDepthMm / 2],
+          rotation: ROT_HORIZONTAL,
+          ...extra,
+        },
+      );
+    }
+    for (const sh of plan.shelves) {
+      out.push({
+        id: sh.id,
+        role: 'shelf',
+        lengthMm: sh.lengthMm,
+        widthMm: sh.depthMm,
+        thicknessMm: t,
+        material: corpus,
+        position: [xMid, sh.yMm + t / 2, zBack + sh.depthMm / 2],
+        rotation: ROT_HORIZONTAL,
+        sectionIndex: s.index,
+      });
+    }
+  }
+  return out;
+}
+
+function layoutDrawerSetback(layout: WardrobeLayout): number {
+  return layout.drawerFrontSetbackMm;
+}
+
+const NO_BAND = { bandId: null, thicknessMm: null };
+
+/**
+ * Production fields (data only, for a later Bazis / GibLab export):
+ * - edges: visible front edges banded (ADR-005 edge rule), others null;
+ * - grainDirection: 'length' for LDSP/MDF, null for HDF (placeholder);
+ * - operations: always empty (no drilling in D-1b).
+ */
+function withProductionFields(p: BasePanel, layout: WardrobeLayout): Panel {
+  const band = { bandId: layout.edgeBand.bandId, thicknessMm: layout.edgeBand.thicknessMm };
+  const allBanded = p.role === 'door' || p.role === 'drawer_front';
+  const frontBanded = allBanded || ['side', 'partition', 'top', 'bottom', 'shelf'].includes(p.role);
+  const edges: PanelEdges = {
+    front: frontBanded ? { ...band } : { ...NO_BAND },
+    back: allBanded ? { ...band } : { ...NO_BAND },
+    left: allBanded ? { ...band } : { ...NO_BAND },
+    right: allBanded ? { ...band } : { ...NO_BAND },
+  };
+  const isHdf = p.material === layout.backMaterial.id && layout.backMaterial.kind === 'hdf';
+  return { ...p, edges, grainDirection: isHdf ? null : 'length', operations: [] };
+}
+
+function buildRails(layout: WardrobeLayout, sections: Section[]): Rail[] {
+  const rails: Rail[] = [];
+  for (const s of sections) {
+    for (const r of layout.interior[s.index]?.rails ?? []) {
+      rails.push({
+        id: r.id,
+        sectionIndex: s.index,
+        lengthMm: r.lengthMm,
+        diameterMm: r.diameterMm,
+        position: [s.xStartMm + s.innerWidthMm / 2, r.axisYMm, r.zMm],
+      });
+    }
+  }
+  return rails;
+}
+
 function buildDimensions(layout: WardrobeLayout): Dimensions {
   return {
     widthMm: layout.widthMm,
@@ -500,7 +748,8 @@ function buildDimensions(layout: WardrobeLayout): Dimensions {
  * Generates the wardrobe for untrusted parameters. Never throws on user input.
  * If any error issue exists, panels and sections are empty and dimensions is null.
  * Output is deterministic: ids and ordering are stable (sides, bottom, top, partitions L→R,
- * back, plinth front/back, door leaves L→R).
+ * back, plinth front/back, door leaves L→R, then per section L→R: drawer parts bottom to top,
+ * shelves bottom to top). Every panel carries edges / grainDirection / operations.
  */
 export function generate(
   template: Template,
@@ -509,13 +758,14 @@ export function generate(
 ): GenerateResult {
   const issues = validate(params, template, catalog);
   if (issues.some((i) => i.severity === 'error')) {
-    return { panels: [], sections: [], issues, dimensions: null };
+    return { panels: [], rails: [], sections: [], issues, dimensions: null };
   }
   const { params: resolved } = resolveParams(template, params);
   const layout = computeLayout(template, resolved, catalog);
   const sections = buildSections(layout);
   return {
     panels: buildPanels(layout, sections),
+    rails: buildRails(layout, sections),
     sections,
     issues,
     dimensions: buildDimensions(layout),

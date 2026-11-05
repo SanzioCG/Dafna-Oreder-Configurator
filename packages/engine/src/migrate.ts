@@ -37,7 +37,15 @@ export function migrateParamsFromD0(
   const raw: Record<string, unknown> =
     d0Params !== null && typeof d0Params === 'object' ? (d0Params as Record<string, unknown>) : {};
 
-  const params: Params = { ...defaultParams(template), doors: 'none' };
+  // D-0 had no doors and no interior: keep both off so the geometry stays identical
+  const params: Params = {
+    ...defaultParams(template),
+    doors: 'none',
+    interior1: 'empty',
+    interior2: 'empty',
+    interior3: 'empty',
+    interior4: 'empty',
+  };
   for (const [key, value] of Object.entries(raw)) {
     if (key === 'panelThickness') continue;
     if (typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') {

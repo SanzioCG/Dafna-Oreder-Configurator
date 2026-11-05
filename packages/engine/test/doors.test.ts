@@ -12,7 +12,15 @@ import {
   type Params,
 } from '../src/index.js';
 
-const gen = (overrides: Partial<Params> = {}) => generate(T, { ...defaultParams(T), ...overrides });
+const NO_INTERIOR = {
+  interior1: 'empty',
+  interior2: 'empty',
+  interior3: 'empty',
+  interior4: 'empty',
+};
+/** Door tests ignore the interior (D-1b): no shelves or drawers in the panel lists. */
+const gen = (overrides: Partial<Params> = {}) =>
+  generate(T, { ...defaultParams(T), ...NO_INTERIOR, ...overrides });
 const doors = (r: GenerateResult) => r.panels.filter((p) => p.role === 'door');
 const byId = (panels: Panel[], id: string): Panel => {
   const p = panels.find((x) => x.id === id);

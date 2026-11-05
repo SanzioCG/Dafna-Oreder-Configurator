@@ -6,11 +6,18 @@ import {
   wardrobeTemplate as T,
   type Panel,
   type Params,
+  type Section,
 } from '../src/index.js';
 
-/** Carcass tests run without doors (D-0 geometry); door tests are in doors.test.ts. */
+/** Carcass tests run without doors and without interior (D-0 geometry); see doors/interior tests. */
+const NO_INTERIOR = {
+  interior1: 'empty',
+  interior2: 'empty',
+  interior3: 'empty',
+  interior4: 'empty',
+};
 const gen = (overrides: Partial<Params> = {}) =>
-  generate(T, { ...defaultParams(T), doors: 'none', ...overrides });
+  generate(T, { ...defaultParams(T), doors: 'none', ...NO_INTERIOR, ...overrides });
 const mat = (t: number) => (t === 18 ? 'ldsp_white_18' : 'ldsp_white_16');
 const byId = (panels: Panel[], id: string): Panel => {
   const p = panels.find((x) => x.id === id);
@@ -65,7 +72,22 @@ describe('carcass with default params and doors=none (D-0 geometry)', () => {
   });
 
   it('has two equal sections', () => {
-    expect(result.sections).toEqual([
+    const d0 = ({
+      index,
+      innerWidthMm,
+      innerHeightMm,
+      innerDepthMm,
+      xStartMm,
+      doorType,
+    }: Section) => ({
+      index,
+      innerWidthMm,
+      innerHeightMm,
+      innerDepthMm,
+      xStartMm,
+      doorType,
+    });
+    expect(result.sections.map(d0)).toEqual([
       {
         index: 0,
         innerWidthMm: 656,

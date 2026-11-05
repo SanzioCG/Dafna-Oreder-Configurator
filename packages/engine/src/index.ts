@@ -34,3 +34,15 @@ export {
   type DoorPlanInput,
   type HingeConflict,
 } from './doors.js';
+export {
+  INTERIOR_PRESETS,
+  defaultPresetFor,
+  evenShelfBottoms,
+  planInterior,
+  resolveInterior,
+  slideLength,
+  type InteriorConstants,
+  type InteriorPlan,
+  type SectionBox,
+} from './interior.js';
+export { interiorConstants } from './wardrobe.js';

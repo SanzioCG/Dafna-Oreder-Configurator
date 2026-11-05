@@ -207,6 +207,90 @@
       "unconfirmed": false,
       "appliesToSection": 4,
       "note": "Staff override for section 4. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "interior1",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "rail",
+        "rail_shelf",
+        "drawers_shelves",
+        "rail_drawers"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 1,
+      "control": "presetCards",
+      "note": "Interior fill of section 1. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "interior2",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "rail",
+        "rail_shelf",
+        "drawers_shelves",
+        "rail_drawers"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 2,
+      "control": "presetCards",
+      "note": "Interior fill of section 2. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "interior3",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "rail",
+        "rail_shelf",
+        "drawers_shelves",
+        "rail_drawers"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 3,
+      "control": "presetCards",
+      "note": "Interior fill of section 3. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "interior4",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "rail",
+        "rail_shelf",
+        "drawers_shelves",
+        "rail_drawers"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 4,
+      "control": "presetCards",
+      "note": "Interior fill of section 4. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
     }
   ],
   "constants": {
@@ -256,6 +340,124 @@
       "unit": "mm",
       "unconfirmed": true,
       "note": "Assumed door height above which DOOR_TOO_HEIGHT warns (warping risk)."
+    },
+    "shelfPitchTargetMm": {
+      "value": 334,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed target pitch of removable shelves; the count is derived from the available height (compartments = round(height / pitch)), openings are equal."
+    },
+    "shelfFrontSetbackMm": {
+      "value": 4,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed setback of shelves from the carcass front (removable shelves); shelf depth = carcass inner depth - setback."
+    },
+    "railTopShelfDropMm": {
+      "value": 400,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed distance from the carcass top inner face down to the top face of the shelf above a rail (rail presets)."
+    },
+    "railAxisDropMm": {
+      "value": 60,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed distance from the underside of the shelf/top above a rail down to the rail axis."
+    },
+    "railDiameterMm": {
+      "value": 25,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed hanging rail diameter."
+    },
+    "drawerFrontHeightMm": {
+      "value": 170,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed internal drawer front height."
+    },
+    "drawerCountPerSection": {
+      "value": 2,
+      "unconfirmed": true,
+      "note": "Assumed number of internal drawers per drawer preset, stacked at the bottom of the section."
+    },
+    "drawerGapMm": {
+      "value": 3,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed vertical gap below, between and above internal drawer fronts (drawer zone = gap + count x (front + gap))."
+    },
+    "drawerFrontSetbackMm": {
+      "value": 4,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed setback of internal drawer fronts behind the carcass front edge (they sit behind the doors)."
+    },
+    "drawerSlideClearanceMm": {
+      "value": 13,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed slide clearance per side: drawer box width = section inner width - 2 x 13. Internal fronts are as wide as the box (simplified)."
+    },
+    "drawerBoxHeightReductionMm": {
+      "value": 40,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed: drawer box height = front height - 40, box centred on the front (simplified box, no slide hardware)."
+    },
+    "drawerBackClearanceMm": {
+      "value": 20,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed free space behind a drawer box."
+    },
+    "drawerSlideMinMm": {
+      "value": 250,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed shortest slide; box depth = longest slide (250..550, 50 steps) that fits."
+    },
+    "drawerSlideMaxMm": {
+      "value": 550,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed longest slide."
+    },
+    "drawerSlideStepMm": {
+      "value": 50,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed slide length step."
+    },
+    "railMinDepthMm": {
+      "value": 530,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed minimum carcass inner depth for hanging clothes (RAIL_DEPTH_SHORT warning below)."
+    },
+    "railMinHangingHeightMm": {
+      "value": 900,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed minimum clear hanging height under a rail (RAIL_HEIGHT_SHORT warning below)."
+    },
+    "drawerMaxFrontWidthMm": {
+      "value": 900,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed maximum internal drawer front width (DRAWER_SECTION_TOO_WIDE warning above)."
+    },
+    "edgeBandId": {
+      "value": "abs_0_8_placeholder",
+      "unconfirmed": true,
+      "note": "Placeholder edge band id for visible front edges until Dafna sends its edge band list."
+    },
+    "edgeBandThicknessMm": {
+      "value": 0.8,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed ABS edge band thickness on visible front edges. Panel dimensions stay finished sizes (band not subtracted)."
     }
   },
   "constructionRules": [
@@ -318,6 +520,26 @@
       "id": "auto-sections-door-feasible",
       "unconfirmed": true,
       "note": "sections=auto picks the smallest count that keeps every section inner width <= maxShelfSpanMm AND, when the doors preset is not none, gives a door layout without DOOR_TOO_WIDE / HINGE_CONFLICT (e.g. 1360 mm with doors=auto -> 3 sections, because 2 sections would need two adjacent double doors)."
+    },
+    {
+      "id": "interior-default-rule",
+      "unconfirmed": true,
+      "note": "interior 'auto': single door -> shelves, double door -> rail_shelf, no door -> shelves; if that preset would produce a warning (e.g. rail in a shallow carcass), shelves instead."
+    },
+    {
+      "id": "interior-layout",
+      "unconfirmed": true,
+      "note": "Drawers stack at the bottom of the section with a fixed shelf directly above; rail presets put a top shelf 400 mm below the top inner face and the rail axis 60 mm below the shelf (or the top); remaining free space without a rail gets evenly spaced removable shelves."
+    },
+    {
+      "id": "edge-default-rule",
+      "unconfirmed": true,
+      "note": "Visible front edges are banded (sides, partitions, top, bottom, shelves: local front edge; doors and drawer fronts: all four edges); back, plinth, drawer box parts: no band."
+    },
+    {
+      "id": "grain-placeholder",
+      "unconfirmed": true,
+      "note": "grainDirection = 'length' for LDSP/MDF parts, null for HDF; real grain rules need Dafna data (oak decors)."
     }
   ]
 }
