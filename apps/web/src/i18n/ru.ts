@@ -1,0 +1,76 @@
+import type { Messages } from './uz';
+
+export const ru: Messages = {
+  'app.brand': 'Dafna',
+  'app.title': 'Конфигуратор шкафа',
+  'lang.label': 'Язык',
+  'lang.uz': "O'zbekcha",
+  'lang.ru': 'Русский',
+  'mode.staff': 'Режим сотрудника',
+
+  'step.size': 'Размер',
+  'step.color': 'Цвет',
+  'step.interior': 'Наполнение',
+  'step.doors': 'Двери',
+  'step.review': 'Просмотр',
+  'step.comingSoon': 'Скоро',
+  'step.size.title': 'Выберите размер шкафа',
+  'step.size.hint': 'Настройте ширину, высоту и глубину — модель меняется сразу.',
+
+  'nav.back': 'Назад',
+  'nav.next': 'Далее',
+  'nav.nextSoon': 'Следующие шаги скоро',
+
+  'param.width': 'Ширина',
+  'param.height': 'Высота',
+  'param.depth': 'Глубина',
+  'param.sections': 'Количество секций',
+  'param.panelThickness': 'Толщина плиты',
+  'param.backPanel': 'Задняя стенка',
+  'param.base': 'Основание',
+  'param.plinthHeight': 'Высота цоколя',
+  'param.plinthRecess': 'Отступ цоколя',
+
+  'option.sections.auto': 'Авто',
+  'option.backPanel.none': 'Нет',
+  'option.backPanel.hdf_overlay': 'ХДФ (накладная)',
+  'option.base.plinth': 'С цоколем',
+  'option.base.none': 'Без цоколя',
+
+  'control.decrease': 'Уменьшить',
+  'control.increase': 'Увеличить',
+  'unit.mm': 'мм',
+
+  'summary.overall': 'Габариты',
+  'summary.sections': 'Секций: {count}',
+
+  'viewer.hint': 'Один палец — вращение · Два пальца — масштаб · Двойное касание — центрировать',
+  'viewer.reframe': 'Центрировать',
+  'viewer.invalid': 'В параметрах ошибка — показана последняя корректная модель',
+
+  'staff.badge': 'Не подтверждено',
+  'staff.issues': 'Ошибки и предупреждения',
+  'staff.noIssues': 'Проблем нет',
+  'staff.download': 'Скачать черновик заказа (JSON)',
+  'staff.assumptions': 'Неподтверждённые конструктивные значения',
+  'staff.kind.param': 'параметр',
+  'staff.kind.constant': 'константа',
+  'staff.kind.rule': 'правило',
+  'staff.panels': 'Детали ({count})',
+  'staff.panel.size': 'Д × Ш × Т, мм',
+  'staff.panel.id': 'ID',
+  'staff.panel.material': 'Материал',
+  'staff.onlyStaff': 'только сотрудник',
+  'nav.steps': 'Шаги',
+  'severity.error': 'Ошибка',
+  'severity.warning': 'Предупреждение',
+
+  'issue.INVALID_TYPE': '{param}: неверное значение «{value}»',
+  'issue.OUT_OF_RANGE': '{param}: должно быть в диапазоне {min}–{max} (введено: {value})',
+  'issue.INVALID_OPTION': '{param}: «{value}» недопустимо ({options})',
+  'issue.GEOMETRY_INVALID': 'Внутренний размер меньше нуля — конструкция невозможна',
+  'issue.UNSUPPORTED_TEMPLATE': 'Шаблон не поддерживается: {generator}',
+  'issue.UNKNOWN_PARAM': 'Неизвестный параметр: {key}',
+  'issue.SHELF_SPAN':
+    'Секция {sectionNumber}: внутренняя ширина {innerWidthMm} мм больше {maxMm} мм (возможен прогиб полки)',
+};
