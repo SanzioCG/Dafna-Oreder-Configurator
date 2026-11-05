@@ -6,12 +6,12 @@ import {
   validate,
   wardrobeTemplate,
   type GenerateResult,
-  type Issue,
   type ParamValue,
   type Params,
 } from '@dafna/engine';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Mode } from '../mode';
+import { isCustomerBlocking } from './blocking';
 
 export const TEMPLATE = wardrobeTemplate;
 export const CATALOG = materialsV0;
@@ -47,21 +47,7 @@ function toView(result: GenerateResult, p: Params): ViewGeometry {
   };
 }
 
-/**
- * Customer mode blocks every engine error plus these warnings: an option that would produce one
- * is disabled (with a reason), and a change that would make the current option produce one
- * resets that option. Staff mode keeps everything selectable and just shows the issue.
- */
-export const CUSTOMER_BLOCKING_WARNINGS = [
-  'SHELF_SPAN',
-  'RAIL_DEPTH_SHORT',
-  'RAIL_HEIGHT_SHORT',
-  'DRAWER_SECTION_TOO_WIDE',
-];
-
-export function isCustomerBlocking(issue: Issue): boolean {
-  return issue.severity === 'error' || CUSTOMER_BLOCKING_WARNINGS.includes(issue.code);
-}
+export { CUSTOMER_BLOCKING_WARNINGS, isCustomerBlocking } from './blocking';
 
 /** One option the app changed on its own (never silently: the UI shows a toast). */
 export interface AutoReset {
