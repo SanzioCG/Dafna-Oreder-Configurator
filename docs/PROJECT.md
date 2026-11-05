@@ -60,7 +60,7 @@ come in later batches.
 | kenglik              | ширина             | width                    | `width`             |
 | balandlik            | высота             | height                   | `height`            |
 | chuqurlik            | глубина            | depth                    | `depth`             |
-| qalinlik             | толщина            | thickness                | `panelThickness`    |
+| qalinlik             | толщина            | thickness                | `thicknessMm`       |
 | javon egilishi       | прогиб полки       | shelf sag (span limit)   | `SHELF_SPAN`        |
 | nakladnoy eshik      | накладная дверь    | overlay door             | `door`              |
 | bir / ikki tabaqali  | одно- / двустворч. | single / double door     | `single_*`/`double` |
