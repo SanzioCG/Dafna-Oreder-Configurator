@@ -1,9 +1,13 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useI18n } from '../i18n/I18n';
 import { IconButton } from './Button';
 import { MinusIcon, PlusIcon } from './icons';
 import { NumberField } from './NumberField';
 import { Slider } from './Slider';
+import { StatusMessage } from './StatusMessage';
+
+/** How long the out-of-range explanation stays visible (ms). */
+export const RANGE_NOTICE_MS = 5000;
 
 export interface DimensionControlProps {
   /** accessible name of the input / slider / ± buttons */
@@ -29,7 +33,8 @@ export interface DimensionControlProps {
 /**
  * DimensionControl (design system V2): label, [−] numeric input [+], slider, min / max labels.
  * Slider, input and ± share ONE state (the parameter value): ± and the input clamp to
- * [min, max]; an invalid typed value is corrected on blur (customer mode).
+ * [min, max]. A typed value outside the range is not accepted: on blur it is corrected to the
+ * nearest limit and the reason is shown under the control (customer mode, never silently).
  */
 export function DimensionControl({
   label,
@@ -47,7 +52,18 @@ export function DimensionControl({
   paramKey,
 }: DimensionControlProps) {
   const { t } = useI18n();
-  const bump = (dir: 1 | -1) => onChange(clampValue(value + dir * step));
+  const [corrected, setCorrected] = useState<{ typed: number; applied: number } | null>(null);
+  useEffect(() => {
+    if (!corrected) return;
+    const timer = setTimeout(() => setCorrected(null), RANGE_NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [corrected]);
+
+  const change = (n: number) => {
+    setCorrected(null);
+    onChange(n);
+  };
+  const bump = (dir: 1 | -1) => change(clampValue(value + dir * step));
   return (
     <div className={hasError ? 'param param-error' : 'param'} data-param={paramKey}>
       <div className="param-top">
@@ -65,6 +81,7 @@ export function DimensionControl({
             max={max}
             clamp={clamp}
             onCommit={onChange}
+            onCorrected={(typed, applied) => setCorrected({ typed, applied })}
             label={label}
             unit={unit}
           />
@@ -76,7 +93,7 @@ export function DimensionControl({
           />
         </div>
       </div>
-      <Slider min={min} max={max} step={step} value={value} onChange={onChange} label={label} />
+      <Slider min={min} max={max} step={step} value={value} onChange={change} label={label} />
       <div
         className="slider-scale"
         aria-hidden="true"
@@ -89,6 +106,18 @@ export function DimensionControl({
           {max} {unit}
         </span>
       </div>
+      {corrected && (
+        <StatusMessage tone="error" testId={paramKey && `range-${paramKey}`}>
+          {t('control.outOfRange', {
+            label,
+            min,
+            max,
+            unit,
+            typed: corrected.typed,
+            applied: corrected.applied,
+          })}
+        </StatusMessage>
+      )}
       {note}
     </div>
   );

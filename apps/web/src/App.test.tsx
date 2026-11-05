@@ -167,17 +167,27 @@ describe('App color step', () => {
     ).toBe('true');
   });
 
-  it('a door swatch turns "same as corpus" off; the toggle turns it back on', () => {
+  it('"same as corpus" hides the door swatches; off shows them, on syncs the door again', () => {
     render(<App />);
     openColorStep();
+    const doorGroup = () => screen.queryByRole('radiogroup', { name: uz['param.doorMaterial'] });
+    const toggle = () => screen.getByRole('switch', { name: uz['color.sameAsCorpus'] });
+    expect(toggle().getAttribute('aria-checked')).toBe('true');
+    expect(doorGroup()).toBeNull(); // door follows the corpus: no independent choice shown
+    fireEvent.click(toggle());
+    expect(toggle().getAttribute('aria-checked')).toBe('false');
+    // swatches appear with the corpus decor selected (nothing changed visually yet)
+    expect(swatch(doorSwatches(), 'ldsp_white_16').getAttribute('aria-checked')).toBe('true');
     fireEvent.click(swatch(doorSwatches(), 'ldsp_oak_light_16'));
     const stub = screen.getByTestId('viewer-stub');
     expect(stub.dataset.corpus).toBe('ldsp_white_16');
     expect(stub.dataset.doors).toBe('ldsp_oak_light_16');
-    const toggle = screen.getByRole('switch', { name: uz['color.sameAsCorpus'] });
-    expect(toggle.getAttribute('aria-checked')).toBe('false');
-    fireEvent.click(toggle);
+    fireEvent.click(toggle());
     expect(stub.dataset.doors).toBe('ldsp_white_16');
+    expect(doorGroup()).toBeNull();
+    // the corpus choice keeps driving the doors while "same" is on
+    fireEvent.click(swatch(corpus(), 'ldsp_beige_16'));
+    expect(stub.dataset.doors).toBe('ldsp_beige_16');
   });
 
   it('staff mode also offers the 18 mm board, and it changes the geometry', () => {
@@ -378,11 +388,13 @@ describe('Option availability (customer disables error-producing door options)',
 });
 
 describe('Selection state contract', () => {
-  it('"same as corpus" on: no door swatch is shown as selected', () => {
+  it('"same as corpus" on: door swatches are hidden, the toggle carries the state', () => {
     render(<App />);
     fireEvent.click(tab(uz['step.color']));
-    const doors = screen.getByRole('radiogroup', { name: uz['param.doorMaterial'] });
-    expect(within(doors).queryAllByRole('radio', { checked: true })).toEqual([]);
+    expect(screen.queryByRole('radiogroup', { name: uz['param.doorMaterial'] })).toBeNull();
+    expect(
+      screen.getByRole('switch', { name: uz['color.sameAsCorpus'] }).getAttribute('aria-checked'),
+    ).toBe('true');
     const corpus = screen.getByRole('radiogroup', { name: uz['param.corpusMaterial'] });
     expect(within(corpus).getAllByRole('radio', { checked: true }).length).toBe(1);
   });
@@ -903,12 +915,46 @@ describe('V2 steps: DimensionControl, customer visibility, global actions', () =
     expect(screen.getByTestId('scale-width').textContent).toBe('600 mm2400 mm');
   });
 
-  it('invalid typed values are corrected on blur (customer)', () => {
+  it('invalid typed values are corrected on blur (customer), with the reason shown', () => {
     render(<App />);
     typeInto(uz['param.width'], '100');
     expect(input(uz['param.width']).value).toBe('600');
+    expect(screen.getByTestId('range-width').textContent).toBe(
+      "Kenglik 600–2400 mm oralig'ida bo'lishi kerak. 100 qabul qilinmadi, 600 mm qo'yildi.",
+    );
     typeInto(uz['param.height'], '99999');
     expect(input(uz['param.height']).value).toBe('2600');
+    expect(screen.getByTestId('range-height').textContent).toContain('2600 mm');
+    // a valid change (± / slider) clears the explanation
+    fireEvent.click(
+      screen.getByRole('button', { name: `${uz['param.width']}: ${uz['control.increase']}` }),
+    );
+    expect(screen.queryByTestId('range-width')).toBeNull();
+  });
+
+  it('valid typed values show no range message; staff gets no correction (engine error)', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '1500');
+    expect(screen.queryByTestId('range-width')).toBeNull();
+    cleanup();
+    setUrl('?mode=staff');
+    render(<App />);
+    typeInto(uz['param.width'], '100');
+    expect(input(uz['param.width']).value).toBe('100');
+    expect(screen.queryByTestId('range-width')).toBeNull();
+  });
+
+  it('the range message disappears after 5 s', () => {
+    vi.useFakeTimers();
+    try {
+      render(<App />);
+      typeInto(uz['param.width'], '9999');
+      expect(screen.getByTestId('range-width')).toBeTruthy();
+      act(() => vi.advanceTimersByTime(5000));
+      expect(screen.queryByTestId('range-width')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('customer: no 18 mm material, no thickness, no back panel; staff sees them', () => {
