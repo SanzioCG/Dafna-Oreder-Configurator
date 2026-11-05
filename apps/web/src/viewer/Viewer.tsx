@@ -11,7 +11,8 @@ import { Confetti, type ConfettiHandle } from '../presentation/Confetti';
 import { RevealDirector, type RevealEvent, type RevealKind } from '../presentation/reveal';
 import { useI18n } from '../i18n/I18n';
 import { useTheme } from '../theme/ThemeProvider';
-import { ReframeIcon, SuccessIcon, WarningIcon } from '../ui/icons';
+import { ReframeIcon, SuccessIcon } from '../ui/icons';
+import { StatusMessage } from '../ui/StatusMessage';
 import type { CameraApi } from './CameraRig';
 import type { ViewGeometry } from '../state/useConfigurator';
 import type { FrameBox } from './CameraRig';
@@ -362,9 +363,7 @@ export function Viewer({
         {hasDoors && !presenting && (
           <button
             type="button"
-            className={
-              doorsOpen ? 'btn btn-floating btn-doors active' : 'btn btn-floating btn-doors'
-            }
+            className="btn btn-floating"
             aria-pressed={doorsOpen}
             onClick={() => setDoorsOpen((o) => !o)}
           >
@@ -372,17 +371,16 @@ export function Viewer({
           </button>
         )}
         <button type="button" className="btn btn-floating" onClick={reframe}>
-          <ReframeIcon className="btn-icon" />
+          <ReframeIcon />
           {t('viewer.reframe')}
         </button>
       </div>
       {!presenting && <p className="viewer-hint">{t('viewer.hint')}</p>}
       {invalid && (
         <div className="viewer-stale" role="alert">
-          <p className="viewer-invalid">
-            <WarningIcon className="btn-icon" />
+          <StatusMessage tone="error" role="note" className="viewer-invalid">
             {t('viewer.invalid')}
-          </p>
+          </StatusMessage>
         </div>
       )}
     </div>

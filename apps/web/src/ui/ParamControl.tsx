@@ -2,6 +2,8 @@ import { clampParam, type ParamDef, type ParamValue, type Params } from '@dafna/
 import type { ReactNode } from 'react';
 import { optionLabel, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
+import { IconButton } from './Button';
+import { MinusIcon, PlusIcon } from './icons';
 import { NumberField } from './NumberField';
 import { blockingIssue } from './optionAvailability';
 import { Segmented } from './Segmented';
@@ -81,15 +83,12 @@ export function ParamControl({
         <div className="param-top">
           {header}
           <div className="param-row">
-            <button
-              type="button"
-              className="stepper"
-              aria-label={`${label}: ${t('control.decrease')}`}
+            <IconButton
+              label={`${label}: ${t('control.decrease')}`}
+              icon={<MinusIcon />}
               disabled={num <= min}
               onClick={() => bump(-1)}
-            >
-              −
-            </button>
+            />
             <NumberField
               value={num}
               min={min}
@@ -99,15 +98,12 @@ export function ParamControl({
               label={label}
               unit={t('unit.mm')}
             />
-            <button
-              type="button"
-              className="stepper"
-              aria-label={`${label}: ${t('control.increase')}`}
+            <IconButton
+              label={`${label}: ${t('control.increase')}`}
+              icon={<PlusIcon />}
               disabled={num >= max}
               onClick={() => bump(1)}
-            >
-              +
-            </button>
+            />
           </div>
         </div>
         <Slider min={min} max={max} step={step} value={num} onChange={set} label={label} />

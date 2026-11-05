@@ -1,100 +1,114 @@
-/** Small inline SVG icons (no emoji in UI text). They inherit `currentColor`. */
-interface IconProps {
-  className?: string;
+import type { InteriorPreset } from '@dafna/engine';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CircleCheck,
+  Headset,
+  Minus,
+  Moon,
+  Plus,
+  Scan,
+  Sun,
+  TriangleAlert,
+  Info,
+  X,
+  type LucideProps,
+} from 'lucide-react';
+import type { ReactNode } from 'react';
+
+/**
+ * Icon set (design system V2): lucide-react for general UI, plus a custom inline-SVG set for
+ * the interior presets drawn on the same 24×24 viewBox with the same 2 px stroke. No emoji.
+ * Every icon uses currentColor and the `.icon` size (1.25em) unless a class overrides it.
+ */
+type IconProps = { className?: string };
+
+const lucide = (C: (p: LucideProps) => ReactNode) =>
+  function Icon({ className }: IconProps) {
+    return <C className={className ?? 'icon'} strokeWidth={2} aria-hidden focusable={false} />;
+  };
+
+export const ArrowLeftIcon = lucide(ArrowLeft);
+export const ArrowRightIcon = lucide(ArrowRight);
+export const CheckIcon = lucide(Check);
+export const CloseIcon = lucide(X);
+export const MinusIcon = lucide(Minus);
+export const PlusIcon = lucide(Plus);
+export const SunIcon = lucide(Sun);
+export const MoonIcon = lucide(Moon);
+export const WarningIcon = lucide(TriangleAlert);
+export const InfoIcon = lucide(Info);
+export const ConsultantIcon = lucide(Headset);
+/** "Markazlash": frame the model */
+export const ReframeIcon = lucide(Scan);
+/** presentation success badge (coloured by CSS: --success) */
+export const SuccessIcon = lucide(CircleCheck);
+
+/* ---------- custom interior preset icons (Lucide geometry: 24×24, stroke 2) ---------- */
+
+function PresetSvg({ className, children }: IconProps & { children: ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className ?? 'icon'}
+      aria-hidden
+      focusable={false}
+    >
+      {/* section frame */}
+      <rect x="4" y="2" width="16" height="20" rx="2" />
+      {children}
+    </svg>
+  );
 }
 
-const base = {
-  viewBox: '0 0 24 24',
-  fill: 'none',
-  stroke: 'currentColor',
-  strokeWidth: 2,
-  strokeLinecap: 'round' as const,
-  strokeLinejoin: 'round' as const,
-  'aria-hidden': true,
-  focusable: false,
+const shelf = (y: number) => <path key={`s${y}`} d={`M4 ${y}h16`} />;
+const rail = (y: number) => (
+  <g key={`r${y}`}>
+    <path d={`M7 ${y}h10`} />
+    <path d={`M12 ${y}v1.5l-2.5 2h5l-2.5-2`} />
+  </g>
+);
+const drawer = (y: number) => (
+  <g key={`d${y}`}>
+    <path d={`M4 ${y}h16`} />
+    <path d={`M10.5 ${y + 2.25}h3`} />
+  </g>
+);
+
+const PRESET_PARTS: Record<InteriorPreset, ReactNode[]> = {
+  empty: [],
+  shelves: [shelf(7), shelf(12), shelf(17)],
+  rail: [rail(6)],
+  rail_shelf: [shelf(6), rail(9)],
+  drawers_shelves: [shelf(8), shelf(13.5), drawer(17.5)],
+  rail_drawers: [rail(5), drawer(13), drawer(17.5)],
 };
 
-export function SunIcon({ className }: IconProps) {
+/** Interior preset icon; `auto` draws a small "A" badge over the resolved preset. */
+export function PresetIcon({
+  preset,
+  auto = false,
+  className,
+}: {
+  preset: InteriorPreset;
+  auto?: boolean;
+  className?: string;
+}) {
   return (
-    <svg {...base} className={className}>
-      <circle cx="12" cy="12" r="4.2" />
-      <path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" />
-    </svg>
-  );
-}
-
-export function MoonIcon({ className }: IconProps) {
-  return (
-    <svg {...base} className={className}>
-      <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z" />
-    </svg>
-  );
-}
-
-export function ArrowLeftIcon({ className }: IconProps) {
-  return (
-    <svg {...base} className={className}>
-      <path d="M19 12H5M11 6l-6 6 6 6" />
-    </svg>
-  );
-}
-
-export function ArrowRightIcon({ className }: IconProps) {
-  return (
-    <svg {...base} className={className}>
-      <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
-  );
-}
-
-export function CheckIcon({ className }: IconProps) {
-  return (
-    <svg {...base} className={className} strokeWidth={3}>
-      <path d="M5 12.5l4.5 4.5L19 7.5" />
-    </svg>
-  );
-}
-
-export function CloseIcon({ className }: IconProps) {
-  return (
-    <svg {...base} className={className}>
-      <path d="M6 6l12 12M18 6L6 18" />
-    </svg>
-  );
-}
-
-export function WarningIcon({ className }: IconProps) {
-  return (
-    <svg {...base} className={className}>
-      <path d="M12 3.5 2.5 20h19L12 3.5Z" />
-      <path d="M12 10v4.5M12 17.2v.1" />
-    </svg>
-  );
-}
-
-/** "Markazlash": four frame corners around the model. */
-export function ReframeIcon({ className }: IconProps) {
-  return (
-    <svg {...base} className={className}>
-      <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />
-      <rect x="9" y="9" width="6" height="6" rx="1" />
-    </svg>
-  );
-}
-
-/** Success badge for the presentation title: filled circle + check. */
-export function SuccessIcon({ className }: IconProps) {
-  return (
-    <svg viewBox="0 0 48 48" aria-hidden focusable={false} className={className}>
-      <circle cx="24" cy="24" r="22" fill="var(--success)" />
-      <path
-        d="M14 24.5l7 7L34.5 17"
-        fill="none"
-        stroke="#fff"
-        strokeWidth={4.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <PresetSvg className={className}>
+      {PRESET_PARTS[preset]}
+      {auto && (
+        <g>
+          <circle cx="19" cy="19" r="4.5" fill="currentColor" stroke="none" />
+          <path d="M17.3 21l1.7-4 1.7 4M17.8 19.8h2.4" strokeWidth={1.4} stroke="var(--surface)" />
+        </g>
+      )}
+    </PresetSvg>
   );
 }

@@ -4,7 +4,7 @@ import { optionLabel, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import { TEMPLATE, type Configurator } from '../state/useConfigurator';
 import { blockingIssue } from './optionAvailability';
-import { PresetIllustration } from './PresetIllustration';
+import { PresetIcon } from './icons';
 import { Segmented } from './Segmented';
 
 interface InteriorStepProps {
@@ -105,7 +105,8 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
                   config.setParam(def.key, o);
                 }}
               >
-                <PresetIllustration
+                <PresetIcon
+                  className="preset-illustration"
                   preset={o === 'auto' ? autoPreset : (o as InteriorPreset)}
                   auto={o === 'auto'}
                 />

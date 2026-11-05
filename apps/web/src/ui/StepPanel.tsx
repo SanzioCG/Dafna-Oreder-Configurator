@@ -4,6 +4,7 @@ import type { Mode } from '../mode';
 import { TEMPLATE, type Configurator } from '../state/useConfigurator';
 import { STEPS, neighbourStep } from '../steps';
 import { useTheme } from '../theme/ThemeProvider';
+import { IconButton } from './Button';
 import { ArrowLeftIcon, ArrowRightIcon, MoonIcon, SunIcon } from './icons';
 import { InteriorStep } from './InteriorStep';
 import { ParamControl } from './ParamControl';
@@ -101,17 +102,16 @@ export function StepPanel({
           <span className="brand-title">{t('app.title')}</span>
         </div>
         {staff && <span className="mode-badge">{t('mode.staff')}</span>}
-        <button
-          type="button"
-          className="theme-toggle"
-          aria-pressed={theme === 'dark'}
-          aria-label={t('theme.dark')}
-          title={t('theme.dark')}
-          data-testid="theme-toggle"
-          onClick={toggleTheme}
-        >
-          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-        </button>
+        {/* theme: kiosk config; staff can switch it on the device, customers cannot */}
+        {staff && (
+          <IconButton
+            label={t('theme.dark')}
+            aria-pressed={theme === 'dark'}
+            data-testid="theme-toggle"
+            onClick={toggleTheme}
+            icon={theme === 'dark' ? <MoonIcon /> : <SunIcon />}
+          />
+        )}
         <div className="lang-switch" role="group" aria-label={t('lang.label')}>
           {LANGS.map((l) => (
             <button
@@ -210,7 +210,7 @@ export function StepPanel({
           disabled={!prev}
           onClick={() => prev && setStep(prev.key)}
         >
-          <ArrowLeftIcon className="btn-icon" />
+          <ArrowLeftIcon />
           {t('nav.back')}
         </button>
         <div className="footer-hint muted">{!next && t('nav.nextSoon')}</div>
@@ -221,7 +221,7 @@ export function StepPanel({
           onClick={() => next && setStep(next.key)}
         >
           {t('nav.next')}
-          <ArrowRightIcon className="btn-icon" />
+          <ArrowRightIcon />
         </button>
       </footer>
     </aside>

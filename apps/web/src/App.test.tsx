@@ -314,11 +314,19 @@ describe('App (staff mode)', () => {
 });
 
 describe('Brand logo in the header', () => {
-  it.each(['', '?mode=staff'])('shows dafna-logo.svg (url "%s")', (search) => {
+  it.each(['', '?mode=staff'])('Dark default: dafna-logo-white.svg (url "%s")', (search) => {
     setUrl(search);
     render(<App />);
     const logo = within(screen.getByRole('banner')).getByRole('img', { name: 'Dafna' });
+    expect(logo.getAttribute('src')).toBe('/brand/dafna-logo-white.svg');
+  });
+
+  it('White theme (kiosk config): dafna-logo.svg', () => {
+    setUrl('?theme=white');
+    render(<App />);
+    const logo = within(screen.getByRole('banner')).getByRole('img', { name: 'Dafna' });
     expect(logo.getAttribute('src')).toBe('/brand/dafna-logo.svg');
+    delete document.documentElement.dataset.theme;
   });
 });
 
@@ -619,23 +627,33 @@ describe('Interior step (D-1b)', () => {
   });
 });
 
-describe('theme toggle in the sheet header', () => {
+describe('theme: kiosk default, staff-only switch', () => {
   afterEach(() => {
     window.localStorage.clear();
     delete document.documentElement.dataset.theme;
   });
 
-  it('switches light <-> dark and swaps the logo variant', () => {
+  it('customer: Dark by default and no theme toggle', () => {
+    render(<App />);
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(screen.queryByRole('button', { name: uz['theme.dark'] })).toBeNull();
+  });
+
+  it('staff switch: White <-> Dark, logo swaps, the configuration is kept', () => {
+    setUrl('?mode=staff');
     render(<App />);
     const logo = () => screen.getByAltText(uz['app.brand']).getAttribute('src') ?? '';
+    typeInto(uz['param.width'], '2000');
+    fireEvent.click(tab(uz['step.color']));
+    expect(logo()).toMatch(/dafna-logo-white\.svg$/);
+    const toggle = screen.getByRole('button', { name: uz['theme.dark'] });
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(toggle);
     expect(document.documentElement.dataset.theme).toBe('light');
     expect(logo()).toMatch(/dafna-logo\.svg$/);
-    fireEvent.click(screen.getByRole('button', { name: uz['theme.dark'] }));
-    expect(document.documentElement.dataset.theme).toBe('dark');
-    expect(logo()).toMatch(/dafna-logo-white\.svg$/);
-    expect(
-      screen.getByRole('button', { name: uz['theme.dark'] }).getAttribute('aria-pressed'),
-    ).toBe('true');
+    // nothing reset: same step, same width
+    expect(tab(uz['step.color']).getAttribute('aria-current')).toBe('step');
+    expect(screen.getByTestId('summary').textContent).toContain('2000');
   });
 });
 

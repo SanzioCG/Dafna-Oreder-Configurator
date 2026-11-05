@@ -53,10 +53,9 @@ export const Confetti = forwardRef<ConfettiHandle>(function Confetti(_props, ref
 
   useEffect(() => {
     colors.current = [
-      cssToken('--brand-blue', '#009fe2'),
-      cssToken('--success', '#20b85a'),
-      cssToken('--brand-blue-hover', '#30bbf9'),
-      cssToken('--warning', '#f4980f'),
+      cssToken('--particle-1', '#009fe3'),
+      cssToken('--particle-2', '#20b85a'),
+      cssToken('--particle-3', '#ffffff'),
     ];
   }, []);
 

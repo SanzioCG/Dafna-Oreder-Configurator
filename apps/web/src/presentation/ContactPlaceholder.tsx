@@ -22,7 +22,7 @@ export function ContactPlaceholder({ mode, onBack }: { mode: Mode; onBack: () =>
           <p className="muted">{t('step.comingSoon')}</p>
         )}
         <button type="button" className="btn btn-secondary" onClick={onBack}>
-          <ArrowLeftIcon className="btn-icon" />
+          <ArrowLeftIcon />
           {t('nav.back')}
         </button>
       </div>
