@@ -59,7 +59,8 @@ export const ru: Messages = {
   'decor.anthracite': 'Антрацит',
   'color.sameAsCorpus': 'Как корпус',
 
-  'reason.DOOR_TOO_WIDE': 'Секция слишком широкая для одной двери',
+  'reason.DOOR_TOO_WIDE': 'Слишком широкая створка',
+  'reason.HINGE_CONFLICT': 'Петли дверей сталкиваются',
   'reason.SHELF_SPAN': 'Слишком широко для полки',
   'reason.default': 'Недоступно при этом размере',
 
@@ -106,8 +107,9 @@ export const ru: Messages = {
   'issue.UNKNOWN_PARAM': 'Неизвестный параметр: {key}',
   'issue.SHELF_SPAN':
     'Секция {sectionNumber}: внутренняя ширина {innerWidthMm} мм больше {maxMm} мм (возможен прогиб полки)',
-  'issue.DOOR_TOO_WIDE':
-    'Секция {sectionNumber} слишком широкая для одной двери: {innerWidthMm} мм > {maxMm} мм (дверь {leafWidthMm} мм)',
+  'issue.DOOR_TOO_WIDE': 'Секция {sectionNumber}: створка {leafWidthMm} мм шире {maxMm} мм',
+  'issue.HINGE_CONFLICT':
+    'Двери секций {sectionNumber} и {nextSectionNumber} навешены на одну перегородку (сталкиваются при открытии)',
   'issue.DOOR_TOO_HEIGHT': 'Высота двери {doorHeightMm} мм больше {maxMm} мм (риск коробления)',
   'issue.MATERIAL_UNKNOWN': 'Неизвестный материал: {material}',
   'issue.MIGRATION_THICKNESS_UNAVAILABLE': 'В каталоге нет плиты {panelThickness} мм',

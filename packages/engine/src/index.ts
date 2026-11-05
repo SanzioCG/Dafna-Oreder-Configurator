@@ -15,8 +15,6 @@ export {
   validate,
   computeLayout,
   autoSectionCount,
-  autoDoorKind,
-  resolveDoorTypes,
   distributeEvenly,
   maxSectionInnerWidth,
   SAME_AS_CORPUS,
@@ -26,3 +24,13 @@ export {
 } from './wardrobe.js';
 export { toOrderDraft, type OrderDraftOptions } from './order.js';
 export { migrateParamsFromD0, migrateOrderDraft, type MigrationOptions } from './migrate.js';
+export {
+  planDoors,
+  doorKindForLeaf,
+  defaultLeftCount,
+  assignRun,
+  roundLeaves,
+  type DoorPlan,
+  type DoorPlanInput,
+  type HingeConflict,
+} from './doors.js';

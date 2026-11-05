@@ -1,4 +1,4 @@
-import wardrobeV1Json from '../templates/wardrobe.v1.json' with { type: 'json' };
+import wardrobeV2Json from '../templates/wardrobe.v2.json' with { type: 'json' };
 import type {
   Material,
   MaterialCatalog,
@@ -9,11 +9,11 @@ import type {
 } from './types.js';
 
 /**
- * The current wardrobe (shkaf) template: v1 (templateVersion 0.2.0, D-1a: materials + doors).
- * templates/wardrobe.v0.json (D-0) is kept as an archive only; D-0 order drafts are migrated
- * with migrateOrderDraft() instead of being generated with the old template.
+ * The current wardrobe (shkaf) template: v2 (templateVersion 0.3.0, D-1b: leaf/hinge rules, interior).
+ * Older templates (wardrobe.v0.json D-0, wardrobe.v1.json D-1a) are kept as an archive only;
+ * older order drafts are migrated with migrateOrderDraft() instead.
  */
-export const wardrobeTemplate: Template = wardrobeV1Json as Template;
+export const wardrobeTemplate: Template = wardrobeV2Json as Template;
 
 export function getParamDef(template: Template, key: string): ParamDef | undefined {
   return template.parameters.find((p) => p.key === key);

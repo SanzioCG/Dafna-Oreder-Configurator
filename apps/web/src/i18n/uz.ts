@@ -58,7 +58,8 @@ export const uz = {
   'decor.anthracite': 'Antratsit',
   'color.sameAsCorpus': 'Korpus bilan bir xil',
 
-  'reason.DOOR_TOO_WIDE': "Bo'lim bitta eshik uchun juda keng",
+  'reason.DOOR_TOO_WIDE': 'Eshik tabaqasi juda keng',
+  'reason.HINGE_CONFLICT': "Eshik ilmoqlari to'qnashadi",
   'reason.SHELF_SPAN': 'Javon uchun juda keng',
   'reason.default': "Bu o'lchamda mumkin emas",
 
@@ -107,7 +108,9 @@ export const uz = {
   'issue.SHELF_SPAN':
     "{sectionNumber}-bo'lim ichki kengligi {innerWidthMm} mm — {maxMm} mm dan katta (javon egilishi mumkin)",
   'issue.DOOR_TOO_WIDE':
-    "{sectionNumber}-bo'lim bitta eshik uchun juda keng: {innerWidthMm} mm > {maxMm} mm (eshik {leafWidthMm} mm)",
+    "{sectionNumber}-bo'lim: eshik tabaqasi {leafWidthMm} mm — {maxMm} mm dan keng",
+  'issue.HINGE_CONFLICT':
+    "{sectionNumber}- va {nextSectionNumber}-bo'lim eshiklari bitta to'siqqa ilmoqlangan (ochilganda to'qnashadi)",
   'issue.DOOR_TOO_HEIGHT':
     'Eshik balandligi {doorHeightMm} mm — {maxMm} mm dan baland (qiyshayish xavfi)',
   'issue.MATERIAL_UNKNOWN': "Noma'lum material: {material}",

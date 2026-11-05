@@ -26,7 +26,7 @@ const LDSP = [
   'ldsp_white_18',
 ];
 
-describe('wardrobe template v1 (0.2.0)', () => {
+describe('wardrobe template v2 (0.3.0)', () => {
   it('defines the parameters with the specified ranges and defaults', () => {
     const summary = T.parameters.map((d) => [
       d.key,
@@ -116,7 +116,8 @@ describe('wardrobe template v1 (0.2.0)', () => {
       'constant:doorGapFrontMm',
       'constant:doorGapBetweenMm',
       'constant:doorGapEdgeMm',
-      'constant:maxSingleDoorWidthMm',
+      'constant:maxSingleLeafWidthMm',
+      'constant:doorLeafRoundingMm',
       'constant:maxDoorHeightMm',
       'rule:sides-on-plinth',
       'rule:top-bottom-between-sides',
@@ -127,7 +128,7 @@ describe('wardrobe template v1 (0.2.0)', () => {
       'rule:plinth-front-under-carcass',
       'rule:doors-overlay',
       'rule:door-split-at-partition-centre',
-      'rule:door-hinge-alternation',
+      'rule:auto-sections-door-feasible',
       ...C.materials.map((m) => `material:${m.id}`),
     ]);
     for (const i of items) {
@@ -145,7 +146,9 @@ describe('wardrobe template v1 (0.2.0)', () => {
     expect(T.constants.doorGapFrontMm?.value).toBe(2);
     expect(T.constants.doorGapBetweenMm?.value).toBe(3);
     expect(T.constants.doorGapEdgeMm?.value).toBe(1.5);
-    expect(T.constants.maxSingleDoorWidthMm?.value).toBe(600);
+    expect(T.constants.maxSingleLeafWidthMm?.value).toBe(600);
+    expect(T.constants.doorLeafRoundingMm?.value).toBe(0.5);
+    expect(T.constants.maxSingleDoorWidthMm).toBeUndefined();
     expect(T.constants.maxDoorHeightMm?.value).toBe(2400);
   });
 
@@ -192,17 +195,18 @@ describe('toOrderDraft (dafna-order/0.1-draft)', () => {
   it('has the 0.1 schema, materials used and doors per section', () => {
     expect(draft.schemaVersion).toBe('dafna-order/0.1-draft');
     expect(draft.productType).toBe('wardrobe');
-    expect(draft.templateVersion).toBe('0.2.0');
+    expect(draft.templateVersion).toBe('0.3.0');
     expect(draft.catalogVersion).toBe('0.1.0');
     expect(draft.params).toEqual(params);
     expect(draft.materials.corpus?.id).toBe('ldsp_oak_light_16');
     expect(draft.materials.doors?.id).toBe('ldsp_anthracite_16');
     expect(draft.materials.back?.id).toBe('hdf_white_3');
-    // 2000 -> 3 sections of 646/645/645 mm -> auto: double, double, double
+    // 2000 -> 3 sections would need adjacent double doors -> 4 sections of 480 mm, singles L,L,R,R
     expect(draft.doors).toEqual([
-      { sectionIndex: 0, type: 'double', leaves: ['door-1-left', 'door-1-right'] },
-      { sectionIndex: 1, type: 'double', leaves: ['door-2-left', 'door-2-right'] },
-      { sectionIndex: 2, type: 'double', leaves: ['door-3-left', 'door-3-right'] },
+      { sectionIndex: 0, type: 'single_left', leaves: ['door-1'] },
+      { sectionIndex: 1, type: 'single_left', leaves: ['door-2'] },
+      { sectionIndex: 2, type: 'single_right', leaves: ['door-3'] },
+      { sectionIndex: 3, type: 'single_right', leaves: ['door-4'] },
     ]);
     expect(draft.dimensions).toEqual(result.dimensions);
     expect(draft.panels).toEqual(result.panels);

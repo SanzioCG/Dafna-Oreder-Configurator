@@ -1,11 +1,11 @@
 import { getMaterial, materialsV0 } from './catalog.js';
+import { planDoors, type DoorLeaf, type DoorPlan, type HingeConflict } from './doors.js';
 import { makeIssue, resolveParams } from './params.js';
 import { getNumberConstant, getParamDef, getStringConstant, wardrobeTemplate } from './template.js';
 import type {
   Dimensions,
   DoorType,
   GenerateResult,
-  HingeSide,
   Issue,
   Material,
   MaterialCatalog,
@@ -16,7 +16,7 @@ import type {
   Vec3,
 } from './types.js';
 
-export const WARDROBE_GENERATOR = 'wardrobe-carcass-v1';
+export const WARDROBE_GENERATOR = 'wardrobe-carcass-v2';
 
 /** Rotations (degrees, XYZ) from the panel local frame (L→X, T→Y, W→Z) to product axes. */
 const ROT_HORIZONTAL: Vec3 = [0, 0, 0]; // length X, thickness Y, width Z
@@ -25,13 +25,7 @@ const ROT_VERTICAL_XY: Vec3 = [90, 0, 0]; // length X, width Y, thickness Z  (ba
 
 export const SAME_AS_CORPUS = 'same_as_corpus';
 
-export interface DoorLeaf {
-  id: string;
-  sectionIndex: number;
-  hingeSide: HingeSide;
-  xStartMm: number;
-  widthMm: number;
-}
+export type { DoorLeaf } from './doors.js';
 
 export interface WardrobeLayout {
   widthMm: number;
@@ -61,14 +55,18 @@ export interface WardrobeLayout {
   /** Z of the carcass front edge */
   carcassFrontZMm: number;
   sectionCount: number;
+  /** sections param was 'auto' (used to attribute HINGE_CONFLICT) */
+  sectionsWereAuto: boolean;
   sectionInnerWidthsMm: number[];
   doorTypes: DoorType[];
   /** which doorSectionN override produced each section's door type (null = preset) */
   doorTypeSource: (string | null)[];
   doorLeaves: DoorLeaf[];
+  /** partitions where two leaves would hinge (only with invalid overrides / section counts) */
+  hingeConflicts: HingeConflict[];
   doorHeightMm: number;
   maxShelfSpanMm: number;
-  maxSingleDoorWidthMm: number;
+  maxSingleLeafWidthMm: number;
   maxDoorHeightMm: number;
 }
 
@@ -90,116 +88,52 @@ export function maxSectionInnerWidth(widthMm: number, t: number, n: number): num
 
 /**
  * Minimum section count from the template's numeric `sections` options that keeps every section
- * inner width <= maxShelfSpanMm. Falls back to the largest option.
+ * inner width <= maxShelfSpanMm and, if given, satisfies `acceptable(n)` (the door layout is
+ * valid: no DOOR_TOO_WIDE, no HINGE_CONFLICT). Falls back to the largest option.
  */
-export function autoSectionCount(template: Template, widthMm: number, t: number): number {
+export function autoSectionCount(
+  template: Template,
+  widthMm: number,
+  t: number,
+  acceptable: (n: number) => boolean = () => true,
+): number {
   const maxSpan = getNumberConstant(template, 'maxShelfSpanMm');
   const counts = (getParamDef(template, 'sections')?.options ?? [])
     .filter((o): o is number => typeof o === 'number')
     .sort((a, b) => a - b);
   for (const n of counts) {
-    if (maxSectionInnerWidth(widthMm, t, n) <= maxSpan) return n;
+    if (maxSectionInnerWidth(widthMm, t, n) <= maxSpan && acceptable(n)) return n;
   }
   return counts[counts.length - 1] ?? 1;
 }
 
-/** doors=auto rule for one section: opening <= maxSingleDoorWidth -> single, wider -> double. */
-export function autoDoorKind(
-  innerWidthMm: number,
-  maxSingleDoorWidthMm: number,
-): 'single' | 'double' {
-  return innerWidthMm <= maxSingleDoorWidthMm ? 'single' : 'double';
-}
-
-/**
- * Resolves the door type of every section: staff override (doorSectionN) wins, otherwise the
- * preset. Preset single doors alternate hinge side left, right, left, ... from the left.
- */
-export function resolveDoorTypes(
+function doorPlanFor(
+  template: Template,
   params: Params,
-  innerWidths: number[],
-  maxSingleDoorWidthMm: number,
-): { types: DoorType[]; source: (string | null)[] } {
-  const types: DoorType[] = [];
-  const source: (string | null)[] = [];
-  let singles = 0;
-  innerWidths.forEach((w, i) => {
-    const key = `doorSection${i + 1}`;
-    const override = params[key];
-    if (typeof override === 'string' && override !== 'preset') {
-      types.push(override as DoorType);
-      source.push(key);
-      return;
-    }
-    source.push(null);
-    const kind =
-      params.doors === 'none'
-        ? 'none'
-        : params.doors === 'all_single'
-          ? 'single'
-          : autoDoorKind(w, maxSingleDoorWidthMm);
-    if (kind === 'single') {
-      types.push(singles % 2 === 0 ? 'single_left' : 'single_right');
-      singles += 1;
-    } else {
-      types.push(kind);
-    }
-  });
-  return { types, source };
-}
-
-function buildDoorLeaves(
-  W: number,
+  widthMm: number,
   t: number,
   innerWidths: number[],
-  types: DoorType[],
-  gapEdge: number,
-  gapBetween: number,
-): DoorLeaf[] {
-  const leaves: DoorLeaf[] = [];
-  const n = innerWidths.length;
-  let xStart = t;
-  innerWidths.forEach((inner, i) => {
-    // Coverage of section i: from the centre line of the partition on its left (or the outer
-    // edge) to the centre line of the partition on its right (or the outer edge).
-    const left = i === 0 ? 0 : xStart - t / 2;
-    const right = i === n - 1 ? W : xStart + inner + t / 2;
-    const gapAt = (neighbour: number) =>
-      neighbour < 0 || neighbour >= n || types[neighbour] === 'none' ? gapEdge : gapBetween / 2;
-    const gL = gapAt(i - 1);
-    const gR = gapAt(i + 1);
-    const type = types[i];
-    const num = i + 1;
-    if (type === 'single_left' || type === 'single_right') {
-      leaves.push({
-        id: `door-${num}`,
-        sectionIndex: i,
-        hingeSide: type === 'single_left' ? 'left' : 'right',
-        xStartMm: left + gL,
-        widthMm: right - gR - (left + gL),
-      });
-    } else if (type === 'double') {
-      const mid = (left + right) / 2;
-      leaves.push(
-        {
-          id: `door-${num}-left`,
-          sectionIndex: i,
-          hingeSide: 'left',
-          xStartMm: left + gL,
-          widthMm: mid - gapBetween / 2 - (left + gL),
-        },
-        {
-          id: `door-${num}-right`,
-          sectionIndex: i,
-          hingeSide: 'right',
-          xStartMm: mid + gapBetween / 2,
-          widthMm: right - gR - (mid + gapBetween / 2),
-        },
-      );
-    }
-    xStart += inner + t;
+): DoorPlan {
+  return planDoors({
+    widthMm,
+    t,
+    innerWidths,
+    preset: String(params.doors),
+    overrides: innerWidths.map((_, i) => {
+      const o = params[`doorSection${i + 1}`];
+      return typeof o === 'string' ? o : undefined;
+    }),
+    gapEdge: getNumberConstant(template, 'doorGapEdgeMm'),
+    gapBetween: getNumberConstant(template, 'doorGapBetweenMm'),
+    maxSingleLeafWidth: getNumberConstant(template, 'maxSingleLeafWidthMm'),
+    rounding: getNumberConstant(template, 'doorLeafRoundingMm'),
   });
-  return leaves;
+}
+
+/** True if the door plan has no DOOR_TOO_WIDE single leaf and no hinge conflict. */
+function doorPlanValid(plan: DoorPlan, maxLeaf: number): boolean {
+  if (plan.conflicts.length > 0) return false;
+  return plan.leaves.every((l) => plan.types[l.sectionIndex] === 'double' || l.widthMm <= maxLeaf);
 }
 
 /** Derives all dimensions from a complete, valid parameter set. */
@@ -224,12 +158,25 @@ export function computeLayout(
   const plinthRecessMm = hasPlinth ? Number(params.plinthRecess) : 0;
   const hasBack = params.backPanel === 'hdf_overlay';
   const backThicknessMm = hasBack ? backMaterial.thicknessMm : 0;
+  const maxSingleLeafWidthMm = getNumberConstant(template, 'maxSingleLeafWidthMm');
+  const innerFor = (n: number) => distributeEvenly(innerTotal(widthMm, t, n), n);
   const sectionCount =
-    params.sections === 'auto' ? autoSectionCount(template, widthMm, t) : Number(params.sections);
-  const sectionInnerWidthsMm = distributeEvenly(innerTotal(widthMm, t, sectionCount), sectionCount);
+    params.sections === 'auto'
+      ? autoSectionCount(
+          template,
+          widthMm,
+          t,
+          (n) =>
+            params.doors === 'none' ||
+            doorPlanValid(
+              doorPlanFor(template, params, widthMm, t, innerFor(n)),
+              maxSingleLeafWidthMm,
+            ),
+        )
+      : Number(params.sections);
+  const sectionInnerWidthsMm = innerFor(sectionCount);
 
-  const maxSingleDoorWidthMm = getNumberConstant(template, 'maxSingleDoorWidthMm');
-  const doors = resolveDoorTypes(params, sectionInnerWidthsMm, maxSingleDoorWidthMm);
+  const doors = doorPlanFor(template, params, widthMm, t, sectionInnerWidthsMm);
   const hasDoors = doors.types.some((d) => d !== 'none');
   const doorThicknessMm = hasDoors ? doorMaterial.thicknessMm : 0;
   const doorGapFrontMm = hasDoors ? getNumberConstant(template, 'doorGapFrontMm') : 0;
@@ -261,20 +208,15 @@ export function computeLayout(
     carcassBackZMm: backThicknessMm,
     carcassFrontZMm: backThicknessMm + carcassDepthMm,
     sectionCount,
+    sectionsWereAuto: params.sections === 'auto',
     sectionInnerWidthsMm,
     doorTypes: doors.types,
     doorTypeSource: doors.source,
-    doorLeaves: buildDoorLeaves(
-      widthMm,
-      t,
-      sectionInnerWidthsMm,
-      doors.types,
-      doorGapEdgeMm,
-      doorGapBetweenMm,
-    ),
+    doorLeaves: doors.leaves,
+    hingeConflicts: doors.conflicts,
     doorHeightMm: carcassHeightMm - 2 * doorGapEdgeMm,
     maxShelfSpanMm: getNumberConstant(template, 'maxShelfSpanMm'),
-    maxSingleDoorWidthMm,
+    maxSingleLeafWidthMm,
     maxDoorHeightMm: getNumberConstant(template, 'maxDoorHeightMm'),
   };
 }
@@ -331,24 +273,31 @@ function layoutIssues(layout: WardrobeLayout): Issue[] {
       );
     }
   });
-  layout.doorTypes.forEach((type, index) => {
-    const inner = layout.sectionInnerWidthsMm[index] ?? 0;
-    if (
-      (type === 'single_left' || type === 'single_right') &&
-      inner > layout.maxSingleDoorWidthMm
-    ) {
-      const leaf = layout.doorLeaves.find((l) => l.sectionIndex === index);
-      issues.push(
-        makeIssue('DOOR_TOO_WIDE', 'error', layout.doorTypeSource[index] ?? 'doors', {
-          sectionIndex: index,
-          sectionNumber: index + 1,
-          innerWidthMm: inner,
-          leafWidthMm: leaf?.widthMm ?? 0,
-          maxMm: layout.maxSingleDoorWidthMm,
-        }),
-      );
-    }
-  });
+  // DOOR_TOO_WIDE: measured on the (rounded) single leaf — same width the auto rule uses
+  for (const leaf of layout.doorLeaves) {
+    const index = leaf.sectionIndex;
+    if (layout.doorTypes[index] === 'double' || leaf.widthMm <= layout.maxSingleLeafWidthMm)
+      continue;
+    issues.push(
+      makeIssue('DOOR_TOO_WIDE', 'error', layout.doorTypeSource[index] ?? 'doors', {
+        sectionIndex: index,
+        sectionNumber: index + 1,
+        leafWidthMm: leaf.widthMm,
+        maxMm: layout.maxSingleLeafWidthMm,
+      }),
+    );
+  }
+  // HINGE_CONFLICT: two leaves on one partition (bad override, or an explicit section count
+  // whose auto layout needs two adjacent double doors)
+  for (const c of layout.hingeConflicts) {
+    issues.push(
+      makeIssue('HINGE_CONFLICT', 'error', c.source ?? hingeParamKey(layout), {
+        partitionNumber: c.partitionNumber,
+        sectionNumber: c.partitionNumber,
+        nextSectionNumber: c.partitionNumber + 1,
+      }),
+    );
+  }
   if (layout.hasDoors && layout.doorHeightMm > layout.maxDoorHeightMm) {
     issues.push(
       makeIssue('DOOR_TOO_HEIGHT', 'warning', 'height', {
@@ -358,6 +307,11 @@ function layoutIssues(layout: WardrobeLayout): Issue[] {
     );
   }
   return issues;
+}
+
+/** Without a responsible override, the explicit section count is what makes doors collide. */
+function hingeParamKey(layout: WardrobeLayout): string {
+  return layout.sectionsWereAuto ? 'doors' : 'sections';
 }
 
 function checkTemplate(template: Template): Issue | null {
