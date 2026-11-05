@@ -25,10 +25,23 @@ come in later batches.
 | D-3a   | Design system V2 (tokens, White/Dark, Inter, contrast gate), redesigned steps, SVG dimension overlay, smart camera, full-screen presentation with 360° reveal, confirm entry, flow (ADR-007, ADR-008) |
 | D-3a.1 | Plinth construction (sides to the floor, ADR-009), Dark theme V2.1 Deep Graphite, consultant modal (1408), audit fixes                                                                                |
 | D-4    | Bold Bento design system (Dark + Light), simplified customer flow (start screen, 4 steps, plain language, cm), staff settings cards, presentation final (ADR-007, ADR-010)                            |
+| D-4.1  | Presentation polish (8 s reveal, camera tour, candy shower), footer pill, customer theme toggle                                                                                                       |
+| D-5    | Contact screen + on-screen keyboard, /api/submit (Google Sheets + Telegram, idempotent IDs), retry cron, submitted screen + session reset, regenerateApplication (ADR-011)                            |
 | D-2a   | Backend: projects, branches/devices, customer confirmation, status model, audit log, outbox, Telegram notification, sales panel                                                                       |
 | D-2b   | CRM adapter                                                                                                                                                                                           |
 | D-3b   | Contact form + submission, server-side PDF, QR, on-screen keyboard, idle timeout / session reset                                                                                                      |
 | later  | Price, tumba, stol, website API                                                                                                                                                                       |
+
+### Roadmap after D-5 (from "Tasdiqlandi" leads)
+
+- **Hardware** (hinges, rails, drawer slides, handles) is added to the configurator and to the
+  template; a new template version, with a new application fixture (ADR-011 freeze rule).
+- **Constructor / production hand-off**: only leads with status `Tasdiqlandi` are processed;
+  the full order draft comes from `regenerateApplication(params, templateVersion)`.
+- **Bazis / GibLab export** from the regenerated order draft (panels, edges, operations).
+- **Status UI / CRM** replaces the manual sheet dropdown (`LeadStore` adapter).
+- **Data localization**: move storage to a server in Uzbekistan if the legal review requires it.
+- **QR / public result page** for the customer (needs a protected page, not in D-5).
 
 ## Principles
 
