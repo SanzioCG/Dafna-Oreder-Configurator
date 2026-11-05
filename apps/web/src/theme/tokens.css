@@ -1,0 +1,80 @@
+/*
+ * Dafna visual language — the ONLY place for brand colours, radii, elevation and font.
+ *
+ * Sources (checked 2026-11-05 on https://dafna.uz, computed styles + :root CSS variables):
+ *   [logo]  = fill colours in public/brand/dafna-logo.svg
+ *   [site]  = dafna.uz :root variable (name given)
+ *   [comp]  = dafna.uz computed style (element given)
+ *   [APPROX] = NOT found on the site yet — estimated from screenshots, replace when known.
+ */
+
+@import '@fontsource/nunito-sans/latin-400.css';
+@import '@fontsource/nunito-sans/latin-600.css';
+@import '@fontsource/nunito-sans/latin-700.css';
+@import '@fontsource/nunito-sans/latin-800.css';
+@import '@fontsource/nunito-sans/cyrillic-400.css';
+@import '@fontsource/nunito-sans/cyrillic-600.css';
+@import '@fontsource/nunito-sans/cyrillic-700.css';
+@import '@fontsource/nunito-sans/cyrillic-800.css';
+
+:root {
+  /* ---- font ---- [comp] body: "Nunito Sans" (the brief assumed "Nunito"; the site uses Nunito Sans) */
+  --font-sans: 'Nunito Sans', system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  /* ---- brand ---- */
+  --brand-blue: #009fe2; /* [logo] verified; [site] --color-brand-primary is #00a0e3 (1 step off) */
+  --brand-blue-hover: #30bbf9; /* [site] --color-brand-hover (brief's approx --accent-sky #2EBDF5) */
+  --brand-blue-active: #0087bf; /* [site] --color-brand-active */
+  --brand-blue-light: #99e0ff; /* [site] --color-brand-light */
+  --brand-blue-surface: #eaf7fd; /* [site] --color-brand-surface */
+  --brand-graphite: #2a2928; /* [logo] verified; text colour (site text is #1a1c20) */
+  --accent-sky: var(--brand-blue-hover);
+  --accent-lavender: #8f9bff; /* [APPROX] not on the dafna.uz home page */
+
+  /* ---- neutrals ---- [site] --color-neutral-* */
+  --bg: #f7f8f9; /* [site] --color-bg-page (brief's approx #F5F6F8) */
+  --surface: #ffffff;
+  --neutral-100: #eef0f2;
+  --neutral-200: #dcdde0; /* [site] --color-border-base */
+  --neutral-300: #c1c4c9;
+  --neutral-400: #a9acb2; /* [site] --color-text-muted */
+  --neutral-500: #787b82; /* [site] --color-text-secondary */
+
+  /* ---- status ---- [site] */
+  --error: #ff4d4f;
+  --error-surface: #ffeeee;
+  --warning: #f4980f;
+  --warning-surface: #fef4e5; /* derived: --warning at ~10% on white */
+  --success: #00b661;
+
+  /* ---- pastels: one per option-card type ---- [comp] home page category cards */
+  --pastel-blue: #cdeeff; /* "Успейте купить"  (brief's approx #CDEBFB) */
+  --pastel-peach: #fcccbc; /* "Новинки"         (brief's approx #FDCDBD) */
+  --pastel-pink: #efced9; /* "Гарантия до 5 лет" (brief's approx #F4CFDC) */
+  --pastel-yellow: #fcfca4; /* "Детский раздел"   (brief's approx #FDF7B0) */
+  /* [comp] installment price badge (brief's approx #C5F59A -> #F2F59A) */
+  --accent-lime: linear-gradient(79.33deg, #a6fc6f -10.06%, #f0fff5 44.03%, #f2f947 127.13%);
+
+  /* ---- 3D stage: always neutral studio, never a brand/pastel colour ---- */
+  --stage-bg: #eef0f3;
+  --stage-floor: #e6e8ec;
+
+  /* ---- shape ---- */
+  --radius-lg: 2rem; /* 32 px at 1080p */
+  --radius-md: 1.25rem; /* 20 px */
+  --radius-sm: 0.75rem; /* 12 px */
+  --radius-pill: 999px;
+  --border-outline: 0.125rem solid var(--brand-blue); /* outlined card: 2 px at 1080p */
+  --shadow-soft: 0 0.5rem 1.75rem rgb(42 41 40 / 0.08), 0 0.125rem 0.375rem rgb(42 41 40 / 0.05);
+  --shadow-float: 0 0.75rem 2.5rem rgb(42 41 40 / 0.14), 0 0.125rem 0.5rem rgb(42 41 40 / 0.06);
+  --frost: rgb(255 255 255 / 0.72);
+  --frost-blur: blur(1rem) saturate(1.4);
+  --press-scale: 0.97;
+
+  /* ---- option-card pastel per parameter (consistent across the app) ---- */
+  --card-sections: var(--pastel-yellow);
+  --card-base: var(--pastel-peach);
+  --card-doors: var(--pastel-blue);
+  --card-door-section: var(--pastel-pink);
+  --card-technical: var(--neutral-100); /* staff-only construction params */
+}

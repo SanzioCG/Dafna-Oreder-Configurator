@@ -1,21 +1,22 @@
 /*
  * Kiosk sizing: 1rem = 16px at 1920x1080 and 32px at 3840x2160 (whichever axis is tighter).
  * Minimum tap target: 3rem = 48px at 1080p, scales with the screen.
+ * Colours, radii, shadows and the font come from ./theme/tokens.css only.
  */
+@import './theme/tokens.css';
+
 :root {
-  --bg: #eef0f3;
-  --panel: #ffffff;
-  --text: #1d2330;
-  --muted: #667085;
-  --line: #dde1e7;
-  --accent: #2b5d8a;
-  --accent-soft: #e5eef6;
-  --warn: #b25e09;
-  --warn-soft: #fdf1e3;
-  --error: #b42318;
-  --error-soft: #fdecea;
-  --radius: 0.75rem;
+  /* semantic aliases used below */
+  --text: var(--brand-graphite);
+  --muted: var(--neutral-500);
+  --line: var(--neutral-200);
+  --accent: var(--brand-blue);
+  --accent-soft: var(--brand-blue-surface);
+  --warn: #b26a00; /* --warning darkened for readable text on --warning-surface */
+  --warn-soft: var(--warning-surface);
+  --error-soft: var(--error-surface);
   --tap: 3rem;
+  --gutter: 1rem;
   color-scheme: light;
 }
 
@@ -38,7 +39,7 @@ body,
 }
 
 body {
-  font-family: system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-sans);
   color: var(--text);
   background: var(--bg);
   line-height: 1.35;
@@ -53,6 +54,16 @@ button {
   color: inherit;
   touch-action: manipulation;
   cursor: pointer;
+  transition:
+    transform 0.1s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* press feedback for every tappable control */
+button:not(:disabled):active,
+.slider:active .slider-thumb {
+  transform: scale(var(--press-scale));
 }
 
 button:disabled {
@@ -74,21 +85,25 @@ p {
   color: var(--muted);
 }
 
-/* ---------- layout ---------- */
+/* ---------- layout: neutral stage left, floating white card right ---------- */
 
 .app {
   display: grid;
   grid-template-columns: 65fr 35fr;
+  gap: var(--gutter);
+  padding: var(--gutter);
   height: 100vh;
   height: 100dvh;
 }
 
-/* ---------- viewer ---------- */
+/* ---------- viewer (3D stage: always neutral; nothing coloured on its edge) ---------- */
 
 .viewer {
   position: relative;
   min-width: 0;
-  background: var(--bg);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--stage-bg);
 }
 
 .viewer canvas {
@@ -98,41 +113,32 @@ p {
 .viewer-hint {
   position: absolute;
   left: 1.5rem;
-  bottom: 1.25rem;
+  bottom: 1.5rem;
   font-size: 0.9rem;
   color: var(--muted);
-  background: rgb(255 255 255 / 0.75);
-  padding: 0.5rem 0.9rem;
-  border-radius: 999px;
+  background: var(--frost);
+  backdrop-filter: var(--frost-blur);
+  padding: 0.55rem 1rem;
+  border-radius: var(--radius-pill);
   pointer-events: none;
-}
-
-.viewer-invalid {
-  background: var(--error);
-  color: #fff;
-  padding: 0.9rem 1.6rem;
-  border-radius: var(--radius);
-  font-size: 1.25rem;
-  font-weight: 700;
-  box-shadow: 0 0.3rem 1rem rgb(180 35 24 / 0.3);
 }
 
 .viewer-actions {
   position: absolute;
   right: 1.5rem;
-  bottom: 1.25rem;
+  bottom: 1.5rem;
   display: flex;
   align-items: flex-end;
   gap: 0.75rem;
 }
 
-/* large, primary-looking: the main way to look inside on the kiosk */
+/* large: the main way to look inside on the kiosk */
 .btn-doors {
   min-height: 4rem;
   padding: 0 2rem;
   font-size: 1.2rem;
   color: var(--accent);
-  border-color: var(--accent);
+  border: var(--border-outline);
 }
 
 .btn-doors.active {
@@ -140,17 +146,26 @@ p {
   color: #fff;
 }
 
-/* staff: params invalid -> the 3D shows the last valid (stale) model */
+/* staff: params invalid -> the 3D shows the last valid (stale) model, washed out */
 .viewer-stale {
   position: absolute;
   inset: 0;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding-top: 1.25rem;
-  background: rgb(238 240 243 / 0.55);
-  box-shadow: inset 0 0 0 0.35rem var(--error);
+  padding-top: 1.5rem;
+  background: rgb(238 240 243 / 0.6);
   pointer-events: none;
+}
+
+.viewer-invalid {
+  background: var(--error);
+  color: #fff;
+  padding: 0.9rem 1.75rem;
+  border-radius: var(--radius-pill);
+  font-size: 1.25rem;
+  font-weight: 800;
+  box-shadow: var(--shadow-float);
 }
 
 .dim-labels {
@@ -167,12 +182,12 @@ p {
   visibility: hidden; /* until the first projected frame */
   will-change: transform;
   font-size: 1.05rem;
-  font-weight: 650;
+  font-weight: 700;
   color: var(--accent);
-  background: rgb(255 255 255 / 0.92);
-  border: 0.0625rem solid #c8d6e5;
-  padding: 0.15rem 0.55rem;
-  border-radius: 0.4rem;
+  background: rgb(255 255 255 / 0.94);
+  padding: 0.2rem 0.7rem;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0.125rem 0.5rem rgb(42 41 40 / 0.1);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
   user-select: none;
@@ -180,27 +195,28 @@ p {
 
 .dim-label-small {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
-/* ---------- step panel ---------- */
+/* ---------- step panel (white card) ---------- */
 
 .panel {
+  position: relative; /* anchors the floating bottom nav */
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  background: var(--panel);
-  border-left: 0.0625rem solid var(--line);
-  box-shadow: -0.25rem 0 1.5rem rgb(16 24 40 / 0.05);
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  overflow: hidden;
 }
 
 .panel-header {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.75rem 1.5rem;
-  border-bottom: 0.0625rem solid var(--line);
+  padding: 1rem 1.5rem 0.5rem;
 }
 
 .brand {
@@ -227,28 +243,30 @@ p {
 
 .mode-badge {
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--warn);
   background: var(--warn-soft);
-  padding: 0.3rem 0.7rem;
-  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--radius-pill);
   text-transform: uppercase;
 }
 
 .lang-switch {
   display: flex;
-  border: 0.0625rem solid var(--line);
-  border-radius: var(--radius);
-  overflow: hidden;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-100);
 }
 
 .lang {
   min-height: var(--tap);
   min-width: 6.5rem;
-  padding: 0 1rem;
+  padding: 0 1.1rem;
   border: 0;
+  border-radius: var(--radius-pill);
   background: transparent;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .lang.active {
@@ -256,12 +274,12 @@ p {
   color: #fff;
 }
 
+/* progress: numbered circles, brand-blue for the current step */
 .steps {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  border-bottom: 0.0625rem solid var(--line);
 }
 
 .step-tab {
@@ -272,31 +290,32 @@ p {
   min-height: 4rem;
   padding: 0.35rem 0.2rem;
   border: 0;
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   background: transparent;
   font-size: 0.85rem;
+  font-weight: 600;
   text-align: center;
 }
 
 .step-tab.active {
   background: var(--accent-soft);
   color: var(--accent);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .step-tab:disabled {
-  color: #a3aab6;
+  color: var(--neutral-400);
 }
 
 .step-num {
   display: grid;
   place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.85rem;
+  height: 1.85rem;
   border-radius: 50%;
   border: 0.125rem solid currentColor;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .step-tab.active .step-num {
@@ -315,7 +334,8 @@ p {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  padding: 1.25rem 1.75rem 1rem;
+  /* bottom padding keeps the last control clear of the floating nav */
+  padding: 1rem 1.75rem 6.25rem;
   overflow-y: auto;
   touch-action: pan-y;
   overscroll-behavior: contain;
@@ -335,8 +355,8 @@ p {
 }
 
 .step-intro h1 {
-  font-size: 1.6rem;
-  font-weight: 750;
+  font-size: 1.65rem;
+  font-weight: 800;
   margin-bottom: 0.35rem;
 }
 
@@ -351,6 +371,7 @@ p {
 
 .summary strong {
   font-size: 1.35rem;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
@@ -395,7 +416,7 @@ p {
 
 .param-label {
   font-size: 1.1rem;
-  font-weight: 650;
+  font-weight: 700;
 }
 
 .param-note {
@@ -407,9 +428,9 @@ p {
 .badge-unconfirmed,
 .badge-staff {
   font-size: 0.72rem;
-  font-weight: 700;
-  padding: 0.12rem 0.5rem;
-  border-radius: 999px;
+  font-weight: 800;
+  padding: 0.15rem 0.6rem;
+  border-radius: var(--radius-pill);
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -421,7 +442,7 @@ p {
 
 .badge-staff {
   color: var(--muted);
-  background: #f0f2f5;
+  background: var(--neutral-100);
 }
 
 .param-row {
@@ -431,13 +452,18 @@ p {
   align-items: center;
 }
 
+/* circular icon buttons */
 .stepper {
+  display: grid;
+  place-items: center;
   height: var(--tap);
   width: var(--tap);
-  border: 0.0625rem solid var(--line);
-  border-radius: var(--radius);
-  background: #f7f8fa;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--neutral-100);
   font-size: 1.6rem;
+  font-weight: 700;
   line-height: 1;
 }
 
@@ -449,10 +475,14 @@ p {
   display: flex;
   align-items: center;
   height: var(--tap);
-  border: 0.0625rem solid var(--line);
-  border-radius: var(--radius);
+  border: 0.125rem solid var(--line);
+  border-radius: var(--radius-sm);
   padding: 0 1rem;
-  background: #fff;
+  background: var(--surface);
+}
+
+.number-field:focus-within {
+  border-color: var(--accent);
 }
 
 .number-field input {
@@ -462,7 +492,7 @@ p {
   outline: 0;
   font: inherit;
   font-size: 1.4rem;
-  font-weight: 700;
+  font-weight: 800;
   text-align: center;
   font-variant-numeric: tabular-nums;
   background: transparent;
@@ -488,14 +518,14 @@ p {
   position: relative;
   flex: 1;
   height: 0.6rem;
-  border-radius: 999px;
-  background: #e3e7ed;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-100);
 }
 
 .slider-fill {
   position: absolute;
   inset: 0 auto 0 0;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--accent);
 }
 
@@ -504,11 +534,12 @@ p {
   top: 50%;
   width: 2.25rem;
   height: 2.25rem;
-  transform: translate(-50%, -50%);
+  margin: -1.125rem 0 0 -1.125rem; /* centre without transform, so :active can scale */
   border-radius: 50%;
-  background: #fff;
+  background: var(--surface);
   border: 0.25rem solid var(--accent);
-  box-shadow: 0 0.15rem 0.5rem rgb(16 24 40 / 0.2);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.1s ease;
 }
 
 .slider-scale {
@@ -520,36 +551,73 @@ p {
   color: var(--muted);
 }
 
+/*
+ * Option cards (enum parameters): pastel fill, one pastel per parameter (card type);
+ * the selected card becomes an outlined card — white fill, 2 px brand-blue border.
+ */
 .segmented {
   display: flex;
-  gap: 0.4rem;
-  padding: 0.3rem;
-  border-radius: calc(var(--radius) + 0.2rem);
-  background: #f0f2f5;
+  gap: 0.6rem;
+}
+
+.param {
+  --option-bg: var(--neutral-100);
+}
+
+.param[data-param='sections'] {
+  --option-bg: var(--card-sections);
+}
+
+.param[data-param='base'] {
+  --option-bg: var(--card-base);
+}
+
+.param[data-param='doors'] {
+  --option-bg: var(--card-doors);
+}
+
+.param[data-param^='doorSection'] {
+  --option-bg: var(--card-door-section);
+}
+
+.param[data-param='backPanel'] {
+  --option-bg: var(--card-technical);
 }
 
 .segment {
   flex: 1;
   min-height: var(--tap);
-  border: 0;
-  border-radius: var(--radius);
-  background: transparent;
+  padding: 0 0.5rem;
+  border: var(--border-outline);
+  border-color: transparent;
+  border-radius: var(--radius-md);
+  background: var(--option-bg);
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .segment.active {
-  background: #fff;
+  background: var(--surface);
+  border-color: var(--accent);
   color: var(--accent);
-  box-shadow: 0 0.1rem 0.4rem rgb(16 24 40 / 0.12);
+  box-shadow: var(--shadow-soft);
 }
 
+/* floating frosted bottom nav */
 .panel-footer {
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  bottom: 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.85rem 1.75rem 1.1rem;
-  border-top: 0.0625rem solid var(--line);
+  padding: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--frost);
+  backdrop-filter: var(--frost-blur);
+  -webkit-backdrop-filter: var(--frost-blur);
+  box-shadow: var(--shadow-float);
 }
 
 .footer-hint {
@@ -561,10 +629,10 @@ p {
 .btn {
   min-height: 3.5rem;
   padding: 0 1.75rem;
-  border-radius: var(--radius);
+  border-radius: var(--radius-pill);
   font-size: 1.1rem;
-  font-weight: 700;
-  border: 0.0625rem solid transparent;
+  font-weight: 800;
+  border: 0.125rem solid transparent;
 }
 
 .btn-primary {
@@ -573,7 +641,7 @@ p {
 }
 
 .btn-secondary {
-  background: #fff;
+  background: var(--surface);
   border-color: var(--line);
 }
 
@@ -587,9 +655,19 @@ p {
 
 .btn-floating {
   min-height: var(--tap);
-  background: rgb(255 255 255 / 0.92);
-  border-color: var(--line);
-  box-shadow: 0 0.2rem 0.8rem rgb(16 24 40 / 0.08);
+  background: var(--frost);
+  backdrop-filter: var(--frost-blur);
+  -webkit-backdrop-filter: var(--frost-blur);
+  border-color: transparent;
+  box-shadow: var(--shadow-float);
+}
+
+.btn-floating.btn-doors {
+  border: var(--border-outline);
+}
+
+.btn-floating.btn-doors.active {
+  background: var(--accent);
 }
 
 /* ---------- staff ---------- */
@@ -604,6 +682,7 @@ p {
 
 .staff h3 {
   font-size: 1rem;
+  font-weight: 800;
   margin-top: 0.4rem;
 }
 
@@ -622,8 +701,8 @@ p {
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem 0.6rem;
-  padding: 0.55rem 0.75rem;
-  border-radius: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius-sm);
 }
 
 .issue code {
@@ -634,7 +713,7 @@ p {
 
 .issue-error {
   background: var(--error-soft);
-  color: var(--error);
+  color: #c4282a; /* --error darkened for text contrast */
 }
 
 .issue-warning {
@@ -643,7 +722,7 @@ p {
 }
 
 .issue-severity {
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .panels {
@@ -682,8 +761,8 @@ p {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.25rem 0;
+  gap: 0.45rem;
+  padding: 0.3rem 0;
   border: 0;
   background: transparent;
   min-height: 4.5rem;
@@ -695,11 +774,14 @@ p {
   place-items: center;
   width: 4.5rem;
   height: 4.5rem;
-  border-radius: 1rem;
-  border: 0.0625rem solid rgb(16 24 40 / 0.18);
-  box-shadow: inset 0 -0.3rem 0.6rem rgb(0 0 0 / 0.06);
+  border-radius: var(--radius-md);
+  border: 0.0625rem solid rgb(42 41 40 / 0.15);
+  box-shadow:
+    inset 0 -0.3rem 0.6rem rgb(0 0 0 / 0.06),
+    var(--shadow-soft);
 }
 
+/* selection ring: brand blue */
 .swatch.selected .swatch-chip {
   outline: 0.25rem solid var(--accent);
   outline-offset: 0.2rem;
@@ -719,7 +801,7 @@ p {
 
 .swatch-name {
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   text-align: center;
   line-height: 1.2;
 }
@@ -730,7 +812,7 @@ p {
 
 .swatch-name small {
   display: block;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--muted);
 }
 
@@ -743,7 +825,7 @@ p {
   border: 0;
   background: transparent;
   font-size: 1.05rem;
-  font-weight: 600;
+  font-weight: 700;
   align-self: flex-start;
 }
 
@@ -751,8 +833,8 @@ p {
   position: relative;
   width: 3.25rem;
   height: 1.9rem;
-  border-radius: 999px;
-  background: #d5dae1;
+  border-radius: var(--radius-pill);
+  background: var(--neutral-300);
   transition: background 0.15s;
 }
 
@@ -764,7 +846,7 @@ p {
   height: 1.5rem;
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 0.1rem 0.3rem rgb(16 24 40 / 0.25);
+  box-shadow: 0 0.1rem 0.3rem rgb(42 41 40 / 0.25);
   transition: transform 0.15s;
 }
 
@@ -778,7 +860,7 @@ p {
 
 .param-hint {
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
