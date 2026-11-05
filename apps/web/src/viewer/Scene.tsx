@@ -32,6 +32,8 @@ export interface SceneProps {
   sectionBoxes: SectionBox[];
   selectedSection: number | null;
   onSectionTap: (index: number) => void;
+  /** current UI theme: re-renders the scene so themed colours (edges, shadow) update */
+  theme?: string;
 }
 
 /**
@@ -57,6 +59,7 @@ export function Scene({
   // Single-layer layout: the canvas is transparent and sits on the page background
   // (tokens.css --bg); there is no floor plane, so no visible floor edge.
   const shadowColor = cssToken('--stage-shadow', '#2a2928');
+  const shadowOpacity = Number(cssToken('--stage-shadow-opacity', '0.8')) || 0.8;
   return (
     <Canvas
       dpr={[1, 2]}
@@ -103,7 +106,12 @@ export function Scene({
         shadow is not used: on a transparent canvas it read as a hard grey slab. The key light
         still shadows the carcass interior and door gaps.
       */}
-      <SoftFloorShadow widthM={W * MM} depthM={D * MM} color={shadowColor} opacity={0.8} />
+      <SoftFloorShadow
+        widthM={W * MM}
+        depthM={D * MM}
+        color={shadowColor}
+        opacity={shadowOpacity}
+      />
 
       <OrbitControls
         makeDefault

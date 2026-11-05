@@ -586,3 +586,23 @@ describe('Interior step (D-1b)', () => {
     expect(stub().dataset.interactive).toBe('false');
   });
 });
+
+describe('theme toggle in the sheet header', () => {
+  afterEach(() => {
+    window.localStorage.clear();
+    delete document.documentElement.dataset.theme;
+  });
+
+  it('switches light <-> dark and swaps the logo variant', () => {
+    render(<App />);
+    const logo = () => screen.getByAltText(uz['app.brand']).getAttribute('src') ?? '';
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(logo()).toMatch(/dafna-logo\.svg$/);
+    fireEvent.click(screen.getByRole('button', { name: uz['theme.dark'] }));
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(logo()).toMatch(/dafna-logo-white\.svg$/);
+    expect(
+      screen.getByRole('button', { name: uz['theme.dark'] }).getAttribute('aria-pressed'),
+    ).toBe('true');
+  });
+});

@@ -5,6 +5,7 @@ export const uz = {
   'lang.label': 'Til',
   'lang.uz': "O'zbekcha",
   'lang.ru': 'Русский',
+  'theme.dark': 'Tungi rejim',
   'mode.staff': 'Xodim rejimi',
 
   'step.size': "O'lcham",

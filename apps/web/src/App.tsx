@@ -3,6 +3,7 @@ import { I18nProvider } from './i18n/I18n';
 import { installKioskGuards } from './kiosk';
 import { parseMode, type Mode } from './mode';
 import { useConfigurator } from './state/useConfigurator';
+import { ThemeProvider } from './theme/ThemeProvider';
 import { StepPanel } from './ui/StepPanel';
 import { Viewer } from './viewer/Viewer';
 
@@ -36,8 +37,10 @@ export function App() {
   const mode = parseMode(window.location.search);
   useEffect(() => installKioskGuards(), []);
   return (
-    <I18nProvider initial="uz">
-      <Configurator mode={mode} />
-    </I18nProvider>
+    <ThemeProvider>
+      <I18nProvider initial="uz">
+        <Configurator mode={mode} />
+      </I18nProvider>
+    </ThemeProvider>
   );
 }

@@ -6,6 +6,7 @@ export const ru: Messages = {
   'lang.label': 'Язык',
   'lang.uz': "O'zbekcha",
   'lang.ru': 'Русский',
+  'theme.dark': 'Тёмная тема',
   'mode.staff': 'Режим сотрудника',
 
   'step.size': 'Размер',

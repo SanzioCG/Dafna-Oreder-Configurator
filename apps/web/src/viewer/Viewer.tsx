@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import { useI18n } from '../i18n/I18n';
+import { useTheme } from '../theme/ThemeProvider';
+import { ReframeIcon, WarningIcon } from '../ui/icons';
 import type { ViewGeometry } from '../state/useConfigurator';
 import type { FrameBox } from './CameraRig';
 import {
@@ -76,6 +78,7 @@ export function Viewer({
   onSelectSection,
 }: ViewerProps) {
   const { t } = useI18n();
+  const { theme } = useTheme();
   const [resetToken, setResetToken] = useState(0);
   const [doorsOpen, setDoorsOpen] = useState(false);
   // Interior step: doors open automatically; leaving the step restores the previous state.
@@ -165,6 +168,7 @@ export function Viewer({
         sectionBoxes={sectionBoxes}
         selectedSection={selectedSection}
         onSectionTap={(i) => onSelectSection?.(i)}
+        theme={theme}
       />
       <DimensionLabels dims={dims} labelRefs={labelRefs} />
 
@@ -182,13 +186,17 @@ export function Viewer({
           </button>
         )}
         <button type="button" className="btn btn-floating" onClick={reframe}>
-          ⤢ {t('viewer.reframe')}
+          <ReframeIcon className="btn-icon" />
+          {t('viewer.reframe')}
         </button>
       </div>
       <p className="viewer-hint">{t('viewer.hint')}</p>
       {invalid && (
         <div className="viewer-stale" role="alert">
-          <p className="viewer-invalid">⚠ {t('viewer.invalid')}</p>
+          <p className="viewer-invalid">
+            <WarningIcon className="btn-icon" />
+            {t('viewer.invalid')}
+          </p>
         </div>
       )}
     </div>

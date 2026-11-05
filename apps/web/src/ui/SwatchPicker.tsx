@@ -2,6 +2,7 @@ import { getMaterial, SAME_AS_CORPUS, type ParamValue } from '@dafna/engine';
 import { useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import { CATALOG } from '../state/useConfigurator';
+import { CheckIcon } from './icons';
 
 interface SwatchPickerProps {
   /** material ids, possibly including 'same_as_corpus' */
@@ -72,7 +73,11 @@ export function SwatchPicker({
               onClick={() => onChange(m.id)}
             >
               <span className="swatch-chip" style={{ background: m.colorHex }}>
-                {selected && <span className="swatch-check">✓</span>}
+                {selected && (
+                  <span className="swatch-check">
+                    <CheckIcon />
+                  </span>
+                )}
               </span>
               <span className="swatch-name">
                 {name}

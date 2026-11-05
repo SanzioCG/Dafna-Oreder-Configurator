@@ -30,3 +30,19 @@ export function installKioskGuards(): () => void {
     document.removeEventListener('keydown', onKey);
   };
 }
+
+export type Theme = 'light' | 'dark';
+
+/**
+ * Kiosk default theme: build-time env `VITE_KIOSK_THEME=dark|light` (per kiosk deployment),
+ * overridable per URL with `?theme=dark|light` (useful for testing a device). Default: light.
+ * The customer's toggle is stored per device on top of this, and a session reset returns here.
+ */
+export function kioskDefaultTheme(
+  search: string = typeof window === 'undefined' ? '' : window.location.search,
+  env: string | undefined = import.meta.env.VITE_KIOSK_THEME as string | undefined,
+): Theme {
+  const fromUrl = new URLSearchParams(search).get('theme');
+  const value = fromUrl ?? env;
+  return value === 'dark' ? 'dark' : 'light';
+}

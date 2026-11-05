@@ -3,13 +3,12 @@ import { LANGS, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import { TEMPLATE, type Configurator } from '../state/useConfigurator';
 import { STEPS, neighbourStep } from '../steps';
+import { useTheme } from '../theme/ThemeProvider';
+import { ArrowLeftIcon, ArrowRightIcon, MoonIcon, SunIcon } from './icons';
 import { InteriorStep } from './InteriorStep';
 import { ParamControl } from './ParamControl';
 import { ResetToast } from './ResetToast';
 import { StaffPanel } from './StaffPanel';
-
-/** Served from apps/web/public/brand (Vite copies public/ as-is; BASE_URL keeps it base-safe). */
-export const BRAND_LOGO_URL = `${import.meta.env.BASE_URL}brand/dafna-logo.svg`;
 
 /**
  * Step content cards inside the sheet. Consecutive numeric parameters share one neutral card;
@@ -60,6 +59,7 @@ export function StepPanel({
   onSelectSection,
 }: StepPanelProps) {
   const { t, lang, setLang } = useI18n();
+  const { theme, toggleTheme, logoUrl } = useTheme();
   const staff = mode === 'staff';
   const prev = neighbourStep(step, -1);
   const next = neighbourStep(step, 1);
@@ -94,10 +94,21 @@ export function StepPanel({
     <aside className="panel">
       <header className="panel-header">
         <div className="brand">
-          <img className="brand-logo" src={BRAND_LOGO_URL} alt={t('app.brand')} draggable={false} />
+          <img className="brand-logo" src={logoUrl} alt={t('app.brand')} draggable={false} />
           <span className="brand-title">{t('app.title')}</span>
         </div>
         {staff && <span className="mode-badge">{t('mode.staff')}</span>}
+        <button
+          type="button"
+          className="theme-toggle"
+          aria-pressed={theme === 'dark'}
+          aria-label={t('theme.dark')}
+          title={t('theme.dark')}
+          data-testid="theme-toggle"
+          onClick={toggleTheme}
+        >
+          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+        </button>
         <div className="lang-switch" role="group" aria-label={t('lang.label')}>
           {LANGS.map((l) => (
             <button
@@ -196,7 +207,8 @@ export function StepPanel({
           disabled={!prev}
           onClick={() => prev && setStep(prev.key)}
         >
-          ← {t('nav.back')}
+          <ArrowLeftIcon className="btn-icon" />
+          {t('nav.back')}
         </button>
         <div className="footer-hint muted">{!next && t('nav.nextSoon')}</div>
         <button
@@ -205,7 +217,8 @@ export function StepPanel({
           disabled={!next}
           onClick={() => next && setStep(next.key)}
         >
-          {t('nav.next')} →
+          {t('nav.next')}
+          <ArrowRightIcon className="btn-icon" />
         </button>
       </footer>
     </aside>

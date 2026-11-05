@@ -1,6 +1,7 @@
 import { getMaterial } from '@dafna/engine';
 import { Color, MeshStandardMaterial, SRGBColorSpace, TextureLoader } from 'three';
 import { CATALOG } from '../state/useConfigurator';
+import { cssToken } from '../theme/cssToken';
 
 /**
  * Catalog material id -> shared Three.js material. Today only `colorHex` is used; when the
@@ -33,11 +34,15 @@ export function materialFor(id: string): MeshStandardMaterial {
 
 /**
  * Edge outline colour: dark on light decors (white, grey, beige, oak) so panels, door leaves
- * and the 3 mm gaps stay distinguishable on the light page background; light on dark decors.
+ * and the 3 mm gaps stay distinguishable; light on dark decors. Both tones are theme tokens
+ * (--edge-on-light-decor / --edge-on-dark-decor): the dark theme uses lighter outlines.
+ * Read at render time, so a theme switch re-colours them on the next render.
  */
 export function edgeColorFor(id: string): string {
   const hex = getMaterial(CATALOG, id)?.colorHex ?? '#ffffff';
   const c = new Color(hex);
   const luminance = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
-  return luminance < 0.35 ? '#b4b8be' : '#33363b';
+  return luminance < 0.35
+    ? cssToken('--edge-on-dark-decor', '#b4b8be')
+    : cssToken('--edge-on-light-decor', '#33363b');
 }

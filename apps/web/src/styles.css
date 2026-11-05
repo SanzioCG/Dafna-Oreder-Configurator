@@ -4,20 +4,25 @@
  * Colours, radii, shadows and the font come from ./theme/tokens.css only.
  */
 @import './theme/tokens.css';
+@import './theme/tokens.dark.css';
 
 :root {
   /* semantic aliases used below */
-  --text: var(--brand-graphite);
+  --text: var(--text-primary);
   --muted: var(--neutral-500);
   --line: var(--neutral-200);
   --accent: var(--brand-blue);
   --accent-soft: var(--brand-blue-surface);
-  --warn: #b26a00; /* --warning darkened for readable text on --warning-surface */
+  --warn: var(--text-warn);
   --warn-soft: var(--warning-surface);
   --error-soft: var(--error-surface);
   --tap: 3rem;
   --gutter: 1rem;
   color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 html {
@@ -107,6 +112,7 @@ p {
   position: relative;
   min-width: 0;
   overflow: hidden;
+  background: var(--stage-bg);
 }
 
 .viewer canvas {
@@ -188,7 +194,7 @@ p {
   font-size: 1.05rem;
   font-weight: 700;
   color: var(--accent);
-  background: rgb(255 255 255 / 0.94);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
   padding: 0.2rem 0.7rem;
   border-radius: var(--radius-pill);
   box-shadow: 0 0.125rem 0.5rem rgb(42 41 40 / 0.1);
@@ -254,6 +260,29 @@ p {
   padding: 0.3rem 0.8rem;
   border-radius: var(--radius-pill);
   text-transform: uppercase;
+}
+
+/* theme toggle: round icon button next to the language switch */
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  border: 0.0625rem solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.theme-toggle svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.theme-toggle[aria-pressed='true'] {
+  color: var(--accent);
 }
 
 .lang-switch {
@@ -891,6 +920,11 @@ p {
   font-size: 1rem;
 }
 
+.swatch-check svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
 .swatch-name {
   font-size: 0.9rem;
   font-weight: 700;
@@ -1023,4 +1057,24 @@ p {
   font-size: 0.7rem;
   font-weight: 600;
   opacity: 0.8;
+}
+
+/* inline SVG icons inside buttons / banners (no emoji in UI text) */
+.btn,
+.viewer-invalid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  flex: none;
+  width: 1.3em;
+  height: 1.3em;
+}
+
+.sheet-toast-close svg {
+  width: 1.4rem;
+  height: 1.4rem;
 }

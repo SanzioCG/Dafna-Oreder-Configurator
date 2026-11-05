@@ -2,6 +2,7 @@ import { getParamDef } from '@dafna/engine';
 import { useEffect } from 'react';
 import { optionLabel, useI18n } from '../i18n/I18n';
 import { TEMPLATE, type ResetNotice } from '../state/useConfigurator';
+import { CloseIcon } from './icons';
 
 export const TOAST_MS = 3000;
 
@@ -53,7 +54,7 @@ export function ResetToast({
         aria-label={t('toast.dismiss')}
         onClick={onDismiss}
       >
-        ×
+        <CloseIcon />
       </button>
     </div>
   );
