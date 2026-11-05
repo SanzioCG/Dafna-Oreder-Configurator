@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { I18nProvider } from './i18n/I18n';
-import { installKioskGuards, requestConsultant } from './kiosk';
+import { ContactScreen } from './contact/ContactScreen';
+import { SubmittedScreen } from './contact/SubmittedScreen';
+import { installKioskGuards, kioskId, requestConsultant } from './kiosk';
+import { summarizeParams } from './lead/summary';
 import { parseMode, type Mode } from './mode';
-import { ContactPlaceholder } from './presentation/ContactPlaceholder';
 import { planReveal, type RevealEvent, type RevealKind } from './presentation/reveal';
 import { Button } from './ui/Button';
 import { useI18n } from './i18n/I18n';
@@ -12,8 +14,9 @@ import { nextFlow, type FlowEvent, type FlowState } from './state/flow';
 import { TEMPLATE, useConfigurator } from './state/useConfigurator';
 import { modelParams } from './state/presets';
 import { defaultParams } from '@dafna/engine';
-import { ThemeProvider } from './theme/ThemeProvider';
+import { ThemeProvider, useTheme } from './theme/ThemeProvider';
 import { StepPanel } from './ui/StepPanel';
+import type { CaptureFn } from './viewer/renderCapture';
 import { Viewer } from './viewer/Viewer';
 
 /** prefers-reduced-motion: the reveal shows its final state directly. */
@@ -26,9 +29,12 @@ export function prefersReducedMotion(): boolean {
 /** The step the configurator returns to from the presentation (last configurator step). */
 const EDIT_STEP = 'interior';
 
-function Configurator({ mode }: { mode: Mode }) {
+function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) {
   const config = useConfigurator(mode);
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  // PNG capture of the 3D view, taken when the application is submitted (D-5)
+  const captureRef = useRef<CaptureFn | null>(null);
+  const [submission, setSubmission] = useState<{ id: string; renderPng?: string } | null>(null);
   // shared by the sheet and the 3D view: the interior step opens the doors and selects sections
   // customers start on the ready-made models screen (step 0); staff go straight to step 1
   const [step, setStep] = useState(mode === 'customer' ? 'start' : 'size');
@@ -113,6 +119,7 @@ function Configurator({ mode }: { mode: Mode }) {
         selectionSeq={selectionSeq}
         presentation={inPresentation ? presentation : null}
         onRevealEvents={onRevealEvents}
+        captureRef={captureRef}
         presentationContent={
           flow === 'ready_to_confirm' ? (
             <div className="present-actions" data-testid="present-actions">
@@ -144,7 +151,26 @@ function Configurator({ mode }: { mode: Mode }) {
           setStep('size');
         }}
       />
-      {flow === 'contact' && <ContactPlaceholder mode={mode} onBack={() => dispatch('back')} />}
+      {flow === 'contact' && (
+        <ContactScreen
+          params={config.params}
+          kioskId={kioskId()}
+          onBack={() => dispatch('back')}
+          captureRender={() => captureRef.current?.() ?? null}
+          onSubmitted={(id, renderPng) => {
+            setSubmission({ id, renderPng });
+            dispatch('submitted');
+          }}
+        />
+      )}
+      {flow === 'submitted' && submission && (
+        <SubmittedScreen
+          id={submission.id}
+          renderPng={submission.renderPng}
+          summary={summarizeParams(config.params, lang)}
+          onFinish={onFinish}
+        />
+      )}
       {mode === 'customer' && inPresentation && (
         <ConsultantButton className="present-consultant" onCall={callConsultant} />
       )}
@@ -153,14 +179,33 @@ function Configurator({ mode }: { mode: Mode }) {
   );
 }
 
+/**
+ * One customer session. "Yakunlash" (or the submitted-screen countdown) ends it with a FULL
+ * reset: configuration, flow, contact data and language (remount via `key`), theme back to
+ * the kiosk default (device choice forgotten).
+ */
+function Session({ mode, onEnd }: { mode: Mode; onEnd: () => void }) {
+  const { resetTheme } = useTheme();
+  return (
+    <I18nProvider initial="uz">
+      <Configurator
+        mode={mode}
+        onFinish={() => {
+          resetTheme();
+          onEnd();
+        }}
+      />
+    </I18nProvider>
+  );
+}
+
 export function App() {
   const mode = parseMode(window.location.search);
+  const [session, setSession] = useState(0);
   useEffect(() => installKioskGuards(), []);
   return (
     <ThemeProvider>
-      <I18nProvider initial="uz">
-        <Configurator mode={mode} />
-      </I18nProvider>
+      <Session key={session} mode={mode} onEnd={() => setSession((n) => n + 1)} />
     </ThemeProvider>
   );
 }

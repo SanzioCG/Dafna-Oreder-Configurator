@@ -79,3 +79,15 @@ export function requestConsultant(where: string, revision: string): ConsultantRe
   }
   return detail;
 }
+
+/**
+ * Kiosk / branch id sent with every application ("Filial/Kiosk" column): `?kiosk=` in the
+ * kiosk's start URL, else the build-time VITE_KIOSK_ID, else empty. Sanitised to the API format.
+ */
+export function kioskId(
+  search: string = typeof window === 'undefined' ? '' : window.location.search,
+  env: string | undefined = import.meta.env.VITE_KIOSK_ID as string | undefined,
+): string {
+  const raw = new URLSearchParams(search).get('kiosk') ?? env ?? '';
+  return raw.replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+}

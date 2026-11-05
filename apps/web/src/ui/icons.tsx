@@ -13,6 +13,8 @@ import {
   TriangleAlert,
   Info,
   X,
+  Delete,
+  LoaderCircle,
   type LucideProps,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -41,6 +43,8 @@ export const MoonIcon = lucide(Moon);
 export const WarningIcon = lucide(TriangleAlert);
 export const InfoIcon = lucide(Info);
 export const ConsultantIcon = lucide(Headset);
+export const BackspaceIcon = lucide(Delete);
+export const SpinnerIcon = lucide(LoaderCircle);
 /** "Markazlash": frame the model */
 export const ReframeIcon = lucide(Scan);
 

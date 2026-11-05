@@ -555,9 +555,8 @@ describe('presentation and flow', () => {
     expect(flow()).toBe('ready_to_confirm');
     fireEvent.click(screen.getByRole('button', { name: uz['present.confirm'] }));
     expect(flow()).toBe('contact');
-    expect(screen.getByRole('dialog', { name: uz['contact.title'] }).textContent).toContain(
-      uz['step.comingSoon'],
-    );
+    expect(screen.getByRole('dialog', { name: uz['contact.title'] })).toBeTruthy();
+    expect(screen.getByTestId('contact-submit')).toBeTruthy();
   });
 
   it('the review pill opens the presentation; edit returns to step 3 with nothing lost', () => {
@@ -622,7 +621,7 @@ describe('reset toast timing', () => {
 describe('presentation — designer final (D-4)', () => {
   const skip = () => screen.queryByRole('button', { name: uz['present.skip'] });
 
-  it('candy layer present, no success icon, no dimension overlay; title + decor line', () => {
+  it('candy layer present, no success icon, no dimension overlay; title + size and decor line', () => {
     renderApp();
     fireEvent.click(tab(uz['step.color']));
     fireEvent.click(toggle(uz['c.doorsOther']));
@@ -638,9 +637,9 @@ describe('presentation — designer final (D-4)', () => {
     const head = screen.getByTestId('present-title');
     expect(head.textContent).toContain(uz['present.title']);
     expect(head.textContent).toContain(uz['present.subtitle']);
-    // D-4.1: no wardrobe sizes in the presentation, only the decors
+    // D-5: overall size (sm) next to the decors
     expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      'Korpus: Oq · Eshik: Och eman',
+      '136 × 190 × 60 sm · Korpus: Oq · Eshik: Och eman',
     );
   });
 
@@ -649,7 +648,9 @@ describe('presentation — designer final (D-4)', () => {
     fireEvent.click(tab(uz['step.interior']));
     fireEvent.click(toggle(uz['c.withDoors']));
     fireEvent.click(tab(uz['step.review']));
-    expect(screen.getByTestId('present-summary-line').textContent).toBe('Korpus: Oq');
+    expect(screen.getByTestId('present-summary-line').textContent).toBe(
+      '136 × 190 × 60 sm · Korpus: Oq',
+    );
   });
 
   it('"Tasdiqlash" (success) appears only after the doors close; skip is a text button', () => {
@@ -666,11 +667,13 @@ describe('presentation — designer final (D-4)', () => {
     expect(skip()).toBeNull();
   });
 
-  it('staff: the same decor line (no sizes)', () => {
+  it('staff: size in mm + decor line', () => {
     setUrl('?mode=staff');
     render(<App />);
     fireEvent.click(tab(uz['step.review']));
-    expect(screen.getByTestId('present-summary-line').textContent).toBe('Korpus: Oq · Eshik: Oq');
+    expect(screen.getByTestId('present-summary-line').textContent).toBe(
+      '1360 × 1900 × 600 mm · Korpus: Oq · Eshik: Oq',
+    );
   });
 });
 

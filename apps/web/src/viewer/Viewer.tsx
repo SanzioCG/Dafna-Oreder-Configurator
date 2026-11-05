@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type PointerEvent,
+  type MutableRefObject,
   type ReactNode,
 } from 'react';
 import { getMaterial } from '@dafna/engine';
@@ -25,10 +26,12 @@ import {
   buildDimensions,
   dimensionVisibility,
   formatLength,
+  formatSize,
   unitSystemFor,
   type V3,
 } from './dimensions';
 import type { CameraCommand, CameraRequest } from './cameraCommands';
+import type { CaptureFn } from './renderCapture';
 import { MM, Scene } from './Scene';
 import type { SectionBox } from './SectionPicker';
 
@@ -50,6 +53,8 @@ interface ViewerProps {
   onRevealEvents?: (events: RevealEvent[]) => void;
   /** stable-state content (summary, confirm / edit), shown as soon as the doors have closed */
   presentationContent?: ReactNode;
+  /** filled with a PNG capture of the 3D view (contact screen, D-5) */
+  captureRef?: MutableRefObject<CaptureFn | null>;
 }
 
 interface RevealUi {
@@ -126,6 +131,7 @@ export function Viewer({
   presentation = null,
   onRevealEvents,
   presentationContent,
+  captureRef,
 }: ViewerProps) {
   const { t } = useI18n();
   const { theme, logoUrl } = useTheme();
@@ -272,8 +278,9 @@ export function Viewer({
   };
   const corpusId = view.result.panels.find((p) => p.role === 'side')?.material;
   const doorId = view.result.panels.find((p) => p.role === 'door')?.material;
-  // D-4.1: no sizes in the presentation line — only the decors
+  // D-5: the overall size is back next to the decors (customer cm, staff mm)
   const presentSummaryLine = [
+    formatSize(engineSize.widthMm, engineSize.heightMm, engineSize.depthMm, units, unitLabel),
     `${t('present.corpus')}: ${decor(corpusId)}`,
     ...(doorId ? [`${t('present.door')}: ${decor(doorId)}`] : []),
   ].join(' · ');
@@ -329,6 +336,7 @@ export function Viewer({
   return (
     <div className={presenting ? 'viewer presenting' : 'viewer'} {...tap} data-testid="viewer">
       <Scene
+        capture={captureRef}
         view={view}
         dims={dims}
         dimRegistry={dimRegistry}
