@@ -6,7 +6,9 @@ import { HEADERS, leadToRow, rowToLead } from './columns';
 import { ID_RE, makeApplicationId, parseTashkentTimestamp, tashkentTimestamp } from './ids';
 import { FakeNotifier, MemoryLeadStore } from './memory';
 import { RateLimiter } from './rateLimit';
+import { retryNotifications } from './retry';
 import { handleSubmit, type SubmitDeps } from './submit';
+import { MAX_TELEGRAM_ATTEMPTS } from './types';
 
 /** 1×1 transparent PNG */
 const PNG =
@@ -265,6 +267,28 @@ describe('POST /api/submit', () => {
     notifier.failing = true;
     await send(body(), { ...deps, log: (e, d) => lines.push(JSON.stringify({ e, d })) });
     expect(lines.join('\n')).not.toMatch(/Aziz|901234567/);
+  });
+});
+
+describe('cron retry of failed Telegram notifications', () => {
+  it('a failed notification is re-sent and marked sent', async () => {
+    notifier.failing = true;
+    await send(body());
+    notifier.failing = false;
+    const report = await retryNotifications(store, notifier);
+    expect(report).toEqual({ checked: 1, sent: 1, failed: 0 });
+    expect(store.rows[0]!.telegram).toBe('sent');
+    expect(store.rows[0]!.telegramAttempts).toBe(2);
+    expect(await retryNotifications(store, notifier)).toEqual({ checked: 0, sent: 0, failed: 0 });
+  });
+
+  it(`gives up after ${MAX_TELEGRAM_ATTEMPTS} attempts in total`, async () => {
+    notifier.failing = true;
+    await send(body());
+    for (let i = 0; i < 10; i++) await retryNotifications(store, notifier);
+    expect(store.rows[0]!.telegramAttempts).toBe(MAX_TELEGRAM_ATTEMPTS);
+    expect(store.rows[0]!.telegram).toBe('failed');
+    expect(notifier.calls).toBe(MAX_TELEGRAM_ATTEMPTS);
   });
 });
 
