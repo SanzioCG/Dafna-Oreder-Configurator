@@ -1,4 +1,5 @@
 import type { ParamDef } from '@dafna/engine';
+import { useState } from 'react';
 import { LANGS, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import type { ReadyModel } from '../state/presets';
@@ -16,6 +17,7 @@ import { ParamControl } from './ParamControl';
 import { ResetToast } from './ResetToast';
 import { SizeStep } from './SizeStep';
 import { StaffPanel } from './StaffPanel';
+import { StaffSettings } from './StaffSettings';
 import { StepNavigation } from './StepNavigation';
 
 /**
@@ -87,6 +89,7 @@ export function StepPanel({
   const prev = neighbourStep(step, -1);
   const next = neighbourStep(step, 1);
   const stepDef = STEPS.find((s) => s.key === step);
+  const [staffOpen, setStaffOpen] = useState(false);
 
   // staff: template parameters of this step (interior also carries the door overrides)
   const sectionCount = config.view.result.sections.length;
@@ -181,9 +184,11 @@ export function StepPanel({
               onSelect={onSelectSection}
             />
           )}
-          {staff &&
-            groupIntoCards(defs).map((group) => (
-              <section key={group.key} className="card" data-card={group.defs[0]?.key}>
+        </div>
+        {staff && (
+          <StaffSettings open={staffOpen} onToggle={() => setStaffOpen((o) => !o)}>
+            {groupIntoCards(defs).map((group) => (
+              <section key={group.key} className="staff-group" data-card={group.defs[0]?.key}>
                 {group.defs.map((def) => (
                   <ParamControl
                     key={def.key}
@@ -204,11 +209,8 @@ export function StepPanel({
                 ))}
               </section>
             ))}
-        </div>
-        {staff && (
-          <div className="card">
             <StaffPanel params={config.params} result={config.result} />
-          </div>
+          </StaffSettings>
         )}
       </div>
 

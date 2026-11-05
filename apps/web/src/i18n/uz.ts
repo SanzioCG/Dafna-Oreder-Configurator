@@ -135,6 +135,7 @@ export const uz = {
   'staff.issues': 'Xatolar va ogohlantirishlar',
   'staff.noIssues': "Muammo yo'q",
   'staff.download': 'Buyurtma qoralamasini yuklab olish (JSON)',
+  'staff.settings': 'Xodim sozlamalari',
   'staff.assumptions': 'Tasdiqlanmagan konstruktiv qiymatlar',
   'staff.kind.param': 'parametr',
   'staff.kind.constant': 'konstanta',

@@ -442,12 +442,7 @@ describe('theme', () => {
     setUrl('?mode=staff');
     render(<App />);
     const logo = () => screen.getByAltText(uz['app.brand']).getAttribute('src') ?? '';
-    // the step card's stepper (staff engineering controls repeat it further down)
-    fireEvent.click(
-      screen.getAllByRole('button', {
-        name: uz['param.width'] + ': ' + uz['control.increase'],
-      })[0] as HTMLElement,
-    );
+    fireEvent.click(plus(uz['param.width']));
     expect(logo()).toMatch(/dafna-logo-white\.svg$/);
     fireEvent.click(screen.getByRole('button', { name: uz['theme.dark'] }));
     expect(document.documentElement.dataset.theme).toBe('light');
@@ -457,35 +452,83 @@ describe('theme', () => {
 });
 
 describe('staff engineering controls', () => {
-  it('staff see section count, back panel and plinth sizes on step 1; can set sections', () => {
+  const settings = () => screen.getByTestId('staff-settings');
+  const openSettings = () =>
+    fireEvent.click(within(settings()).getByRole('button', { name: uz['staff.settings'] }));
+
+  it('"Xodim sozlamalari" is collapsed by default; customers never see it', () => {
     setUrl('?mode=staff');
     render(<App />);
-    const sections = screen.getByRole('radiogroup', { name: uz['param.sections'] });
-    expect(screen.getByRole('radiogroup', { name: uz['param.backPanel'] })).toBeTruthy();
-    expect(screen.getByRole('textbox', { name: uz['param.plinthHeight'] })).toBeTruthy();
-    fireEvent.click(within(sections).getByRole('radio', { name: /^3/ }));
-    expect(stub().dataset.sections?.split(',').length).toBe(3);
+    expect(
+      within(settings())
+        .getByRole('button', { name: uz['staff.settings'] })
+        .getAttribute('aria-expanded'),
+    ).toBe('false');
+    expect(screen.queryByRole('radiogroup', { name: uz['param.sections'] })).toBeNull();
+    cleanup();
+    setUrl('');
+    renderApp();
+    expect(screen.queryByTestId('staff-settings')).toBeNull();
   });
 
-  it('staff see door presets and per-section overrides on step 3; issues + order draft', () => {
+  it('exposes ALL engine parameters across the steps (+ issues and order draft JSON)', () => {
     setUrl('?mode=staff');
     render(<App />);
+    openSettings();
+    const seen = new Set<string>();
+    const collect = () =>
+      settings()
+        .querySelectorAll('[data-param]')
+        .forEach((e) => seen.add(e.getAttribute('data-param') ?? ''));
+    collect();
+    expect(within(settings()).getByRole('button', { name: uz['staff.download'] })).toBeTruthy();
+    expect(within(settings()).getByText(uz['staff.issues'])).toBeTruthy();
+    fireEvent.click(tab(uz['step.color']));
+    collect();
     fireEvent.click(tab(uz['step.interior']));
-    expect(screen.getByRole('radiogroup', { name: uz['param.doors'] })).toBeTruthy();
-    expect(screen.getByRole('radiogroup', { name: "1-bo'lim eshigi" })).toBeTruthy();
+    collect(); // the open state is kept between steps
+    const sectionCount = stub().dataset.sections?.split(',').length ?? 0;
+    const expected = [
+      'width',
+      'height',
+      'depth',
+      'sections',
+      'corpusMaterial',
+      'doorMaterial',
+      'backPanel',
+      'base',
+      'plinthHeight',
+      'plinthRecess',
+      'doors',
+      ...Array.from({ length: sectionCount }, (_, i) => `doorSection${i + 1}`),
+      ...Array.from({ length: sectionCount }, (_, i) => `interior${i + 1}`),
+    ];
+    for (const key of expected) expect(seen.has(key), key).toBe(true);
+  });
+
+  it('staff can set the section count, door overrides and the 18 mm board', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    openSettings();
+    const sections = within(settings()).getByRole('radiogroup', { name: uz['param.sections'] });
+    fireEvent.click(within(sections).getByRole('radio', { name: /^3/ }));
+    expect(stub().dataset.sections?.split(',').length).toBe(3);
+    fireEvent.click(tab(uz['step.color']));
+    const corpus = within(settings()).getByRole('radiogroup', {
+      name: uz['param.corpusMaterial'],
+    });
+    expect(corpus.querySelector('[data-material="ldsp_white_18"]')).not.toBeNull();
+    fireEvent.click(tab(uz['step.interior']));
+    const door1 = within(settings()).getByRole('radiogroup', { name: "1-bo'lim eshigi" });
+    fireEvent.click(within(door1).getByRole('radio', { name: uz['option.doorSection.none'] }));
     expect(screen.getByTestId('interior-details')).toBeTruthy();
-    expect(screen.getByRole('button', { name: uz['staff.download'] })).toBeTruthy();
   });
 
   it('staff: out-of-range values are not corrected (engine error is shown)', () => {
     setUrl('?mode=staff');
     render(<App />);
-    const width = () =>
-      screen.getAllByRole('textbox', { name: uz['param.width'] })[0] as HTMLInputElement;
-    fireEvent.focus(width());
-    fireEvent.change(width(), { target: { value: '100' } });
-    fireEvent.blur(width());
-    expect(width().value).toBe('100');
+    typeInto(uz['param.width'], '100');
+    expect(input(uz['param.width']).value).toBe('100');
     expect(screen.getByRole('alert')).toBeTruthy();
   });
 });

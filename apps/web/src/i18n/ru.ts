@@ -134,6 +134,7 @@ export const ru: Messages = {
   'staff.issues': 'Ошибки и предупреждения',
   'staff.noIssues': 'Проблем нет',
   'staff.download': 'Скачать черновик заказа (JSON)',
+  'staff.settings': 'Настройки сотрудника',
   'staff.assumptions': 'Неподтверждённые конструктивные значения',
   'staff.kind.param': 'параметр',
   'staff.kind.constant': 'константа',

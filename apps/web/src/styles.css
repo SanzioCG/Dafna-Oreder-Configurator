@@ -831,6 +831,40 @@ p {
 
 /* ---------- staff ---------- */
 
+/* "Xodim sozlamalari": --paper card on the page (outline per the page rule) */
+.staff-card {
+  gap: var(--space-3);
+}
+
+.staff-toggle {
+  align-self: flex-start;
+  color: var(--ink);
+  font-size: var(--fs-lg);
+}
+
+.staff-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.staff-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.staff-card .segment,
+.staff-card .number-field,
+.staff-card .icon-btn,
+.staff-card .swatch,
+.staff-card .slider-track,
+.staff-card .slider-thumb,
+.staff-card .toggle-track,
+.staff-card .btn-secondary {
+  border: var(--line-in-card);
+}
+
 .staff {
   display: flex;
   flex-direction: column;
