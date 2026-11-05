@@ -1,5 +1,10 @@
 export type * from './types.js';
-export { ORDER_SCHEMA_VERSION, ORDER_SCHEMA_VERSION_01, ORDER_SCHEMA_VERSION_D0 } from './types.js';
+export {
+  ORDER_SCHEMA_VERSION,
+  ORDER_SCHEMA_VERSION_02,
+  ORDER_SCHEMA_VERSION_01,
+  ORDER_SCHEMA_VERSION_D0,
+} from './types.js';
 export {
   wardrobeTemplate,
   defaultParams,
@@ -26,6 +31,7 @@ export { toOrderDraft, type OrderDraftOptions } from './order.js';
 export {
   migrateParamsFromD0,
   migrateParamsFrom01,
+  migrateParamsFrom02,
   migrateOrderDraft,
   type MigrationOptions,
 } from './migrate.js';

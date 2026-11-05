@@ -286,7 +286,8 @@ export interface OrderDraftDoor {
   leaves: string[];
 }
 
-export const ORDER_SCHEMA_VERSION = 'dafna-order/0.2-draft';
+export const ORDER_SCHEMA_VERSION = 'dafna-order/0.3-draft';
+export const ORDER_SCHEMA_VERSION_02 = 'dafna-order/0.2-draft';
 export const ORDER_SCHEMA_VERSION_01 = 'dafna-order/0.1-draft';
 export const ORDER_SCHEMA_VERSION_D0 = 'dafna-order/0-draft';
 

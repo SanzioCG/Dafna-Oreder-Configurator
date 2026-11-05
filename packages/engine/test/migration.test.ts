@@ -4,15 +4,19 @@ import {
   generate,
   migrateOrderDraft,
   migrateParamsFrom01,
+  migrateParamsFrom02,
   toOrderDraft,
   wardrobeTemplate as T,
   type Panel,
 } from '../src/index.js';
 import d0Default from './fixtures/d0-order-draft.default.json' with { type: 'json' };
-// Real 0.1 drafts, produced by the D-1a engine (main @ 10d0238) before any D-1b change.
+// Real 0.1 drafts, produced by the D-1a engine (main @ 10d0238).
 import d01Default from './fixtures/d01-order-draft.default.json' with { type: 'json' };
 import d01NoDoors from './fixtures/d01-order-draft.nodoors.json' with { type: 'json' };
 import d01Singles from './fixtures/d01-order-draft.w1600-3singles.json' with { type: 'json' };
+// Real 0.2 drafts, produced by the D-1b engine (main @ 67e7eda).
+import d02Default from './fixtures/d02-order-draft.default.json' with { type: 'json' };
+import d02Interior from './fixtures/d02-order-draft.d600-interior.json' with { type: 'json' };
 
 const geometry = (p: Panel) => [
   p.id,
@@ -23,10 +27,11 @@ const geometry = (p: Panel) => [
   p.position,
   p.rotation,
 ];
+const doorsOf = (sections: { doorType: string }[]) => sections.map((s) => s.doorType);
 const codes = (issues: { code: string }[]) => issues.map((i) => i.code);
 
-describe('0.1 -> 0.2 parameter step', () => {
-  it('pins sections=auto to the old count and sets interior empty', () => {
+describe('parameter steps', () => {
+  it('0.1 -> 0.2: pins sections=auto to the old count, interior empty', () => {
     const p = migrateParamsFrom01(d01Default.params, 2);
     expect(p.sections).toBe(2);
     expect([p.interior1, p.interior2, p.interior3, p.interior4]).toEqual([
@@ -35,82 +40,124 @@ describe('0.1 -> 0.2 parameter step', () => {
       'empty',
       'empty',
     ]);
-    expect(p.corpusMaterial).toBe(d01Default.params.corpusMaterial);
-    expect(migrateParamsFrom01({ ...d01Default.params, sections: 3 }, 2).sections).toBe(3);
+  });
+
+  it('0.2 -> 0.3: pins sections=auto, keeps the stored depth and interior', () => {
+    const p = migrateParamsFrom02(d02Default.params, 3);
+    expect(p.sections).toBe(3);
+    expect(p.depth).toBe(516);
+    expect(p.interior1).toBe('auto');
   });
 });
 
-describe('0.1 drafts -> 0.2', () => {
-  it('without doors: geometry identical, schema 0.2, production fields added', () => {
-    expect(d01NoDoors.schemaVersion).toBe('dafna-order/0.1-draft');
-    const { draft, issues } = migrateOrderDraft(d01NoDoors);
-    expect(issues).toEqual([]);
-    if (!draft) throw new Error('no draft');
-    expect(draft.schemaVersion).toBe('dafna-order/0.2-draft');
-    expect(draft.migratedFrom).toBe('dafna-order/0.1-draft');
-    expect(draft.generatedAt).toBe(d01NoDoors.generatedAt);
-    expect(draft.panels.map(geometry)).toEqual((d01NoDoors.panels as Panel[]).map(geometry));
-    expect(draft.panels.map((p) => p.material)).toEqual(d01NoDoors.panels.map((p) => p.material));
-    for (const p of draft.panels) {
-      expect(p.edges).toBeDefined();
-      expect(p.operations).toEqual([]);
-    }
-    expect(draft.interior.every((x) => x.preset === 'empty')).toBe(true);
-    expect(draft.rails).toEqual([]);
-  });
-
-  it('3 single doors (0.1 hinges L,R,L): geometry kept, hinge change reported, not silent', () => {
-    expect(d01Singles.sections.map((s) => s.doorType)).toEqual([
-      'single_left',
-      'single_right',
-      'single_left',
-    ]);
-    const { draft, issues } = migrateOrderDraft(d01Singles);
-    if (!draft) throw new Error('no draft');
-    // interim (D-1c commit 1): auto hinge rule gives L,L,R; preserved in the migration commit
-    expect(draft.sections.map((s) => s.doorType)).toEqual([
-      'single_left',
-      'single_left',
-      'single_right',
-    ]);
-    expect(issues.map((i) => [i.code, i.values.sectionNumber])).toEqual([
-      ['MIGRATION_DOORS_CHANGED', 2],
-      ['MIGRATION_DOORS_CHANGED', 3],
-    ]);
-    // every panel keeps its size and place (leaf widths here are whole mm, rounding changes nothing)
-    expect(draft.panels.map(geometry)).toEqual((d01Singles.panels as Panel[]).map(geometry));
-    expect(draft.materials.corpus?.id).toBe('ldsp_oak_light_16');
-    expect(draft.materials.doors?.id).toBe('ldsp_anthracite_16');
-  });
-
-  it('0.1 default (2 sections, two adjacent double doors) migrates again (D-1c)', () => {
-    expect(d01Default.sections.map((s) => s.doorType)).toEqual(['double', 'double']);
+describe('0.1 drafts -> 0.3', () => {
+  it('two adjacent double doors (refused by D-1b) migrate again, unchanged', () => {
+    expect(doorsOf(d01Default.sections)).toEqual(['double', 'double']);
     const { draft, issues } = migrateOrderDraft(d01Default);
     expect(issues).toEqual([]);
-    expect(draft?.sections.map((s) => s.doorType)).toEqual(['double', 'double']);
+    if (!draft) throw new Error('no draft');
+    expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');
+    expect(draft.migratedFrom).toBe('dafna-order/0.1-draft');
+    expect(doorsOf(draft.sections)).toEqual(['double', 'double']);
+    expect(draft.panels.map(geometry)).toEqual((d01Default.panels as Panel[]).map(geometry));
+  });
+
+  it('original hinge sides L,R,L are preserved (overrides), geometry identical, no warnings', () => {
+    expect(doorsOf(d01Singles.sections)).toEqual(['single_left', 'single_right', 'single_left']);
+    const { draft, issues } = migrateOrderDraft(d01Singles);
+    expect(issues).toEqual([]);
+    if (!draft) throw new Error('no draft');
+    expect(doorsOf(draft.sections)).toEqual(['single_left', 'single_right', 'single_left']);
+    // the current auto rule would give L,L,R: sections 2 and 3 are pinned as overrides
+    expect([
+      draft.params.doorSection1,
+      draft.params.doorSection2,
+      draft.params.doorSection3,
+    ]).toEqual(['preset', 'single_right', 'single_left']);
+    expect(draft.panels.map(geometry)).toEqual((d01Singles.panels as Panel[]).map(geometry));
+    expect(
+      draft.panels.filter((p) => p.role === 'door').map((p) => [p.id, p.hingeSide, p.hingeMount]),
+    ).toEqual([
+      ['door-1', 'left', 'full_overlay'],
+      ['door-2', 'right', 'half_overlay'],
+      ['door-3', 'left', 'half_overlay'],
+    ]);
+  });
+
+  it('without doors: geometry identical', () => {
+    const { draft, issues } = migrateOrderDraft(d01NoDoors);
+    expect(issues).toEqual([]);
+    expect(draft?.panels.map(geometry)).toEqual((d01NoDoors.panels as Panel[]).map(geometry));
+  });
+
+  it('a 0.1 single door that the leaf rule no longer allows becomes double, reported', () => {
+    // D-1a decided on the inner width (600 -> single); the leaf is 621 mm > 600
+    const synthetic = {
+      ...d01Singles,
+      params: { ...d01Singles.params, width: 1248, sections: 2 },
+      sections: [
+        { ...d01Singles.sections[0], doorType: 'single_left' },
+        { ...d01Singles.sections[1], doorType: 'single_right' },
+      ],
+    };
+    const { draft, issues } = migrateOrderDraft(synthetic);
+    if (!draft) throw new Error('no draft');
+    expect(doorsOf(draft.sections)).toEqual(['double', 'double']);
+    expect(issues.map((i) => [i.code, i.values.sectionNumber, i.values.from, i.values.to])).toEqual(
+      [
+        ['MIGRATION_DOORS_CHANGED', 1, 'single_left', 'double'],
+        ['MIGRATION_DOORS_CHANGED', 2, 'single_right', 'double'],
+      ],
+    );
   });
 });
 
-describe('full chain D-0 -> 0.1 -> 0.2', () => {
-  it('a D-0 draft becomes a 0.2 draft with the D-0 geometry', () => {
+describe('0.2 drafts (D-1b) -> 0.3', () => {
+  it('D-1b default (3 sections L,R,R, depth 516): section count, hinges and geometry kept', () => {
+    expect(doorsOf(d02Default.sections)).toEqual(['single_left', 'single_right', 'single_right']);
+    const { draft, issues } = migrateOrderDraft(d02Default);
+    expect(issues).toEqual([]);
+    if (!draft) throw new Error('no draft');
+    expect(draft.migratedFrom).toBe('dafna-order/0.2-draft');
+    expect(draft.params.sections).toBe(3);
+    expect(doorsOf(draft.sections)).toEqual(['single_left', 'single_right', 'single_right']);
+    expect(draft.panels.map(geometry)).toEqual(
+      (d02Default.panels as unknown as Panel[]).map(geometry),
+    );
+    expect(draft.panels.filter((p) => p.role === 'door').map((p) => p.hingeMount)).toEqual([
+      'full_overlay',
+      'half_overlay',
+      'full_overlay',
+    ]);
+  });
+
+  it('chosen interior presets are kept', () => {
+    const { draft, issues } = migrateOrderDraft(d02Interior);
+    expect(issues).toEqual([]);
+    expect(draft?.sections.map((s) => [s.preset, s.presetSource])).toEqual(
+      d02Interior.sections.map((s) => [s.preset, s.presetSource]),
+    );
+    expect(draft?.panels.map(geometry)).toEqual(
+      (d02Interior.panels as unknown as Panel[]).map(geometry),
+    );
+  });
+});
+
+describe('full chain D-0 -> 0.1 -> 0.2 -> 0.3', () => {
+  it('a D-0 draft becomes a 0.3 draft with the D-0 geometry', () => {
     const { draft, issues } = migrateOrderDraft(d0Default);
     expect(issues).toEqual([]);
     if (!draft) throw new Error('no draft');
-    expect(draft.schemaVersion).toBe('dafna-order/0.2-draft');
+    expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');
     expect(draft.migratedFrom).toBe('dafna-order/0-draft');
     expect(draft.panels.map(geometry)).toEqual((d0Default.panels as Panel[]).map(geometry));
     expect(draft.params.doors).toBe('none');
-    expect(draft.params.sections).toBe(2); // pinned from the D-0 draft
-    expect(draft.params.interior1).toBe('empty');
+    expect(draft.params.sections).toBe(2);
   });
 
-  it('migrating twice is a no-op (0.2 passes through unchanged)', () => {
+  it('migrating twice is a no-op; unknown schemas are rejected', () => {
     const once = migrateOrderDraft(d0Default).draft;
-    expect(once).not.toBeNull();
     expect(migrateOrderDraft(once).draft).toBe(once);
-  });
-
-  it('current drafts pass through; unknown schemas are rejected', () => {
     const current = toOrderDraft(defaultParams(T), generate(T, defaultParams(T)));
     expect(migrateOrderDraft(current).draft).toBe(current);
     expect(codes(migrateOrderDraft({ schemaVersion: 'dafna-order/9-draft' }).issues)).toEqual([

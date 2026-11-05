@@ -223,7 +223,7 @@ describe('material catalog v0', () => {
   });
 });
 
-describe('toOrderDraft (dafna-order/0.2-draft)', () => {
+describe('toOrderDraft (dafna-order/0.3-draft)', () => {
   const params = {
     ...defaultParams(T),
     width: 2000,
@@ -234,7 +234,7 @@ describe('toOrderDraft (dafna-order/0.2-draft)', () => {
   const draft = toOrderDraft(params, result, { now: () => new Date('2026-11-05T10:00:00.000Z') });
 
   it('has the 0.2 schema, materials, doors and interior per section, rails', () => {
-    expect(draft.schemaVersion).toBe('dafna-order/0.2-draft');
+    expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');
     expect(draft.productType).toBe('wardrobe');
     expect(draft.templateVersion).toBe('0.4.0');
     expect(draft.catalogVersion).toBe('0.1.0');
@@ -281,7 +281,7 @@ describe('toOrderDraft (dafna-order/0.2-draft)', () => {
   });
 });
 
-describe('D-0 order draft migration (chain D-0 -> 0.1 -> 0.2)', () => {
+describe('D-0 order draft migration (chain D-0 -> 0.3)', () => {
   const geometry = (p: Panel) => [
     p.id,
     p.role,
@@ -299,7 +299,7 @@ describe('D-0 order draft migration (chain D-0 -> 0.1 -> 0.2)', () => {
     const { draft, issues } = migrateOrderDraft(d0);
     expect(issues).toEqual([]);
     if (!draft) throw new Error('no draft');
-    expect(draft.schemaVersion).toBe('dafna-order/0.2-draft');
+    expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');
     expect(draft.migratedFrom).toBe('dafna-order/0-draft');
     expect(draft.params.interior1).toBe('empty');
     expect(draft.rails).toEqual([]);
