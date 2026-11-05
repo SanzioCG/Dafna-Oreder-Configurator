@@ -26,6 +26,7 @@ import {
   buildDimensions,
   dimensionVisibility,
   formatLength,
+  formatSize,
   unitSystemFor,
   type V3,
 } from './dimensions';
@@ -277,8 +278,9 @@ export function Viewer({
   };
   const corpusId = view.result.panels.find((p) => p.role === 'side')?.material;
   const doorId = view.result.panels.find((p) => p.role === 'door')?.material;
-  // D-4.1: no sizes in the presentation line — only the decors
+  // D-5: the overall size is back next to the decors (customer cm, staff mm)
   const presentSummaryLine = [
+    formatSize(engineSize.widthMm, engineSize.heightMm, engineSize.depthMm, units, unitLabel),
     `${t('present.corpus')}: ${decor(corpusId)}`,
     ...(doorId ? [`${t('present.door')}: ${decor(doorId)}`] : []),
   ].join(' · ');
