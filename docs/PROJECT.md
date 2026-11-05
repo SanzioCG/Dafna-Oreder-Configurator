@@ -16,16 +16,17 @@ come in later batches.
 
 ## Batch plan
 
-| Batch | Scope                                                                                                                           |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------- |
-| D-0   | Engine + shkaf carcass + 3D viewer + step UI                                                                                    |
-| D-1a  | Material catalog, colour step, depth definition (ADR-003), hinged overlay doors, order draft 0.1                                |
-| D-1b  | Interior fill per section, door leaf/hinge rule fixes (ADR-006), production-ready panel fields, order draft 0.2 (ADR-005)       |
-| D-1c  | Leaves may share a partition (ADR-006 revised), hinge mount per leaf, default depth 600, order draft 0.3                        |
-| D-2a  | Backend: projects, branches/devices, customer confirmation, status model, audit log, outbox, Telegram notification, sales panel |
-| D-2b  | CRM adapter                                                                                                                     |
-| D-3   | Confirmation screen, server-side PDF, QR, on-screen keyboard, kiosk mode                                                        |
-| later | Price, tumba, stol, website API                                                                                                 |
+| Batch | Scope                                                                                                                                                         |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-0   | Engine + shkaf carcass + 3D viewer + step UI                                                                                                                  |
+| D-1a  | Material catalog, colour step, depth definition (ADR-003), hinged overlay doors, order draft 0.1                                                              |
+| D-1b  | Interior fill per section, door leaf/hinge rule fixes (ADR-006), production-ready panel fields, order draft 0.2 (ADR-005)                                     |
+| D-1c  | Leaves may share a partition (ADR-006 revised), hinge mount per leaf, default depth 600, order draft 0.3                                                      |
+| D-3a  | Light/dark themes, SVG dimension overlay (cm customer / mm staff), smart camera, presentation + reveal, summary + confirm entry, flow state machine (ADR-007) |
+| D-2a  | Backend: projects, branches/devices, customer confirmation, status model, audit log, outbox, Telegram notification, sales panel                               |
+| D-2b  | CRM adapter                                                                                                                                                   |
+| D-3b  | Contact form + submission, server-side PDF, QR, on-screen keyboard, idle timeout / session reset                                                              |
+| later | Price, tumba, stol, website API                                                                                                                               |
 
 ## Principles
 
@@ -100,4 +101,15 @@ self-hosted via `@fontsource/nunito-sans`, latin + cyrillic, weights 400–800.
 - **3D legibility:** dark edge outlines (light outlines on dark decors), one directional key
   light + hemisphere ambient, soft contact shadow under the footprint.
 - Radii 32/20/12, pills, circular icon buttons, soft elevation, press scale 0.97.
+- **Themes (D-3a):** light (default) and dark via `<html data-theme>`; dark overrides only in
+  `theme/tokens.dark.css`. Kiosk default from `VITE_KIOSK_THEME` / `?theme=`, per-device toggle in
+  the sheet header; the session reset (D-3b) must call `resetTheme()`. Logo: `dafna-logo-white.svg`
+  on dark. No emoji in UI text — inline SVG icons (`ui/icons.tsx`).
+- **Units:** customers see centimetres ("136 sm"), staff millimetres; the engine stays in mm.
+- **Dimension overlay:** one SVG, refs per frame; overall W/H/D always, section widths on the
+  interior/doors steps only (ADR-007).
+- **Smart camera:** moves only on explicit selection, never while the 3D zone is touched.
+- **Presentation ("Ko'rib chiqish"):** sheet hidden, reveal once per configuration revision, skip
+  always visible, reduced motion respected; summary card + confirm; flow
+  `configurator → presentation → ready_to_confirm → contact` (ADR-007).
 - Still `[APPROX]`: `--accent-lavender` (not found on the dafna.uz home page).
