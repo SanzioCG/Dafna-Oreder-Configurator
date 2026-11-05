@@ -1,4 +1,4 @@
-/** Wizard steps. D-1b: size, color, interior, doors active; review is a visible placeholder. */
+/** Wizard steps. D-3a: review = presentation mode (the sheet hides, the 3D fills the screen). */
 export interface StepDef {
   key: string;
   labelKey: string;
@@ -10,7 +10,7 @@ export const STEPS: StepDef[] = [
   { key: 'color', labelKey: 'step.color', enabled: true },
   { key: 'interior', labelKey: 'step.interior', enabled: true },
   { key: 'doors', labelKey: 'step.doors', enabled: true },
-  { key: 'review', labelKey: 'step.review', enabled: false },
+  { key: 'review', labelKey: 'step.review', enabled: true },
 ];
 
 export function neighbourStep(current: string, dir: 1 | -1): StepDef | undefined {

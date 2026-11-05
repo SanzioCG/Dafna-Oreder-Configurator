@@ -2,15 +2,15 @@ import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import { TOUCH } from 'three';
 import type { ViewGeometry } from '../state/useConfigurator';
-import { CameraRig, type FrameBox } from './CameraRig';
-import {
-  DimensionLines,
-  LabelProjector,
-  type DimSpec,
-  type LabelRefs,
-  type V3,
-} from './Dimensions';
+import type { MutableRefObject } from 'react';
+import type { CameraCommand } from './cameraCommands';
+import { CameraRig, type CameraApi, type FrameBox } from './CameraRig';
+import { DimensionProjector, type DimRegistry } from './DimensionOverlay';
+import type { DimSpec, V3 } from './dimensions';
 import { cssToken } from '../theme/cssToken';
+import type { ConfettiHandle } from '../presentation/Confetti';
+import { RevealDriver } from '../presentation/RevealDriver';
+import type { RevealDirector, RevealEvent, RevealKind } from '../presentation/reveal';
 import { SectionPicker, type SectionBox } from './SectionPicker';
 import { SoftFloorShadow } from './SoftFloorShadow';
 import { Wardrobe3D } from './Wardrobe3D';
@@ -20,8 +20,9 @@ export const MM = 0.001;
 export interface SceneProps {
   view: ViewGeometry;
   dims: DimSpec[];
-  anchors: { key: string; world: V3 }[];
-  labelRefs: LabelRefs;
+  dimRegistry: DimRegistry;
+  toWorld: (p: V3) => V3;
+  remPx: number;
   lineScale: number;
   product: FrameBox;
   extent: FrameBox;
@@ -32,6 +33,26 @@ export interface SceneProps {
   sectionBoxes: SectionBox[];
   selectedSection: number | null;
   onSectionTap: (index: number) => void;
+  /** explicit camera move (smart camera) */
+  cameraCommand?: CameraCommand | null;
+  /** true while a pointer is down on the 3D zone (camera moves wait for release) */
+  pointerDown?: MutableRefObject<boolean>;
+  /** imperative camera API for scripted sequences (presentation) */
+  cameraApi?: MutableRefObject<CameraApi | null>;
+  /** presentation reveal: user orbit off */
+  cameraLocked?: boolean;
+  /** scripted door progress (reveal), null = follow doorsOpen */
+  doorOverride?: MutableRefObject<number | null>;
+  /** presentation reveal driver (null outside the presentation) */
+  reveal?: {
+    director: RevealDirector;
+    generation: number;
+    kind: RevealKind;
+    confetti: MutableRefObject<ConfettiHandle | null>;
+    onEvents: (events: RevealEvent[]) => void;
+  } | null;
+  /** current UI theme: re-renders the scene so themed colours (edges, shadow) update */
+  theme?: string;
 }
 
 /**
@@ -41,8 +62,9 @@ export interface SceneProps {
 export function Scene({
   view,
   dims,
-  anchors,
-  labelRefs,
+  dimRegistry,
+  toWorld,
+  remPx,
   lineScale,
   product,
   extent,
@@ -52,11 +74,18 @@ export function Scene({
   sectionBoxes,
   selectedSection,
   onSectionTap,
+  cameraCommand = null,
+  pointerDown,
+  cameraApi,
+  cameraLocked = false,
+  doorOverride,
+  reveal = null,
 }: SceneProps) {
   const { widthMm: W, depthMm: D } = view;
   // Single-layer layout: the canvas is transparent and sits on the page background
   // (tokens.css --bg); there is no floor plane, so no visible floor edge.
   const shadowColor = cssToken('--stage-shadow', '#2a2928');
+  const shadowOpacity = Number(cssToken('--stage-shadow-opacity', '0.8')) || 0.8;
   return (
     <Canvas
       dpr={[1, 2]}
@@ -85,7 +114,12 @@ export function Scene({
       />
 
       <group scale={MM} position={[(-W / 2) * MM, 0, (-D / 2) * MM]}>
-        <Wardrobe3D panels={view.result.panels} rails={view.result.rails} doorsOpen={doorsOpen} />
+        <Wardrobe3D
+          panels={view.result.panels}
+          rails={view.result.rails}
+          doorsOpen={doorsOpen}
+          doorOverride={doorOverride}
+        />
         {interactive && (
           <SectionPicker
             boxes={sectionBoxes}
@@ -94,16 +128,20 @@ export function Scene({
             lineScale={lineScale}
           />
         )}
-        <DimensionLines dims={dims} lineScale={lineScale} />
       </group>
-      <LabelProjector anchors={anchors} labelRefs={labelRefs} />
+      <DimensionProjector dims={dims} registry={dimRegistry} toWorld={toWorld} remPx={remPx} />
 
       {/*
         Floor = soft contact shadow only (no floor plane, no edge). The key light's own floor
         shadow is not used: on a transparent canvas it read as a hard grey slab. The key light
         still shadows the carcass interior and door gaps.
       */}
-      <SoftFloorShadow widthM={W * MM} depthM={D * MM} color={shadowColor} opacity={0.8} />
+      <SoftFloorShadow
+        widthM={W * MM}
+        depthM={D * MM}
+        color={shadowColor}
+        opacity={shadowOpacity}
+      />
 
       <OrbitControls
         makeDefault
@@ -114,7 +152,25 @@ export function Scene({
         maxPolarAngle={Math.PI / 2 - 0.04}
         touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }}
       />
-      <CameraRig product={product} extent={extent} resetToken={resetToken} />
+      {reveal && cameraApi && doorOverride && (
+        <RevealDriver
+          director={reveal.director}
+          generation={reveal.generation}
+          cameraApi={cameraApi}
+          doorOverride={doorOverride}
+          confetti={reveal.confetti}
+          onEvents={reveal.onEvents}
+        />
+      )}
+      <CameraRig
+        product={product}
+        extent={extent}
+        resetToken={resetToken}
+        command={cameraCommand}
+        pointerDown={pointerDown}
+        apiRef={cameraApi}
+        locked={cameraLocked}
+      />
     </Canvas>
   );
 }

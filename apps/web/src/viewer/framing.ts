@@ -94,3 +94,66 @@ export function fitDistance(
   }
   return hi;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Smart camera (D-3a): poses, easing, selection framing. Pure math, reused by <CameraRig>.
+
+export type Vec3 = [number, number, number];
+
+/** Camera pose: where the camera is and what it looks at (world metres). */
+export interface Pose {
+  position: Vec3;
+  target: Vec3;
+}
+
+/** Default three-quarter view direction (also the showcase direction of the presentation). */
+export const DEFAULT_VIEW_DIR = new Vector3(0.5, 0.3, 1).normalize();
+/** A selected section / door is framed more frontally so its inside is readable. */
+export const SELECTION_VIEW_DIR = new Vector3(0.22, 0.16, 1).normalize();
+/** Camera animation duration for explicit moves (brief: 500–700 ms). */
+export const CAMERA_ANIM_MS = 600;
+
+export const easeInOutCubic = (t: number): number => {
+  const p = Math.min(1, Math.max(0, t));
+  return p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2;
+};
+
+function poseAt(center: Vector3, dir: Vector3, distance: number): Pose {
+  const pos = center.clone().addScaledVector(dir, distance);
+  return { position: [pos.x, pos.y, pos.z], target: [center.x, center.y, center.z] };
+}
+
+/** fitToModel: the product (plus dimension annotations) framed from `dir`. */
+export function fitToModelPose(
+  product: FrameBox,
+  extent: FrameBox,
+  fov: number,
+  aspect: number,
+  dir: Vector3 = DEFAULT_VIEW_DIR,
+): Pose {
+  return poseAt(boxCenter(product), dir, fitDistance(product, extent, fov, aspect, dir));
+}
+
+/**
+ * fitToSelection: a section (or its door) framed frontally, centred on the selection box.
+ * The selection gets the same fill rules as the product (70% height / 80% width), so a full
+ * height section is not zoomed in uncomfortably close; the camera mainly re-centres on it.
+ */
+export function fitToSelectionPose(
+  box: FrameBox,
+  fov: number,
+  aspect: number,
+  dir: Vector3 = SELECTION_VIEW_DIR,
+): Pose {
+  return poseAt(boxCenter(box), dir, fitDistance(box, box, fov, aspect, dir));
+}
+
+/** Linear blend of two poses (the caller applies the easing to `t`). */
+export function interpolatePose(a: Pose, b: Pose, t: number): Pose {
+  const mix = (p: Vec3, q: Vec3): Vec3 => [
+    p[0] + (q[0] - p[0]) * t,
+    p[1] + (q[1] - p[1]) * t,
+    p[2] + (q[2] - p[2]) * t,
+  ];
+  return { position: mix(a.position, b.position), target: mix(a.target, b.target) };
+}

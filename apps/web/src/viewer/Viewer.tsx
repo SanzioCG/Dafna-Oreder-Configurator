@@ -1,39 +1,82 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
+import { Confetti, type ConfettiHandle } from '../presentation/Confetti';
+import { RevealDirector, type RevealEvent, type RevealKind } from '../presentation/reveal';
 import { useI18n } from '../i18n/I18n';
+import { useTheme } from '../theme/ThemeProvider';
+import { ReframeIcon, SuccessIcon, WarningIcon } from '../ui/icons';
+import type { CameraApi } from './CameraRig';
 import type { ViewGeometry } from '../state/useConfigurator';
 import type { FrameBox } from './CameraRig';
+import type { Mode } from '../mode';
+import { DimensionSvg, type DimElements } from './DimensionOverlay';
 import {
   DIMENSION_MARGIN,
-  DimensionLabels,
   buildDimensions,
-  midpoint,
+  dimensionVisibility,
+  formatLength,
+  unitSystemFor,
   type V3,
-} from './Dimensions';
+} from './dimensions';
+import type { CameraCommand, CameraRequest } from './cameraCommands';
 import { MM, Scene } from './Scene';
 import type { SectionBox } from './SectionPicker';
 
 interface ViewerProps {
   view: ViewGeometry;
+  /** customer sees cm, staff mm */
+  mode?: Mode;
   invalid: boolean;
   /** current wizard step: 'interior' opens the doors and enables section picking */
   activeStep?: string;
   /** selected section on the interior step (null elsewhere) */
   selectedSection?: number | null;
   onSelectSection?: (index: number) => void;
+  /** increments on every explicit section selection (tab or 3D tap): frames that section */
+  selectionSeq?: number;
+  /** presentation mode ("Ko'rib chiqish"): the reveal to play; null = configurator */
+  presentation?: { kind: RevealKind; runId: number } | null;
+  /** discrete reveal events (doors closed, title, done) */
+  onRevealEvents?: (events: RevealEvent[]) => void;
+  /** stable-state content (summary, confirm / edit), shown as soon as the doors have closed */
+  presentationContent?: ReactNode;
 }
 
-/** Detects a double tap (touch or mouse) without interfering with orbit gestures. */
-function useDoubleTap(onDoubleTap: () => void) {
+interface RevealUi {
+  running: boolean;
+  title: boolean;
+  doorsClosed: boolean;
+}
+
+const REVEAL_IDLE: RevealUi = { running: false, title: false, doorsClosed: false };
+
+/**
+ * Detects a double tap (touch or mouse) without interfering with orbit gestures, and tracks
+ * whether a pointer is down on the 3D zone (`pointerDown`): camera moves wait for release.
+ */
+function useDoubleTap(onDoubleTap: () => void, pointerDown: { current: boolean }) {
   const down = useRef<{ x: number; y: number; t: number } | null>(null);
   const lastTap = useRef<{ x: number; y: number; t: number } | null>(null);
   const active = useRef(0);
+  const sync = () => {
+    pointerDown.current = active.current > 0;
+  };
   return {
     onPointerDown: (e: PointerEvent) => {
       active.current += 1;
+      sync();
       down.current = active.current === 1 ? { x: e.clientX, y: e.clientY, t: e.timeStamp } : null;
     },
     onPointerUp: (e: PointerEvent) => {
       active.current = Math.max(0, active.current - 1);
+      sync();
       const d = down.current;
       down.current = null;
       if (!d || e.timeStamp - d.t > 300 || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 12) {
@@ -50,6 +93,7 @@ function useDoubleTap(onDoubleTap: () => void) {
     },
     onPointerCancel: () => {
       active.current = Math.max(0, active.current - 1);
+      sync();
       down.current = null;
     },
   };
@@ -70,12 +114,19 @@ function useUiScale(): number {
 /** Viewer shell: 3D scene + DOM overlays (dimension labels, buttons, banners). */
 export function Viewer({
   view,
+  mode = 'customer',
   invalid,
-  activeStep,
+  activeStep = 'size',
   selectedSection = null,
   onSelectSection,
+  selectionSeq = 0,
+  presentation = null,
+  onRevealEvents,
+  presentationContent,
 }: ViewerProps) {
   const { t } = useI18n();
+  const { theme, logoUrl } = useTheme();
+  const presenting = presentation !== null;
   const [resetToken, setResetToken] = useState(0);
   const [doorsOpen, setDoorsOpen] = useState(false);
   // Interior step: doors open automatically; leaving the step restores the previous state.
@@ -94,7 +145,8 @@ export function Viewer({
     }
   }, [interior]);
   const reframe = () => setResetToken((n) => n + 1);
-  const tap = useDoubleTap(reframe);
+  const pointerDown = useRef(false);
+  const tap = useDoubleTap(reframe, pointerDown);
   const { widthMm: W, heightMm: H, depthMm: D } = view;
   const hasDoors = view.result.panels.some((p) => p.role === 'door');
 
@@ -111,26 +163,41 @@ export function Viewer({
     [W, H, D],
   );
 
-  const unit = t('unit.mm');
   const sections = view.result.sections;
-  // Closed doors hide the sections, so only overall dimensions are shown then.
-  const showSections = !hasDoors || doorsOpen;
+  // Dimension values come from the engine output only (result.dimensions / sections).
+  const units = unitSystemFor(mode);
+  const unitLabel = t(units === 'cm' ? 'unit.cm' : 'unit.mm');
+  const engineSize = view.result.dimensions ?? { widthMm: W, heightMm: H, depthMm: D };
+  const visibility = dimensionVisibility({
+    step: activeStep,
+    presentation: presenting,
+    hasDoors,
+    doorsOpen,
+  });
   const dims = useMemo(
-    () => buildDimensions(W, H, D, sections, unit, showSections),
-    [W, H, D, sections, unit, showSections],
-  );
-  // Label anchors in world metres (same transform as the product group in <Scene>).
-  const anchors = useMemo(
     () =>
-      dims.map((d) => {
-        const [x, y, z] = midpoint(d);
-        const world: V3 = [(x - W / 2) * MM, y * MM, (z - D / 2) * MM];
-        return { key: d.key, world };
-      }),
-    [dims, W, D],
+      buildDimensions(engineSize, sections, (mm) => formatLength(mm, units, unitLabel), visibility),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- primitive deps below
+    [
+      engineSize.widthMm,
+      engineSize.heightMm,
+      engineSize.depthMm,
+      sections,
+      units,
+      unitLabel,
+      visibility.primary,
+      visibility.secondary,
+    ],
   );
-  const labelRefs = useRef(new Map<string, HTMLDivElement>());
+  // product mm -> world metres (same transform as the product group in <Scene>)
+  const toWorld = useMemo(
+    () =>
+      (p: V3): V3 => [(p[0] - W / 2) * MM, p[1] * MM, (p[2] - D / 2) * MM],
+    [W, D],
+  );
+  const dimRegistry = useRef(new Map<string, DimElements>());
   const uiScale = useUiScale();
+  const remPx = uiScale * 16;
 
   // section inner boxes (mm) for picking / highlighting on the interior step
   const sectionBoxes = useMemo<SectionBox[]>(() => {
@@ -149,27 +216,150 @@ export function Viewer({
     }));
   }, [view.result.dimensions, view.result.panels, sections, H]);
 
+  // ---- smart camera: explicit selections only ----
+  const picking = activeStep === 'interior' || activeStep === 'doors';
+  const [cameraCommand, setCameraCommand] = useState<CameraCommand | null>(null);
+  const commandSeq = useRef(0);
+  const issue = (c: CameraRequest) => {
+    commandSeq.current += 1;
+    setCameraCommand({ ...c, seq: commandSeq.current });
+  };
+  // dimensions / colours steps: full-model view (on entering the step, not on first render)
+  const prevStep = useRef(activeStep);
+  useEffect(() => {
+    if (prevStep.current === activeStep) return;
+    prevStep.current = activeStep;
+    if (activeStep === 'size' || activeStep === 'color') issue({ kind: 'model' });
+  }, [activeStep]);
+  // a section picked (tab or 3D tap): frame it (interior) or its door(s) (doors step)
+  const lastSelectionSeq = useRef(selectionSeq);
+  useEffect(() => {
+    if (lastSelectionSeq.current === selectionSeq) return;
+    lastSelectionSeq.current = selectionSeq;
+    const b = sectionBoxes.find((s) => s.index === selectedSection);
+    if (!b || !picking) return;
+    const t = view.result.panels.find((p) => p.id === 'side-left')?.thicknessMm ?? 16;
+    const doorsStep = activeStep === 'doors';
+    const mm: [number, number, number, number, number, number] = doorsStep
+      ? [b.x0 - t / 2, b.x1 + t / 2, b.y0 - t, b.y1 + t, D - 30, D]
+      : [b.x0, b.x1, b.y0, b.y1, b.z0, D];
+    const box: FrameBox = {
+      min: [(mm[0] - W / 2) * MM, mm[2] * MM, (mm[4] - D / 2) * MM],
+      max: [(mm[1] - W / 2) * MM, mm[3] * MM, (mm[5] - D / 2) * MM],
+    };
+    issue({ kind: 'selection', box, id: `${doorsStep ? 'door' : 'section'}-${b.index}` });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only an explicit selection moves the camera
+  }, [selectionSeq]);
+
+  // ---- presentation reveal (driven in the render loop; React hears discrete events) ----
+  const [director] = useState(() => new RevealDirector());
+  const [generation, setGeneration] = useState(0);
+  const [revealUi, setRevealUi] = useState<RevealUi>(REVEAL_IDLE);
+  const doorOverride = useRef<number | null>(null);
+  const confettiRef = useRef<ConfettiHandle | null>(null);
+  const cameraApi = useRef<CameraApi | null>(null);
+  const onRevealEventsRef = useRef(onRevealEvents);
+  onRevealEventsRef.current = onRevealEvents;
+
+  const handleRevealEvents = useCallback((events: RevealEvent[]) => {
+    if (events.length === 0) return;
+    setRevealUi((prev) => ({
+      running: prev.running && !events.includes('done'),
+      title: prev.title || events.includes('title'),
+      doorsClosed: prev.doorsClosed || events.includes('doorsClosed'),
+    }));
+    onRevealEventsRef.current?.(events);
+  }, []);
+
+  const runId = presentation?.runId ?? null;
+  useEffect(() => {
+    if (!presentation) {
+      director.cancel();
+      setRevealUi(REVEAL_IDLE);
+      return;
+    }
+    director.cancel();
+    director.start(presentation.kind, hasDoors && doorsOpen ? 1 : 0);
+    setDoorsOpen(false); // the reveal ends with closed doors; they stay closed afterwards
+    setGeneration((g) => g + 1);
+    if (director.isRunning) {
+      setRevealUi({ running: true, title: false, doorsClosed: false });
+    } else {
+      // none / instant (reduced motion): final state directly
+      setRevealUi(REVEAL_IDLE);
+      handleRevealEvents(director.skip());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one start per presentation run
+  }, [runId]);
+
+  const skipReveal = () => {
+    const events = director.skip();
+    setGeneration((g) => g + 1);
+    setRevealUi((prev) => ({ ...prev, running: false }));
+    handleRevealEvents(events);
+  };
+
   return (
-    <div className="viewer" {...tap} data-testid="viewer">
+    <div className={presenting ? 'viewer presenting' : 'viewer'} {...tap} data-testid="viewer">
       <Scene
         view={view}
         dims={dims}
-        anchors={anchors}
-        labelRefs={labelRefs}
+        dimRegistry={dimRegistry}
+        toWorld={toWorld}
+        remPx={remPx}
         lineScale={uiScale}
         product={product}
         extent={extent}
         resetToken={resetToken}
         doorsOpen={hasDoors && doorsOpen}
-        interactive={interior}
+        interactive={picking}
+        cameraCommand={cameraCommand}
+        pointerDown={pointerDown}
         sectionBoxes={sectionBoxes}
         selectedSection={selectedSection}
         onSectionTap={(i) => onSelectSection?.(i)}
+        theme={theme}
+        cameraApi={cameraApi}
+        cameraLocked={revealUi.running}
+        doorOverride={doorOverride}
+        reveal={
+          presenting
+            ? {
+                director,
+                generation,
+                kind: presentation.kind,
+                confetti: confettiRef,
+                onEvents: handleRevealEvents,
+              }
+            : null
+        }
       />
-      <DimensionLabels dims={dims} labelRefs={labelRefs} />
+      <DimensionSvg dims={dims} registry={dimRegistry} remPx={remPx} />
 
-      <div className="viewer-actions">
-        {hasDoors && (
+      {presenting && (
+        <>
+          <img className="present-logo" src={logoUrl} alt={t('app.brand')} draggable={false} />
+          <Confetti ref={confettiRef} />
+          {revealUi.title && (
+            <div className="present-title" role="status" data-testid="present-title">
+              <SuccessIcon className="present-title-icon" />
+              <div>
+                <h2>{t('present.title')}</h2>
+                <p>{t('present.subtitle')}</p>
+              </div>
+            </div>
+          )}
+          {revealUi.running && (
+            <button type="button" className="btn btn-floating present-skip" onClick={skipReveal}>
+              {t('present.skip')}
+            </button>
+          )}
+          {revealUi.doorsClosed && presentationContent}
+        </>
+      )}
+
+      <div className="viewer-actions" hidden={presenting && revealUi.running}>
+        {hasDoors && !presenting && (
           <button
             type="button"
             className={
@@ -182,13 +372,17 @@ export function Viewer({
           </button>
         )}
         <button type="button" className="btn btn-floating" onClick={reframe}>
-          ⤢ {t('viewer.reframe')}
+          <ReframeIcon className="btn-icon" />
+          {t('viewer.reframe')}
         </button>
       </div>
-      <p className="viewer-hint">{t('viewer.hint')}</p>
+      {!presenting && <p className="viewer-hint">{t('viewer.hint')}</p>}
       {invalid && (
         <div className="viewer-stale" role="alert">
-          <p className="viewer-invalid">⚠ {t('viewer.invalid')}</p>
+          <p className="viewer-invalid">
+            <WarningIcon className="btn-icon" />
+            {t('viewer.invalid')}
+          </p>
         </div>
       )}
     </div>

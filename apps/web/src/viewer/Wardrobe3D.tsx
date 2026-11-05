@@ -1,7 +1,7 @@
 import type { Panel, Rail } from '@dafna/engine';
 import { Edges } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, type MutableRefObject } from 'react';
 import type { Group } from 'three';
 import { edgeColorFor, materialFor } from './materials';
 import { DOOR_OPEN_DEG, openAngles } from './doorSwing';
@@ -34,7 +34,18 @@ const easeInOut = (p: number) => (p < 0.5 ? 2 * p * p : 1 - (-2 * p + 2) ** 2 / 
  * two leaves on one partition never intersect up to 90° (they open to 85°). Left-hinged doors
  * rotate by -angle, right-hinged by +angle around Y, towards the viewer (+Z).
  */
-function DoorLeaf({ panel, open, angleDeg }: { panel: Panel; open: boolean; angleDeg: number }) {
+function DoorLeaf({
+  panel,
+  open,
+  angleDeg,
+  override,
+}: {
+  panel: Panel;
+  open: boolean;
+  angleDeg: number;
+  /** scripted progress (presentation reveal), null = follow `open` */
+  override?: MutableRefObject<number | null>;
+}) {
   const pivot = useRef<Group>(null);
   const progress = useRef(open ? 1 : 0);
   const [x, y, z] = panel.position;
@@ -44,8 +55,15 @@ function DoorLeaf({ panel, open, angleDeg }: { panel: Panel; open: boolean; angl
   const frontZ = z + panel.thicknessMm / 2;
 
   useFrame((_, dt) => {
+    const forced = override?.current ?? null;
     const target = open ? 1 : 0;
     const p = progress.current;
+    if (forced !== null) {
+      // the reveal drives the leaf (already eased); keep progress in sync for the hand-back
+      progress.current = forced;
+      if (pivot.current) pivot.current.rotation.y = sign * angleDeg * DEG * forced;
+      return;
+    }
     if (p !== target) {
       const step = Math.min(dt, 0.1) / DOOR_ANIM_SECONDS;
       progress.current = target > p ? Math.min(1, p + step) : Math.max(0, p - step);
@@ -77,10 +95,12 @@ export function Wardrobe3D({
   panels,
   rails = [],
   doorsOpen,
+  doorOverride,
 }: {
   panels: Panel[];
   rails?: Rail[];
   doorsOpen: boolean;
+  doorOverride?: MutableRefObject<number | null>;
 }) {
   const angles = useMemo(() => openAngles(panels), [panels]);
   return (
@@ -97,6 +117,7 @@ export function Wardrobe3D({
             panel={p}
             open={doorsOpen}
             angleDeg={angles.get(p.id) ?? DOOR_OPEN_DEG}
+            override={doorOverride}
           />
         ) : (
           <Board key={key} panel={p} position={p.position} />

@@ -15,9 +15,19 @@ vi.mock('./viewer/Scene', () => ({
     sectionBoxes,
     selectedSection,
     onSectionTap,
+    cameraCommand,
+    reveal,
+    cameraLocked,
   }: SceneProps) => (
     <div
       data-testid="viewer-stub"
+      data-reveal={reveal ? reveal.kind : ''}
+      data-camera-locked={String(Boolean(cameraLocked))}
+      data-camera={
+        cameraCommand
+          ? `${cameraCommand.kind}${cameraCommand.kind === 'selection' ? ':' + cameraCommand.id : ''}#${cameraCommand.seq}`
+          : ''
+      }
       data-doors-open={String(doorsOpen)}
       data-interactive={String(interactive)}
       data-selected-section={String(selectedSection)}
@@ -74,18 +84,14 @@ function typeInto(label: string, value: string) {
 }
 
 describe('App (customer mode)', () => {
-  it('renders in Uzbek with size, color and doors steps active, others disabled', () => {
+  it('renders in Uzbek with all five steps active (review = presentation)', () => {
     render(<App />);
     expect(screen.getByText(uz['app.title'])).toBeTruthy();
     expect(screen.getByRole('button', { name: /O'lcham/ }).hasAttribute('disabled')).toBe(false);
     expect(screen.getByRole('button', { name: /Rang/ }).hasAttribute('disabled')).toBe(false);
     expect(tab(uz['step.doors']).hasAttribute('disabled')).toBe(false);
     expect(tab(uz['step.interior']).hasAttribute('disabled')).toBe(false);
-    for (const key of ['step.review'] as const) {
-      expect(
-        screen.getByRole('button', { name: new RegExp(uz[key]) }).hasAttribute('disabled'),
-      ).toBe(true);
-    }
+    expect(tab(uz['step.review']).hasAttribute('disabled')).toBe(false);
     const stub = screen.getByTestId('viewer-stub');
     // D-1c: 1360 mm -> 2 sections with double doors (shared partition allowed)
     expect(stub.dataset.panels).toBe('12'); // 8 carcass + 4 door leaves
@@ -186,19 +192,29 @@ describe('App color step', () => {
 describe('App doors', () => {
   const sectionLabels = () => document.querySelectorAll('[data-dim^="section-"]').length;
 
-  it('door toggle opens/closes doors; section widths only show while open', () => {
+  it('door toggle opens/closes doors; section widths only on the doors step while open', () => {
     render(<App />);
     const stub = screen.getByTestId('viewer-stub');
     const button = screen.getByRole('button', { name: uz['viewer.doorsOpen'] });
     expect(stub.dataset.doorsOpen).toBe('false');
     expect(sectionLabels()).toBe(0);
-    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('1360 mm');
+    // customer: centimetres, from the engine's overall dimensions
+    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('136 sm');
+    expect(document.querySelector('[data-dim="height"]')?.textContent).toBe('190 sm');
+    expect(document.querySelector('[data-dim="depth"]')?.textContent).toBe('60 sm');
+    // size step: section widths stay hidden even with open doors
+    fireEvent.click(button);
+    expect(sectionLabels()).toBe(0);
+    fireEvent.click(button);
 
+    fireEvent.click(tab(uz['step.doors']));
+    expect(sectionLabels()).toBe(0);
     fireEvent.click(button);
     expect(stub.dataset.doorsOpen).toBe('true');
     expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(button.textContent).toBe(uz['viewer.doorsClose']);
     expect(sectionLabels()).toBe(2);
+    expect(document.querySelector('[data-dim="section-0"]')?.textContent).toBe('65,6 sm');
 
     fireEvent.click(button);
     expect(stub.dataset.doorsOpen).toBe('false');
@@ -216,6 +232,22 @@ describe('App doors', () => {
     expect(sectionLabels()).toBe(2);
     // per-section overrides are staff-only
     expect(screen.queryByRole('radiogroup', { name: "1-bo'lim eshigi" })).toBeNull();
+  });
+});
+
+describe('dimension overlay units', () => {
+  it('staff sees millimetres', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('1360 mm');
+    expect(document.querySelector('[data-dim="depth"]')?.textContent).toBe('600 mm');
+  });
+
+  it('interior step shows section widths (doors auto-open); one SVG overlay', () => {
+    render(<App />);
+    fireEvent.click(tab(uz['step.interior']));
+    expect(document.querySelectorAll('[data-dim^="section-"]').length).toBe(2);
+    expect(document.querySelectorAll('[data-testid="dim-overlay"]').length).toBe(1);
   });
 });
 
@@ -584,5 +616,238 @@ describe('Interior step (D-1b)', () => {
     fireEvent.click(tab(uz['step.color']));
     expect(stub().dataset.doorsOpen).toBe('true');
     expect(stub().dataset.interactive).toBe('false');
+  });
+});
+
+describe('theme toggle in the sheet header', () => {
+  afterEach(() => {
+    window.localStorage.clear();
+    delete document.documentElement.dataset.theme;
+  });
+
+  it('switches light <-> dark and swaps the logo variant', () => {
+    render(<App />);
+    const logo = () => screen.getByAltText(uz['app.brand']).getAttribute('src') ?? '';
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(logo()).toMatch(/dafna-logo\.svg$/);
+    fireEvent.click(screen.getByRole('button', { name: uz['theme.dark'] }));
+    expect(document.documentElement.dataset.theme).toBe('dark');
+    expect(logo()).toMatch(/dafna-logo-white\.svg$/);
+    expect(
+      screen.getByRole('button', { name: uz['theme.dark'] }).getAttribute('aria-pressed'),
+    ).toBe('true');
+  });
+});
+
+describe('smart camera triggers (explicit selections only)', () => {
+  const stub = () => screen.getByTestId('viewer-stub');
+  const camera = () => (stub().dataset.camera ?? '').split('#')[0];
+
+  it('no camera command on load; entering the interior step does not move the camera', () => {
+    render(<App />);
+    expect(stub().dataset.camera).toBe('');
+    fireEvent.click(tab(uz['step.interior']));
+    expect(stub().dataset.camera).toBe('');
+  });
+
+  it('section tab and 3D tap frame that section; the same section again re-frames it', () => {
+    render(<App />);
+    fireEvent.click(tab(uz['step.interior']));
+    const tabs = screen.getByRole('radiogroup', { name: uz['interior.sections'] });
+    fireEvent.click(within(tabs).getAllByRole('radio')[1] as HTMLElement);
+    expect(camera()).toBe('selection:section-1');
+    const seq = stub().dataset.camera;
+    fireEvent.click(screen.getByTestId('section-hit-0'));
+    expect(camera()).toBe('selection:section-0');
+    fireEvent.click(screen.getByTestId('section-hit-0'));
+    expect(stub().dataset.camera).not.toBe(seq);
+  });
+
+  it('doors step: tapping a section frames its door(s); size/colour steps use the full model', () => {
+    render(<App />);
+    fireEvent.click(tab(uz['step.doors']));
+    expect(stub().dataset.interactive).toBe('true');
+    fireEvent.click(screen.getByTestId('section-hit-1'));
+    expect(camera()).toBe('selection:door-1');
+    fireEvent.click(tab(uz['step.color']));
+    expect(camera()).toBe('model');
+    fireEvent.click(tab(uz['step.size']));
+    expect(camera()).toBe('model');
+  });
+
+  it('changing a parameter never issues a camera command', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '2000');
+    expect(stub().dataset.camera).toBe('');
+  });
+});
+
+describe('presentation mode and reveal', () => {
+  const stub = () => screen.getByTestId('viewer-stub');
+  const skip = () => screen.queryByRole('button', { name: uz['present.skip'] });
+  const toReview = () => fireEvent.click(tab(uz['step.review']));
+
+  it('hides the sheet and step navigation; plays the full reveal with a skip button', () => {
+    render(<App />);
+    toReview();
+    expect(screen.queryByRole('navigation')).toBeNull(); // sheet hidden
+    expect(document.querySelector('.app')?.classList.contains('presenting')).toBe(true);
+    expect(stub().dataset.reveal).toBe('full');
+    expect(stub().dataset.cameraLocked).toBe('true');
+    expect(skip()).not.toBeNull();
+    // the confirm area only after the doors have closed
+    expect(screen.queryByRole('button', { name: uz['present.edit'] })).toBeNull();
+    // logo top-left in presentation
+    expect(document.querySelector('.present-logo')).not.toBeNull();
+  });
+
+  it('skip ends in the stable state: title, manual orbit, edit button', () => {
+    render(<App />);
+    toReview();
+    fireEvent.click(skip() as HTMLElement);
+    expect(skip()).toBeNull();
+    expect(screen.getByTestId('present-title').textContent).toContain(uz['present.title']);
+    expect(screen.getByTestId('present-title').textContent).toContain(uz['present.subtitle']);
+    expect(stub().dataset.cameraLocked).toBe('false');
+    expect(screen.getByRole('button', { name: uz['present.edit'] })).toBeTruthy();
+  });
+
+  it('edit returns to the configurator; same configuration again: no animation', () => {
+    render(<App />);
+    toReview();
+    fireEvent.click(skip() as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
+    expect(screen.getByRole('navigation')).toBeTruthy();
+    expect(stub().dataset.reveal).toBe('');
+    toReview();
+    expect(stub().dataset.reveal).toBe('none');
+    expect(skip()).toBeNull();
+    expect(screen.getByTestId('present-title')).toBeTruthy();
+  });
+
+  it('after an edit the short version plays', () => {
+    render(<App />);
+    toReview();
+    fireEvent.click(skip() as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
+    fireEvent.click(tab(uz['step.size']));
+    typeInto(uz['param.width'], '2000');
+    toReview();
+    expect(stub().dataset.reveal).toBe('short');
+    expect(skip()).not.toBeNull();
+  });
+
+  it('prefers-reduced-motion: final state directly (no skip, title shown)', () => {
+    const mm = vi.fn().mockReturnValue({ matches: true });
+    vi.stubGlobal('matchMedia', mm);
+    try {
+      render(<App />);
+      toReview();
+      expect(stub().dataset.reveal).toBe('instant');
+      expect(skip()).toBeNull();
+      expect(screen.getByTestId('present-title')).toBeTruthy();
+      expect(mm).toHaveBeenCalledWith('(prefers-reduced-motion: reduce)');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe('summary card, confirm entry point and flow', () => {
+  const flow = () => document.querySelector('.app')?.getAttribute('data-flow');
+  const toStable = () => {
+    fireEvent.click(tab(uz['step.review']));
+    // unchanged configuration: no reveal, already stable
+    const skip = screen.queryByRole('button', { name: uz['present.skip'] });
+    if (skip) fireEvent.click(skip);
+  };
+  const row = (key: string) =>
+    screen.getByTestId('summary-card').querySelector(`[data-row="${key}"]`) as HTMLElement;
+
+  it('flow: configurator -> presentation -> ready_to_confirm (doors closed) -> contact', () => {
+    render(<App />);
+    expect(flow()).toBe('configurator');
+    fireEvent.click(tab(uz['step.review']));
+    expect(flow()).toBe('presentation');
+    expect(screen.queryByTestId('summary-card')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: uz['present.skip'] }));
+    expect(flow()).toBe('ready_to_confirm');
+    fireEvent.click(screen.getByRole('button', { name: uz['present.confirm'] }));
+    expect(flow()).toBe('contact');
+  });
+
+  it('summary values: size in cm, colours, sections + presets, doors', () => {
+    render(<App />);
+    toStable();
+    expect(row('size').querySelector('dd')?.textContent).toBe('136 × 190 × 60 sm');
+    expect(row('corpus').querySelector('dd')?.textContent).toBe(uz['decor.white']);
+    expect(row('doorColor').querySelector('dd')?.textContent).toBe(uz['decor.white']);
+    expect(row('sections').querySelector('dd')?.textContent).toBe(
+      `2 ta: ${uz['option.interior.rail_shelf']}, ${uz['option.interior.rail_shelf']}`,
+    );
+    expect(row('doors').querySelector('dd')?.textContent).toBe(
+      `${uz['option.doorSection.double']} × 2`,
+    );
+  });
+
+  it('staff summary in millimetres', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    toStable();
+    expect(row('size').querySelector('dd')?.textContent).toBe('1360 × 1900 × 600 mm');
+  });
+
+  it('"o\'zgartirish" returns to that step with the selection intact', () => {
+    render(<App />);
+    // pick section 2 on the interior step first
+    fireEvent.click(tab(uz['step.interior']));
+    const tabs = () => screen.getByRole('radiogroup', { name: uz['interior.sections'] });
+    fireEvent.click(within(tabs()).getAllByRole('radio')[1] as HTMLElement);
+    toStable();
+    fireEvent.click(within(row('sections')).getByRole('button'));
+    expect(flow()).toBe('configurator');
+    expect(tab(uz['step.interior']).getAttribute('aria-current')).toBe('step');
+    expect(within(tabs()).getAllByRole('radio')[1]?.getAttribute('aria-checked')).toBe('true');
+
+    const steps: [string, string][] = [
+      ['size', 'step.size'],
+      ['corpus', 'step.color'],
+      ['doors', 'step.doors'],
+    ];
+    for (const [key, stepKey] of steps) {
+      toStable();
+      fireEvent.click(within(row(key)).getByRole('button'));
+      expect(tab(uz[stepKey as 'step.size']).getAttribute('aria-current')).toBe('step');
+    }
+  });
+
+  it('edit keeps every parameter (nothing lost)', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '2000');
+    toStable();
+    fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
+    expect(screen.getByTestId('summary').textContent).toContain('2000 × 1900 × 600');
+    expect(tab(uz['step.doors']).getAttribute('aria-current')).toBe('step');
+  });
+
+  it('contact placeholder: customer sees "Tez orada", Orqaga returns; no fake order data', () => {
+    render(<App />);
+    toStable();
+    fireEvent.click(screen.getByRole('button', { name: uz['present.confirm'] }));
+    const dialog = screen.getByRole('dialog', { name: uz['contact.title'] });
+    expect(dialog.textContent).toContain(uz['step.comingSoon']);
+    expect(screen.queryByTestId('contact-todo')).toBeNull();
+    expect(dialog.textContent).not.toMatch(/\d{3,}/); // no invented order number
+    fireEvent.click(within(dialog).getByRole('button', { name: uz['nav.back'] }));
+    expect(flow()).toBe('ready_to_confirm');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('contact placeholder: staff sees the TODO marker', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    toStable();
+    fireEvent.click(screen.getByRole('button', { name: uz['present.confirm'] }));
+    expect(screen.getByTestId('contact-todo').textContent).toContain('TODO (D-3b)');
   });
 });

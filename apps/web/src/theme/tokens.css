@@ -1,5 +1,6 @@
 /*
- * Dafna visual language — the ONLY place for brand colours, radii, elevation and font.
+ * Dafna visual language, LIGHT theme (default; dark overrides live in tokens.dark.css) —
+ * the ONLY place for brand colours, radii, elevation and font.
  *
  * Sources (checked 2026-11-05 on https://dafna.uz, computed styles + :root CSS variables):
  *   [logo]  = fill colours in public/brand/dafna-logo.svg
@@ -28,6 +29,8 @@
   --brand-blue-light: #99e0ff; /* [site] --color-brand-light */
   --brand-blue-surface: #eaf7fd; /* [site] --color-brand-surface */
   --brand-graphite: #2a2928; /* [logo] verified; text colour (site text is #1a1c20) */
+  --text-primary: var(--brand-graphite); /* themed text colour (dark: tokens.dark.css) */
+  --text-warn: #b26a00; /* --warning darkened for readable text on --warning-surface */
   --accent-sky: var(--brand-blue-hover);
   --accent-lavender: #8f9bff; /* [APPROX] not on the dafna.uz home page */
   --pastel-lavender: #e4e7ff; /* [APPROX] --accent-lavender at ~20% on white (interior cards) */
@@ -53,7 +56,7 @@
   --error-surface: #ffeeee;
   --warning: #f4980f;
   --warning-surface: #fef4e5; /* derived: --warning at ~10% on white */
-  --success: #00b661;
+  --success: #20b85a; /* [designer] confirm button (site --color-success was #00b661) */
 
   /* ---- pastels: one per option-card type ---- [comp] home page category cards */
   --pastel-blue: #cdeeff; /* "Успейте купить"  (brief's approx #CDEBFB) */
@@ -63,8 +66,12 @@
   /* [comp] installment price badge (brief's approx #C5F59A -> #F2F59A) */
   --accent-lime: linear-gradient(79.33deg, #a6fc6f -10.06%, #f0fff5 44.03%, #f2f947 127.13%);
 
-  /* ---- 3D stage: transparent canvas on --bg; only the shadow colour is themed ---- */
+  /* ---- 3D stage: transparent canvas on --stage-bg; shadow + edge outlines are themed ---- */
+  --stage-bg: transparent; /* light: the canvas sits directly on --bg */
   --stage-shadow: #2a2928;
+  --stage-shadow-opacity: 0.8;
+  --edge-on-light-decor: #33363b; /* outlines on white / grey / beige / oak */
+  --edge-on-dark-decor: #b4b8be; /* outlines on dark decors */
 
   /* ---- shape ---- */
   --radius-lg: 2rem; /* 32 px at 1080p */

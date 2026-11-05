@@ -5,6 +5,7 @@ export const uz = {
   'lang.label': 'Til',
   'lang.uz': "O'zbekcha",
   'lang.ru': 'Русский',
+  'theme.dark': 'Tungi rejim',
   'mode.staff': 'Xodim rejimi',
 
   'step.size': "O'lcham",
@@ -21,6 +22,20 @@ export const uz = {
   'step.interior.hint': "Bo'limni tanlang (yoki modelda bosing), so'ng ichki variantni tanlang.",
   'step.doors.title': 'Eshiklarni tanlang',
   'step.doors.hint': "Eshik turi barcha bo'limlar uchun. Ichini ko'rish uchun eshiklarni oching.",
+
+  'present.title': 'Ajoyib tanlov!',
+  'present.subtitle': "Siz o'z shkafingiz dizaynini muvaffaqiyatli yaratdingiz.",
+  'present.skip': "O'tkazib yuborish",
+  'present.edit': 'Konfiguratsiyani tahrirlash',
+  'present.confirm': 'Konfiguratsiyani tasdiqlash',
+  'summary.title': 'Sizning shkafingiz',
+  'summary.size': "O'lcham",
+  'summary.sectionsRow': "Bo'limlar",
+  'summary.sectionsValue': '{count} ta: {list}',
+  'summary.change': "o'zgartirish",
+  'contact.title': "Aloqa ma'lumotlari",
+  'contact.todo':
+    "TODO (D-3b): bu yerda kontakt formasi (ism, telefon) va buyurtmani yuborish bo'ladi. Hozircha hech narsa yuborilmaydi.",
 
   'nav.back': 'Orqaga',
   'nav.next': 'Keyingi',
@@ -89,6 +104,7 @@ export const uz = {
   'control.decrease': 'Kamaytirish',
   'control.increase': 'Oshirish',
   'unit.mm': 'mm',
+  'unit.cm': 'sm',
 
   'summary.overall': "Umumiy o'lcham",
   'summary.sections': "{count} ta bo'lim",

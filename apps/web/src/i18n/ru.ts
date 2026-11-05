@@ -6,6 +6,7 @@ export const ru: Messages = {
   'lang.label': 'Язык',
   'lang.uz': "O'zbekcha",
   'lang.ru': 'Русский',
+  'theme.dark': 'Тёмная тема',
   'mode.staff': 'Режим сотрудника',
 
   'step.size': 'Размер',
@@ -22,6 +23,20 @@ export const ru: Messages = {
   'step.interior.hint': 'Выберите секцию (или нажмите на неё в модели), затем вариант наполнения.',
   'step.doors.title': 'Выберите двери',
   'step.doors.hint': 'Тип дверей для всех секций. Откройте двери, чтобы увидеть секции.',
+
+  'present.title': 'Отличный выбор!',
+  'present.subtitle': 'Вы успешно создали дизайн своего шкафа.',
+  'present.skip': 'Пропустить',
+  'present.edit': 'Изменить конфигурацию',
+  'present.confirm': 'Подтвердить конфигурацию',
+  'summary.title': 'Ваш шкаф',
+  'summary.size': 'Размер',
+  'summary.sectionsRow': 'Секции',
+  'summary.sectionsValue': '{count}: {list}',
+  'summary.change': 'изменить',
+  'contact.title': 'Контактные данные',
+  'contact.todo':
+    'TODO (D-3b): здесь будет форма контактов (имя, телефон) и отправка заказа. Пока ничего не отправляется.',
 
   'nav.back': 'Назад',
   'nav.next': 'Далее',
@@ -90,6 +105,7 @@ export const ru: Messages = {
   'control.decrease': 'Уменьшить',
   'control.increase': 'Увеличить',
   'unit.mm': 'мм',
+  'unit.cm': 'см',
 
   'summary.overall': 'Габариты',
   'summary.sections': 'Секций: {count}',

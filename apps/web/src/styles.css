@@ -4,20 +4,25 @@
  * Colours, radii, shadows and the font come from ./theme/tokens.css only.
  */
 @import './theme/tokens.css';
+@import './theme/tokens.dark.css';
 
 :root {
   /* semantic aliases used below */
-  --text: var(--brand-graphite);
+  --text: var(--text-primary);
   --muted: var(--neutral-500);
   --line: var(--neutral-200);
   --accent: var(--brand-blue);
   --accent-soft: var(--brand-blue-surface);
-  --warn: #b26a00; /* --warning darkened for readable text on --warning-surface */
+  --warn: var(--text-warn);
   --warn-soft: var(--warning-surface);
   --error-soft: var(--error-surface);
   --tap: 3rem;
   --gutter: 1rem;
   color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
 }
 
 html {
@@ -107,6 +112,7 @@ p {
   position: relative;
   min-width: 0;
   overflow: hidden;
+  background: var(--stage-bg);
 }
 
 .viewer canvas {
@@ -172,34 +178,48 @@ p {
   box-shadow: var(--shadow-float);
 }
 
-.dim-labels {
+/*
+ * Dimension overlay (D-3a): one SVG over the 3D zone, coordinates written per frame via refs.
+ * Brand-blue lines, perpendicular end ticks (no arrowheads), solid pill labels on the theme
+ * surface. Stroke widths in rem so they scale from 1080p to 4K.
+ */
+.dim-overlay {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   pointer-events: none;
 }
 
-.dim-label {
-  position: absolute;
-  left: 0;
-  top: 0;
-  visibility: hidden; /* until the first projected frame */
-  will-change: transform;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--accent);
-  background: rgb(255 255 255 / 0.94);
-  padding: 0.2rem 0.7rem;
-  border-radius: var(--radius-pill);
-  box-shadow: 0 0.125rem 0.5rem rgb(42 41 40 / 0.1);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  user-select: none;
+.dim-line,
+.dim-tick {
+  stroke: var(--brand-blue);
+  stroke-width: 0.125rem;
+  stroke-linecap: round;
 }
 
-.dim-label-small {
-  font-size: 0.85rem;
-  font-weight: 700;
+.dim-secondary .dim-line {
+  stroke-width: 0.094rem;
+}
+
+.dim-ext {
+  stroke: var(--brand-blue);
+  stroke-width: 0.0625rem;
+  stroke-opacity: 0.45;
+}
+
+.dim-label rect {
+  fill: var(--surface);
+  stroke: color-mix(in srgb, var(--brand-blue) 35%, transparent);
+  stroke-width: 0.0625rem;
+}
+
+.dim-label text {
+  fill: var(--brand-blue);
+  font-family: var(--font-sans);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------- configurator sheet (right zone) ---------- */
@@ -254,6 +274,29 @@ p {
   padding: 0.3rem 0.8rem;
   border-radius: var(--radius-pill);
   text-transform: uppercase;
+}
+
+/* theme toggle: round icon button next to the language switch */
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: var(--tap);
+  height: var(--tap);
+  padding: 0;
+  border: 0.0625rem solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.theme-toggle svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.theme-toggle[aria-pressed='true'] {
+  color: var(--accent);
 }
 
 .lang-switch {
@@ -891,6 +934,11 @@ p {
   font-size: 1rem;
 }
 
+.swatch-check svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
 .swatch-name {
   font-size: 0.9rem;
   font-weight: 700;
@@ -1023,4 +1071,227 @@ p {
   font-size: 0.7rem;
   font-weight: 600;
   opacity: 0.8;
+}
+
+/* inline SVG icons inside buttons / banners (no emoji in UI text) */
+.btn,
+.viewer-invalid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  flex: none;
+  width: 1.3em;
+  height: 1.3em;
+}
+
+.sheet-toast-close svg {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+/* ---------- presentation mode ("Ko'rib chiqish", D-3a) ---------- */
+
+/* the sheet and step navigation hide; the 3D zone fills the screen */
+.app.presenting {
+  grid-template-columns: 1fr;
+}
+
+.panel[hidden],
+.viewer-actions[hidden] {
+  display: none;
+}
+
+.present-logo {
+  position: absolute;
+  left: 2rem;
+  top: 1.75rem;
+  height: 3rem;
+  width: auto;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* title: top-left under the logo (the top centre holds the width dimension) */
+.present-title {
+  position: absolute;
+  left: 2rem;
+  top: 6rem;
+  max-width: 30rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.9rem 1.75rem 0.9rem 1rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-float);
+  animation: toast-in 0.3s ease-out;
+}
+
+.present-title-icon {
+  flex: none;
+  width: 3rem;
+  height: 3rem;
+}
+
+.present-title h2 {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.present-title p {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+/* skip: top-right, away from the stable-state actions (bottom-right) */
+.present-skip {
+  position: absolute;
+  right: 2rem;
+  top: 1.75rem;
+  padding: 0 2rem;
+}
+
+/* stable state: compact summary card on the right, never over the wardrobe centre */
+.present-summary {
+  position: absolute;
+  right: 2rem;
+  bottom: 2rem;
+  width: 27rem;
+  max-height: calc(100% - 9rem);
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem 1.5rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sheet);
+  animation: toast-in 0.25s ease-out;
+}
+
+.present-summary h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.present-summary dl {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 0.75rem;
+  align-items: center;
+  padding: 0.55rem 0;
+  border-bottom: 0.0625rem solid var(--line);
+}
+
+.summary-row dt {
+  grid-column: 1;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.summary-row dd {
+  grid-column: 1;
+  margin: 0.1rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-change {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  min-height: var(--tap);
+  padding: 0 0.9rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.summary-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+/* primary confirm: solid green (--success) */
+.btn-success {
+  background: var(--success);
+  color: #fff;
+  min-height: 4rem;
+  font-size: 1.2rem;
+}
+
+/* contact (D-3b placeholder): over the presentation, nothing is submitted */
+.contact-placeholder {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  backdrop-filter: blur(0.5rem);
+}
+
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  width: min(36rem, 90vw);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-sheet);
+}
+
+.contact-card h2 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.contact-todo {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .present-title,
+  .present-summary,
+  .sheet-toast {
+    animation: none;
+  }
 }
