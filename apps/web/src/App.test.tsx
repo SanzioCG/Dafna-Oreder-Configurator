@@ -396,12 +396,17 @@ describe('smart camera', () => {
 });
 
 describe('global customer actions', () => {
-  it('"Tayyor — ko\'rib chiqish" and "Konsultant chaqirish" on steps 1–3', () => {
+  it('"Konsultant chaqirish" and the "Orqaga" pill on steps 1–3', () => {
     renderApp();
     for (const key of ['step.size', 'step.color', 'step.interior'] as const) {
       fireEvent.click(tab(uz[key]));
-      expect(screen.getByRole('button', { name: uz['nav.readyReview'] })).toBeTruthy();
+      // D-4.1: no "Tayyor — ko'rib chiqish" in the footer; the step pill opens the review
+      expect(screen.queryByRole('button', { name: uz['nav.readyReview'] })).toBeNull();
       expect(screen.getByRole('button', { name: uz['consultant.call'] })).toBeTruthy();
+      // "Orqaga" is a pill (shape), never a bare underlined link
+      expect(screen.getByRole('button', { name: uz['nav.back'] }).className).toContain(
+        'btn-secondary',
+      );
     }
   });
 
@@ -432,10 +437,14 @@ describe('global customer actions', () => {
 });
 
 describe('theme', () => {
-  it('customer: Dark by default, no theme toggle', () => {
+  it('customer: Dark by default; Light / Dark switch available, configuration kept', () => {
     renderApp();
     expect(document.documentElement.dataset.theme).toBe('dark');
-    expect(screen.queryByRole('button', { name: uz['theme.dark'] })).toBeNull();
+    fireEvent.click(plus(uz['param.width']));
+    fireEvent.click(screen.getByRole('button', { name: uz['theme.dark'] }));
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(stub().dataset.width).toBe('1370');
+    expect(tab(uz['step.size']).getAttribute('aria-current')).toBe('step');
   });
 
   it('staff switch keeps the configuration; logo swaps', () => {
@@ -551,10 +560,10 @@ describe('presentation and flow', () => {
     );
   });
 
-  it('"Tayyor" jumps to the presentation; edit returns to step 3 with nothing lost', () => {
+  it('the review pill opens the presentation; edit returns to step 3 with nothing lost', () => {
     renderApp();
     fireEvent.click(plus(uz['param.width']));
-    fireEvent.click(screen.getByRole('button', { name: uz['nav.readyReview'] }));
+    fireEvent.click(tab(uz['step.review']));
     expect(flow()).toBe('presentation');
     fireEvent.click(skip() as HTMLElement);
     fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
@@ -613,7 +622,7 @@ describe('reset toast timing', () => {
 describe('presentation — designer final (D-4)', () => {
   const skip = () => screen.queryByRole('button', { name: uz['present.skip'] });
 
-  it('no particles, no success icon, no dimension overlay; title + summary line', () => {
+  it('candy layer present, no success icon, no dimension overlay; title + decor line', () => {
     renderApp();
     fireEvent.click(tab(uz['step.color']));
     fireEvent.click(toggle(uz['c.doorsOther']));
@@ -623,14 +632,15 @@ describe('presentation — designer final (D-4)', () => {
       ).querySelector('[data-material="ldsp_oak_light_16"]') as HTMLElement,
     );
     fireEvent.click(tab(uz['step.review']));
-    expect(document.querySelector('.confetti, canvas.confetti')).toBeNull();
+    expect(document.querySelector('canvas.confetti')).not.toBeNull(); // candy celebration layer
     expect(document.querySelector('.present-title-icon')).toBeNull();
     expect(document.querySelectorAll('[data-dim]').length).toBe(0);
     const head = screen.getByTestId('present-title');
     expect(head.textContent).toContain(uz['present.title']);
     expect(head.textContent).toContain(uz['present.subtitle']);
+    // D-4.1: no wardrobe sizes in the presentation, only the decors
     expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '136 × 190 × 60 sm · Korpus: Oq · Eshik: Och eman',
+      'Korpus: Oq · Eshik: Och eman',
     );
   });
 
@@ -639,31 +649,35 @@ describe('presentation — designer final (D-4)', () => {
     fireEvent.click(tab(uz['step.interior']));
     fireEvent.click(toggle(uz['c.withDoors']));
     fireEvent.click(tab(uz['step.review']));
-    expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '136 × 190 × 60 sm · Korpus: Oq',
-    );
+    expect(screen.getByTestId('present-summary-line').textContent).toBe('Korpus: Oq');
   });
 
   it('"Tasdiqlash" (success) appears only after the doors close; skip is a text button', () => {
     renderApp();
     fireEvent.click(tab(uz['step.review']));
     expect(screen.queryByRole('button', { name: uz['present.confirm'] })).toBeNull();
-    expect(skip()?.className).toContain('btn-text');
+    expect(skip()?.className).toContain('btn-secondary');
     fireEvent.click(skip() as HTMLElement);
     const confirm = screen.getByRole('button', { name: uz['present.confirm'] });
     expect(confirm.className).toContain('btn-success');
     expect(screen.getByRole('button', { name: uz['present.edit'] }).className).toContain(
-      'btn-text',
+      'btn-secondary',
     );
     expect(skip()).toBeNull();
   });
 
-  it('staff summary line in mm', () => {
+  it('staff: the same decor line (no sizes)', () => {
     setUrl('?mode=staff');
     render(<App />);
     fireEvent.click(tab(uz['step.review']));
-    expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '1360 × 1900 × 600 mm · Korpus: Oq · Eshik: Oq',
-    );
+    expect(screen.getByTestId('present-summary-line').textContent).toBe('Korpus: Oq · Eshik: Oq');
+  });
+});
+
+describe('D-4.1 navigation', () => {
+  it('customer "Orqaga" on step 1 returns to the ready-made models', () => {
+    renderApp();
+    fireEvent.click(screen.getByRole('button', { name: uz['nav.back'] }));
+    expect(screen.getByTestId('start-screen')).toBeTruthy();
   });
 });

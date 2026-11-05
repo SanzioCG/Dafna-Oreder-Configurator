@@ -57,8 +57,6 @@ interface StepPanelProps {
   hidden?: boolean;
   /** "Konsultant chaqirish" hook (customer screens) */
   onCallConsultant?: () => void;
-  /** "Tayyor — ko'rib chiqish": straight to the presentation (blocking validation applies) */
-  onReview?: () => void;
   /** start screen: a ready-made model was picked / "Noldan boshlash" */
   onPickModel?: (model: ReadyModel) => void;
   onScratch?: () => void;
@@ -79,7 +77,6 @@ export function StepPanel({
   onSelectSection,
   hidden = false,
   onCallConsultant,
-  onReview,
   onPickModel,
   onScratch,
 }: StepPanelProps) {
@@ -129,16 +126,14 @@ export function StepPanel({
           <span className="brand-title">{t('app.title')}</span>
         </div>
         {staff && <span className="mode-badge">{t('mode.staff')}</span>}
-        {/* theme: kiosk config; staff can switch it on the device, customers cannot */}
-        {staff && (
-          <IconButton
-            label={t('theme.dark')}
-            aria-pressed={theme === 'dark'}
-            data-testid="theme-toggle"
-            onClick={toggleTheme}
-            icon={theme === 'dark' ? <MoonIcon /> : <SunIcon />}
-          />
-        )}
+        {/* theme: kiosk default (Dark); everyone can switch Light / Dark (D-4.1) */}
+        <IconButton
+          label={t('theme.dark')}
+          aria-pressed={theme === 'dark'}
+          data-testid="theme-toggle"
+          onClick={toggleTheme}
+          icon={theme === 'dark' ? <MoonIcon /> : <SunIcon />}
+        />
         {!staff && onCallConsultant && <ConsultantButton onCall={onCallConsultant} />}
         <div className="lang-switch" role="group" aria-label={t('lang.label')}>
           {LANGS.map((l) => (
@@ -216,27 +211,17 @@ export function StepPanel({
 
       <footer className="panel-footer" hidden={step === 'start'}>
         <ResetToast notice={config.notice} onDismiss={config.dismissNotice} mode={mode} />
+        {/* "Orqaga" in a pill; on step 1 customers go back to the ready-made models */}
         <Button
-          variant="text"
-          disabled={!prev}
+          variant="secondary"
+          className="btn-back"
+          disabled={!prev && staff}
           icon={<ArrowLeftIcon />}
-          onClick={() => prev && setStep(prev.key)}
+          onClick={() => (prev ? setStep(prev.key) : !staff && setStep('start'))}
         >
           {t('nav.back')}
         </Button>
-        <div className="footer-center">
-          {onReview && step !== 'review' && (
-            <Button
-              variant="text"
-              className="btn-review"
-              disabled={config.hasErrors}
-              onClick={onReview}
-              data-testid="ready-review"
-            >
-              {t('nav.readyReview')}
-            </Button>
-          )}
-        </div>
+        <div className="footer-center" />
         <Button
           variant="primary"
           disabled={!next}

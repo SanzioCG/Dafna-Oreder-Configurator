@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  CANDY_MS,
   FINAL_SAMPLE,
   RevealDirector,
   TURN_MS,
@@ -11,6 +12,8 @@ import {
   totalMs,
   type RevealEvent,
 } from './reveal';
+import { CONFETTI_MS, LOGO_EVERY, makePieces, piecePosition } from './Confetti';
+import { TOUR_SHOTS, shotPose, tourKeyframes } from './tour';
 
 describe('planReveal: once per configuration revision', () => {
   it('first time full, same revision none, after an edit short, reduced motion instant', () => {
@@ -25,55 +28,113 @@ describe('planReveal: once per configuration revision', () => {
 describe('sequence order (full)', () => {
   const phaseAt = (t: number) => sampleReveal('full', t).phase;
 
-  it('showcase -> close -> turn -> done; total 10 s (no celebration phase)', () => {
+  it('8 s in total: showcase -> close -> turn -> tour -> settle -> done', () => {
+    expect(totalMs('full')).toBe(8000);
     expect(phaseAt(0)).toBe('showcase');
-    expect(phaseAt(900)).toBe('close');
-    expect(phaseAt(2100)).toBe('turn');
-    expect(phaseAt(9999)).toBe('turn');
-    expect(phaseAt(10000)).toBe('done');
-    expect(totalMs('full')).toBe(10000);
+    expect(phaseAt(700)).toBe('close');
+    expect(phaseAt(1700)).toBe('turn');
+    expect(phaseAt(4599)).toBe('turn');
+    expect(phaseAt(4600)).toBe('tour');
+    expect(phaseAt(7399)).toBe('tour');
+    expect(phaseAt(7400)).toBe('settle');
+    expect(phaseAt(8000)).toBe('done');
   });
 
-  it('doors: open during the showcase, closed (1.2 s, eased) before the turn', () => {
+  it('doors: open during the showcase, closed (1.0 s, eased) before the turn', () => {
     expect(sampleReveal('full', 0, 0).door).toBe(0);
-    expect(sampleReveal('full', 799, 0).door).toBeGreaterThan(0.99);
-    expect(sampleReveal('full', 800 + 600).door).toBeCloseTo(0.5, 5);
-    expect(sampleReveal('full', 800 + 1199).door).toBeLessThan(0.01);
-    expect(sampleReveal('full', 2001).doorsClosed).toBe(true);
-    expect(sampleReveal('full', 1999).doorsClosed).toBe(false);
+    expect(sampleReveal('full', 599, 0).door).toBeGreaterThan(0.99);
+    expect(sampleReveal('full', 600 + 500).door).toBeCloseTo(0.5, 5);
+    expect(sampleReveal('full', 600 + 999).door).toBeLessThan(0.01);
+    expect(sampleReveal('full', 1601).doorsClosed).toBe(true);
+    expect(sampleReveal('full', 1599).doorsClosed).toBe(false);
   });
 
-  it('exactly one 360° turn: monotonic, constant velocity between 0.3 s ramps', () => {
+  it('exactly one 360° turn in 3 s: monotonic, constant velocity between 0.3 s ramps', () => {
+    expect(TURN_MS).toBe(3000);
     expect(turnAngle(0)).toBe(0);
     expect(turnAngle(TURN_MS)).toBeCloseTo(TURN_RAD, 12);
     let prev = 0;
     for (let t = 10; t <= TURN_MS; t += 10) {
-      const a = turnAngle(t);
-      expect(a).toBeGreaterThanOrEqual(prev); // never turns back
-      prev = a;
+      const angle = turnAngle(t);
+      expect(angle).toBeGreaterThanOrEqual(prev); // never turns back
+      prev = angle;
     }
     const v = TURN_RAD / (TURN_MS - TURN_RAMP_MS);
-    // constant angular velocity in the middle
-    expect(turnAngle(4010) - turnAngle(4000)).toBeCloseTo(v * 10, 9);
-    expect(turnAngle(7010) - turnAngle(7000)).toBeCloseTo(v * 10, 9);
-    // ramps: slower at the very start and end
+    expect(turnAngle(1010) - turnAngle(1000)).toBeCloseTo(v * 10, 9);
+    expect(turnAngle(2010) - turnAngle(2000)).toBeCloseTo(v * 10, 9);
     expect(turnAngle(20) - turnAngle(10)).toBeLessThan(v * 10);
     expect(turnAngle(TURN_MS) - turnAngle(TURN_MS - 10)).toBeLessThan(v * 10);
-    // continuous at the ramp joints
     expect(turnAngle(TURN_RAMP_MS - 1e-6)).toBeCloseTo(turnAngle(TURN_RAMP_MS + 1e-6), 6);
   });
 
   it('the reveal turns the wardrobe once and ends at the showcase angle', () => {
-    expect(sampleReveal('full', 1999).turnRad).toBe(0);
-    expect(sampleReveal('full', 2000 + TURN_MS / 2).turnRad).toBeCloseTo(Math.PI, 6);
-    expect(sampleReveal('full', 2000 + TURN_MS - 1).turnRad).toBeGreaterThan(TURN_RAD - 0.001);
-    expect(sampleReveal('full', 2000 + TURN_MS).turnRad).toBe(0); // done: showcase angle
+    expect(sampleReveal('full', 1599).turnRad).toBe(0);
+    expect(sampleReveal('full', 1600 + TURN_MS / 2).turnRad).toBeCloseTo(Math.PI, 6);
+    expect(sampleReveal('full', 1600 + TURN_MS - 1).turnRad).toBeGreaterThan(TURN_RAD - 0.001);
+    expect(sampleReveal('full', 1600 + TURN_MS).turnRad).toBe(0); // tour: showcase angle
     expect(sampleReveal('full', totalMs('full')).turnRad).toBe(0);
   });
 
-  it('no particles and no confetti field in the sample (D-4)', () => {
-    for (let t = 0; t <= totalMs('full'); t += 250) {
-      expect('confettiMs' in sampleReveal('full', t)).toBe(false);
+  it('camera tour: 3 legs (showcase -> 1 -> 2 -> 3), then back to the showcase pose', () => {
+    expect(sampleReveal('full', 4000).shot).toBeNull(); // during the turn: showcase pose
+    const legs = [4600, 4600 + 934, 4600 + 1867].map((t) => sampleReveal('full', t).shot);
+    expect(legs.map((l) => l && [l.from, l.to])).toEqual([
+      [0, 1],
+      [1, 2],
+      [2, 3],
+    ]);
+    const back = sampleReveal('full', 7700).shot;
+    expect(back && [back.from, back.to]).toEqual([3, 0]);
+    expect(back?.t).toBeCloseTo(0.5, 5);
+    expect(sampleReveal('full', 8000).shot).toBeNull();
+    expect(sampleReveal('short', 1300, 1).shot).toBeNull(); // short version: no tour
+  });
+
+  it('tour shots: 2 close-ups (left, right) and 1 wide shot, relative to the showcase pose', () => {
+    const base = {
+      position: [0, 1, 5] as [number, number, number],
+      target: [0, 1, 0] as [number, number, number],
+    };
+    const dist = (p: { position: number[]; target: number[] }) =>
+      Math.hypot(...p.position.map((v, i) => v - (p.target[i] ?? 0)));
+    const [k0, k1, k2, k3] = tourKeyframes(base, 2);
+    expect(k0).toEqual(base);
+    expect(TOUR_SHOTS).toHaveLength(3);
+    expect(dist(k1 as typeof base)).toBeLessThan(dist(base)); // zoom in
+    expect(dist(k2 as typeof base)).toBeLessThan(dist(base)); // zoom in
+    expect(dist(k3 as typeof base)).toBeGreaterThan(dist(base)); // zoom out
+    expect(k1?.position[0]).toBeLessThan(k2?.position[0] ?? 0); // from the left, then the right
+    expect(k1?.target).toEqual(base.target); // target stays: no overlap with title / button
+    expect(shotPose(base, { azimuthDeg: 0, distanceScale: 1, lift: 0 }, 2)).toEqual(base);
+  });
+
+  it('candy shower: during the 360° turn, from 0.3 s into it, full reveal only (D-4.1)', () => {
+    expect(sampleReveal('full', 1899).confettiMs).toBeNull();
+    expect(sampleReveal('full', 1900).phase).toBe('turn');
+    expect(sampleReveal('full', 1900).confettiMs).toBe(0);
+    expect(sampleReveal('full', 3000).confettiMs).toBe(1100);
+    expect(sampleReveal('full', 4499).phase).toBe('turn');
+    expect(sampleReveal('full', 4500).confettiMs).toBeNull();
+    expect(CANDY_MS).toBe(CONFETTI_MS);
+    for (let t = 0; t < totalMs('short'); t += 50) {
+      expect(sampleReveal('short', t, 1).confettiMs).toBeNull();
+    }
+  });
+
+  it('candies: rectangles mixed with DAFNA logo candies (every 4th)', () => {
+    const pieces = makePieces();
+    expect(pieces.filter((p) => p.logo).length).toBe(Math.ceil(pieces.length / LOGO_EVERY));
+    expect(pieces.some((p) => !p.logo)).toBe(true);
+  });
+
+  it('candies: spread across the whole screen width, falling down', () => {
+    const pieces = makePieces();
+    expect(pieces.some((p) => p.x > 0.4 && p.x < 0.6)).toBe(true);
+    expect(pieces.some((p) => p.x < 0.1)).toBe(true);
+    expect(pieces.some((p) => p.x > 0.9)).toBe(true);
+    for (const p of pieces) {
+      expect(p.y).toBeLessThan(0);
+      expect(piecePosition(p, CONFETTI_MS / 1000).y).toBeGreaterThan(p.y);
     }
   });
 

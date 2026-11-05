@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { getMaterial } from '@dafna/engine';
+import { Confetti, type ConfettiHandle } from '../presentation/Confetti';
 import { CATALOG } from '../state/useConfigurator';
 import { RevealDirector, type RevealEvent, type RevealKind } from '../presentation/reveal';
 import { useI18n } from '../i18n/I18n';
@@ -24,7 +25,6 @@ import {
   buildDimensions,
   dimensionVisibility,
   formatLength,
-  formatSize,
   unitSystemFor,
   type V3,
 } from './dimensions';
@@ -272,8 +272,8 @@ export function Viewer({
   };
   const corpusId = view.result.panels.find((p) => p.role === 'side')?.material;
   const doorId = view.result.panels.find((p) => p.role === 'door')?.material;
+  // D-4.1: no sizes in the presentation line — only the decors
   const presentSummaryLine = [
-    formatSize(engineSize.widthMm, engineSize.heightMm, engineSize.depthMm, units, unitLabel),
     `${t('present.corpus')}: ${decor(corpusId)}`,
     ...(doorId ? [`${t('present.door')}: ${decor(doorId)}`] : []),
   ].join(' · ');
@@ -283,6 +283,7 @@ export function Viewer({
   const [generation, setGeneration] = useState(0);
   const [revealUi, setRevealUi] = useState<RevealUi>(REVEAL_IDLE);
   const doorOverride = useRef<number | null>(null);
+  const confettiRef = useRef<ConfettiHandle | null>(null);
   const cameraApi = useRef<CameraApi | null>(null);
   const onRevealEventsRef = useRef(onRevealEvents);
   onRevealEventsRef.current = onRevealEvents;
@@ -356,6 +357,7 @@ export function Viewer({
                 generation,
                 kind: presentation.kind,
                 onEvents: handleRevealEvents,
+                confetti: confettiRef,
               }
             : null
         }
@@ -365,6 +367,7 @@ export function Viewer({
       {presenting && (
         <>
           <img className="present-logo" src={logoUrl} alt={t('app.brand')} draggable={false} />
+          <Confetti ref={confettiRef} />
           <div className="present-head" data-testid="present-title">
             <h2>{t('present.title')}</h2>
             <p className="present-sub">{t('present.subtitle')}</p>
@@ -373,7 +376,7 @@ export function Viewer({
             </p>
           </div>
           {revealUi.running && (
-            <button type="button" className="btn btn-text present-skip" onClick={skipReveal}>
+            <button type="button" className="btn btn-secondary present-skip" onClick={skipReveal}>
               {t('present.skip')}
             </button>
           )}

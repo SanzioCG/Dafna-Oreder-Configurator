@@ -119,7 +119,7 @@ function Configurator({ mode }: { mode: Mode }) {
               <Button variant="success" large onClick={() => dispatch('confirm')}>
                 {t('present.confirm')}
               </Button>
-              <Button variant="text" onClick={() => edit()}>
+              <Button variant="secondary" onClick={() => edit()}>
                 {t('present.edit')}
               </Button>
             </div>
@@ -135,7 +135,6 @@ function Configurator({ mode }: { mode: Mode }) {
         selectedSection={section}
         onSelectSection={selectSection}
         onCallConsultant={callConsultant}
-        onReview={present}
         onPickModel={(m) => {
           config.setParams(modelParams(m));
           setStep('size');

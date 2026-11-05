@@ -9,6 +9,7 @@ import { CameraRig, type CameraApi, type FrameBox } from './CameraRig';
 import { DimensionProjector, type DimRegistry } from './DimensionOverlay';
 import type { DimSpec, V3 } from './dimensions';
 import { cssToken } from '../theme/cssToken';
+import type { ConfettiHandle } from '../presentation/Confetti';
 import { PresentationPlatform } from '../presentation/PresentationPlatform';
 import { RevealDriver } from '../presentation/RevealDriver';
 import type { RevealDirector, RevealEvent, RevealKind } from '../presentation/reveal';
@@ -64,6 +65,7 @@ export interface SceneProps {
     generation: number;
     kind: RevealKind;
     onEvents: (events: RevealEvent[]) => void;
+    confetti: MutableRefObject<ConfettiHandle | null>;
   } | null;
   /** current UI theme: re-renders the scene so themed colours (edges, shadow) update */
   theme?: string;
@@ -187,6 +189,8 @@ export function Scene({
           cameraApi={cameraApi}
           doorOverride={doorOverride}
           turn={turn}
+          productHeightM={view.heightMm * MM}
+          confetti={reveal.confetti}
           onEvents={reveal.onEvents}
         />
       )}
@@ -200,6 +204,7 @@ export function Scene({
         pointerDown={pointerDown}
         apiRef={cameraApi}
         locked={cameraLocked}
+        presenting={reveal !== null}
         onHighlight={setHighlight}
       />
     </Canvas>

@@ -202,16 +202,13 @@ p {
   border: var(--line-in-card);
 }
 
-/* text buttons ("Orqaga", "Tayyor — ko'rib chiqish", "Tahrirlash") */
+/* text buttons (disclosures with an icon, "Noldan boshlash"): no underline anywhere (D-4.1) */
 .btn-text,
 .btn-ghost {
   min-height: var(--tap);
   padding: 0 var(--space-3);
   background: transparent;
   color: var(--text);
-  text-decoration: underline;
-  text-decoration-thickness: 0.125rem;
-  text-underline-offset: 0.25em;
 }
 
 .btn:disabled {
@@ -795,9 +792,9 @@ p {
   min-width: 0;
 }
 
-.btn-review {
-  white-space: normal;
-  text-align: center;
+/* "Orqaga": a pill as tall as "Keyingi" */
+.btn-back {
+  min-height: var(--tap-xl);
 }
 
 .sheet-toast {
@@ -1276,6 +1273,14 @@ p {
   width: auto;
   pointer-events: none;
   -webkit-user-drag: none;
+}
+
+.confetti {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 /* headline + subtitle + one summary line, upper centre */
