@@ -77,7 +77,6 @@ export const uz = {
   'color.sameAsCorpus': 'Korpus bilan bir xil',
 
   'reason.DOOR_TOO_WIDE': 'Eshik tabaqasi juda keng',
-  'reason.HINGE_CONFLICT': "Eshik ilmoqlari to'qnashadi",
   'reason.RAIL_DEPTH_SHORT': 'Shtanga uchun chuqurlik yetarli emas',
   'reason.RAIL_HEIGHT_SHORT': 'Kiyim osish uchun balandlik yetarli emas',
   'reason.DRAWER_SECTION_TOO_WIDE': "Tortma uchun bo'lim juda keng",
@@ -130,8 +129,6 @@ export const uz = {
     "{sectionNumber}-bo'lim ichki kengligi {innerWidthMm} mm — {maxMm} mm dan katta (javon egilishi mumkin)",
   'issue.DOOR_TOO_WIDE':
     "{sectionNumber}-bo'lim: eshik tabaqasi {leafWidthMm} mm — {maxMm} mm dan keng",
-  'issue.HINGE_CONFLICT':
-    "{sectionNumber}- va {nextSectionNumber}-bo'lim eshiklari bitta to'siqqa ilmoqlangan (ochilganda to'qnashadi)",
   'issue.DOOR_TOO_HEIGHT':
     'Eshik balandligi {doorHeightMm} mm — {maxMm} mm dan baland (qiyshayish xavfi)',
   'issue.MATERIAL_UNKNOWN': "Noma'lum material: {material}",

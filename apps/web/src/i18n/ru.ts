@@ -78,7 +78,6 @@ export const ru: Messages = {
   'color.sameAsCorpus': 'Как корпус',
 
   'reason.DOOR_TOO_WIDE': 'Слишком широкая створка',
-  'reason.HINGE_CONFLICT': 'Петли дверей сталкиваются',
   'reason.RAIL_DEPTH_SHORT': 'Мала глубина для штанги',
   'reason.RAIL_HEIGHT_SHORT': 'Мала высота для одежды',
   'reason.DRAWER_SECTION_TOO_WIDE': 'Секция слишком широкая для ящиков',
@@ -129,8 +128,6 @@ export const ru: Messages = {
   'issue.SHELF_SPAN':
     'Секция {sectionNumber}: внутренняя ширина {innerWidthMm} мм больше {maxMm} мм (возможен прогиб полки)',
   'issue.DOOR_TOO_WIDE': 'Секция {sectionNumber}: створка {leafWidthMm} мм шире {maxMm} мм',
-  'issue.HINGE_CONFLICT':
-    'Двери секций {sectionNumber} и {nextSectionNumber} навешены на одну перегородку (сталкиваются при открытии)',
   'issue.DOOR_TOO_HEIGHT': 'Высота двери {doorHeightMm} мм больше {maxMm} мм (риск коробления)',
   'issue.MATERIAL_UNKNOWN': 'Неизвестный материал: {material}',
   'issue.RAIL_DEPTH_SHORT':
