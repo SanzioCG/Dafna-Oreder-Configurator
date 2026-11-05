@@ -1,5 +1,7 @@
 /**
- * Vercel Cron entry: GET /api/retry-telegram (every 10 min, vercel.json). Bundled by
+ * Vercel Cron entry: GET /api/retry-telegram (daily 04:00 UTC = 09:00 Tashkent, vercel.json;
+ * Hobby plan allows daily crons only — a 10-min schedule needs Pro or an external scheduler
+ * calling this URL with the CRON_SECRET bearer). Bundled by
  * scripts/build-api.mjs into api/retry-telegram.js — edit this source, never the bundle.
  */
 import { missingEnv, notifierFromEnv, storeFromEnv } from '../config';

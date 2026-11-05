@@ -7,7 +7,7 @@ export interface RetryReport {
 }
 
 /**
- * Cron job (every 10 min): re-sends failed (or stuck pending) Telegram notifications, at most
+ * Cron job (daily on Vercel Hobby; any scheduler may call it more often): re-sends failed (or stuck pending) Telegram notifications, at most
  * MAX_TELEGRAM_ATTEMPTS per lead in total. The render image is not stored, so a retry is text only.
  */
 export async function retryNotifications(

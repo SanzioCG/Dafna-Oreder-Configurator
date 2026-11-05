@@ -4,5 +4,5 @@
     "api/submit.js": { "maxDuration": 20 },
     "api/retry-telegram.js": { "maxDuration": 60 }
   },
-  "crons": [{ "path": "/api/retry-telegram", "schedule": "*/10 * * * *" }]
+  "crons": [{ "path": "/api/retry-telegram", "schedule": "0 4 * * *" }]
 }
