@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { optionLabel, useI18n } from '../i18n/I18n';
 import { TEMPLATE, type ResetNotice } from '../state/useConfigurator';
 import { CloseIcon } from './icons';
+import { StatusMessage } from './StatusMessage';
 
 export const TOAST_MS = 3000;
 
@@ -29,7 +30,20 @@ export function ResetToast({
   if (!notice) return null;
 
   return (
-    <div className="sheet-toast" role="status" aria-live="polite" data-testid="reset-toast">
+    <StatusMessage
+      className="sheet-toast"
+      testId="reset-toast"
+      action={
+        <button
+          type="button"
+          className="sheet-toast-close"
+          aria-label={t('toast.dismiss')}
+          onClick={onDismiss}
+        >
+          <CloseIcon />
+        </button>
+      }
+    >
       <ul>
         {notice.resets.map((r) => {
           const def = getParamDef(TEMPLATE, r.key);
@@ -48,14 +62,6 @@ export function ResetToast({
           );
         })}
       </ul>
-      <button
-        type="button"
-        className="sheet-toast-close"
-        aria-label={t('toast.dismiss')}
-        onClick={onDismiss}
-      >
-        <CloseIcon />
-      </button>
-    </div>
+    </StatusMessage>
   );
 }

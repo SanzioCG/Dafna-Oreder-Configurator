@@ -1,0 +1,34 @@
+/*
+ * DAFNA design system V2 — DARK theme (the default kiosk theme, ADR-007).
+ * Overrides the White tokens of tokens.css on <html data-theme="dark">.
+ *
+ * Deviation from the brief: --text-2 is #8E949E instead of #858B95, which measured 4.21:1 on
+ * --surface #242A33 (below the 4.5:1 text minimum enforced by theme/contrast.test.ts).
+ */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #191d24;
+  --surface: #242a33;
+  --text: #ffffff;
+  --text-2: #8e949e;
+  --border: #3b424d;
+  --border-control: #737a86;
+  --primary: #009fe3;
+  --primary-strong: #009fe3;
+  --success: #20b85a;
+  --error: #f06b6b;
+  --on-primary: #191d24;
+  --on-success: #191d24;
+  --disabled-fill: #2c333d;
+  --disabled-text: #6b727d;
+
+  /* 3D viewport: mid-dark neutral (solid, not black); lighting is the same in both themes */
+  --viewport-bg: #2e343d;
+  --stage-shadow: #000000;
+  --stage-shadow-opacity: 0.85;
+  --edge-on-light-decor: #8a9099;
+  --edge-on-dark-decor: #d3d7dd;
+
+  --shadow-overlay: 0 0.25rem 1rem rgb(0 0 0 / 0.4);
+}

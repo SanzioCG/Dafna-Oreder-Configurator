@@ -38,6 +38,8 @@ export const ru: Messages = {
   'contact.todo':
     'TODO (D-3b): здесь будет форма контактов (имя, телефон) и отправка заказа. Пока ничего не отправляется.',
 
+  'nav.readyReview': 'Готово — просмотр',
+  'consultant.call': 'Позвать консультанта',
   'nav.back': 'Назад',
   'nav.next': 'Далее',
   'nav.nextSoon': 'Следующие шаги скоро',

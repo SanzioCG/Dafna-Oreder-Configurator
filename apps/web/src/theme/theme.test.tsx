@@ -34,12 +34,13 @@ afterEach(() => {
 });
 
 describe('kiosk default theme', () => {
-  it('env decides, URL overrides, anything else is light', () => {
-    expect(kioskDefaultTheme('', undefined)).toBe('light');
-    expect(kioskDefaultTheme('', 'dark')).toBe('dark');
-    expect(kioskDefaultTheme('?theme=light', 'dark')).toBe('light');
-    expect(kioskDefaultTheme('?theme=dark', undefined)).toBe('dark');
-    expect(kioskDefaultTheme('?theme=neon', 'blue')).toBe('light');
+  it('Dark by default; env decides, URL overrides; white/light select White', () => {
+    expect(kioskDefaultTheme('', undefined)).toBe('dark');
+    expect(kioskDefaultTheme('', 'white')).toBe('light');
+    expect(kioskDefaultTheme('', 'light')).toBe('light');
+    expect(kioskDefaultTheme('?theme=dark', 'white')).toBe('dark');
+    expect(kioskDefaultTheme('?theme=white', undefined)).toBe('light');
+    expect(kioskDefaultTheme('?theme=neon', 'blue')).toBe('dark');
   });
 });
 
@@ -50,27 +51,27 @@ describe('ThemeProvider', () => {
         <Probe />
       </ThemeProvider>,
     );
-    expect(document.documentElement.dataset.theme).toBe('light');
-    expect(screen.getByTestId('logo').getAttribute('src')).toBe(LOGO_URL.light);
-    act(() => screen.getByText('toggle').click());
-    expect(screen.getByTestId('theme').textContent).toBe('dark');
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(screen.getByTestId('logo').getAttribute('src')).toBe(LOGO_URL.dark);
     expect(LOGO_URL.dark).toContain('dafna-logo-white.svg');
-    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('dark');
+    act(() => screen.getByText('toggle').click());
+    expect(screen.getByTestId('theme').textContent).toBe('light');
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(screen.getByTestId('logo').getAttribute('src')).toBe(LOGO_URL.light);
+    expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe('light');
   });
 
   it('restores the stored device choice; session reset returns to the kiosk default', () => {
-    window.localStorage.setItem(THEME_STORAGE_KEY, 'dark');
-    window.history.replaceState(null, '', '/?theme=light');
+    window.localStorage.setItem(THEME_STORAGE_KEY, 'light');
+    window.history.replaceState(null, '', '/?theme=dark');
     render(
       <ThemeProvider>
         <Probe />
       </ThemeProvider>,
     );
-    expect(screen.getByTestId('theme').textContent).toBe('dark');
-    act(() => screen.getByText('reset').click());
     expect(screen.getByTestId('theme').textContent).toBe('light');
+    act(() => screen.getByText('reset').click());
+    expect(screen.getByTestId('theme').textContent).toBe('dark');
     expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBeNull();
   });
 
@@ -87,9 +88,9 @@ describe('ThemeProvider', () => {
         <Probe />
       </ThemeProvider>,
     );
-    expect(screen.getByTestId('theme').textContent).toBe('light');
-    act(() => screen.getByText('toggle').click());
     expect(screen.getByTestId('theme').textContent).toBe('dark');
-    expect(document.documentElement.dataset.theme).toBe('dark');
+    act(() => screen.getByText('toggle').click());
+    expect(screen.getByTestId('theme').textContent).toBe('light');
+    expect(document.documentElement.dataset.theme).toBe('light');
   });
 });

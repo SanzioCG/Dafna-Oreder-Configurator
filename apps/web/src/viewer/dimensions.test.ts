@@ -12,9 +12,8 @@ import {
 } from './dimensions';
 
 describe('formatting', () => {
-  it('customer cm (decimal comma), staff mm', () => {
-    expect(unitSystemFor('customer')).toBe('cm');
-    expect(unitSystemFor('staff')).toBe('mm');
+  it('V2: mm in both modes; cm formatter kept (decimal comma)', () => {
+    expect(unitSystemFor()).toBe('mm');
     expect(formatLength(1360, 'cm', 'sm')).toBe('136 sm');
     expect(formatLength(656, 'cm', 'sm')).toBe('65,6 sm');
     expect(formatLength(645, 'cm', 'см')).toBe('64,5 см');

@@ -6,11 +6,17 @@ export interface ConfettiHandle {
   draw: (ms: number | null) => void;
 }
 
-export const CONFETTI_MS = 1500;
-const COUNT = 90;
+export const CONFETTI_MS = 1300;
+const COUNT = 70;
+/** particles stay in the outer bands of the screen: never over the model centre */
+export const SIDE_BAND = 0.28;
 
-interface Piece {
+export interface Piece {
+  /** start x as a fraction of the width (inside a side band) */
   x: number;
+  /** start y as a fraction of the height (upper part) */
+  y: number;
+  /** horizontal drift (fraction of width / s), always towards the nearest screen edge */
   vx: number;
   vy: number;
   size: number;
@@ -29,22 +35,33 @@ function rng(seed: number) {
   };
 }
 
-function makePieces(): Piece[] {
+/** Small particles from the upper left and right sides, drifting outwards and down. */
+export function makePieces(): Piece[] {
   const r = rng(7);
-  return Array.from({ length: COUNT }, () => ({
-    x: 0.2 + r() * 0.6,
-    vx: (r() - 0.5) * 0.5,
-    vy: -0.9 - r() * 0.7,
-    size: 0.006 + r() * 0.006,
-    spin: (r() - 0.5) * 14,
-    color: Math.floor(r() * 4),
-  }));
+  return Array.from({ length: COUNT }, (_, i) => {
+    const left = i % 2 === 0;
+    const x = left ? 0.02 + r() * (SIDE_BAND - 0.08) : 1 - 0.02 - r() * (SIDE_BAND - 0.08);
+    return {
+      x,
+      y: 0.04 + r() * 0.22,
+      vx: (left ? -1 : 1) * (0.01 + r() * 0.05),
+      vy: -0.15 - r() * 0.25,
+      size: 0.004 + r() * 0.004,
+      spin: (r() - 0.5) * 12,
+      color: Math.floor(r() * 3),
+    };
+  });
+}
+
+/** Position of a piece `s` seconds after the burst (fractions of width / height). */
+export function piecePosition(p: Piece, s: number): { x: number; y: number } {
+  return { x: p.x + p.vx * s, y: p.y + p.vy * s + 0.6 * s * s };
 }
 
 /**
- * Restrained celebration: one short burst (~1.5 s) of brand-coloured paper pieces on a 2D
- * canvas over the 3D zone. No own animation loop: the reveal driver calls draw(ms) from the
- * existing render loop. pointer-events: none.
+ * Restrained celebration: one short burst (~1.3 s) of small particles (#009FE3 / #20B85A /
+ * #FFFFFF tokens) from the upper sides of the 3D zone, never over the model centre. No own
+ * animation loop: the reveal driver calls draw(ms) from the existing render loop.
  */
 export const Confetti = forwardRef<ConfettiHandle>(function Confetti(_props, ref) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -53,10 +70,9 @@ export const Confetti = forwardRef<ConfettiHandle>(function Confetti(_props, ref
 
   useEffect(() => {
     colors.current = [
-      cssToken('--brand-blue', '#009fe2'),
-      cssToken('--success', '#20b85a'),
-      cssToken('--brand-blue-hover', '#30bbf9'),
-      cssToken('--warning', '#f4980f'),
+      cssToken('--particle-1', '#009fe3'),
+      cssToken('--particle-2', '#20b85a'),
+      cssToken('--particle-3', '#ffffff'),
     ];
   }, []);
 
@@ -74,17 +90,15 @@ export const Confetti = forwardRef<ConfettiHandle>(function Confetti(_props, ref
       ctx.clearRect(0, 0, w, h);
       if (ms === null || ms >= CONFETTI_MS) return;
       const s = ms / 1000;
-      const fade = Math.min(1, (CONFETTI_MS - ms) / 400);
-      ctx.globalAlpha = fade;
+      ctx.globalAlpha = Math.min(1, (CONFETTI_MS - ms) / 350);
       for (const p of pieces.current) {
-        const x = (p.x + p.vx * s) * w;
-        const y = (0.42 + p.vy * s + 1.1 * s * s) * h;
+        const pos = piecePosition(p, s);
         const size = p.size * Math.max(w, h);
         ctx.save();
-        ctx.translate(x, y);
+        ctx.translate(pos.x * w, pos.y * h);
         ctx.rotate(p.spin * s);
-        ctx.fillStyle = colors.current[p.color] ?? '#009fe2';
-        ctx.fillRect(-size / 2, -size / 4, size, size / 2);
+        ctx.fillStyle = colors.current[p.color] ?? '#009fe3';
+        ctx.fillRect(-size / 2, -size / 2, size, size);
         ctx.restore();
       }
       ctx.globalAlpha = 1;

@@ -1,8 +1,9 @@
 import { OrbitControls } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { TOUCH } from 'three';
 import type { ViewGeometry } from '../state/useConfigurator';
-import type { MutableRefObject } from 'react';
+import { useRef, useState, type MutableRefObject, type ReactNode } from 'react';
+import type { Group } from 'three';
 import type { CameraCommand } from './cameraCommands';
 import { CameraRig, type CameraApi, type FrameBox } from './CameraRig';
 import { DimensionProjector, type DimRegistry } from './DimensionOverlay';
@@ -16,6 +17,18 @@ import { SoftFloorShadow } from './SoftFloorShadow';
 import { Wardrobe3D } from './Wardrobe3D';
 
 export const MM = 0.001;
+
+/**
+ * Turntable: rotates its children (wardrobe + floor shadow) around the vertical axis through
+ * the product centre by `angle.current` radians, applied in the render loop (no re-render).
+ */
+function Turntable({ angle, children }: { angle?: MutableRefObject<number>; children: ReactNode }) {
+  const group = useRef<Group>(null);
+  useFrame(() => {
+    if (group.current) group.current.rotation.y = angle?.current ?? 0;
+  });
+  return <group ref={group}>{children}</group>;
+}
 
 export interface SceneProps {
   view: ViewGeometry;
@@ -41,6 +54,8 @@ export interface SceneProps {
   cameraApi?: MutableRefObject<CameraApi | null>;
   /** presentation reveal: user orbit off */
   cameraLocked?: boolean;
+  /** wardrobe turn angle in radians (presentation 360° turn); 0 = showcase angle */
+  turn?: MutableRefObject<number>;
   /** scripted door progress (reveal), null = follow doorsOpen */
   doorOverride?: MutableRefObject<number | null>;
   /** presentation reveal driver (null outside the presentation) */
@@ -79,11 +94,15 @@ export function Scene({
   cameraApi,
   cameraLocked = false,
   doorOverride,
+  turn,
   reveal = null,
 }: SceneProps) {
   const { widthMm: W, depthMm: D } = view;
   // Single-layer layout: the canvas is transparent and sits on the page background
   // (tokens.css --bg); there is no floor plane, so no visible floor edge.
+  // highlightSelection(id) from the camera controller: "section-1" / "door-1" -> section 1
+  const [highlight, setHighlight] = useState<string | null>(null);
+  const highlightIndex = highlight ? Number(highlight.split('-')[1]) : null;
   const shadowColor = cssToken('--stage-shadow', '#2a2928');
   const shadowOpacity = Number(cssToken('--stage-shadow-opacity', '0.8')) || 0.8;
   return (
@@ -113,35 +132,37 @@ export function Scene({
         shadow-normalBias={0.02}
       />
 
-      <group scale={MM} position={[(-W / 2) * MM, 0, (-D / 2) * MM]}>
-        <Wardrobe3D
-          panels={view.result.panels}
-          rails={view.result.rails}
-          doorsOpen={doorsOpen}
-          doorOverride={doorOverride}
-        />
-        {interactive && (
-          <SectionPicker
-            boxes={sectionBoxes}
-            selected={selectedSection}
-            onTap={onSectionTap}
-            lineScale={lineScale}
+      <Turntable angle={turn}>
+        <group scale={MM} position={[(-W / 2) * MM, 0, (-D / 2) * MM]}>
+          <Wardrobe3D
+            panels={view.result.panels}
+            rails={view.result.rails}
+            doorsOpen={doorsOpen}
+            doorOverride={doorOverride}
           />
-        )}
-      </group>
-      <DimensionProjector dims={dims} registry={dimRegistry} toWorld={toWorld} remPx={remPx} />
+          {interactive && (
+            <SectionPicker
+              boxes={sectionBoxes}
+              selected={highlightIndex ?? selectedSection}
+              onTap={onSectionTap}
+              lineScale={lineScale}
+            />
+          )}
+        </group>
+        <DimensionProjector dims={dims} registry={dimRegistry} toWorld={toWorld} remPx={remPx} />
 
-      {/*
+        {/*
         Floor = soft contact shadow only (no floor plane, no edge). The key light's own floor
         shadow is not used: on a transparent canvas it read as a hard grey slab. The key light
         still shadows the carcass interior and door gaps.
       */}
-      <SoftFloorShadow
-        widthM={W * MM}
-        depthM={D * MM}
-        color={shadowColor}
-        opacity={shadowOpacity}
-      />
+        <SoftFloorShadow
+          widthM={W * MM}
+          depthM={D * MM}
+          color={shadowColor}
+          opacity={shadowOpacity}
+        />
+      </Turntable>
 
       <OrbitControls
         makeDefault
@@ -152,12 +173,13 @@ export function Scene({
         maxPolarAngle={Math.PI / 2 - 0.04}
         touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }}
       />
-      {reveal && cameraApi && doorOverride && (
+      {reveal && cameraApi && doorOverride && turn && (
         <RevealDriver
           director={reveal.director}
           generation={reveal.generation}
           cameraApi={cameraApi}
           doorOverride={doorOverride}
+          turn={turn}
           confetti={reveal.confetti}
           onEvents={reveal.onEvents}
         />
@@ -170,6 +192,7 @@ export function Scene({
         pointerDown={pointerDown}
         apiRef={cameraApi}
         locked={cameraLocked}
+        onHighlight={setHighlight}
       />
     </Canvas>
   );

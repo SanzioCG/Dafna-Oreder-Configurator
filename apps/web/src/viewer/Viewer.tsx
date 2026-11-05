@@ -11,7 +11,8 @@ import { Confetti, type ConfettiHandle } from '../presentation/Confetti';
 import { RevealDirector, type RevealEvent, type RevealKind } from '../presentation/reveal';
 import { useI18n } from '../i18n/I18n';
 import { useTheme } from '../theme/ThemeProvider';
-import { ReframeIcon, SuccessIcon, WarningIcon } from '../ui/icons';
+import { ReframeIcon, SuccessIcon } from '../ui/icons';
+import { StatusMessage } from '../ui/StatusMessage';
 import type { CameraApi } from './CameraRig';
 import type { ViewGeometry } from '../state/useConfigurator';
 import type { FrameBox } from './CameraRig';
@@ -31,7 +32,7 @@ import type { SectionBox } from './SectionPicker';
 
 interface ViewerProps {
   view: ViewGeometry;
-  /** customer sees cm, staff mm */
+  /** customer / staff (units are mm in both modes since design system V2) */
   mode?: Mode;
   invalid: boolean;
   /** current wizard step: 'interior' opens the doors and enables section picking */
@@ -114,7 +115,6 @@ function useUiScale(): number {
 /** Viewer shell: 3D scene + DOM overlays (dimension labels, buttons, banners). */
 export function Viewer({
   view,
-  mode = 'customer',
   invalid,
   activeStep = 'size',
   selectedSection = null,
@@ -165,7 +165,7 @@ export function Viewer({
 
   const sections = view.result.sections;
   // Dimension values come from the engine output only (result.dimensions / sections).
-  const units = unitSystemFor(mode);
+  const units = unitSystemFor();
   const unitLabel = t(units === 'cm' ? 'unit.cm' : 'unit.mm');
   const engineSize = view.result.dimensions ?? { widthMm: W, heightMm: H, depthMm: D };
   const visibility = dimensionVisibility({
@@ -189,10 +189,21 @@ export function Viewer({
       visibility.secondary,
     ],
   );
-  // product mm -> world metres (same transform as the product group in <Scene>)
+  // wardrobe turn angle during the presentation (radians, written in the render loop)
+  const turn = useRef(0);
+  // product mm -> world metres (same transform as the product group in <Scene>, including the
+  // turntable rotation around the vertical axis through the product centre)
   const toWorld = useMemo(
     () =>
-      (p: V3): V3 => [(p[0] - W / 2) * MM, p[1] * MM, (p[2] - D / 2) * MM],
+      (p: V3): V3 => {
+        const x = (p[0] - W / 2) * MM;
+        const z = (p[2] - D / 2) * MM;
+        const a = turn.current;
+        if (a === 0) return [x, p[1] * MM, z];
+        const c = Math.cos(a);
+        const s = Math.sin(a);
+        return [x * c + z * s, p[1] * MM, -x * s + z * c];
+      },
     [W, D],
   );
   const dimRegistry = useRef(new Map<string, DimElements>());
@@ -322,6 +333,7 @@ export function Viewer({
         cameraApi={cameraApi}
         cameraLocked={revealUi.running}
         doorOverride={doorOverride}
+        turn={turn}
         reveal={
           presenting
             ? {
@@ -362,9 +374,7 @@ export function Viewer({
         {hasDoors && !presenting && (
           <button
             type="button"
-            className={
-              doorsOpen ? 'btn btn-floating btn-doors active' : 'btn btn-floating btn-doors'
-            }
+            className="btn btn-floating"
             aria-pressed={doorsOpen}
             onClick={() => setDoorsOpen((o) => !o)}
           >
@@ -372,17 +382,16 @@ export function Viewer({
           </button>
         )}
         <button type="button" className="btn btn-floating" onClick={reframe}>
-          <ReframeIcon className="btn-icon" />
+          <ReframeIcon />
           {t('viewer.reframe')}
         </button>
       </div>
       {!presenting && <p className="viewer-hint">{t('viewer.hint')}</p>}
       {invalid && (
         <div className="viewer-stale" role="alert">
-          <p className="viewer-invalid">
-            <WarningIcon className="btn-icon" />
+          <StatusMessage tone="error" role="note" className="viewer-invalid">
             {t('viewer.invalid')}
-          </p>
+          </StatusMessage>
         </div>
       )}
     </div>

@@ -4,8 +4,10 @@ import { optionLabel, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import { TEMPLATE, type Configurator } from '../state/useConfigurator';
 import { blockingIssue } from './optionAvailability';
-import { PresetIllustration } from './PresetIllustration';
-import { Segmented } from './Segmented';
+import { Button } from './Button';
+import { PresetIcon } from './icons';
+import { StatusMessage } from './StatusMessage';
+import { SectionSelector } from './SectionSelector';
 
 interface InteriorStepProps {
   mode: Mode;
@@ -70,21 +72,19 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
 
   return (
     <>
-      <section className="card card-neutral" data-card="interior-sections">
+      <section className="card" data-card="interior-sections">
         <span className="param-label">{t('interior.sections')}</span>
-        <Segmented
-          options={sections.map((_, i) => i)}
-          value={sel}
-          onChange={(i) => {
+        <SectionSelector
+          count={count}
+          selected={sel}
+          onSelect={(i) => {
             setSkipped(null);
             onSelect(i);
           }}
-          label={(i) => t('interior.section', { n: i + 1 })}
-          ariaLabel={t('interior.sections')}
         />
       </section>
 
-      <section className="card card-pastel" data-card="interior">
+      <section className="card" data-card="interior">
         <span className="param-label">{t(def.labelKey, { n: sel + 1 })}</span>
         <div className="preset-grid" role="radiogroup" aria-label={t(def.labelKey, { n: sel + 1 })}>
           {(def.options ?? []).map((o) => {
@@ -105,7 +105,8 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
                   config.setParam(def.key, o);
                 }}
               >
-                <PresetIllustration
+                <PresetIcon
+                  className="preset-illustration"
                   preset={o === 'auto' ? autoPreset : (o as InteriorPreset)}
                   auto={o === 'auto'}
                 />
@@ -119,27 +120,22 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
           })}
         </div>
         {count > 1 && (
-          <button
-            type="button"
-            className="btn btn-secondary btn-wide"
-            disabled={allSame}
-            onClick={applyToAll}
-          >
+          <Button variant="secondary" wide disabled={allSame} onClick={applyToAll}>
             {t('interior.applyAll')}
-          </button>
+          </Button>
         )}
         {skipped && (
-          <p className="param-note" role="note">
+          <StatusMessage role="note">
             {t('interior.skipped', {
               sections: skipped.sections.join(', '),
               reason: reasonText(skipped.code),
             })}
-          </p>
+          </StatusMessage>
         )}
       </section>
 
       {mode === 'staff' && section && (
-        <section className="card card-neutral" data-testid="interior-details">
+        <section className="card" data-testid="interior-details">
           <span className="param-label">{t('interior.details', { n: sel + 1 })}</span>
           <p className="param-note">
             {section.preset} ({section.presetSource}) · {section.innerWidthMm} ×{' '}
