@@ -1,27 +1,20 @@
-import { ContactShadows, OrbitControls } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
-import { TOUCH } from 'three';
 import { useI18n } from '../i18n/I18n';
 import type { ViewGeometry } from '../state/useConfigurator';
-import { CameraRig, type FrameBox } from './CameraRig';
+import type { FrameBox } from './CameraRig';
 import {
   DIMENSION_MARGIN,
   DimensionLabels,
-  DimensionLines,
-  LabelProjector,
   buildDimensions,
   midpoint,
   type V3,
 } from './Dimensions';
-import { Wardrobe3D } from './Wardrobe3D';
+import { MM, Scene } from './Scene';
 
 interface ViewerProps {
   view: ViewGeometry;
   invalid: boolean;
 }
-
-const MM = 0.001;
 
 /** Detects a double tap (touch or mouse) without interfering with orbit gestures. */
 function useDoubleTap(onDoubleTap: () => void) {
@@ -68,12 +61,15 @@ function useUiScale(): number {
   return scale;
 }
 
+/** Viewer shell: 3D scene + DOM overlays (dimension labels, buttons, banners). */
 export function Viewer({ view, invalid }: ViewerProps) {
   const { t } = useI18n();
   const [resetToken, setResetToken] = useState(0);
+  const [doorsOpen, setDoorsOpen] = useState(false);
   const reframe = () => setResetToken((n) => n + 1);
   const tap = useDoubleTap(reframe);
   const { widthMm: W, heightMm: H, depthMm: D } = view;
+  const hasDoors = view.result.panels.some((p) => p.role === 'door');
 
   // World space is metres with the product centred on the origin, standing on the floor (y=0).
   const box = useMemo<FrameBox>(
@@ -83,12 +79,16 @@ export function Viewer({ view, invalid }: ViewerProps) {
     }),
     [W, H, D],
   );
-  const floor = 60; // m — large enough that its edge is always lost in the fog
 
   const unit = t('unit.mm');
   const sections = view.result.sections;
-  const dims = useMemo(() => buildDimensions(W, H, D, sections, unit), [W, H, D, sections, unit]);
-  // Label anchors in world metres (same transform as the product group below).
+  // Closed doors hide the sections, so only overall dimensions are shown then.
+  const showSections = !hasDoors || doorsOpen;
+  const dims = useMemo(
+    () => buildDimensions(W, H, D, sections, unit, showSections),
+    [W, H, D, sections, unit, showSections],
+  );
+  // Label anchors in world metres (same transform as the product group in <Scene>).
   const anchors = useMemo(
     () =>
       dims.map((d) => {
@@ -103,65 +103,41 @@ export function Viewer({ view, invalid }: ViewerProps) {
 
   return (
     <div className="viewer" {...tap} data-testid="viewer">
-      <Canvas
-        dpr={[1, 2]}
-        shadows="percentage"
-        camera={{ fov: 32, near: 0.05, far: 200, position: [2, 1.6, 5] }}
-        gl={{ antialias: true, preserveDrawingBuffer: false }}
-      >
-        <color attach="background" args={['#eef0f3']} />
-        <fog attach="fog" args={['#eef0f3', 9, 24]} />
-        <hemisphereLight args={['#ffffff', '#c9ccd2', 1.25]} />
-        <directionalLight
-          position={[2.5, 5, 4]}
-          intensity={1.6}
-          castShadow
-          shadow-mapSize={[2048, 2048]}
-          shadow-camera-left={-4}
-          shadow-camera-right={4}
-          shadow-camera-top={4}
-          shadow-camera-bottom={-4}
-          shadow-bias={-0.0004}
-        />
-        <directionalLight position={[-3, 2, -2]} intensity={0.35} />
-
-        <group scale={MM} position={[(-W / 2) * MM, 0, (-D / 2) * MM]}>
-          <Wardrobe3D panels={view.result.panels} />
-          <DimensionLines dims={dims} lineScale={uiScale} />
-        </group>
-        <LabelProjector anchors={anchors} labelRefs={labelRefs} />
-
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.0005, 0]} receiveShadow>
-          <planeGeometry args={[floor, floor]} />
-          <meshStandardMaterial color="#e6e8ec" roughness={1} />
-        </mesh>
-        <ContactShadows
-          position={[0, 0.0005, 0]}
-          scale={Math.max(W, D) * MM * 2.2}
-          opacity={0.5}
-          blur={2.2}
-          far={1.2}
-          resolution={512}
-        />
-
-        <OrbitControls
-          makeDefault
-          enablePan={false}
-          enableDamping
-          dampingFactor={0.12}
-          rotateSpeed={0.7}
-          maxPolarAngle={Math.PI / 2 - 0.04}
-          touches={{ ONE: TOUCH.ROTATE, TWO: TOUCH.DOLLY_PAN }}
-        />
-        <CameraRig box={box} resetToken={resetToken} />
-      </Canvas>
+      <Scene
+        view={view}
+        dims={dims}
+        anchors={anchors}
+        labelRefs={labelRefs}
+        lineScale={uiScale}
+        box={box}
+        resetToken={resetToken}
+        doorsOpen={hasDoors && doorsOpen}
+      />
       <DimensionLabels dims={dims} labelRefs={labelRefs} />
 
-      <button type="button" className="btn btn-floating reframe" onClick={reframe}>
-        ⤢ {t('viewer.reframe')}
-      </button>
+      <div className="viewer-actions">
+        {hasDoors && (
+          <button
+            type="button"
+            className={
+              doorsOpen ? 'btn btn-floating btn-doors active' : 'btn btn-floating btn-doors'
+            }
+            aria-pressed={doorsOpen}
+            onClick={() => setDoorsOpen((o) => !o)}
+          >
+            {doorsOpen ? t('viewer.doorsClose') : t('viewer.doorsOpen')}
+          </button>
+        )}
+        <button type="button" className="btn btn-floating" onClick={reframe}>
+          ⤢ {t('viewer.reframe')}
+        </button>
+      </div>
       <p className="viewer-hint">{t('viewer.hint')}</p>
-      {invalid && <p className="viewer-invalid">{t('viewer.invalid')}</p>}
+      {invalid && (
+        <div className="viewer-stale" role="alert">
+          <p className="viewer-invalid">⚠ {t('viewer.invalid')}</p>
+        </div>
+      )}
     </div>
   );
 }

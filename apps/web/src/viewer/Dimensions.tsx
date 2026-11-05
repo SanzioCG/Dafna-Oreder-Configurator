@@ -25,19 +25,23 @@ export interface DimSpec {
 /** Extra space (mm) the annotations need around the product, for camera framing. */
 export const DIMENSION_MARGIN = { right: 260, top: 320 };
 
-/** Overall width / height / depth and per-section inner widths (on top). */
+/**
+ * Overall width / height / depth, plus per-section inner widths on top when `showSections`
+ * (the viewer hides them while closed doors cover the sections).
+ */
 export function buildDimensions(
   W: number,
   H: number,
   D: number,
   sections: Section[],
   unit: string,
+  showSections = true,
 ): DimSpec[] {
   const sectionY = H + 90;
   const widthY = H + 230;
   const sideX = W + 140;
   return [
-    ...sections.map<DimSpec>((s) => ({
+    ...(showSections ? sections : []).map<DimSpec>((s) => ({
       key: `section-${s.index}`,
       from: [s.xStartMm, sectionY, D],
       to: [s.xStartMm + s.innerWidthMm, sectionY, D],

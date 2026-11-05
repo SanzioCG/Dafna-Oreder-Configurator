@@ -25,6 +25,12 @@ export interface ParamDef {
   /** true = assumed value, not yet confirmed by Dafna production */
   unconfirmed: boolean;
   note?: string;
+  /** UI hint: "swatch" = enum of material ids shown as colour swatches */
+  control?: 'swatch';
+  /** enum of material ids: catalog kinds allowed for this parameter */
+  materialKinds?: MaterialKind[];
+  /** 1-based section number this parameter applies to (UI hides it if there are fewer sections) */
+  appliesToSection?: number;
 }
 
 export interface TemplateConstant {
@@ -51,6 +57,28 @@ export interface Template {
   constructionRules: ConstructionRule[];
 }
 
+export type MaterialKind = 'ldsp' | 'hdf' | 'mdf';
+
+export interface Material {
+  id: string;
+  kind: MaterialKind;
+  /** i18n key of the decor name */
+  decorName: string;
+  thicknessMm: number;
+  colorHex: string;
+  /** null until real decor textures exist */
+  textureUrl: string | null;
+  /** false = staff-only (e.g. back panel HDF, legacy 18 mm board) */
+  customerVisible: boolean;
+  unconfirmed: boolean;
+  note?: string;
+}
+
+export interface MaterialCatalog {
+  catalogVersion: string;
+  materials: Material[];
+}
+
 export type Severity = 'error' | 'warning';
 
 export interface Issue {
@@ -62,7 +90,9 @@ export interface Issue {
   values: Record<string, number | string | boolean>;
 }
 
-export type PanelRole = 'side' | 'top' | 'bottom' | 'partition' | 'back' | 'plinth';
+export type PanelRole = 'side' | 'top' | 'bottom' | 'partition' | 'back' | 'plinth' | 'door';
+export type DoorType = 'none' | 'single_left' | 'single_right' | 'double';
+export type HingeSide = 'left' | 'right';
 
 export type Vec3 = [number, number, number];
 
@@ -78,9 +108,14 @@ export interface Panel {
   lengthMm: number;
   widthMm: number;
   thicknessMm: number;
+  /** material id from the catalog */
   material: string;
   position: Vec3;
   rotation: Vec3;
+  /** doors only: 0-based section index */
+  sectionIndex?: number;
+  /** doors only */
+  hingeSide?: HingeSide;
 }
 
 export interface Section {
@@ -91,21 +126,63 @@ export interface Section {
   innerDepthMm: number;
   /** X of the section's left inner face */
   xStartMm: number;
+  /** door type actually used for this section (preset/auto/override resolved) */
+  doorType: DoorType;
+}
+
+/** Overall and derived dimensions; staff mode shows the depth breakdown from these. */
+export interface Dimensions {
+  widthMm: number;
+  heightMm: number;
+  /** overall outer depth = back + carcass + door gap + door */
+  depthMm: number;
+  carcassHeightMm: number;
+  carcassDepthMm: number;
+  backThicknessMm: number;
+  /** 0 when there are no doors */
+  doorThicknessMm: number;
+  /** 0 when there are no doors */
+  doorGapFrontMm: number;
+  plinthHeightMm: number;
 }
 
 export interface GenerateResult {
   panels: Panel[];
   sections: Section[];
   issues: Issue[];
+  /** null when params have errors */
+  dimensions: Dimensions | null;
 }
 
+export interface OrderDraftMaterials {
+  corpus: Material | null;
+  doors: Material | null;
+  back: Material | null;
+}
+
+export interface OrderDraftDoor {
+  sectionIndex: number;
+  type: DoorType;
+  /** panel ids of the leaves, left to right */
+  leaves: string[];
+}
+
+export const ORDER_SCHEMA_VERSION = 'dafna-order/0.1-draft';
+export const ORDER_SCHEMA_VERSION_D0 = 'dafna-order/0-draft';
+
 export interface OrderDraft {
-  schemaVersion: 'dafna-order/0-draft';
+  schemaVersion: typeof ORDER_SCHEMA_VERSION;
   productType: 'wardrobe';
   templateVersion: string;
+  catalogVersion: string;
   params: Params;
+  materials: OrderDraftMaterials;
+  doors: OrderDraftDoor[];
+  dimensions: Dimensions | null;
   panels: Panel[];
   sections: Section[];
   issues: Issue[];
   generatedAt: string;
+  /** set when the draft was produced by migrating an older schema */
+  migratedFrom?: string;
 }

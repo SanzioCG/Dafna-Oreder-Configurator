@@ -38,4 +38,7 @@ from the template or the parameters — e.g. no hard-coded panel thickness.
 
 - Construction logic that cannot be expressed as data stays in the generator, versioned together
   with the template (`generator` field).
-- Breaking template changes get a new file (`wardrobe.v1.json`); old ones stay for old orders.
+- Breaking template changes get a new file (`wardrobe.v1.json`); old ones stay in the repo as a
+  record. Update (D-1a): only the current generator is kept in code, so old order drafts are
+  **migrated** to the current schema/template (`migrateOrderDraft`, ADR-004) instead of being
+  generated with the old template.

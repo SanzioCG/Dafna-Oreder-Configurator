@@ -1,26 +1,62 @@
+import { getMaterial, materialsV0 } from './catalog.js';
 import { resolveParams } from './params.js';
-import { wardrobeTemplateV0 } from './template.js';
-import type { GenerateResult, OrderDraft, Template } from './types.js';
+import { getStringConstant, wardrobeTemplate } from './template.js';
+import {
+  ORDER_SCHEMA_VERSION,
+  type GenerateResult,
+  type MaterialCatalog,
+  type OrderDraft,
+  type Template,
+} from './types.js';
+import { SAME_AS_CORPUS } from './wardrobe.js';
 
 export interface OrderDraftOptions {
   template?: Template;
+  catalog?: MaterialCatalog;
   /** Injectable clock for deterministic output (tests). */
   now?: () => Date;
 }
 
-/** Builds the order draft JSON. Contains no price fields (price comes in a later batch). */
+/**
+ * Builds the order draft JSON (schema dafna-order/0.1-draft). Contains no price fields
+ * (price comes in a later batch). Materials are embedded as full catalog entries so the draft
+ * stays readable even after the catalog changes.
+ */
 export function toOrderDraft(
   params: unknown,
   result: GenerateResult,
   options: OrderDraftOptions = {},
 ): OrderDraft {
-  const template = options.template ?? wardrobeTemplateV0;
+  const template = options.template ?? wardrobeTemplate;
+  const catalog = options.catalog ?? materialsV0;
   const now = options.now ?? (() => new Date());
+  const resolved = resolveParams(template, params).params;
+  const hasDoors = result.sections.some((s) => s.doorType !== 'none');
+  const doorMaterialId =
+    resolved.doorMaterial === SAME_AS_CORPUS ? resolved.corpusMaterial : resolved.doorMaterial;
+  const hasBack = result.panels.some((p) => p.role === 'back');
+
   return {
-    schemaVersion: 'dafna-order/0-draft',
+    schemaVersion: ORDER_SCHEMA_VERSION,
     productType: 'wardrobe',
     templateVersion: template.templateVersion,
-    params: resolveParams(template, params).params,
+    catalogVersion: catalog.catalogVersion,
+    params: resolved,
+    materials: {
+      corpus: getMaterial(catalog, resolved.corpusMaterial) ?? null,
+      doors: hasDoors ? (getMaterial(catalog, doorMaterialId) ?? null) : null,
+      back: hasBack
+        ? (getMaterial(catalog, getStringConstant(template, 'backMaterial')) ?? null)
+        : null,
+    },
+    doors: result.sections.map((s) => ({
+      sectionIndex: s.index,
+      type: s.doorType,
+      leaves: result.panels
+        .filter((p) => p.role === 'door' && p.sectionIndex === s.index)
+        .map((p) => p.id),
+    })),
+    dimensions: result.dimensions,
     panels: result.panels,
     sections: result.sections,
     issues: result.issues,

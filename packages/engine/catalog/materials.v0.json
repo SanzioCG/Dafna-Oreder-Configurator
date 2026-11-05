@@ -1,0 +1,82 @@
+{
+  "catalogVersion": "0.1.0",
+  "materials": [
+    {
+      "id": "ldsp_white_16",
+      "kind": "ldsp",
+      "decorName": "decor.white",
+      "thicknessMm": 16,
+      "colorHex": "#f3f2ee",
+      "textureUrl": null,
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Placeholder decor until Dafna sends its decor list. Colour approximated."
+    },
+    {
+      "id": "ldsp_light_grey_16",
+      "kind": "ldsp",
+      "decorName": "decor.lightGrey",
+      "thicknessMm": 16,
+      "colorHex": "#c8cacb",
+      "textureUrl": null,
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Placeholder decor until Dafna sends its decor list. Colour approximated."
+    },
+    {
+      "id": "ldsp_beige_16",
+      "kind": "ldsp",
+      "decorName": "decor.beige",
+      "thicknessMm": 16,
+      "colorHex": "#e0d2b8",
+      "textureUrl": null,
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Placeholder decor until Dafna sends its decor list. Colour approximated."
+    },
+    {
+      "id": "ldsp_oak_light_16",
+      "kind": "ldsp",
+      "decorName": "decor.oakLight",
+      "thicknessMm": 16,
+      "colorHex": "#c9a77c",
+      "textureUrl": null,
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Placeholder wood decor (flat colour, no texture yet)."
+    },
+    {
+      "id": "ldsp_anthracite_16",
+      "kind": "ldsp",
+      "decorName": "decor.anthracite",
+      "thicknessMm": 16,
+      "colorHex": "#3b3e42",
+      "textureUrl": null,
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Placeholder decor until Dafna sends its decor list. Colour approximated."
+    },
+    {
+      "id": "ldsp_white_18",
+      "kind": "ldsp",
+      "decorName": "decor.white",
+      "thicknessMm": 18,
+      "colorHex": "#f3f2ee",
+      "textureUrl": null,
+      "customerVisible": false,
+      "unconfirmed": true,
+      "note": "Staff-only. Keeps the confirmed 18 mm board option from D-0 and lets D-0 drafts with panelThickness=18 migrate."
+    },
+    {
+      "id": "hdf_white_3",
+      "kind": "hdf",
+      "decorName": "decor.white",
+      "thicknessMm": 3,
+      "colorHex": "#efeee9",
+      "textureUrl": null,
+      "customerVisible": false,
+      "unconfirmed": true,
+      "note": "Assumed back panel: white HDF 3 mm."
+    }
+  ]
+}

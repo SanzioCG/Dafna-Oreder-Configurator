@@ -5,5 +5,5 @@
     "types": [],
     "noEmit": true
   },
-  "include": ["src", "test", "templates/*.json"]
+  "include": ["src", "test", "templates/*.json", "catalog/*.json"]
 }

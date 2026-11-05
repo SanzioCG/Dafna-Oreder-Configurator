@@ -1,14 +1,16 @@
 import {
   defaultParams,
   generate,
-  wardrobeTemplateV0,
+  materialsV0,
+  wardrobeTemplate,
   type GenerateResult,
   type ParamValue,
   type Params,
 } from '@dafna/engine';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-export const TEMPLATE = wardrobeTemplateV0;
+export const TEMPLATE = wardrobeTemplate;
+export const CATALOG = materialsV0;
 
 export interface ViewGeometry {
   result: GenerateResult;

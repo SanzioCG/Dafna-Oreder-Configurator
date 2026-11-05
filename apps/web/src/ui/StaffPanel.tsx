@@ -7,7 +7,7 @@ import {
   type Params,
 } from '@dafna/engine';
 import { useI18n, type Translate } from '../i18n/I18n';
-import { TEMPLATE } from '../state/useConfigurator';
+import { CATALOG, TEMPLATE } from '../state/useConfigurator';
 
 export function issueText(t: Translate, issue: Issue): string {
   const def = issue.paramKey ? getParamDef(TEMPLATE, issue.paramKey) : undefined;
@@ -34,10 +34,10 @@ interface StaffPanelProps {
 /** Staff-only tools: all issues, order draft download, unconfirmed assumptions, panel list. */
 export function StaffPanel({ params, result }: StaffPanelProps) {
   const { t } = useI18n();
-  const unconfirmed = listUnconfirmed(TEMPLATE);
+  const unconfirmed = listUnconfirmed(TEMPLATE, CATALOG);
 
   const download = () => {
-    const draft = toOrderDraft(params, result, { template: TEMPLATE });
+    const draft = toOrderDraft(params, result, { template: TEMPLATE, catalog: CATALOG });
     const stamp = draft.generatedAt.replace(/[:.]/g, '-');
     downloadJson(`dafna-order-draft-${stamp}.json`, draft);
   };
@@ -91,12 +91,20 @@ export function StaffPanel({ params, result }: StaffPanelProps) {
           <li key={`${u.kind}-${u.key}`}>
             <span className="badge-unconfirmed">{t(`staff.kind.${u.kind}`)}</span>{' '}
             <strong>
-              {u.kind === 'param' ? t(u.def.labelKey) : u.key}
+              {u.kind === 'param' ? t(u.def.labelKey, { n: u.def.appliesToSection }) : u.key}
               {u.kind === 'constant' &&
                 ` = ${u.constant.value}${u.constant.unit ? ` ${u.constant.unit}` : ''}`}
+              {u.kind === 'material' &&
+                ` — ${t(u.material.decorName)}, ${u.material.thicknessMm} mm, ${u.material.colorHex}`}
             </strong>
             <p className="param-note">
-              {u.kind === 'param' ? u.def.note : u.kind === 'constant' ? u.constant.note : u.note}
+              {u.kind === 'param'
+                ? u.def.note
+                : u.kind === 'constant'
+                  ? u.constant.note
+                  : u.kind === 'material'
+                    ? u.material.note
+                    : u.note}
             </p>
           </li>
         ))}

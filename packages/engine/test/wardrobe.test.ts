@@ -3,12 +3,15 @@ import {
   defaultParams,
   generate,
   validate,
-  wardrobeTemplateV0 as T,
+  wardrobeTemplate as T,
   type Panel,
   type Params,
 } from '../src/index.js';
 
-const gen = (overrides: Partial<Params> = {}) => generate(T, { ...defaultParams(T), ...overrides });
+/** Carcass tests run without doors (D-0 geometry); door tests are in doors.test.ts. */
+const gen = (overrides: Partial<Params> = {}) =>
+  generate(T, { ...defaultParams(T), doors: 'none', ...overrides });
+const mat = (t: number) => (t === 18 ? 'ldsp_white_18' : 'ldsp_white_16');
 const byId = (panels: Panel[], id: string): Panel => {
   const p = panels.find((x) => x.id === id);
   if (!p) throw new Error(`panel ${id} not found`);
@@ -22,7 +25,7 @@ function xExtent(p: Panel): [number, number] {
   return [p.position[0] - sizeX / 2, p.position[0] + sizeX / 2];
 }
 
-describe('generate() with default params', () => {
+describe('carcass with default params and doors=none (D-0 geometry)', () => {
   const result = gen();
 
   it('has no issues', () => {
@@ -50,21 +53,35 @@ describe('generate() with default params', () => {
       ]),
     );
     expect(dims).toEqual({
-      'side-left': [1800, 513, 16, 'ldsp', 8, 1000, 259.5, 0, 0, 90],
-      'side-right': [1800, 513, 16, 'ldsp', 1352, 1000, 259.5, 0, 0, 90],
-      bottom: [1328, 513, 16, 'ldsp', 680, 108, 259.5, 0, 0, 0],
-      top: [1328, 513, 16, 'ldsp', 680, 1892, 259.5, 0, 0, 0],
-      'partition-1': [1768, 513, 16, 'ldsp', 680, 1000, 259.5, 0, 0, 90],
-      back: [1360, 1800, 3, 'hdf', 680, 1000, 1.5, 90, 0, 0],
-      'plinth-front': [1360, 100, 16, 'ldsp', 680, 50, 508, 90, 0, 0],
-      'plinth-back': [1360, 100, 16, 'ldsp', 680, 50, 11, 90, 0, 0],
+      'side-left': [1800, 513, 16, 'ldsp_white_16', 8, 1000, 259.5, 0, 0, 90],
+      'side-right': [1800, 513, 16, 'ldsp_white_16', 1352, 1000, 259.5, 0, 0, 90],
+      bottom: [1328, 513, 16, 'ldsp_white_16', 680, 108, 259.5, 0, 0, 0],
+      top: [1328, 513, 16, 'ldsp_white_16', 680, 1892, 259.5, 0, 0, 0],
+      'partition-1': [1768, 513, 16, 'ldsp_white_16', 680, 1000, 259.5, 0, 0, 90],
+      back: [1360, 1800, 3, 'hdf_white_3', 680, 1000, 1.5, 90, 0, 0],
+      'plinth-front': [1360, 100, 16, 'ldsp_white_16', 680, 50, 508, 90, 0, 0],
+      'plinth-back': [1360, 100, 16, 'ldsp_white_16', 680, 50, 11, 90, 0, 0],
     });
   });
 
   it('has two equal sections', () => {
     expect(result.sections).toEqual([
-      { index: 0, innerWidthMm: 656, innerHeightMm: 1768, innerDepthMm: 513, xStartMm: 16 },
-      { index: 1, innerWidthMm: 656, innerHeightMm: 1768, innerDepthMm: 513, xStartMm: 688 },
+      {
+        index: 0,
+        innerWidthMm: 656,
+        innerHeightMm: 1768,
+        innerDepthMm: 513,
+        xStartMm: 16,
+        doorType: 'none',
+      },
+      {
+        index: 1,
+        innerWidthMm: 656,
+        innerHeightMm: 1768,
+        innerDepthMm: 513,
+        xStartMm: 688,
+        doorType: 'none',
+      },
     ]);
   });
 });
@@ -99,10 +116,10 @@ describe('width budget: sides + partitions + section inner widths = width', () =
   const widths = [600, 601, 933, 1360, 1371, 1999, 2400];
   const sectionOptions = ['auto', 1, 2, 3, 4] as const;
   for (const t of [16, 18]) {
-    it(`holds exactly for panelThickness ${t}`, () => {
+    it(`holds exactly for corpus thickness ${t}`, () => {
       for (const width of widths) {
         for (const sections of sectionOptions) {
-          const r = gen({ width, sections, panelThickness: t });
+          const r = gen({ width, sections, corpusMaterial: mat(t) });
           expect(errors(r.issues)).toEqual([]);
           const sides = r.panels.filter((p) => p.role === 'side');
           const partitions = r.panels.filter((p) => p.role === 'partition');
@@ -130,10 +147,10 @@ describe('width budget: sides + partitions + section inner widths = width', () =
   }
 });
 
-describe('panelThickness 16 vs 18 at the same width', () => {
+describe('corpus material 16 vs 18 mm at the same width', () => {
   it('changes inner widths, keeps overall width', () => {
-    const r16 = gen({ width: 1360, panelThickness: 16 });
-    const r18 = gen({ width: 1360, panelThickness: 18 });
+    const r16 = gen({ width: 1360, corpusMaterial: mat(16) });
+    const r18 = gen({ width: 1360, corpusMaterial: mat(18) });
     expect(r16.sections.map((s) => s.innerWidthMm)).toEqual([656, 656]);
     expect(r18.sections.map((s) => s.innerWidthMm)).toEqual([653, 653]);
     for (const r of [r16, r18]) {
@@ -143,9 +160,9 @@ describe('panelThickness 16 vs 18 at the same width', () => {
     }
     expect(byId(r18.panels, 'top').lengthMm).toBe(1360 - 36);
     expect(byId(r18.panels, 'partition-1').lengthMm).toBe(1800 - 36);
-    expect(r18.panels.filter((p) => p.material === 'ldsp').every((p) => p.thicknessMm === 18)).toBe(
-      true,
-    );
+    expect(
+      r18.panels.filter((p) => p.material === 'ldsp_white_18').every((p) => p.thicknessMm === 18),
+    ).toBe(true);
     expect(r18.sections[0]?.innerHeightMm).toBe(1800 - 36);
   });
 });
@@ -159,7 +176,7 @@ describe('sections=auto', () => {
     [1360, 18, 2, [653, 653]],
     [2400, 18, 3, [776, 776, 776]],
   ])('width %i, t=%i -> %i sections', (width, t, n, inner) => {
-    const r = gen({ width, panelThickness: t, sections: 'auto' });
+    const r = gen({ width, corpusMaterial: mat(t), sections: 'auto' });
     expect(r.sections.length).toBe(n);
     expect(r.sections.map((s) => s.innerWidthMm)).toEqual(inner);
   });
@@ -167,7 +184,7 @@ describe('sections=auto', () => {
   it('never produces a SHELF_SPAN warning across the whole width range', () => {
     for (const t of [16, 18]) {
       for (let width = 600; width <= 2400; width += 1) {
-        const issues = validate({ ...defaultParams(T), width, panelThickness: t });
+        const issues = validate({ ...defaultParams(T), width, corpusMaterial: mat(t) });
         expect(issues).toEqual([]);
       }
     }
@@ -253,10 +270,15 @@ describe('boundaries and invalid input', () => {
   });
 
   it('invalid enum options give INVALID_OPTION errors', () => {
-    const issues = validate({ ...defaultParams(T), sections: 5, panelThickness: 17, base: 'legs' });
+    const issues = validate({
+      ...defaultParams(T),
+      sections: 5,
+      corpusMaterial: 'ldsp_pink_17',
+      base: 'legs',
+    });
     expect(issues.map((i) => [i.code, i.paramKey])).toEqual([
       ['INVALID_OPTION', 'sections'],
-      ['INVALID_OPTION', 'panelThickness'],
+      ['INVALID_OPTION', 'corpusMaterial'],
       ['INVALID_OPTION', 'base'],
     ]);
   });
@@ -285,7 +307,7 @@ describe('boundaries and invalid input', () => {
   });
 
   it('missing params fall back to defaults; unknown params are a warning', () => {
-    expect(generate(T, {})).toEqual(gen());
+    expect(generate(T, {})).toEqual(generate(T, defaultParams(T)));
     expect(validate({ color: 'red' })).toEqual([
       {
         code: 'UNKNOWN_PARAM',
@@ -309,7 +331,7 @@ describe('determinism', () => {
   it('same input -> deep-equal output', () => {
     const inputs: Partial<Params>[] = [
       {},
-      { width: 2400, sections: 4, panelThickness: 18 },
+      { width: 2400, sections: 4, corpusMaterial: 'ldsp_white_18' },
       { base: 'none', backPanel: 'none', width: 777, height: 2111, depth: 401 },
       { width: 1360, sections: 1 },
     ];

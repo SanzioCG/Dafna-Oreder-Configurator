@@ -1,8 +1,19 @@
-import wardrobeV0Json from '../templates/wardrobe.v0.json' with { type: 'json' };
-import type { ParamDef, Params, Template, TemplateConstant } from './types.js';
+import wardrobeV1Json from '../templates/wardrobe.v1.json' with { type: 'json' };
+import type {
+  Material,
+  MaterialCatalog,
+  ParamDef,
+  Params,
+  Template,
+  TemplateConstant,
+} from './types.js';
 
-/** The wardrobe (shkaf) carcass template, version 0. */
-export const wardrobeTemplateV0: Template = wardrobeV0Json as Template;
+/**
+ * The current wardrobe (shkaf) template: v1 (templateVersion 0.2.0, D-1a: materials + doors).
+ * templates/wardrobe.v0.json (D-0) is kept as an archive only; D-0 order drafts are migrated
+ * with migrateOrderDraft() instead of being generated with the old template.
+ */
+export const wardrobeTemplate: Template = wardrobeV1Json as Template;
 
 export function getParamDef(template: Template, key: string): ParamDef | undefined {
   return template.parameters.find((p) => p.key === key);
@@ -34,10 +45,14 @@ export function getStringConstant(template: Template, name: string): string {
 export type UnconfirmedItem =
   | { kind: 'param'; key: string; def: ParamDef }
   | { kind: 'constant'; key: string; constant: TemplateConstant }
-  | { kind: 'rule'; key: string; note: string };
+  | { kind: 'rule'; key: string; note: string }
+  | { kind: 'material'; key: string; material: Material };
 
-/** Every assumption in the template, in template order. Used by staff mode and docs. */
-export function listUnconfirmed(template: Template): UnconfirmedItem[] {
+/**
+ * Every assumption in the template (and, if given, the material catalog), in template order.
+ * Used by staff mode and docs.
+ */
+export function listUnconfirmed(template: Template, catalog?: MaterialCatalog): UnconfirmedItem[] {
   const out: UnconfirmedItem[] = [];
   for (const def of template.parameters) {
     if (def.unconfirmed) out.push({ kind: 'param', key: def.key, def });
@@ -47,6 +62,9 @@ export function listUnconfirmed(template: Template): UnconfirmedItem[] {
   }
   for (const rule of template.constructionRules) {
     if (rule.unconfirmed) out.push({ kind: 'rule', key: rule.id, note: rule.note });
+  }
+  for (const material of catalog?.materials ?? []) {
+    if (material.unconfirmed) out.push({ kind: 'material', key: material.id, material });
   }
   return out;
 }

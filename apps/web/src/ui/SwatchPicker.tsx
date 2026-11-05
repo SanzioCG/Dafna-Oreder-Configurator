@@ -1,0 +1,89 @@
+import { getMaterial, SAME_AS_CORPUS, type ParamValue } from '@dafna/engine';
+import { useI18n } from '../i18n/I18n';
+import type { Mode } from '../mode';
+import { CATALOG } from '../state/useConfigurator';
+
+interface SwatchPickerProps {
+  /** material ids, possibly including 'same_as_corpus' */
+  options: readonly ParamValue[];
+  value: ParamValue;
+  /** current corpus material: shown as the effective decor while "same as corpus" is on */
+  corpusValue: ParamValue;
+  mode: Mode;
+  label: string;
+  onChange: (value: ParamValue) => void;
+}
+
+/**
+ * Large colour swatches for a material parameter. If the options contain 'same_as_corpus',
+ * a toggle sits above the swatches; tapping a swatch turns it off and selects that decor.
+ * Staff-only catalog entries (customerVisible=false) are hidden in customer mode.
+ */
+export function SwatchPicker({
+  options,
+  value,
+  corpusValue,
+  mode,
+  label,
+  onChange,
+}: SwatchPickerProps) {
+  const { t } = useI18n();
+  const hasSame = options.includes(SAME_AS_CORPUS);
+  const same = hasSame && value === SAME_AS_CORPUS;
+  const effective = same ? corpusValue : value;
+  const materials = options
+    .filter((o) => o !== SAME_AS_CORPUS)
+    .map((o) => getMaterial(CATALOG, o))
+    .filter((m) => m !== undefined)
+    .filter((m) => mode === 'staff' || m.customerVisible || m.id === effective);
+
+  return (
+    <div className="swatch-picker">
+      {hasSame && (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={same}
+          className={same ? 'toggle on' : 'toggle'}
+          onClick={() => onChange(same ? corpusValue : SAME_AS_CORPUS)}
+        >
+          <span className="toggle-track" aria-hidden="true">
+            <span className="toggle-knob" />
+          </span>
+          {t('color.sameAsCorpus')}
+        </button>
+      )}
+      <div
+        className={same ? 'swatches swatches-muted' : 'swatches'}
+        role="radiogroup"
+        aria-label={label}
+      >
+        {materials.map((m) => {
+          const selected = m.id === effective;
+          const name = t(m.decorName);
+          const extra = mode === 'staff' ? ` ${m.thicknessMm} ${t('unit.mm')}` : '';
+          return (
+            <button
+              key={m.id}
+              type="button"
+              role="radio"
+              aria-checked={selected && !same}
+              aria-label={`${name}${extra}`}
+              data-material={m.id}
+              className={selected ? 'swatch selected' : 'swatch'}
+              onClick={() => onChange(m.id)}
+            >
+              <span className="swatch-chip" style={{ background: m.colorHex }}>
+                {selected && <span className="swatch-check">✓</span>}
+              </span>
+              <span className="swatch-name">
+                {name}
+                {extra && <small>{extra}</small>}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
