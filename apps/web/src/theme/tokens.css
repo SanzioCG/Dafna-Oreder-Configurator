@@ -32,7 +32,14 @@
   --accent-lavender: #8f9bff; /* [APPROX] not on the dafna.uz home page */
 
   /* ---- neutrals ---- [site] --color-neutral-* */
-  --bg: #f7f8f9; /* [site] --color-bg-page (brief's approx #F5F6F8) */
+  /*
+   * One continuous page background for the whole screen (3D canvas is transparent on it).
+   * Decision: [site] --color-neutral-100 #eef0f2 instead of the site page bg #f7f8f9 / brief's
+   * #F5F6F8, because white and light-oak decors need a slightly darker neutral to stay legible
+   * (contrast brief asked for "#E9ECEF-ish"). Swap here if Dafna prefers the lighter one.
+   */
+  --bg: #eef0f2;
+  --bg-site-page: #f7f8f9; /* [site] --color-bg-page, kept for reference */
   --surface: #ffffff;
   --neutral-100: #eef0f2;
   --neutral-200: #dcdde0; /* [site] --color-border-base */
@@ -55,9 +62,8 @@
   /* [comp] installment price badge (brief's approx #C5F59A -> #F2F59A) */
   --accent-lime: linear-gradient(79.33deg, #a6fc6f -10.06%, #f0fff5 44.03%, #f2f947 127.13%);
 
-  /* ---- 3D stage: always neutral studio, never a brand/pastel colour ---- */
-  --stage-bg: #eef0f3;
-  --stage-floor: #e6e8ec;
+  /* ---- 3D stage: transparent canvas on --bg; only the shadow colour is themed ---- */
+  --stage-shadow: #2a2928;
 
   /* ---- shape ---- */
   --radius-lg: 2rem; /* 32 px at 1080p */
@@ -71,7 +77,7 @@
   --frost-blur: blur(1rem) saturate(1.4);
   --press-scale: 0.97;
 
-  /* ---- option-card pastel per parameter (consistent across the app) ---- */
+  /* ---- card pastel per option-card type (consistent across the app; never a state) ---- */
   --card-sections: var(--pastel-yellow);
   --card-base: var(--pastel-peach);
   --card-doors: var(--pastel-blue);

@@ -59,6 +59,9 @@ export const ru: Messages = {
   'decor.anthracite': 'Антрацит',
   'color.sameAsCorpus': 'Как корпус',
 
+  'reason.DOOR_TOO_WIDE': 'Секция слишком широкая для одной двери',
+  'reason.default': 'Недоступно при этом размере',
+
   'control.decrease': 'Уменьшить',
   'control.increase': 'Увеличить',
   'unit.mm': 'мм',

@@ -31,10 +31,13 @@ export function materialFor(id: string): MeshStandardMaterial {
   return mat;
 }
 
-/** Edge line colour that stays visible on light and dark decors. */
+/**
+ * Edge outline colour: dark on light decors (white, grey, beige, oak) so panels, door leaves
+ * and the 3 mm gaps stay distinguishable on the light page background; light on dark decors.
+ */
 export function edgeColorFor(id: string): string {
   const hex = getMaterial(CATALOG, id)?.colorHex ?? '#ffffff';
   const c = new Color(hex);
   const luminance = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
-  return luminance < 0.35 ? '#9aa1ab' : '#5f6672';
+  return luminance < 0.35 ? '#b4b8be' : '#33363b';
 }

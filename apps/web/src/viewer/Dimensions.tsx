@@ -23,7 +23,7 @@ export interface DimSpec {
 }
 
 /** Extra space (mm) the annotations need around the product, for camera framing. */
-export const DIMENSION_MARGIN = { right: 260, top: 320 };
+export const DIMENSION_MARGIN = { right: 260, top: 320, bottom: 420 };
 
 /**
  * Overall width / height / depth, plus per-section inner widths on top when `showSections`

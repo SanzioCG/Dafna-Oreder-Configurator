@@ -74,7 +74,8 @@ export function Viewer({ view, invalid }: ViewerProps) {
   // World space is metres with the product centred on the origin, standing on the floor (y=0).
   const box = useMemo<FrameBox>(
     () => ({
-      min: [(-W / 2) * MM, 0, (-D / 2) * MM],
+      // extra room below the floor keeps the model above the centred floating nav
+      min: [(-W / 2) * MM, -DIMENSION_MARGIN.bottom * MM, (-D / 2) * MM],
       max: [(W / 2 + DIMENSION_MARGIN.right) * MM, (H + DIMENSION_MARGIN.top) * MM, (D / 2) * MM],
     }),
     [W, H, D],

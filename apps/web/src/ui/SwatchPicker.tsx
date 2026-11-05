@@ -53,13 +53,11 @@ export function SwatchPicker({
           {t('color.sameAsCorpus')}
         </button>
       )}
-      <div
-        className={same ? 'swatches swatches-muted' : 'swatches'}
-        role="radiogroup"
-        aria-label={label}
-      >
+      <div className="swatches" role="radiogroup" aria-label={label}>
         {materials.map((m) => {
-          const selected = m.id === effective;
+          // selection contract: while "same as corpus" is on, the toggle carries the state and
+          // no door swatch is shown as selected (opacity is reserved for "disabled")
+          const selected = !same && m.id === effective;
           const name = t(m.decorName);
           const extra = mode === 'staff' ? ` ${m.thicknessMm} ${t('unit.mm')}` : '';
           return (
@@ -67,7 +65,7 @@ export function SwatchPicker({
               key={m.id}
               type="button"
               role="radio"
-              aria-checked={selected && !same}
+              aria-checked={selected}
               aria-label={`${name}${extra}`}
               data-material={m.id}
               className={selected ? 'swatch selected' : 'swatch'}
