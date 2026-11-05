@@ -56,3 +56,12 @@ export {
   type SectionBox,
 } from './interior.js';
 export { interiorConstants } from './wardrobe.js';
+export {
+  CATALOG_ARCHIVE,
+  REGENERABLE_SINCE,
+  TEMPLATE_ARCHIVE,
+  regenerateApplication,
+  type RegenerateFailure,
+  type RegenerateOptions,
+  type RegenerateResult,
+} from './regenerate.js';

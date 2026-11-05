@@ -1992,6 +1992,11 @@ function generate(template, params, catalog = materialsV0) {
   };
 }
 
+// ../../packages/engine/src/regenerate.ts
+var CATALOG_ARCHIVE = {
+  [materialsV0.catalogVersion]: materialsV0
+};
+
 // src/lead/phone.ts
 var PHONE_COUNTRY_CODE = "+998";
 var PHONE_DIGITS = 9;
