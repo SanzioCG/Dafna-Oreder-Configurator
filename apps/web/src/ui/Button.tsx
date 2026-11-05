@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 
 type Variant = 'primary' | 'secondary' | 'success' | 'ghost' | 'floating';
 
@@ -9,6 +9,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   iconAfter?: ReactNode;
   wide?: boolean;
   large?: boolean;
+  /** React 19: ref is a plain prop on function components */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /**

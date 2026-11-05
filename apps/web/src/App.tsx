@@ -6,6 +6,7 @@ import { ContactPlaceholder } from './presentation/ContactPlaceholder';
 import { planReveal, type RevealEvent, type RevealKind } from './presentation/reveal';
 import { ConfigurationSummary } from './ui/ConfigurationSummary';
 import { ConsultantButton } from './ui/ConsultantButton';
+import { ConsultantModal } from './ui/ConsultantModal';
 import { nextFlow, type FlowEvent, type FlowState } from './state/flow';
 import { useConfigurator } from './state/useConfigurator';
 import { ThemeProvider } from './theme/ThemeProvider';
@@ -88,9 +89,13 @@ function Configurator({ mode }: { mode: Mode }) {
   };
 
   const inPresentation = flow !== 'configurator';
-  // never touches the configuration; delivery to staff comes with the backend (D-2a)
-  const callConsultant = () =>
+  // Until D-2a: an honest modal (ask a nearby employee or call 1408) + the internal event that
+  // D-2a will deliver to staff. Never touches the configuration, never fakes a confirmation.
+  const [consultantOpen, setConsultantOpen] = useState(false);
+  const callConsultant = () => {
     requestConsultant(inPresentation ? flow : step, JSON.stringify(config.params));
+    setConsultantOpen(true);
+  };
   return (
     <div className={`app mode-${mode}${inPresentation ? ' presenting' : ''}`} data-flow={flow}>
       <Viewer
@@ -130,6 +135,7 @@ function Configurator({ mode }: { mode: Mode }) {
       {mode === 'customer' && inPresentation && (
         <ConsultantButton className="present-consultant" onCall={callConsultant} />
       )}
+      {consultantOpen && <ConsultantModal onClose={() => setConsultantOpen(false)} />}
     </div>
   );
 }

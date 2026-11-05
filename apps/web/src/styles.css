@@ -1183,6 +1183,47 @@ p {
   margin-top: var(--space-2);
 }
 
+/* modal (consultant until D-2a): centred over everything, flat card */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+}
+
+.modal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: min(34rem, 90vw);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  border: var(--border-w) solid var(--divider);
+  background: var(--panel);
+  color: var(--text);
+  text-align: center;
+  box-shadow: var(--shadow-overlay);
+}
+
+.modal-card h2 {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+}
+
+.modal-card p {
+  font-size: var(--fs-lg);
+  line-height: var(--lh-snug);
+}
+
+.modal-icon {
+  width: 3rem;
+  height: 3rem;
+  color: var(--primary-strong);
+}
+
 /* contact (D-3b placeholder): over the presentation, nothing is submitted */
 .contact-placeholder {
   position: fixed;

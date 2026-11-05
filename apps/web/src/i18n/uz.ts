@@ -40,6 +40,9 @@ export const uz = {
   'nav.back': 'Orqaga',
   'nav.readyReview': "Tayyor — ko'rib chiqish",
   'consultant.call': 'Konsultant chaqirish',
+  'consultant.message':
+    "Yaqin atrofdagi Dafna xodimiga murojaat qiling yoki qo'ng'iroq qiling: {phone}",
+  'consultant.close': 'Yopish',
   'nav.next': 'Keyingi',
   'nav.nextSoon': 'Keyingi bosqichlar tez orada',
 

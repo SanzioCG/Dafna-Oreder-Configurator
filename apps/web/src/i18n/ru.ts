@@ -40,6 +40,8 @@ export const ru: Messages = {
 
   'nav.readyReview': 'Готово — просмотр',
   'consultant.call': 'Позвать консультанта',
+  'consultant.message': 'Обратитесь к ближайшему сотруднику Dafna или позвоните: {phone}',
+  'consultant.close': 'Закрыть',
   'nav.back': 'Назад',
   'nav.next': 'Далее',
   'nav.nextSoon': 'Следующие шаги скоро',
