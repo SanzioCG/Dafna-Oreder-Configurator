@@ -45,7 +45,7 @@
   /* ---- 3D ---- */
   --stage-shadow: #2a2928;
   --stage-shadow-opacity: 0.8;
-  --edge-on-light-decor: #33363b;
+  --edge-on-light-decor: #000000; /* furniture wireframe: black in both themes */
   --edge-on-dark-decor: #b4b8be;
   --rim-light: 0;
   --platform: #ffffff; /* presentation platform disc */

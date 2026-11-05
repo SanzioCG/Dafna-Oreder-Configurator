@@ -18,7 +18,6 @@
   /* 3D: same key + hemisphere lights as Light (decor colours do not shift) */
   --stage-shadow: #000000;
   --stage-shadow-opacity: 0.75;
-  --edge-on-light-decor: #8a9099;
   --edge-on-dark-decor: #c9ced6;
   --rim-light: 0.9;
   --platform: #2e353f;
