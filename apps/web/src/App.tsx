@@ -16,6 +16,7 @@ function Configurator({ mode }: { mode: Mode }) {
     <div className={`app mode-${mode}`}>
       <Viewer
         view={config.view}
+        mode={mode}
         invalid={config.hasErrors}
         activeStep={step}
         selectedSection={step === 'interior' ? section : null}

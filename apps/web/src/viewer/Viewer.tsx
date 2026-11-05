@@ -4,18 +4,23 @@ import { useTheme } from '../theme/ThemeProvider';
 import { ReframeIcon, WarningIcon } from '../ui/icons';
 import type { ViewGeometry } from '../state/useConfigurator';
 import type { FrameBox } from './CameraRig';
+import type { Mode } from '../mode';
+import { DimensionSvg, type DimElements } from './DimensionOverlay';
 import {
   DIMENSION_MARGIN,
-  DimensionLabels,
   buildDimensions,
-  midpoint,
+  dimensionVisibility,
+  formatLength,
+  unitSystemFor,
   type V3,
-} from './Dimensions';
+} from './dimensions';
 import { MM, Scene } from './Scene';
 import type { SectionBox } from './SectionPicker';
 
 interface ViewerProps {
   view: ViewGeometry;
+  /** customer sees cm, staff mm */
+  mode?: Mode;
   invalid: boolean;
   /** current wizard step: 'interior' opens the doors and enables section picking */
   activeStep?: string;
@@ -72,8 +77,9 @@ function useUiScale(): number {
 /** Viewer shell: 3D scene + DOM overlays (dimension labels, buttons, banners). */
 export function Viewer({
   view,
+  mode = 'customer',
   invalid,
-  activeStep,
+  activeStep = 'size',
   selectedSection = null,
   onSelectSection,
 }: ViewerProps) {
@@ -114,26 +120,41 @@ export function Viewer({
     [W, H, D],
   );
 
-  const unit = t('unit.mm');
   const sections = view.result.sections;
-  // Closed doors hide the sections, so only overall dimensions are shown then.
-  const showSections = !hasDoors || doorsOpen;
+  // Dimension values come from the engine output only (result.dimensions / sections).
+  const units = unitSystemFor(mode);
+  const unitLabel = t(units === 'cm' ? 'unit.cm' : 'unit.mm');
+  const engineSize = view.result.dimensions ?? { widthMm: W, heightMm: H, depthMm: D };
+  const visibility = dimensionVisibility({
+    step: activeStep,
+    presentation: false,
+    hasDoors,
+    doorsOpen,
+  });
   const dims = useMemo(
-    () => buildDimensions(W, H, D, sections, unit, showSections),
-    [W, H, D, sections, unit, showSections],
-  );
-  // Label anchors in world metres (same transform as the product group in <Scene>).
-  const anchors = useMemo(
     () =>
-      dims.map((d) => {
-        const [x, y, z] = midpoint(d);
-        const world: V3 = [(x - W / 2) * MM, y * MM, (z - D / 2) * MM];
-        return { key: d.key, world };
-      }),
-    [dims, W, D],
+      buildDimensions(engineSize, sections, (mm) => formatLength(mm, units, unitLabel), visibility),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- primitive deps below
+    [
+      engineSize.widthMm,
+      engineSize.heightMm,
+      engineSize.depthMm,
+      sections,
+      units,
+      unitLabel,
+      visibility.primary,
+      visibility.secondary,
+    ],
   );
-  const labelRefs = useRef(new Map<string, HTMLDivElement>());
+  // product mm -> world metres (same transform as the product group in <Scene>)
+  const toWorld = useMemo(
+    () =>
+      (p: V3): V3 => [(p[0] - W / 2) * MM, p[1] * MM, (p[2] - D / 2) * MM],
+    [W, D],
+  );
+  const dimRegistry = useRef(new Map<string, DimElements>());
   const uiScale = useUiScale();
+  const remPx = uiScale * 16;
 
   // section inner boxes (mm) for picking / highlighting on the interior step
   const sectionBoxes = useMemo<SectionBox[]>(() => {
@@ -157,8 +178,9 @@ export function Viewer({
       <Scene
         view={view}
         dims={dims}
-        anchors={anchors}
-        labelRefs={labelRefs}
+        dimRegistry={dimRegistry}
+        toWorld={toWorld}
+        remPx={remPx}
         lineScale={uiScale}
         product={product}
         extent={extent}
@@ -170,7 +192,7 @@ export function Viewer({
         onSectionTap={(i) => onSelectSection?.(i)}
         theme={theme}
       />
-      <DimensionLabels dims={dims} labelRefs={labelRefs} />
+      <DimensionSvg dims={dims} registry={dimRegistry} remPx={remPx} />
 
       <div className="viewer-actions">
         {hasDoors && (

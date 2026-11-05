@@ -3,13 +3,8 @@ import { Canvas } from '@react-three/fiber';
 import { TOUCH } from 'three';
 import type { ViewGeometry } from '../state/useConfigurator';
 import { CameraRig, type FrameBox } from './CameraRig';
-import {
-  DimensionLines,
-  LabelProjector,
-  type DimSpec,
-  type LabelRefs,
-  type V3,
-} from './Dimensions';
+import { DimensionProjector, type DimRegistry } from './DimensionOverlay';
+import type { DimSpec, V3 } from './dimensions';
 import { cssToken } from '../theme/cssToken';
 import { SectionPicker, type SectionBox } from './SectionPicker';
 import { SoftFloorShadow } from './SoftFloorShadow';
@@ -20,8 +15,9 @@ export const MM = 0.001;
 export interface SceneProps {
   view: ViewGeometry;
   dims: DimSpec[];
-  anchors: { key: string; world: V3 }[];
-  labelRefs: LabelRefs;
+  dimRegistry: DimRegistry;
+  toWorld: (p: V3) => V3;
+  remPx: number;
   lineScale: number;
   product: FrameBox;
   extent: FrameBox;
@@ -43,8 +39,9 @@ export interface SceneProps {
 export function Scene({
   view,
   dims,
-  anchors,
-  labelRefs,
+  dimRegistry,
+  toWorld,
+  remPx,
   lineScale,
   product,
   extent,
@@ -97,9 +94,8 @@ export function Scene({
             lineScale={lineScale}
           />
         )}
-        <DimensionLines dims={dims} lineScale={lineScale} />
       </group>
-      <LabelProjector anchors={anchors} labelRefs={labelRefs} />
+      <DimensionProjector dims={dims} registry={dimRegistry} toWorld={toWorld} remPx={remPx} />
 
       {/*
         Floor = soft contact shadow only (no floor plane, no edge). The key light's own floor

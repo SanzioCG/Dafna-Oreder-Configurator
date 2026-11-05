@@ -186,19 +186,29 @@ describe('App color step', () => {
 describe('App doors', () => {
   const sectionLabels = () => document.querySelectorAll('[data-dim^="section-"]').length;
 
-  it('door toggle opens/closes doors; section widths only show while open', () => {
+  it('door toggle opens/closes doors; section widths only on the doors step while open', () => {
     render(<App />);
     const stub = screen.getByTestId('viewer-stub');
     const button = screen.getByRole('button', { name: uz['viewer.doorsOpen'] });
     expect(stub.dataset.doorsOpen).toBe('false');
     expect(sectionLabels()).toBe(0);
-    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('1360 mm');
+    // customer: centimetres, from the engine's overall dimensions
+    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('136 sm');
+    expect(document.querySelector('[data-dim="height"]')?.textContent).toBe('190 sm');
+    expect(document.querySelector('[data-dim="depth"]')?.textContent).toBe('60 sm');
+    // size step: section widths stay hidden even with open doors
+    fireEvent.click(button);
+    expect(sectionLabels()).toBe(0);
+    fireEvent.click(button);
 
+    fireEvent.click(tab(uz['step.doors']));
+    expect(sectionLabels()).toBe(0);
     fireEvent.click(button);
     expect(stub.dataset.doorsOpen).toBe('true');
     expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(button.textContent).toBe(uz['viewer.doorsClose']);
     expect(sectionLabels()).toBe(2);
+    expect(document.querySelector('[data-dim="section-0"]')?.textContent).toBe('65,6 sm');
 
     fireEvent.click(button);
     expect(stub.dataset.doorsOpen).toBe('false');
@@ -216,6 +226,22 @@ describe('App doors', () => {
     expect(sectionLabels()).toBe(2);
     // per-section overrides are staff-only
     expect(screen.queryByRole('radiogroup', { name: "1-bo'lim eshigi" })).toBeNull();
+  });
+});
+
+describe('dimension overlay units', () => {
+  it('staff sees millimetres', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('1360 mm');
+    expect(document.querySelector('[data-dim="depth"]')?.textContent).toBe('600 mm');
+  });
+
+  it('interior step shows section widths (doors auto-open); one SVG overlay', () => {
+    render(<App />);
+    fireEvent.click(tab(uz['step.interior']));
+    expect(document.querySelectorAll('[data-dim^="section-"]').length).toBe(2);
+    expect(document.querySelectorAll('[data-testid="dim-overlay"]').length).toBe(1);
   });
 });
 

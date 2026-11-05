@@ -91,6 +91,7 @@ export const ru: Messages = {
   'control.decrease': 'Уменьшить',
   'control.increase': 'Увеличить',
   'unit.mm': 'мм',
+  'unit.cm': 'см',
 
   'summary.overall': 'Габариты',
   'summary.sections': 'Секций: {count}',

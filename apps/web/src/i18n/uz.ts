@@ -90,6 +90,7 @@ export const uz = {
   'control.decrease': 'Kamaytirish',
   'control.increase': 'Oshirish',
   'unit.mm': 'mm',
+  'unit.cm': 'sm',
 
   'summary.overall': "Umumiy o'lcham",
   'summary.sections': "{count} ta bo'lim",
