@@ -1,13 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ru } from './ru';
-import { uz, type Messages } from './uz';
+import { translate, type Lang, type Translate } from './translate';
 
-export type Lang = 'uz' | 'ru';
-export const LANGS: Lang[] = ['uz', 'ru'];
-const DICTS: Record<Lang, Messages> = { uz, ru };
-
-export type TranslateValues = Record<string, string | number | boolean | undefined>;
-export type Translate = (key: string, values?: TranslateValues) => string;
+export { LANGS, translate, type Lang, type Translate, type TranslateValues } from './translate';
 
 interface I18nValue {
   lang: Lang;
@@ -16,16 +10,6 @@ interface I18nValue {
 }
 
 const I18nContext = createContext<I18nValue | null>(null);
-
-export function translate(lang: Lang, key: string, values?: TranslateValues): string {
-  const dict = DICTS[lang] as Record<string, string>;
-  const template = dict[key] ?? (uz as Record<string, string>)[key] ?? key;
-  if (!values) return template;
-  return template.replace(/\{(\w+)\}/g, (match, name: string) => {
-    const v = values[name];
-    return v === undefined ? match : String(v);
-  });
-}
 
 export function I18nProvider({
   children,

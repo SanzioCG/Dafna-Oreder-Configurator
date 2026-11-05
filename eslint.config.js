@@ -4,11 +4,14 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default tseslint.config(
-  { ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**'] },
+  {
+    // apps/web/api: generated Vercel Function bundles (scripts/build-api.mjs)
+    ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**', 'apps/web/api/**'],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.{js,ts,tsx}'],
+    files: ['**/*.{js,mjs,ts,tsx}'],
     languageOptions: { globals: { ...globals.node } },
   },
   {
