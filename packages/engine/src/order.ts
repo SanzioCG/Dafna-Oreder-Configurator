@@ -18,7 +18,7 @@ export interface OrderDraftOptions {
 }
 
 /**
- * Builds the order draft JSON (schema dafna-order/0.1-draft). Contains no price fields
+ * Builds the order draft JSON (schema dafna-order/0.2-draft). Contains no price fields
  * (price comes in a later batch). Materials are embedded as full catalog entries so the draft
  * stays readable even after the catalog changes.
  */
@@ -56,8 +56,18 @@ export function toOrderDraft(
         .filter((p) => p.role === 'door' && p.sectionIndex === s.index)
         .map((p) => p.id),
     })),
+    interior: result.sections.map((s) => ({
+      sectionIndex: s.index,
+      preset: s.preset,
+      presetSource: s.presetSource,
+      shelves: s.shelves,
+      rails: s.rails,
+      drawers: s.drawers,
+      clearHangingHeightMm: s.clearHangingHeightMm,
+    })),
     dimensions: result.dimensions,
     panels: result.panels,
+    rails: result.rails,
     sections: result.sections,
     issues: result.issues,
     generatedAt: now().toISOString(),

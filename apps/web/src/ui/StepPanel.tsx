@@ -1,9 +1,9 @@
 import type { ParamDef } from '@dafna/engine';
-import { useState } from 'react';
 import { LANGS, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import { TEMPLATE, type Configurator } from '../state/useConfigurator';
 import { STEPS, neighbourStep } from '../steps';
+import { InteriorStep } from './InteriorStep';
 import { ParamControl } from './ParamControl';
 import { ResetToast } from './ResetToast';
 import { StaffPanel } from './StaffPanel';
@@ -43,11 +43,23 @@ export function groupIntoCards(defs: ParamDef[]): CardGroup[] {
 interface StepPanelProps {
   mode: Mode;
   config: Configurator;
+  /** current wizard step (lifted to App: the 3D view reacts to it) */
+  step: string;
+  onStepChange: (step: string) => void;
+  /** selected section on the interior step (shared with the 3D view) */
+  selectedSection: number;
+  onSelectSection: (index: number) => void;
 }
 
-export function StepPanel({ mode, config }: StepPanelProps) {
+export function StepPanel({
+  mode,
+  config,
+  step,
+  onStepChange: setStep,
+  selectedSection,
+  onSelectSection,
+}: StepPanelProps) {
   const { t, lang, setLang } = useI18n();
-  const [step, setStep] = useState('size');
   const staff = mode === 'staff';
   const prev = neighbourStep(step, -1);
   const next = neighbourStep(step, 1);
@@ -133,32 +145,41 @@ export function StepPanel({ mode, config }: StepPanelProps) {
           </p>
         </div>
         <div className="controls">
-          {groupIntoCards(defs).map((group) => (
-            <section
-              key={group.key}
-              className={`card card-${group.tone}`}
-              data-card={group.defs[0]?.key}
-            >
-              {group.defs.map((def) => (
-                <ParamControl
-                  key={def.key}
-                  def={def}
-                  value={config.params[def.key] ?? def.default}
-                  mode={mode}
-                  hasError={errorKeys.has(def.key)}
-                  onChange={config.setParam}
-                  params={config.params}
-                  hint={
-                    hints[def.key] ? (
-                      <p className="param-hint" data-testid={`hint-${def.key}`}>
-                        {hints[def.key]}
-                      </p>
-                    ) : undefined
-                  }
-                />
-              ))}
-            </section>
-          ))}
+          {step === 'interior' && (
+            <InteriorStep
+              mode={mode}
+              config={config}
+              selected={selectedSection}
+              onSelect={onSelectSection}
+            />
+          )}
+          {step !== 'interior' &&
+            groupIntoCards(defs).map((group) => (
+              <section
+                key={group.key}
+                className={`card card-${group.tone}`}
+                data-card={group.defs[0]?.key}
+              >
+                {group.defs.map((def) => (
+                  <ParamControl
+                    key={def.key}
+                    def={def}
+                    value={config.params[def.key] ?? def.default}
+                    mode={mode}
+                    hasError={errorKeys.has(def.key)}
+                    onChange={config.setParam}
+                    params={config.params}
+                    hint={
+                      hints[def.key] ? (
+                        <p className="param-hint" data-testid={`hint-${def.key}`}>
+                          {hints[def.key]}
+                        </p>
+                      ) : undefined
+                    }
+                  />
+                ))}
+              </section>
+            ))}
         </div>
         {staff && (
           <div className="card card-neutral">

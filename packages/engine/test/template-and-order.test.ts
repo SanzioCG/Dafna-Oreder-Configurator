@@ -26,7 +26,7 @@ const LDSP = [
   'ldsp_white_18',
 ];
 
-describe('wardrobe template v1 (0.2.0)', () => {
+describe('wardrobe template v2 (0.3.0)', () => {
   it('defines the parameters with the specified ranges and defaults', () => {
     const summary = T.parameters.map((d) => [
       d.key,
@@ -40,6 +40,15 @@ describe('wardrobe template v1 (0.2.0)', () => {
       d.unconfirmed,
     ]);
     const override = ['preset', 'none', 'single_left', 'single_right', 'double'];
+    const interior = [
+      'auto',
+      'empty',
+      'shelves',
+      'rail',
+      'rail_shelf',
+      'drawers_shelves',
+      'rail_drawers',
+    ];
     expect(summary).toEqual([
       ['width', 'int', 1360, 600, 2400, null, 'size', true, false],
       ['height', 'int', 1900, 1200, 2600, null, 'size', true, false],
@@ -76,6 +85,10 @@ describe('wardrobe template v1 (0.2.0)', () => {
       ['doorSection2', 'enum', 'preset', null, null, override, 'doors', false, false],
       ['doorSection3', 'enum', 'preset', null, null, override, 'doors', false, false],
       ['doorSection4', 'enum', 'preset', null, null, override, 'doors', false, false],
+      ['interior1', 'enum', 'auto', null, null, interior, 'interior', true, false],
+      ['interior2', 'enum', 'auto', null, null, interior, 'interior', true, false],
+      ['interior3', 'enum', 'auto', null, null, interior, 'interior', true, false],
+      ['interior4', 'enum', 'auto', null, null, interior, 'interior', true, false],
     ]);
     expect(getParamDef(T, 'panelThickness')).toBeUndefined();
   });
@@ -83,7 +96,7 @@ describe('wardrobe template v1 (0.2.0)', () => {
   it('every parameter has the required metadata', () => {
     for (const d of T.parameters) {
       expect(d.labelKey).toMatch(/^param\./);
-      expect(['size', 'color', 'doors']).toContain(d.uiStep);
+      expect(['size', 'color', 'doors', 'interior']).toContain(d.uiStep);
       if (d.type === 'int') {
         expect(d.unit).toBe('mm');
         expect(d.step).toBeGreaterThan(0);
@@ -116,8 +129,29 @@ describe('wardrobe template v1 (0.2.0)', () => {
       'constant:doorGapFrontMm',
       'constant:doorGapBetweenMm',
       'constant:doorGapEdgeMm',
-      'constant:maxSingleDoorWidthMm',
+      'constant:maxSingleLeafWidthMm',
+      'constant:doorLeafRoundingMm',
       'constant:maxDoorHeightMm',
+      'constant:shelfPitchTargetMm',
+      'constant:shelfFrontSetbackMm',
+      'constant:railTopShelfDropMm',
+      'constant:railAxisDropMm',
+      'constant:railDiameterMm',
+      'constant:drawerFrontHeightMm',
+      'constant:drawerCountPerSection',
+      'constant:drawerGapMm',
+      'constant:drawerFrontSetbackMm',
+      'constant:drawerSlideClearanceMm',
+      'constant:drawerBoxHeightReductionMm',
+      'constant:drawerBackClearanceMm',
+      'constant:drawerSlideMinMm',
+      'constant:drawerSlideMaxMm',
+      'constant:drawerSlideStepMm',
+      'constant:railMinDepthMm',
+      'constant:railMinHangingHeightMm',
+      'constant:drawerMaxFrontWidthMm',
+      'constant:edgeBandId',
+      'constant:edgeBandThicknessMm',
       'rule:sides-on-plinth',
       'rule:top-bottom-between-sides',
       'rule:equal-sections-integer-mm',
@@ -127,7 +161,11 @@ describe('wardrobe template v1 (0.2.0)', () => {
       'rule:plinth-front-under-carcass',
       'rule:doors-overlay',
       'rule:door-split-at-partition-centre',
-      'rule:door-hinge-alternation',
+      'rule:auto-sections-door-feasible',
+      'rule:interior-default-rule',
+      'rule:interior-layout',
+      'rule:edge-default-rule',
+      'rule:grain-placeholder',
       ...C.materials.map((m) => `material:${m.id}`),
     ]);
     for (const i of items) {
@@ -145,7 +183,9 @@ describe('wardrobe template v1 (0.2.0)', () => {
     expect(T.constants.doorGapFrontMm?.value).toBe(2);
     expect(T.constants.doorGapBetweenMm?.value).toBe(3);
     expect(T.constants.doorGapEdgeMm?.value).toBe(1.5);
-    expect(T.constants.maxSingleDoorWidthMm?.value).toBe(600);
+    expect(T.constants.maxSingleLeafWidthMm?.value).toBe(600);
+    expect(T.constants.doorLeafRoundingMm?.value).toBe(0.5);
+    expect(T.constants.maxSingleDoorWidthMm).toBeUndefined();
     expect(T.constants.maxDoorHeightMm?.value).toBe(2400);
   });
 
@@ -179,7 +219,7 @@ describe('material catalog v0', () => {
   });
 });
 
-describe('toOrderDraft (dafna-order/0.1-draft)', () => {
+describe('toOrderDraft (dafna-order/0.2-draft)', () => {
   const params = {
     ...defaultParams(T),
     width: 2000,
@@ -189,23 +229,34 @@ describe('toOrderDraft (dafna-order/0.1-draft)', () => {
   const result = generate(T, params);
   const draft = toOrderDraft(params, result, { now: () => new Date('2026-11-05T10:00:00.000Z') });
 
-  it('has the 0.1 schema, materials used and doors per section', () => {
-    expect(draft.schemaVersion).toBe('dafna-order/0.1-draft');
+  it('has the 0.2 schema, materials, doors and interior per section, rails', () => {
+    expect(draft.schemaVersion).toBe('dafna-order/0.2-draft');
     expect(draft.productType).toBe('wardrobe');
-    expect(draft.templateVersion).toBe('0.2.0');
+    expect(draft.templateVersion).toBe('0.3.0');
     expect(draft.catalogVersion).toBe('0.1.0');
     expect(draft.params).toEqual(params);
     expect(draft.materials.corpus?.id).toBe('ldsp_oak_light_16');
     expect(draft.materials.doors?.id).toBe('ldsp_anthracite_16');
     expect(draft.materials.back?.id).toBe('hdf_white_3');
-    // 2000 -> 3 sections of 646/645/645 mm -> auto: double, double, double
+    // 2000 -> 3 sections would need adjacent double doors -> 4 sections of 480 mm, singles L,L,R,R
     expect(draft.doors).toEqual([
-      { sectionIndex: 0, type: 'double', leaves: ['door-1-left', 'door-1-right'] },
-      { sectionIndex: 1, type: 'double', leaves: ['door-2-left', 'door-2-right'] },
-      { sectionIndex: 2, type: 'double', leaves: ['door-3-left', 'door-3-right'] },
+      { sectionIndex: 0, type: 'single_left', leaves: ['door-1'] },
+      { sectionIndex: 1, type: 'single_left', leaves: ['door-2'] },
+      { sectionIndex: 2, type: 'single_right', leaves: ['door-3'] },
+      { sectionIndex: 3, type: 'single_right', leaves: ['door-4'] },
     ]);
     expect(draft.dimensions).toEqual(result.dimensions);
     expect(draft.panels).toEqual(result.panels);
+    expect(draft.rails).toEqual(result.rails);
+    expect(
+      draft.interior.map((x) => [x.sectionIndex, x.preset, x.presetSource, x.shelves.length]),
+    ).toEqual([
+      [0, 'shelves', 'auto', 4],
+      [1, 'shelves', 'auto', 4],
+      [2, 'shelves', 'auto', 4],
+      [3, 'shelves', 'auto', 4],
+    ]);
+    expect(draft.panels.every((p) => p.edges && 'grainDirection' in p && p.operations)).toBe(true);
     expect(draft.sections).toEqual(result.sections);
     expect(draft.issues).toEqual(result.issues);
     expect(draft.generatedAt).toBe('2026-11-05T10:00:00.000Z');
@@ -227,7 +278,7 @@ describe('toOrderDraft (dafna-order/0.1-draft)', () => {
   });
 });
 
-describe('D-0 order draft migration', () => {
+describe('D-0 order draft migration (chain D-0 -> 0.1 -> 0.2)', () => {
   const geometry = (p: Panel) => [
     p.id,
     p.role,
@@ -241,12 +292,14 @@ describe('D-0 order draft migration', () => {
   it.each([
     ['default (16 mm)', d0Default, 'ldsp_white_16'],
     ['width 2000, 18 mm, recess 20', d0T18, 'ldsp_white_18'],
-  ])('%s: same geometry, new material ids, schema 0.1', (_name, d0, corpus) => {
+  ])('%s: same geometry, new material ids, schema 0.2', (_name, d0, corpus) => {
     const { draft, issues } = migrateOrderDraft(d0);
     expect(issues).toEqual([]);
     if (!draft) throw new Error('no draft');
-    expect(draft.schemaVersion).toBe('dafna-order/0.1-draft');
+    expect(draft.schemaVersion).toBe('dafna-order/0.2-draft');
     expect(draft.migratedFrom).toBe('dafna-order/0-draft');
+    expect(draft.params.interior1).toBe('empty');
+    expect(draft.rails).toEqual([]);
     expect(draft.generatedAt).toBe(d0.generatedAt);
     expect(draft.params.corpusMaterial).toBe(corpus);
     expect(draft.params.doors).toBe('none');
@@ -257,7 +310,19 @@ describe('D-0 order draft migration', () => {
     expect(draft.panels.map((p) => p.material)).toEqual(
       d0.panels.map((p) => materialMap[p.material]),
     );
-    expect(draft.sections).toEqual(d0.sections.map((s) => ({ ...s, doorType: 'none' })));
+    expect(
+      draft.sections.map(
+        ({ index, innerWidthMm, innerHeightMm, innerDepthMm, xStartMm, doorType, preset }) => ({
+          index,
+          innerWidthMm,
+          innerHeightMm,
+          innerDepthMm,
+          xStartMm,
+          doorType,
+          preset,
+        }),
+      ),
+    ).toEqual(d0.sections.map((s) => ({ ...s, doorType: 'none', preset: 'empty' })));
     expect(draft.issues).toEqual(d0.issues);
     expect(draft.materials.corpus?.id).toBe(corpus);
     expect(draft.materials.doors).toBeNull();

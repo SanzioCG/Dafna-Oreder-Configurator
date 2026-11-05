@@ -30,6 +30,7 @@
   --brand-graphite: #2a2928; /* [logo] verified; text colour (site text is #1a1c20) */
   --accent-sky: var(--brand-blue-hover);
   --accent-lavender: #8f9bff; /* [APPROX] not on the dafna.uz home page */
+  --pastel-lavender: #e4e7ff; /* [APPROX] --accent-lavender at ~20% on white (interior cards) */
 
   /* ---- neutrals ---- [site] --color-neutral-* */
   /*
@@ -86,4 +87,5 @@
   --card-doors: var(--pastel-blue);
   --card-door-section: var(--pastel-pink);
   --card-technical: var(--neutral-100); /* staff-only construction params */
+  --card-interior: var(--pastel-lavender);
 }

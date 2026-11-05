@@ -20,7 +20,7 @@ come in later batches.
 | ----- | ------------------------------------------------------------------------------------------------------------------------------- |
 | D-0   | Engine + shkaf carcass + 3D viewer + step UI                                                                                    |
 | D-1a  | Material catalog, colour step, depth definition (ADR-003), hinged overlay doors, order draft 0.1                                |
-| D-1b  | Interior fill presets (shelves, rails, drawers)                                                                                 |
+| D-1b  | Interior fill per section, door leaf/hinge rule fixes (ADR-006), production-ready panel fields, order draft 0.2 (ADR-005)       |
 | D-2a  | Backend: projects, branches/devices, customer confirmation, status model, audit log, outbox, Telegram notification, sales panel |
 | D-2b  | CRM adapter                                                                                                                     |
 | D-3   | Confirmation screen, server-side PDF, QR, on-screen keyboard, kiosk mode                                                        |
@@ -36,38 +36,41 @@ come in later batches.
 
 ## Glossary (uz / ru / en)
 
-| O'zbekcha            | Русский            | English                  | Engine key / role   |
-| -------------------- | ------------------ | ------------------------ | ------------------- |
-| shkaf                | шкаф               | wardrobe                 | `wardrobe`          |
-| tumba                | тумба              | cabinet / nightstand     | —                   |
-| stol                 | стол               | table / desk             | —                   |
-| korpus               | корпус             | carcass                  | —                   |
-| yon devor (bokovina) | боковина           | side panel               | `side`              |
-| usti (qopqoq)        | крыша              | top panel                | `top`               |
-| tagi (dno)           | дно                | bottom panel             | `bottom`            |
-| to'siq (peregorodka) | перегородка        | vertical partition       | `partition`         |
-| orqa devor           | задняя стенка      | back panel               | `back`              |
-| tsokol               | цоколь             | plinth                   | `plinth`            |
-| bo'lim (seksiya)     | секция             | section (bay)            | `sections`          |
-| javon (polka)        | полка              | shelf                    | D-1                 |
-| shtanga              | штанга             | hanging rail             | D-1                 |
-| tortma               | ящик               | drawer                   | D-1                 |
-| eshik                | дверь              | door                     | D-1                 |
-| fasad                | фасад              | front (door/drawer face) | D-1                 |
-| LDSP                 | ЛДСП               | laminated chipboard      | `ldsp`              |
-| HDF                  | ХДФ (ДВП)          | high-density fibreboard  | `hdf`               |
-| kromka               | кромка             | edge banding             | —                   |
-| kenglik              | ширина             | width                    | `width`             |
-| balandlik            | высота             | height                   | `height`            |
-| chuqurlik            | глубина            | depth                    | `depth`             |
-| qalinlik             | толщина            | thickness                | `panelThickness`    |
-| javon egilishi       | прогиб полки       | shelf sag (span limit)   | `SHELF_SPAN`        |
-| nakladnoy eshik      | накладная дверь    | overlay door             | `door`              |
-| bir / ikki tabaqali  | одно- / двустворч. | single / double door     | `single_*`/`double` |
-| ilmoq (petlya)       | петля              | hinge                    | `hingeSide`         |
-| tirqish              | зазор              | gap                      | `doorGap*Mm`        |
-| dekor                | декор              | decor (colour/pattern)   | `decorName`         |
-| korpus chuqurligi    | глубина корпуса    | carcass depth            | `carcassDepthMm`    |
+| O'zbekcha            | Русский              | English                  | Engine key / role   |
+| -------------------- | -------------------- | ------------------------ | ------------------- |
+| shkaf                | шкаф                 | wardrobe                 | `wardrobe`          |
+| tumba                | тумба                | cabinet / nightstand     | —                   |
+| stol                 | стол                 | table / desk             | —                   |
+| korpus               | корпус               | carcass                  | —                   |
+| yon devor (bokovina) | боковина             | side panel               | `side`              |
+| usti (qopqoq)        | крыша                | top panel                | `top`               |
+| tagi (dno)           | дно                  | bottom panel             | `bottom`            |
+| to'siq (peregorodka) | перегородка          | vertical partition       | `partition`         |
+| orqa devor           | задняя стенка        | back panel               | `back`              |
+| tsokol               | цоколь               | plinth                   | `plinth`            |
+| bo'lim (seksiya)     | секция               | section (bay)            | `sections`          |
+| javon (polka)        | полка                | shelf                    | `shelf`             |
+| shtanga              | штанга               | hanging rail             | `rail`              |
+| tortma               | ящик                 | drawer (internal)        | `drawer_*`          |
+| eshik                | дверь                | door                     | D-1                 |
+| fasad                | фасад                | front (door/drawer face) | D-1                 |
+| LDSP                 | ЛДСП                 | laminated chipboard      | `ldsp`              |
+| HDF                  | ХДФ (ДВП)            | high-density fibreboard  | `hdf`               |
+| kromka               | кромка               | edge banding             | —                   |
+| kenglik              | ширина               | width                    | `width`             |
+| balandlik            | высота               | height                   | `height`            |
+| chuqurlik            | глубина              | depth                    | `depth`             |
+| qalinlik             | толщина              | thickness                | `thicknessMm`       |
+| javon egilishi       | прогиб полки         | shelf sag (span limit)   | `SHELF_SPAN`        |
+| nakladnoy eshik      | накладная дверь      | overlay door             | `door`              |
+| bir / ikki tabaqali  | одно- / двустворч.   | single / double door     | `single_*`/`double` |
+| ilmoq (petlya)       | петля                | hinge                    | `hingeSide`         |
+| tirqish              | зазор                | gap                      | `doorGap*Mm`        |
+| dekor                | декор                | decor (colour/pattern)   | `decorName`         |
+| korpus chuqurligi    | глубина корпуса      | carcass depth            | `carcassDepthMm`    |
+| ichki to'ldirish     | наполнение           | interior fill            | `interior1..4`      |
+| kromka (ABS)         | кромка (ABS)         | edge band                | `edges`             |
+| tola yo'nalishi      | направление текстуры | grain direction          | `grainDirection`    |
 
 ## Visual language
 
@@ -87,7 +90,7 @@ self-hosted via `@fontsource/nunito-sans`, latin + cyrillic, weights 400–800.
   white text; unselected = white fill + graphite text; disabled = 40% opacity + short reason.
   Pastels are card backgrounds (one per option-card type, `--card-*`) and never indicate state.
 - **Customer mode** disables every option that would produce an engine error or a
-  `SHELF_SPAN` warning and shows a short reason (e.g. "1 bo'lim" at width 1360); if a size
+  `SHELF_SPAN` / `RAIL_DEPTH_SHORT` / `RAIL_HEIGHT_SHORT` / `DRAWER_SECTION_TOO_WIDE` warning and shows a short reason (e.g. "1 bo'lim" at width 1360); if a size
   change makes the selected option blocked, it falls back to the template default (auto).
   Staff mode keeps every option selectable and shows the issue.
 - **Never change a customer choice silently:** every such auto-reset shows a short toast inside

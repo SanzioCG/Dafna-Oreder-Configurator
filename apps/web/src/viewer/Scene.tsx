@@ -11,6 +11,7 @@ import {
   type V3,
 } from './Dimensions';
 import { cssToken } from '../theme/cssToken';
+import { SectionPicker, type SectionBox } from './SectionPicker';
 import { SoftFloorShadow } from './SoftFloorShadow';
 import { Wardrobe3D } from './Wardrobe3D';
 
@@ -26,6 +27,11 @@ export interface SceneProps {
   extent: FrameBox;
   resetToken: number;
   doorsOpen: boolean;
+  /** interior step: section hit volumes + selected outline */
+  interactive: boolean;
+  sectionBoxes: SectionBox[];
+  selectedSection: number | null;
+  onSectionTap: (index: number) => void;
 }
 
 /**
@@ -42,6 +48,10 @@ export function Scene({
   extent,
   resetToken,
   doorsOpen,
+  interactive,
+  sectionBoxes,
+  selectedSection,
+  onSectionTap,
 }: SceneProps) {
   const { widthMm: W, depthMm: D } = view;
   // Single-layer layout: the canvas is transparent and sits on the page background
@@ -75,7 +85,15 @@ export function Scene({
       />
 
       <group scale={MM} position={[(-W / 2) * MM, 0, (-D / 2) * MM]}>
-        <Wardrobe3D panels={view.result.panels} doorsOpen={doorsOpen} />
+        <Wardrobe3D panels={view.result.panels} rails={view.result.rails} doorsOpen={doorsOpen} />
+        {interactive && (
+          <SectionPicker
+            boxes={sectionBoxes}
+            selected={selectedSection}
+            onTap={onSectionTap}
+            lineScale={lineScale}
+          />
+        )}
         <DimensionLines dims={dims} lineScale={lineScale} />
       </group>
       <LabelProjector anchors={anchors} labelRefs={labelRefs} />

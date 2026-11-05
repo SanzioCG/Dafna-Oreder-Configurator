@@ -1,4 +1,4 @@
-/** Wizard steps. D-1a: size, color, doors active; the rest are visible placeholders. */
+/** Wizard steps. D-1b: size, color, interior, doors active; review is a visible placeholder. */
 export interface StepDef {
   key: string;
   labelKey: string;
@@ -8,7 +8,7 @@ export interface StepDef {
 export const STEPS: StepDef[] = [
   { key: 'size', labelKey: 'step.size', enabled: true },
   { key: 'color', labelKey: 'step.color', enabled: true },
-  { key: 'interior', labelKey: 'step.interior', enabled: false },
+  { key: 'interior', labelKey: 'step.interior', enabled: true },
   { key: 'doors', labelKey: 'step.doors', enabled: true },
   { key: 'review', labelKey: 'step.review', enabled: false },
 ];

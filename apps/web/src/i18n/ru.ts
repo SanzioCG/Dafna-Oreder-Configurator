@@ -18,6 +18,8 @@ export const ru: Messages = {
   'step.size.hint': 'Настройте ширину, высоту и глубину — модель меняется сразу.',
   'step.color.title': 'Выберите цвет',
   'step.color.hint': 'Выберите декор корпуса и дверей.',
+  'step.interior.title': 'Выберите наполнение',
+  'step.interior.hint': 'Выберите секцию (или нажмите на неё в модели), затем вариант наполнения.',
   'step.doors.title': 'Выберите двери',
   'step.doors.hint': 'Тип дверей для всех секций. Откройте двери, чтобы увидеть секции.',
 
@@ -37,6 +39,7 @@ export const ru: Messages = {
   'param.plinthRecess': 'Отступ цоколя',
   'param.doors': 'Двери',
   'param.doorSection': 'Дверь секции {n}',
+  'param.interior': 'Наполнение секции {n}',
 
   'option.sections.auto': 'Авто',
   'option.backPanel.none': 'Нет',
@@ -51,6 +54,21 @@ export const ru: Messages = {
   'option.doorSection.single_left': 'Петли слева',
   'option.doorSection.single_right': 'Петли справа',
   'option.doorSection.double': 'Двустворчатая',
+  'option.interior.auto': 'Авто',
+  'option.interior.empty': 'Пусто',
+  'option.interior.shelves': 'Полки',
+  'option.interior.rail': 'Штанга',
+  'option.interior.rail_shelf': 'Штанга + полка',
+  'option.interior.drawers_shelves': 'Ящики + полки',
+  'option.interior.rail_drawers': 'Штанга + ящики',
+  'interior.sections': 'Секция',
+  'interior.section': 'Секция {n}',
+  'interior.applyAll': 'Применить ко всем секциям',
+  'interior.skipped': 'Не применено к секциям {sections}: {reason}',
+  'interior.details': 'Секция {n}: детали',
+  'interior.details.shelves': 'Полки ({count}), нижняя грань: {positions} мм',
+  'interior.details.rail': 'Ось штанги: {y} мм, высота для одежды: {h} мм',
+  'interior.details.drawer': 'Ящик {y} мм: фасад {fw} × {fh}, короб {bw} × {bh} × {bd} мм',
 
   'decor.white': 'Белый',
   'decor.lightGrey': 'Светло-серый',
@@ -59,7 +77,11 @@ export const ru: Messages = {
   'decor.anthracite': 'Антрацит',
   'color.sameAsCorpus': 'Как корпус',
 
-  'reason.DOOR_TOO_WIDE': 'Секция слишком широкая для одной двери',
+  'reason.DOOR_TOO_WIDE': 'Слишком широкая створка',
+  'reason.HINGE_CONFLICT': 'Петли дверей сталкиваются',
+  'reason.RAIL_DEPTH_SHORT': 'Мала глубина для штанги',
+  'reason.RAIL_HEIGHT_SHORT': 'Мала высота для одежды',
+  'reason.DRAWER_SECTION_TOO_WIDE': 'Секция слишком широкая для ящиков',
   'reason.SHELF_SPAN': 'Слишком широко для полки',
   'reason.default': 'Недоступно при этом размере',
 
@@ -106,10 +128,19 @@ export const ru: Messages = {
   'issue.UNKNOWN_PARAM': 'Неизвестный параметр: {key}',
   'issue.SHELF_SPAN':
     'Секция {sectionNumber}: внутренняя ширина {innerWidthMm} мм больше {maxMm} мм (возможен прогиб полки)',
-  'issue.DOOR_TOO_WIDE':
-    'Секция {sectionNumber} слишком широкая для одной двери: {innerWidthMm} мм > {maxMm} мм (дверь {leafWidthMm} мм)',
+  'issue.DOOR_TOO_WIDE': 'Секция {sectionNumber}: створка {leafWidthMm} мм шире {maxMm} мм',
+  'issue.HINGE_CONFLICT':
+    'Двери секций {sectionNumber} и {nextSectionNumber} навешены на одну перегородку (сталкиваются при открытии)',
   'issue.DOOR_TOO_HEIGHT': 'Высота двери {doorHeightMm} мм больше {maxMm} мм (риск коробления)',
   'issue.MATERIAL_UNKNOWN': 'Неизвестный материал: {material}',
+  'issue.RAIL_DEPTH_SHORT':
+    'Секция {sectionNumber}: внутренняя глубина {innerDepthMm} мм — для штанги нужно от {minMm} мм',
+  'issue.RAIL_HEIGHT_SHORT':
+    'Секция {sectionNumber}: высота для одежды {clearHangingHeightMm} мм — нужно от {minMm} мм',
+  'issue.DRAWER_SECTION_TOO_WIDE':
+    'Секция {sectionNumber}: фасад ящика {frontWidthMm} мм шире {maxMm} мм',
+  'issue.MIGRATION_DOORS_CHANGED':
+    'Дверь секции {sectionNumber} изменена по новому правилу: {from} → {to}',
   'issue.MIGRATION_THICKNESS_UNAVAILABLE': 'В каталоге нет плиты {panelThickness} мм',
   'issue.UNSUPPORTED_SCHEMA': 'Неподдерживаемая схема заказа: {schemaVersion}',
 };

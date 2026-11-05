@@ -1,5 +1,5 @@
 export type * from './types.js';
-export { ORDER_SCHEMA_VERSION, ORDER_SCHEMA_VERSION_D0 } from './types.js';
+export { ORDER_SCHEMA_VERSION, ORDER_SCHEMA_VERSION_01, ORDER_SCHEMA_VERSION_D0 } from './types.js';
 export {
   wardrobeTemplate,
   defaultParams,
@@ -15,8 +15,6 @@ export {
   validate,
   computeLayout,
   autoSectionCount,
-  autoDoorKind,
-  resolveDoorTypes,
   distributeEvenly,
   maxSectionInnerWidth,
   SAME_AS_CORPUS,
@@ -25,4 +23,31 @@ export {
   type DoorLeaf,
 } from './wardrobe.js';
 export { toOrderDraft, type OrderDraftOptions } from './order.js';
-export { migrateParamsFromD0, migrateOrderDraft, type MigrationOptions } from './migrate.js';
+export {
+  migrateParamsFromD0,
+  migrateParamsFrom01,
+  migrateOrderDraft,
+  type MigrationOptions,
+} from './migrate.js';
+export {
+  planDoors,
+  doorKindForLeaf,
+  defaultLeftCount,
+  assignRun,
+  roundLeaves,
+  type DoorPlan,
+  type DoorPlanInput,
+  type HingeConflict,
+} from './doors.js';
+export {
+  INTERIOR_PRESETS,
+  defaultPresetFor,
+  evenShelfBottoms,
+  planInterior,
+  resolveInterior,
+  slideLength,
+  type InteriorConstants,
+  type InteriorPlan,
+  type SectionBox,
+} from './interior.js';
+export { interiorConstants } from './wardrobe.js';

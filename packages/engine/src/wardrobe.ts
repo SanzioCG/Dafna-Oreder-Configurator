@@ -1,22 +1,30 @@
 import { getMaterial, materialsV0 } from './catalog.js';
+import { planDoors, type DoorLeaf, type DoorPlan, type HingeConflict } from './doors.js';
+import {
+  resolveInterior,
+  type InteriorConstants,
+  type InteriorPlan,
+  type SectionBox,
+} from './interior.js';
 import { makeIssue, resolveParams } from './params.js';
 import { getNumberConstant, getParamDef, getStringConstant, wardrobeTemplate } from './template.js';
 import type {
   Dimensions,
   DoorType,
   GenerateResult,
-  HingeSide,
   Issue,
   Material,
   MaterialCatalog,
   Panel,
+  PanelEdges,
   Params,
+  Rail,
   Section,
   Template,
   Vec3,
 } from './types.js';
 
-export const WARDROBE_GENERATOR = 'wardrobe-carcass-v1';
+export const WARDROBE_GENERATOR = 'wardrobe-carcass-v2';
 
 /** Rotations (degrees, XYZ) from the panel local frame (L→X, T→Y, W→Z) to product axes. */
 const ROT_HORIZONTAL: Vec3 = [0, 0, 0]; // length X, thickness Y, width Z
@@ -25,13 +33,7 @@ const ROT_VERTICAL_XY: Vec3 = [90, 0, 0]; // length X, width Y, thickness Z  (ba
 
 export const SAME_AS_CORPUS = 'same_as_corpus';
 
-export interface DoorLeaf {
-  id: string;
-  sectionIndex: number;
-  hingeSide: HingeSide;
-  xStartMm: number;
-  widthMm: number;
-}
+export type { DoorLeaf } from './doors.js';
 
 export interface WardrobeLayout {
   widthMm: number;
@@ -61,15 +63,24 @@ export interface WardrobeLayout {
   /** Z of the carcass front edge */
   carcassFrontZMm: number;
   sectionCount: number;
+  /** sections param was 'auto' (used to attribute HINGE_CONFLICT) */
+  sectionsWereAuto: boolean;
   sectionInnerWidthsMm: number[];
   doorTypes: DoorType[];
   /** which doorSectionN override produced each section's door type (null = preset) */
   doorTypeSource: (string | null)[];
   doorLeaves: DoorLeaf[];
+  /** partitions where two leaves would hinge (only with invalid overrides / section counts) */
+  hingeConflicts: HingeConflict[];
   doorHeightMm: number;
   maxShelfSpanMm: number;
-  maxSingleDoorWidthMm: number;
+  maxSingleLeafWidthMm: number;
   maxDoorHeightMm: number;
+  /** interior plan per section ('auto' resolved) */
+  interior: (InteriorPlan & { source: 'auto' | 'chosen' })[];
+  interiorMin: { railDepth: number; railHeight: number; drawerWidth: number };
+  drawerFrontSetbackMm: number;
+  edgeBand: { bandId: string; thicknessMm: number };
 }
 
 /** Split `total` whole millimetres into `n` parts differing by at most 1 mm (extra mm leftmost). */
@@ -90,116 +101,76 @@ export function maxSectionInnerWidth(widthMm: number, t: number, n: number): num
 
 /**
  * Minimum section count from the template's numeric `sections` options that keeps every section
- * inner width <= maxShelfSpanMm. Falls back to the largest option.
+ * inner width <= maxShelfSpanMm and, if given, satisfies `acceptable(n)` (the door layout is
+ * valid: no DOOR_TOO_WIDE, no HINGE_CONFLICT). Falls back to the largest option.
  */
-export function autoSectionCount(template: Template, widthMm: number, t: number): number {
+export function autoSectionCount(
+  template: Template,
+  widthMm: number,
+  t: number,
+  acceptable: (n: number) => boolean = () => true,
+): number {
   const maxSpan = getNumberConstant(template, 'maxShelfSpanMm');
   const counts = (getParamDef(template, 'sections')?.options ?? [])
     .filter((o): o is number => typeof o === 'number')
     .sort((a, b) => a - b);
   for (const n of counts) {
-    if (maxSectionInnerWidth(widthMm, t, n) <= maxSpan) return n;
+    if (maxSectionInnerWidth(widthMm, t, n) <= maxSpan && acceptable(n)) return n;
   }
   return counts[counts.length - 1] ?? 1;
 }
 
-/** doors=auto rule for one section: opening <= maxSingleDoorWidth -> single, wider -> double. */
-export function autoDoorKind(
-  innerWidthMm: number,
-  maxSingleDoorWidthMm: number,
-): 'single' | 'double' {
-  return innerWidthMm <= maxSingleDoorWidthMm ? 'single' : 'double';
-}
-
-/**
- * Resolves the door type of every section: staff override (doorSectionN) wins, otherwise the
- * preset. Preset single doors alternate hinge side left, right, left, ... from the left.
- */
-export function resolveDoorTypes(
+function doorPlanFor(
+  template: Template,
   params: Params,
-  innerWidths: number[],
-  maxSingleDoorWidthMm: number,
-): { types: DoorType[]; source: (string | null)[] } {
-  const types: DoorType[] = [];
-  const source: (string | null)[] = [];
-  let singles = 0;
-  innerWidths.forEach((w, i) => {
-    const key = `doorSection${i + 1}`;
-    const override = params[key];
-    if (typeof override === 'string' && override !== 'preset') {
-      types.push(override as DoorType);
-      source.push(key);
-      return;
-    }
-    source.push(null);
-    const kind =
-      params.doors === 'none'
-        ? 'none'
-        : params.doors === 'all_single'
-          ? 'single'
-          : autoDoorKind(w, maxSingleDoorWidthMm);
-    if (kind === 'single') {
-      types.push(singles % 2 === 0 ? 'single_left' : 'single_right');
-      singles += 1;
-    } else {
-      types.push(kind);
-    }
-  });
-  return { types, source };
-}
-
-function buildDoorLeaves(
-  W: number,
+  widthMm: number,
   t: number,
   innerWidths: number[],
-  types: DoorType[],
-  gapEdge: number,
-  gapBetween: number,
-): DoorLeaf[] {
-  const leaves: DoorLeaf[] = [];
-  const n = innerWidths.length;
-  let xStart = t;
-  innerWidths.forEach((inner, i) => {
-    // Coverage of section i: from the centre line of the partition on its left (or the outer
-    // edge) to the centre line of the partition on its right (or the outer edge).
-    const left = i === 0 ? 0 : xStart - t / 2;
-    const right = i === n - 1 ? W : xStart + inner + t / 2;
-    const gapAt = (neighbour: number) =>
-      neighbour < 0 || neighbour >= n || types[neighbour] === 'none' ? gapEdge : gapBetween / 2;
-    const gL = gapAt(i - 1);
-    const gR = gapAt(i + 1);
-    const type = types[i];
-    const num = i + 1;
-    if (type === 'single_left' || type === 'single_right') {
-      leaves.push({
-        id: `door-${num}`,
-        sectionIndex: i,
-        hingeSide: type === 'single_left' ? 'left' : 'right',
-        xStartMm: left + gL,
-        widthMm: right - gR - (left + gL),
-      });
-    } else if (type === 'double') {
-      const mid = (left + right) / 2;
-      leaves.push(
-        {
-          id: `door-${num}-left`,
-          sectionIndex: i,
-          hingeSide: 'left',
-          xStartMm: left + gL,
-          widthMm: mid - gapBetween / 2 - (left + gL),
-        },
-        {
-          id: `door-${num}-right`,
-          sectionIndex: i,
-          hingeSide: 'right',
-          xStartMm: mid + gapBetween / 2,
-          widthMm: right - gR - (mid + gapBetween / 2),
-        },
-      );
-    }
-    xStart += inner + t;
+): DoorPlan {
+  return planDoors({
+    widthMm,
+    t,
+    innerWidths,
+    preset: String(params.doors),
+    overrides: innerWidths.map((_, i) => {
+      const o = params[`doorSection${i + 1}`];
+      return typeof o === 'string' ? o : undefined;
+    }),
+    gapEdge: getNumberConstant(template, 'doorGapEdgeMm'),
+    gapBetween: getNumberConstant(template, 'doorGapBetweenMm'),
+    maxSingleLeafWidth: getNumberConstant(template, 'maxSingleLeafWidthMm'),
+    rounding: getNumberConstant(template, 'doorLeafRoundingMm'),
   });
-  return leaves;
+}
+
+/** True if the door plan has no DOOR_TOO_WIDE single leaf and no hinge conflict. */
+function doorPlanValid(plan: DoorPlan, maxLeaf: number): boolean {
+  if (plan.conflicts.length > 0) return false;
+  return plan.leaves.every((l) => plan.types[l.sectionIndex] === 'double' || l.widthMm <= maxLeaf);
+}
+
+export function interiorConstants(template: Template): InteriorConstants {
+  const n = (name: string) => getNumberConstant(template, name);
+  return {
+    shelfPitchTargetMm: n('shelfPitchTargetMm'),
+    shelfFrontSetbackMm: n('shelfFrontSetbackMm'),
+    railTopShelfDropMm: n('railTopShelfDropMm'),
+    railAxisDropMm: n('railAxisDropMm'),
+    railDiameterMm: n('railDiameterMm'),
+    drawerFrontHeightMm: n('drawerFrontHeightMm'),
+    drawerCount: n('drawerCountPerSection'),
+    drawerGapMm: n('drawerGapMm'),
+    drawerFrontSetbackMm: n('drawerFrontSetbackMm'),
+    drawerSlideClearanceMm: n('drawerSlideClearanceMm'),
+    drawerBoxHeightReductionMm: n('drawerBoxHeightReductionMm'),
+    drawerBackClearanceMm: n('drawerBackClearanceMm'),
+    drawerSlideMinMm: n('drawerSlideMinMm'),
+    drawerSlideMaxMm: n('drawerSlideMaxMm'),
+    drawerSlideStepMm: n('drawerSlideStepMm'),
+    railMinDepthMm: n('railMinDepthMm'),
+    railMinHangingHeightMm: n('railMinHangingHeightMm'),
+    drawerMaxFrontWidthMm: n('drawerMaxFrontWidthMm'),
+  };
 }
 
 /** Derives all dimensions from a complete, valid parameter set. */
@@ -224,12 +195,25 @@ export function computeLayout(
   const plinthRecessMm = hasPlinth ? Number(params.plinthRecess) : 0;
   const hasBack = params.backPanel === 'hdf_overlay';
   const backThicknessMm = hasBack ? backMaterial.thicknessMm : 0;
+  const maxSingleLeafWidthMm = getNumberConstant(template, 'maxSingleLeafWidthMm');
+  const innerFor = (n: number) => distributeEvenly(innerTotal(widthMm, t, n), n);
   const sectionCount =
-    params.sections === 'auto' ? autoSectionCount(template, widthMm, t) : Number(params.sections);
-  const sectionInnerWidthsMm = distributeEvenly(innerTotal(widthMm, t, sectionCount), sectionCount);
+    params.sections === 'auto'
+      ? autoSectionCount(
+          template,
+          widthMm,
+          t,
+          (n) =>
+            params.doors === 'none' ||
+            doorPlanValid(
+              doorPlanFor(template, params, widthMm, t, innerFor(n)),
+              maxSingleLeafWidthMm,
+            ),
+        )
+      : Number(params.sections);
+  const sectionInnerWidthsMm = innerFor(sectionCount);
 
-  const maxSingleDoorWidthMm = getNumberConstant(template, 'maxSingleDoorWidthMm');
-  const doors = resolveDoorTypes(params, sectionInnerWidthsMm, maxSingleDoorWidthMm);
+  const doors = doorPlanFor(template, params, widthMm, t, sectionInnerWidthsMm);
   const hasDoors = doors.types.some((d) => d !== 'none');
   const doorThicknessMm = hasDoors ? doorMaterial.thicknessMm : 0;
   const doorGapFrontMm = hasDoors ? getNumberConstant(template, 'doorGapFrontMm') : 0;
@@ -237,6 +221,29 @@ export function computeLayout(
   const doorGapBetweenMm = getNumberConstant(template, 'doorGapBetweenMm');
   const carcassHeightMm = heightMm - plinthHeightMm;
   const carcassDepthMm = depthMm - backThicknessMm - doorThicknessMm - doorGapFrontMm;
+
+  const ic = interiorConstants(template);
+  let xs = t;
+  const interior = sectionInnerWidthsMm.map((innerW, index) => {
+    const box: SectionBox = {
+      index,
+      xStart: xs,
+      innerW,
+      yBottom: plinthHeightMm + t,
+      yTop: heightMm - t,
+      zBack: backThicknessMm,
+      innerDepth: carcassDepthMm,
+      t,
+    };
+    xs += innerW + t;
+    const choice = params[`interior${index + 1}`];
+    return resolveInterior(
+      box,
+      typeof choice === 'string' ? choice : 'auto',
+      doors.types[index] ?? 'none',
+      ic,
+    );
+  });
 
   return {
     widthMm,
@@ -261,21 +268,27 @@ export function computeLayout(
     carcassBackZMm: backThicknessMm,
     carcassFrontZMm: backThicknessMm + carcassDepthMm,
     sectionCount,
+    sectionsWereAuto: params.sections === 'auto',
     sectionInnerWidthsMm,
     doorTypes: doors.types,
     doorTypeSource: doors.source,
-    doorLeaves: buildDoorLeaves(
-      widthMm,
-      t,
-      sectionInnerWidthsMm,
-      doors.types,
-      doorGapEdgeMm,
-      doorGapBetweenMm,
-    ),
+    doorLeaves: doors.leaves,
+    hingeConflicts: doors.conflicts,
     doorHeightMm: carcassHeightMm - 2 * doorGapEdgeMm,
     maxShelfSpanMm: getNumberConstant(template, 'maxShelfSpanMm'),
-    maxSingleDoorWidthMm,
+    maxSingleLeafWidthMm,
     maxDoorHeightMm: getNumberConstant(template, 'maxDoorHeightMm'),
+    interior,
+    drawerFrontSetbackMm: ic.drawerFrontSetbackMm,
+    interiorMin: {
+      railDepth: ic.railMinDepthMm,
+      railHeight: ic.railMinHangingHeightMm,
+      drawerWidth: ic.drawerMaxFrontWidthMm,
+    },
+    edgeBand: {
+      bandId: getStringConstant(template, 'edgeBandId'),
+      thicknessMm: getNumberConstant(template, 'edgeBandThicknessMm'),
+    },
   };
 }
 
@@ -331,22 +344,51 @@ function layoutIssues(layout: WardrobeLayout): Issue[] {
       );
     }
   });
-  layout.doorTypes.forEach((type, index) => {
-    const inner = layout.sectionInnerWidthsMm[index] ?? 0;
-    if (
-      (type === 'single_left' || type === 'single_right') &&
-      inner > layout.maxSingleDoorWidthMm
-    ) {
-      const leaf = layout.doorLeaves.find((l) => l.sectionIndex === index);
-      issues.push(
-        makeIssue('DOOR_TOO_WIDE', 'error', layout.doorTypeSource[index] ?? 'doors', {
-          sectionIndex: index,
-          sectionNumber: index + 1,
-          innerWidthMm: inner,
-          leafWidthMm: leaf?.widthMm ?? 0,
-          maxMm: layout.maxSingleDoorWidthMm,
-        }),
-      );
+  // DOOR_TOO_WIDE: measured on the (rounded) single leaf — same width the auto rule uses
+  for (const leaf of layout.doorLeaves) {
+    const index = leaf.sectionIndex;
+    if (layout.doorTypes[index] === 'double' || leaf.widthMm <= layout.maxSingleLeafWidthMm)
+      continue;
+    issues.push(
+      makeIssue('DOOR_TOO_WIDE', 'error', layout.doorTypeSource[index] ?? 'doors', {
+        sectionIndex: index,
+        sectionNumber: index + 1,
+        leafWidthMm: leaf.widthMm,
+        maxMm: layout.maxSingleLeafWidthMm,
+      }),
+    );
+  }
+  // HINGE_CONFLICT: two leaves on one partition (bad override, or an explicit section count
+  // whose auto layout needs two adjacent double doors)
+  for (const c of layout.hingeConflicts) {
+    issues.push(
+      makeIssue('HINGE_CONFLICT', 'error', c.source ?? hingeParamKey(layout), {
+        partitionNumber: c.partitionNumber,
+        sectionNumber: c.partitionNumber,
+        nextSectionNumber: c.partitionNumber + 1,
+      }),
+    );
+  }
+  // interior warnings (only for explicitly chosen presets; 'auto' never warns)
+  layout.interior.forEach((plan, index) => {
+    for (const code of plan.warnings) {
+      const s = layout.sectionInnerWidthsMm;
+      const values: Record<string, number | string> = {
+        sectionIndex: index,
+        sectionNumber: index + 1,
+        preset: plan.preset,
+      };
+      if (code === 'RAIL_DEPTH_SHORT') {
+        values.innerDepthMm = layout.carcassDepthMm;
+        values.minMm = layout.interiorMin.railDepth;
+      } else if (code === 'RAIL_HEIGHT_SHORT') {
+        values.clearHangingHeightMm = plan.clearHangingHeightMm ?? 0;
+        values.minMm = layout.interiorMin.railHeight;
+      } else if (code === 'DRAWER_SECTION_TOO_WIDE') {
+        values.frontWidthMm = plan.drawers[0]?.frontWidthMm ?? s[index] ?? 0;
+        values.maxMm = layout.interiorMin.drawerWidth;
+      }
+      issues.push(makeIssue(code, 'warning', `interior${index + 1}`, values));
     }
   });
   if (layout.hasDoors && layout.doorHeightMm > layout.maxDoorHeightMm) {
@@ -358,6 +400,11 @@ function layoutIssues(layout: WardrobeLayout): Issue[] {
     );
   }
   return issues;
+}
+
+/** Without a responsible override, the explicit section count is what makes doors collide. */
+function hingeParamKey(layout: WardrobeLayout): string {
+  return layout.sectionsWereAuto ? 'doors' : 'sections';
 }
 
 function checkTemplate(template: Template): Issue | null {
@@ -396,13 +443,28 @@ function buildSections(layout: WardrobeLayout): Section[] {
       innerDepthMm: layout.carcassDepthMm,
       xStartMm: x,
       doorType: layout.doorTypes[index] ?? 'none',
+      preset: layout.interior[index]?.preset ?? 'empty',
+      presetSource: layout.interior[index]?.source ?? 'auto',
+      shelves: layout.interior[index]?.shelves ?? [],
+      rails: layout.interior[index]?.rails ?? [],
+      drawers: layout.interior[index]?.drawers ?? [],
+      clearHangingHeightMm: layout.interior[index]?.clearHangingHeightMm ?? null,
     });
     x += w + t;
   });
   return sections;
 }
 
+/** Panel before the production fields are added. */
+type BasePanel = Omit<Panel, 'edges' | 'grainDirection' | 'operations'>;
+
 function buildPanels(layout: WardrobeLayout, sections: Section[]): Panel[] {
+  return [...buildCarcassAndDoors(layout, sections), ...buildInterior(layout, sections)].map((p) =>
+    withProductionFields(p, layout),
+  );
+}
+
+function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): BasePanel[] {
   const t = layout.panelThicknessMm;
   const W = layout.widthMm;
   const H = layout.heightMm;
@@ -413,7 +475,7 @@ function buildPanels(layout: WardrobeLayout, sections: Section[]): Panel[] {
   const zMid = zC + Dc / 2;
   const corpus = layout.corpusMaterial.id;
 
-  const panels: Panel[] = [
+  const panels: BasePanel[] = [
     {
       id: 'side-left',
       role: 'side',
@@ -528,6 +590,146 @@ function buildPanels(layout: WardrobeLayout, sections: Section[]): Panel[] {
   return panels;
 }
 
+/** Shelves and internal drawers, section by section (left to right, bottom to top). */
+function buildInterior(layout: WardrobeLayout, sections: Section[]): BasePanel[] {
+  const t = layout.panelThicknessMm;
+  const zBack = layout.carcassBackZMm;
+  const zFront = layout.carcassFrontZMm;
+  const corpus = layout.corpusMaterial.id;
+  const hdf = layout.backMaterial;
+  const out: BasePanel[] = [];
+  for (const s of sections) {
+    const plan = layout.interior[s.index];
+    if (!plan) continue;
+    const xMid = s.xStartMm + s.innerWidthMm / 2;
+    // drawers first (they are at the bottom), then shelves bottom to top
+    for (const d of plan.drawers) {
+      const frontFaceZ = zFront - layoutDrawerSetback(layout);
+      const boxBackZ = frontFaceZ - t - d.boxDepthMm;
+      const boxBottomY = d.frontYMm + (d.frontHeightMm - d.boxHeightMm) / 2;
+      const boxLeft = xMid - d.boxWidthMm / 2;
+      const extra = { sectionIndex: s.index };
+      out.push(
+        {
+          id: `${d.id}-front`,
+          role: 'drawer_front',
+          lengthMm: d.frontWidthMm,
+          widthMm: d.frontHeightMm,
+          thicknessMm: t,
+          material: corpus,
+          position: [xMid, d.frontYMm + d.frontHeightMm / 2, frontFaceZ - t / 2],
+          rotation: ROT_VERTICAL_XY,
+          ...extra,
+        },
+        {
+          id: `${d.id}-side-left`,
+          role: 'drawer_side',
+          lengthMm: d.boxHeightMm,
+          widthMm: d.boxDepthMm,
+          thicknessMm: t,
+          material: corpus,
+          position: [boxLeft + t / 2, boxBottomY + d.boxHeightMm / 2, boxBackZ + d.boxDepthMm / 2],
+          rotation: ROT_VERTICAL_YZ,
+          ...extra,
+        },
+        {
+          id: `${d.id}-side-right`,
+          role: 'drawer_side',
+          lengthMm: d.boxHeightMm,
+          widthMm: d.boxDepthMm,
+          thicknessMm: t,
+          material: corpus,
+          position: [
+            boxLeft + d.boxWidthMm - t / 2,
+            boxBottomY + d.boxHeightMm / 2,
+            boxBackZ + d.boxDepthMm / 2,
+          ],
+          rotation: ROT_VERTICAL_YZ,
+          ...extra,
+        },
+        {
+          id: `${d.id}-back`,
+          role: 'drawer_back',
+          lengthMm: d.boxWidthMm - 2 * t,
+          widthMm: d.boxHeightMm,
+          thicknessMm: t,
+          material: corpus,
+          position: [xMid, boxBottomY + d.boxHeightMm / 2, boxBackZ + t / 2],
+          rotation: ROT_VERTICAL_XY,
+          ...extra,
+        },
+        {
+          id: `${d.id}-bottom`,
+          role: 'drawer_bottom',
+          lengthMm: d.boxWidthMm,
+          widthMm: d.boxDepthMm,
+          thicknessMm: hdf.thicknessMm,
+          material: hdf.id,
+          position: [xMid, boxBottomY - hdf.thicknessMm / 2, boxBackZ + d.boxDepthMm / 2],
+          rotation: ROT_HORIZONTAL,
+          ...extra,
+        },
+      );
+    }
+    for (const sh of plan.shelves) {
+      out.push({
+        id: sh.id,
+        role: 'shelf',
+        lengthMm: sh.lengthMm,
+        widthMm: sh.depthMm,
+        thicknessMm: t,
+        material: corpus,
+        position: [xMid, sh.yMm + t / 2, zBack + sh.depthMm / 2],
+        rotation: ROT_HORIZONTAL,
+        sectionIndex: s.index,
+      });
+    }
+  }
+  return out;
+}
+
+function layoutDrawerSetback(layout: WardrobeLayout): number {
+  return layout.drawerFrontSetbackMm;
+}
+
+const NO_BAND = { bandId: null, thicknessMm: null };
+
+/**
+ * Production fields (data only, for a later Bazis / GibLab export):
+ * - edges: visible front edges banded (ADR-005 edge rule), others null;
+ * - grainDirection: 'length' for LDSP/MDF, null for HDF (placeholder);
+ * - operations: always empty (no drilling in D-1b).
+ */
+function withProductionFields(p: BasePanel, layout: WardrobeLayout): Panel {
+  const band = { bandId: layout.edgeBand.bandId, thicknessMm: layout.edgeBand.thicknessMm };
+  const allBanded = p.role === 'door' || p.role === 'drawer_front';
+  const frontBanded = allBanded || ['side', 'partition', 'top', 'bottom', 'shelf'].includes(p.role);
+  const edges: PanelEdges = {
+    front: frontBanded ? { ...band } : { ...NO_BAND },
+    back: allBanded ? { ...band } : { ...NO_BAND },
+    left: allBanded ? { ...band } : { ...NO_BAND },
+    right: allBanded ? { ...band } : { ...NO_BAND },
+  };
+  const isHdf = p.material === layout.backMaterial.id && layout.backMaterial.kind === 'hdf';
+  return { ...p, edges, grainDirection: isHdf ? null : 'length', operations: [] };
+}
+
+function buildRails(layout: WardrobeLayout, sections: Section[]): Rail[] {
+  const rails: Rail[] = [];
+  for (const s of sections) {
+    for (const r of layout.interior[s.index]?.rails ?? []) {
+      rails.push({
+        id: r.id,
+        sectionIndex: s.index,
+        lengthMm: r.lengthMm,
+        diameterMm: r.diameterMm,
+        position: [s.xStartMm + s.innerWidthMm / 2, r.axisYMm, r.zMm],
+      });
+    }
+  }
+  return rails;
+}
+
 function buildDimensions(layout: WardrobeLayout): Dimensions {
   return {
     widthMm: layout.widthMm,
@@ -546,7 +748,8 @@ function buildDimensions(layout: WardrobeLayout): Dimensions {
  * Generates the wardrobe for untrusted parameters. Never throws on user input.
  * If any error issue exists, panels and sections are empty and dimensions is null.
  * Output is deterministic: ids and ordering are stable (sides, bottom, top, partitions L→R,
- * back, plinth front/back, door leaves L→R).
+ * back, plinth front/back, door leaves L→R, then per section L→R: drawer parts bottom to top,
+ * shelves bottom to top). Every panel carries edges / grainDirection / operations.
  */
 export function generate(
   template: Template,
@@ -555,13 +758,14 @@ export function generate(
 ): GenerateResult {
   const issues = validate(params, template, catalog);
   if (issues.some((i) => i.severity === 'error')) {
-    return { panels: [], sections: [], issues, dimensions: null };
+    return { panels: [], rails: [], sections: [], issues, dimensions: null };
   }
   const { params: resolved } = resolveParams(template, params);
   const layout = computeLayout(template, resolved, catalog);
   const sections = buildSections(layout);
   return {
     panels: buildPanels(layout, sections),
+    rails: buildRails(layout, sections),
     sections,
     issues,
     dimensions: buildDimensions(layout),

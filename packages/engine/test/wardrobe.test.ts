@@ -6,11 +6,18 @@ import {
   wardrobeTemplate as T,
   type Panel,
   type Params,
+  type Section,
 } from '../src/index.js';
 
-/** Carcass tests run without doors (D-0 geometry); door tests are in doors.test.ts. */
+/** Carcass tests run without doors and without interior (D-0 geometry); see doors/interior tests. */
+const NO_INTERIOR = {
+  interior1: 'empty',
+  interior2: 'empty',
+  interior3: 'empty',
+  interior4: 'empty',
+};
 const gen = (overrides: Partial<Params> = {}) =>
-  generate(T, { ...defaultParams(T), doors: 'none', ...overrides });
+  generate(T, { ...defaultParams(T), doors: 'none', ...NO_INTERIOR, ...overrides });
 const mat = (t: number) => (t === 18 ? 'ldsp_white_18' : 'ldsp_white_16');
 const byId = (panels: Panel[], id: string): Panel => {
   const p = panels.find((x) => x.id === id);
@@ -65,7 +72,22 @@ describe('carcass with default params and doors=none (D-0 geometry)', () => {
   });
 
   it('has two equal sections', () => {
-    expect(result.sections).toEqual([
+    const d0 = ({
+      index,
+      innerWidthMm,
+      innerHeightMm,
+      innerDepthMm,
+      xStartMm,
+      doorType,
+    }: Section) => ({
+      index,
+      innerWidthMm,
+      innerHeightMm,
+      innerDepthMm,
+      xStartMm,
+      doorType,
+    });
+    expect(result.sections.map(d0)).toEqual([
       {
         index: 0,
         innerWidthMm: 656,
@@ -184,7 +206,12 @@ describe('sections=auto', () => {
   it('never produces a SHELF_SPAN warning across the whole width range', () => {
     for (const t of [16, 18]) {
       for (let width = 600; width <= 2400; width += 1) {
-        const issues = validate({ ...defaultParams(T), width, corpusMaterial: mat(t) });
+        const issues = validate({
+          ...defaultParams(T),
+          doors: 'none',
+          width,
+          corpusMaterial: mat(t),
+        });
         expect(issues).toEqual([]);
       }
     }
@@ -198,7 +225,7 @@ describe('sections=auto', () => {
 
 describe('SHELF_SPAN warning', () => {
   it('triggers once per section wider than 900 mm', () => {
-    const issues = validate({ ...defaultParams(T), width: 2400, sections: 2 });
+    const issues = validate({ ...defaultParams(T), doors: 'none', width: 2400, sections: 2 });
     expect(issues).toEqual([
       {
         code: 'SHELF_SPAN',
@@ -218,15 +245,17 @@ describe('SHELF_SPAN warning', () => {
   });
 
   it('does not trigger at exactly 900 mm, triggers at 901 mm', () => {
-    expect(validate({ ...defaultParams(T), width: 932, sections: 1 })).toEqual([]);
-    const w = validate({ ...defaultParams(T), width: 933, sections: 1 });
+    expect(validate({ ...defaultParams(T), doors: 'none', width: 932, sections: 1 })).toEqual([]);
+    const w = validate({ ...defaultParams(T), doors: 'none', width: 933, sections: 1 });
     expect(w.map((i) => [i.code, i.values.innerWidthMm])).toEqual([['SHELF_SPAN', 901]]);
   });
 
   it('only warns for the sections that exceed (uneven remainder)', () => {
     // 1837 - 3*16 = 1789 -> [895, 894] ok; 1853 - 48 = 1805 -> [903, 902] both warn
-    expect(validate({ ...defaultParams(T), width: 1837, sections: 2 })).toEqual([]);
-    expect(validate({ ...defaultParams(T), width: 1853, sections: 2 }).length).toBe(2);
+    expect(validate({ ...defaultParams(T), doors: 'none', width: 1837, sections: 2 })).toEqual([]);
+    expect(validate({ ...defaultParams(T), doors: 'none', width: 1853, sections: 2 }).length).toBe(
+      2,
+    );
   });
 
   it('is a warning, so geometry is still generated', () => {
