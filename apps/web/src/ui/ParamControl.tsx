@@ -1,9 +1,11 @@
-import { clampParam, type ParamDef, type ParamValue } from '@dafna/engine';
+import { clampParam, type ParamDef, type ParamValue, type Params } from '@dafna/engine';
+import type { ReactNode } from 'react';
 import { optionLabel, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import { NumberField } from './NumberField';
 import { Segmented } from './Segmented';
 import { Slider } from './Slider';
+import { SwatchPicker } from './SwatchPicker';
 
 interface ParamControlProps {
   def: ParamDef;
@@ -11,12 +13,24 @@ interface ParamControlProps {
   mode: Mode;
   hasError: boolean;
   onChange: (key: string, value: ParamValue) => void;
+  /** all current params (swatches need the corpus decor for "same as corpus") */
+  params: Params;
+  /** optional extra line under the control (e.g. staff depth breakdown) */
+  hint?: ReactNode;
 }
 
 /** One control generated from a template parameter definition. */
-export function ParamControl({ def, value, mode, hasError, onChange }: ParamControlProps) {
+export function ParamControl({
+  def,
+  value,
+  mode,
+  hasError,
+  onChange,
+  params,
+  hint,
+}: ParamControlProps) {
   const { t } = useI18n();
-  const label = t(def.labelKey);
+  const label = t(def.labelKey, { n: def.appliesToSection });
   const staff = mode === 'staff';
 
   const header = (
@@ -26,8 +40,31 @@ export function ParamControl({ def, value, mode, hasError, onChange }: ParamCont
       {staff && !def.customerVisible && <span className="badge-staff">{t('staff.onlyStaff')}</span>}
     </div>
   );
-  const note =
+  const unconfirmedNote =
     staff && def.unconfirmed && def.note ? <p className="param-note">{def.note}</p> : null;
+  const note = (
+    <>
+      {hint}
+      {unconfirmedNote}
+    </>
+  );
+
+  if (def.control === 'swatch') {
+    return (
+      <div className={hasError ? 'param param-error' : 'param'} data-param={def.key}>
+        {header}
+        <SwatchPicker
+          options={def.options ?? []}
+          value={value}
+          corpusValue={params.corpusMaterial ?? ''}
+          mode={mode}
+          label={label}
+          onChange={(v) => onChange(def.key, v)}
+        />
+        {note}
+      </div>
+    );
+  }
 
   if (def.type === 'int') {
     const min = def.min ?? 0;

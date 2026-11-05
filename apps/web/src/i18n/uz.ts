@@ -15,6 +15,10 @@ export const uz = {
   'step.comingSoon': 'Tez orada',
   'step.size.title': "Shkaf o'lchamini tanlang",
   'step.size.hint': "Kenglik, balandlik va chuqurlikni sozlang — model darhol o'zgaradi.",
+  'step.color.title': 'Rangni tanlang',
+  'step.color.hint': 'Korpus va eshiklar uchun dekor tanlang.',
+  'step.doors.title': 'Eshiklarni tanlang',
+  'step.doors.hint': "Eshik turi barcha bo'limlar uchun. Ichini ko'rish uchun eshiklarni oching.",
 
   'nav.back': 'Orqaga',
   'nav.next': 'Keyingi',
@@ -24,17 +28,35 @@ export const uz = {
   'param.height': 'Balandlik',
   'param.depth': 'Chuqurlik',
   'param.sections': "Bo'limlar soni",
-  'param.panelThickness': 'Plita qalinligi',
+  'param.corpusMaterial': 'Korpus rangi',
+  'param.doorMaterial': 'Eshik rangi',
   'param.backPanel': 'Orqa devor',
   'param.base': 'Asos',
   'param.plinthHeight': 'Tsokol balandligi',
   'param.plinthRecess': 'Tsokol chuqurlashuvi',
+  'param.doors': 'Eshiklar',
+  'param.doorSection': "{n}-bo'lim eshigi",
 
   'option.sections.auto': 'Avto',
   'option.backPanel.none': "Yo'q",
   'option.backPanel.hdf_overlay': 'HDF (ustidan)',
   'option.base.plinth': 'Tsokol bilan',
   'option.base.none': 'Tsokolsiz',
+  'option.doors.none': 'Eshiksiz',
+  'option.doors.all_single': 'Bir tabaqali',
+  'option.doors.auto': 'Avto',
+  'option.doorSection.preset': 'Umumiy',
+  'option.doorSection.none': "Yo'q",
+  'option.doorSection.single_left': 'Chap ilmoq',
+  'option.doorSection.single_right': "O'ng ilmoq",
+  'option.doorSection.double': 'Ikki tabaqali',
+
+  'decor.white': 'Oq',
+  'decor.lightGrey': 'Och kulrang',
+  'decor.beige': 'Bej',
+  'decor.oakLight': 'Och eman',
+  'decor.anthracite': 'Antratsit',
+  'color.sameAsCorpus': 'Korpus bilan bir xil',
 
   'control.decrease': 'Kamaytirish',
   'control.increase': 'Oshirish',
@@ -46,7 +68,9 @@ export const uz = {
   'viewer.hint':
     'Bir barmoq — aylantirish · Ikki barmoq — yaqinlashtirish · Ikki marta bosing — markazlash',
   'viewer.reframe': 'Markazlash',
-  'viewer.invalid': "Parametrlarda xato bor — oxirgi to'g'ri model ko'rsatilmoqda",
+  'viewer.invalid': "Model eskirgan — parametrlarni to'g'rilang",
+  'viewer.doorsOpen': 'Eshiklarni ochish',
+  'viewer.doorsClose': 'Eshiklarni yopish',
 
   'staff.badge': 'Tasdiqlanmagan',
   'staff.issues': 'Xatolar va ogohlantirishlar',
@@ -56,6 +80,8 @@ export const uz = {
   'staff.kind.param': 'parametr',
   'staff.kind.constant': 'konstanta',
   'staff.kind.rule': 'qoida',
+  'staff.kind.material': 'material',
+  'staff.depth': 'Orqa {back} + korpus {carcass} + tirqish {gap} + eshik {door} = {depth} mm',
   'staff.panels': 'Detallar ({count})',
   'staff.panel.size': 'U × E × Q, mm',
   'staff.panel.id': 'ID',
@@ -73,6 +99,13 @@ export const uz = {
   'issue.UNKNOWN_PARAM': "Noma'lum parametr: {key}",
   'issue.SHELF_SPAN':
     "{sectionNumber}-bo'lim ichki kengligi {innerWidthMm} mm — {maxMm} mm dan katta (javon egilishi mumkin)",
+  'issue.DOOR_TOO_WIDE':
+    "{sectionNumber}-bo'lim bitta eshik uchun juda keng: {innerWidthMm} mm > {maxMm} mm (eshik {leafWidthMm} mm)",
+  'issue.DOOR_TOO_HEIGHT':
+    'Eshik balandligi {doorHeightMm} mm — {maxMm} mm dan baland (qiyshayish xavfi)',
+  'issue.MATERIAL_UNKNOWN': "Noma'lum material: {material}",
+  'issue.MIGRATION_THICKNESS_UNAVAILABLE': "Katalogda {panelThickness} mm plita yo'q",
+  'issue.UNSUPPORTED_SCHEMA': "Qo'llab-quvvatlanmaydigan buyurtma sxemasi: {schemaVersion}",
 } as const;
 
 export type MessageKey = keyof typeof uz;

@@ -19,11 +19,16 @@ export function StepPanel({ mode, config }: StepPanelProps) {
   const next = neighbourStep(step, 1);
 
   // UI is generated from the template: parameters of this step, filtered by mode.
-  const defs = TEMPLATE.parameters.filter((d) => d.uiStep === step && (staff || d.customerVisible));
+  const sectionCount = config.view.result.sections.length;
+  const defs = TEMPLATE.parameters.filter(
+    (d) =>
+      d.uiStep === step &&
+      (staff || d.customerVisible) &&
+      (d.appliesToSection === undefined || d.appliesToSection <= sectionCount),
+  );
   const errorKeys = new Set(
     config.result.issues.filter((i) => i.severity === 'error').map((i) => i.paramKey),
   );
-  const sectionCount = config.view.result.sections.length;
 
   return (
     <aside className="panel">
@@ -88,6 +93,7 @@ export function StepPanel({ mode, config }: StepPanelProps) {
               mode={mode}
               hasError={errorKeys.has(def.key)}
               onChange={config.setParam}
+              params={config.params}
             />
           ))}
         </div>
