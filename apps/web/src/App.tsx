@@ -4,7 +4,7 @@ import { installKioskGuards, requestConsultant } from './kiosk';
 import { parseMode, type Mode } from './mode';
 import { ContactPlaceholder } from './presentation/ContactPlaceholder';
 import { planReveal, type RevealEvent, type RevealKind } from './presentation/reveal';
-import { SummaryCard } from './presentation/SummaryCard';
+import { ConfigurationSummary } from './ui/ConfigurationSummary';
 import { ConsultantButton } from './ui/ConsultantButton';
 import { nextFlow, type FlowEvent, type FlowState } from './state/flow';
 import { useConfigurator } from './state/useConfigurator';
@@ -105,7 +105,7 @@ function Configurator({ mode }: { mode: Mode }) {
         onRevealEvents={onRevealEvents}
         presentationContent={
           flow === 'ready_to_confirm' ? (
-            <SummaryCard
+            <ConfigurationSummary
               config={config}
               mode={mode}
               onEditStep={edit}

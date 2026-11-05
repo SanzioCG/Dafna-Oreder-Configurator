@@ -88,7 +88,7 @@ export function summaryRows(config: Configurator, mode: Mode, t: Translate): Sum
  * wardrobe centre). Each row links back to its step with the selection intact; the primary
  * (green, --success) button confirms, the secondary returns to the configurator.
  */
-export function SummaryCard({
+export function ConfigurationSummary({
   config,
   mode,
   onEditStep,

@@ -2,13 +2,16 @@ import { describe, expect, it } from 'vitest';
 import {
   FINAL_SAMPLE,
   RevealDirector,
-  SWAY_DEG,
+  TURN_MS,
+  TURN_RAD,
+  TURN_RAMP_MS,
+  turnAngle,
   planReveal,
   sampleReveal,
   totalMs,
   type RevealEvent,
 } from './reveal';
-import { swayPose } from './RevealDriver';
+import { CONFETTI_MS, SIDE_BAND, makePieces, piecePosition } from './Confetti';
 
 describe('planReveal: once per configuration revision', () => {
   it('first time full, same revision none, after an edit short, reduced motion instant', () => {
@@ -23,16 +26,17 @@ describe('planReveal: once per configuration revision', () => {
 describe('sequence order (full)', () => {
   const phaseAt = (t: number) => sampleReveal('full', t).phase;
 
-  it('showcase -> close -> sway -> celebrate -> done; total ~8 s', () => {
+  it('showcase -> close -> turn -> celebrate -> done; total 11.3 s', () => {
     expect(phaseAt(0)).toBe('showcase');
     expect(phaseAt(900)).toBe('close');
-    expect(phaseAt(2100)).toBe('sway');
-    expect(phaseAt(6600)).toBe('celebrate');
+    expect(phaseAt(2100)).toBe('turn');
+    expect(phaseAt(9999)).toBe('turn');
+    expect(phaseAt(10000)).toBe('celebrate');
     expect(phaseAt(totalMs('full'))).toBe('done');
-    expect(totalMs('full')).toBe(8000);
+    expect(totalMs('full')).toBe(11300);
   });
 
-  it('doors: open during the showcase, closed (~1.2 s, eased) before the sway', () => {
+  it('doors: open during the showcase, closed (1.2 s, eased) before the turn', () => {
     expect(sampleReveal('full', 0, 0).door).toBe(0);
     expect(sampleReveal('full', 799, 0).door).toBeGreaterThan(0.99);
     expect(sampleReveal('full', 800 + 600).door).toBeCloseTo(0.5, 5);
@@ -41,34 +45,57 @@ describe('sequence order (full)', () => {
     expect(sampleReveal('full', 1999).doorsClosed).toBe(false);
   });
 
-  it('sway stays within ±35° and returns to the showcase angle', () => {
-    let max = 0;
-    let min = 0;
-    for (let t = 2000; t < 6500; t += 25) {
-      const a = sampleReveal('full', t).swayDeg;
-      max = Math.max(max, a);
-      min = Math.min(min, a);
+  it('exactly one 360° turn: monotonic, constant velocity between 0.3 s ramps', () => {
+    expect(turnAngle(0)).toBe(0);
+    expect(turnAngle(TURN_MS)).toBeCloseTo(TURN_RAD, 12);
+    let prev = 0;
+    for (let t = 10; t <= TURN_MS; t += 10) {
+      const a = turnAngle(t);
+      expect(a).toBeGreaterThanOrEqual(prev); // never turns back
+      prev = a;
     }
-    expect(max).toBeLessThanOrEqual(SWAY_DEG + 1e-9);
-    expect(max).toBeGreaterThan(SWAY_DEG - 0.5);
-    expect(min).toBeGreaterThanOrEqual(-SWAY_DEG - 1e-9);
-    expect(Math.abs(sampleReveal('full', 6499).swayDeg)).toBeLessThan(0.1);
-    expect(sampleReveal('full', 6500).swayDeg).toBe(0);
+    const v = TURN_RAD / (TURN_MS - TURN_RAMP_MS);
+    // constant angular velocity in the middle
+    expect(turnAngle(4010) - turnAngle(4000)).toBeCloseTo(v * 10, 9);
+    expect(turnAngle(7010) - turnAngle(7000)).toBeCloseTo(v * 10, 9);
+    // ramps: slower at the very start and end
+    expect(turnAngle(20) - turnAngle(10)).toBeLessThan(v * 10);
+    expect(turnAngle(TURN_MS) - turnAngle(TURN_MS - 10)).toBeLessThan(v * 10);
+    // continuous at the ramp joints
+    expect(turnAngle(TURN_RAMP_MS - 1e-6)).toBeCloseTo(turnAngle(TURN_RAMP_MS + 1e-6), 6);
   });
 
-  it('confetti only in the celebration (~1.5 s), with the title', () => {
-    expect(sampleReveal('full', 6000).confettiMs).toBeNull();
-    expect(sampleReveal('full', 6000).title).toBe(false);
-    const c = sampleReveal('full', 7000);
+  it('the reveal turns the wardrobe once and ends at the showcase angle', () => {
+    expect(sampleReveal('full', 1999).turnRad).toBe(0);
+    expect(sampleReveal('full', 2000 + TURN_MS / 2).turnRad).toBeCloseTo(Math.PI, 6);
+    expect(sampleReveal('full', 2000 + TURN_MS - 1).turnRad).toBeGreaterThan(TURN_RAD - 0.001);
+    expect(sampleReveal('full', 2000 + TURN_MS).turnRad).toBe(0); // celebration: showcase angle
+    expect(sampleReveal('full', totalMs('full')).turnRad).toBe(0);
+  });
+
+  it('particles: small, from the upper sides, never over the model centre', () => {
+    for (const p of makePieces()) {
+      expect(p.y).toBeLessThan(0.3);
+      for (let ms = 0; ms < CONFETTI_MS; ms += 50) {
+        const { x } = piecePosition(p, ms / 1000);
+        expect(x < SIDE_BAND || x > 1 - SIDE_BAND).toBe(true);
+      }
+    }
+  });
+
+  it('particles only in the celebration (1.3 s), with the title', () => {
+    expect(sampleReveal('full', 9000).confettiMs).toBeNull();
+    expect(sampleReveal('full', 9000).title).toBe(false);
+    const c = sampleReveal('full', 10500);
     expect(c.confettiMs).toBe(500);
     expect(c.title).toBe(true);
   });
 
-  it('short version: ≤ 1.5 s, doors close, no sway, no confetti', () => {
+  it('short version: ≤ 1.5 s, doors close only, no turn, no particles', () => {
     expect(totalMs('short')).toBeLessThanOrEqual(1500);
     for (let t = 0; t < totalMs('short'); t += 20) {
       const s = sampleReveal('short', t, 1);
-      expect(s.swayDeg).toBe(0);
+      expect(s.turnRad).toBe(0);
       expect(s.confettiMs).toBeNull();
     }
     expect(sampleReveal('short', 1250).doorsClosed).toBe(true);
@@ -91,7 +118,7 @@ describe('RevealDirector', () => {
   it('events fire once, in order: doorsClosed, title, done', () => {
     const d = new RevealDirector();
     d.start('full');
-    expect(run(d, 9000)).toEqual(['doorsClosed', 'title', 'done']);
+    expect(run(d, 12000)).toEqual(['doorsClosed', 'title', 'done']);
     expect(d.isRunning).toBe(false);
     expect(run(d, 1000)).toEqual([]);
   });
@@ -127,19 +154,5 @@ describe('RevealDirector', () => {
     d.start('instant');
     expect(d.isRunning).toBe(false);
     expect(d.skip()).toEqual(['doorsClosed', 'title', 'done']);
-  });
-});
-
-describe('turntable sway pose', () => {
-  it('rotates the camera around the vertical axis through the target, same distance', () => {
-    const base = {
-      position: [0, 1, 5] as [number, number, number],
-      target: [0, 1, 0] as [number, number, number],
-    };
-    const p = swayPose(base, 90);
-    expect(p.position[0]).toBeCloseTo(5, 6);
-    expect(p.position[1]).toBeCloseTo(1, 6);
-    expect(p.position[2]).toBeCloseTo(0, 6);
-    expect(swayPose(base, 0).position).toEqual(base.position);
   });
 });

@@ -1,21 +1,45 @@
 /**
  * Presentation reveal (D-3a): pure timeline + director. The render loop calls `tick(dt)` and
- * applies the sample (door progress, sway angle) through refs; React only hears about the few
+ * applies the sample (door progress, turn angle) through refs; React only hears about the few
  * discrete events (doors closed, title, done).
  *
  * Full sequence (first time a configuration revision is presented):
  *   a) showcase  0.8 s  camera to the three-quarter showcase pose, doors open (if any)
  *   b) close     1.2 s  doors close around their real hinge pivots, ease-in-out
- *   c) sway      4.5 s  turntable sway ±35° and back to the showcase angle (not a full 360°)
- *   d) celebrate 1.5 s  short confetti + title "Ajoyib tanlov!"
- * Short version (presented again after an edit): doors open briefly, close, settle — 1.5 s,
- * no confetti. Same revision again: no animation. prefers-reduced-motion: final state directly.
+ *   c) turn      8.0 s  exactly ONE 360° turn of the wardrobe around its vertical axis, constant
+ *                       angular velocity with 0.3 s linear-acceleration ramps, ending at the
+ *                       three-quarter showcase angle (the back panel is seen once)
+ *   d) celebrate 1.5 s  small particles from the upper sides + title "Ajoyib tanlov!"
+ * Short version (presented again after an edit): doors close only (brief open, close, settle —
+ * 1.5 s), no turn, no particles. Same revision again: no animation. prefers-reduced-motion:
+ * final state directly.
  */
 
 export type RevealKind = 'full' | 'short' | 'none' | 'instant';
-export type RevealPhase = 'showcase' | 'close' | 'sway' | 'settle' | 'celebrate' | 'done';
+export type RevealPhase = 'showcase' | 'close' | 'turn' | 'settle' | 'celebrate' | 'done';
 
-export const SWAY_DEG = 35;
+/** One full turn (radians). */
+export const TURN_RAD = 2 * Math.PI;
+export const TURN_MS = 8000;
+/** ease-in / ease-out ramp of the turn (linear acceleration) */
+export const TURN_RAMP_MS = 300;
+
+/**
+ * Turn angle at `t` ms into the turn phase: 0 -> 2π. Constant angular velocity
+ * v = 2π / (T − ramp) between two linear-acceleration ramps, so the area under the velocity
+ * curve is exactly one turn and the wardrobe ends where it started (showcase angle).
+ */
+export function turnAngle(t: number, total = TURN_MS, ramp = TURN_RAMP_MS): number {
+  const v = TURN_RAD / (total - ramp); // rad per ms at full speed
+  if (t <= 0) return 0;
+  if (t >= total) return TURN_RAD;
+  if (t < ramp) return (v * t * t) / (2 * ramp);
+  if (t > total - ramp) {
+    const r = total - t;
+    return TURN_RAD - (v * r * r) / (2 * ramp);
+  }
+  return (v * ramp) / 2 + v * (t - ramp);
+}
 
 interface Segment {
   phase: RevealPhase;
@@ -26,8 +50,8 @@ export const TIMELINES: Record<'full' | 'short', Segment[]> = {
   full: [
     { phase: 'showcase', ms: 800 },
     { phase: 'close', ms: 1200 },
-    { phase: 'sway', ms: 4500 },
-    { phase: 'celebrate', ms: 1500 },
+    { phase: 'turn', ms: TURN_MS },
+    { phase: 'celebrate', ms: 1300 },
   ],
   short: [
     { phase: 'showcase', ms: 300 },
@@ -65,8 +89,8 @@ export interface RevealSample {
   phase: RevealPhase;
   /** door progress: 1 = open, 0 = closed */
   door: number;
-  /** turntable sway around the showcase angle, degrees */
-  swayDeg: number;
+  /** wardrobe rotation around its vertical axis, radians (0 = showcase angle) */
+  turnRad: number;
   doorsClosed: boolean;
   /** ms since the celebration started (confetti), null outside it */
   confettiMs: number | null;
@@ -77,7 +101,7 @@ export interface RevealSample {
 export const FINAL_SAMPLE: RevealSample = {
   phase: 'done',
   door: 0,
-  swayDeg: 0,
+  turnRad: 0,
   doorsClosed: true,
   confettiMs: null,
   title: true,
@@ -95,7 +119,7 @@ export function sampleReveal(kind: RevealKind, t: number, startDoor = 0): Reveal
     if (p < 1) {
       const base = {
         phase: seg.phase,
-        swayDeg: 0,
+        turnRad: 0,
         confettiMs: null,
         title: false,
         done: false,
@@ -106,8 +130,8 @@ export function sampleReveal(kind: RevealKind, t: number, startDoor = 0): Reveal
           return { ...base, door: startDoor + (1 - startDoor) * easeInOut(p) };
         case 'close':
           return { ...base, door: 1 - easeInOut(p) };
-        case 'sway':
-          return { ...base, door: 0, swayDeg: SWAY_DEG * Math.sin(2 * Math.PI * easeInOut(p)) };
+        case 'turn':
+          return { ...base, door: 0, turnRad: turnAngle(t - t0, seg.ms) };
         case 'settle':
           return { ...base, door: 0 };
         case 'celebrate':

@@ -189,10 +189,21 @@ export function Viewer({
       visibility.secondary,
     ],
   );
-  // product mm -> world metres (same transform as the product group in <Scene>)
+  // wardrobe turn angle during the presentation (radians, written in the render loop)
+  const turn = useRef(0);
+  // product mm -> world metres (same transform as the product group in <Scene>, including the
+  // turntable rotation around the vertical axis through the product centre)
   const toWorld = useMemo(
     () =>
-      (p: V3): V3 => [(p[0] - W / 2) * MM, p[1] * MM, (p[2] - D / 2) * MM],
+      (p: V3): V3 => {
+        const x = (p[0] - W / 2) * MM;
+        const z = (p[2] - D / 2) * MM;
+        const a = turn.current;
+        if (a === 0) return [x, p[1] * MM, z];
+        const c = Math.cos(a);
+        const s = Math.sin(a);
+        return [x * c + z * s, p[1] * MM, -x * s + z * c];
+      },
     [W, D],
   );
   const dimRegistry = useRef(new Map<string, DimElements>());
@@ -322,6 +333,7 @@ export function Viewer({
         cameraApi={cameraApi}
         cameraLocked={revealUi.running}
         doorOverride={doorOverride}
+        turn={turn}
         reveal={
           presenting
             ? {
