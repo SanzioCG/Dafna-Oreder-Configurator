@@ -17,6 +17,8 @@ export const uz = {
   'step.size.hint': "Kenglik, balandlik va chuqurlikni sozlang — model darhol o'zgaradi.",
   'step.color.title': 'Rangni tanlang',
   'step.color.hint': 'Korpus va eshiklar uchun dekor tanlang.',
+  'step.interior.title': "Ichki to'ldirishni tanlang",
+  'step.interior.hint': "Bo'limni tanlang (yoki modelda bosing), so'ng ichki variantni tanlang.",
   'step.doors.title': 'Eshiklarni tanlang',
   'step.doors.hint': "Eshik turi barcha bo'limlar uchun. Ichini ko'rish uchun eshiklarni oching.",
 
@@ -36,6 +38,7 @@ export const uz = {
   'param.plinthRecess': 'Tsokol chuqurlashuvi',
   'param.doors': 'Eshiklar',
   'param.doorSection': "{n}-bo'lim eshigi",
+  'param.interior': "{n}-bo'lim ichki to'ldirishi",
 
   'option.sections.auto': 'Avto',
   'option.backPanel.none': "Yo'q",
@@ -50,6 +53,21 @@ export const uz = {
   'option.doorSection.single_left': 'Chap ilmoq',
   'option.doorSection.single_right': "O'ng ilmoq",
   'option.doorSection.double': 'Ikki tabaqali',
+  'option.interior.auto': 'Avto',
+  'option.interior.empty': "Bo'sh",
+  'option.interior.shelves': 'Javonlar',
+  'option.interior.rail': 'Shtanga',
+  'option.interior.rail_shelf': 'Shtanga + javon',
+  'option.interior.drawers_shelves': 'Tortmalar + javonlar',
+  'option.interior.rail_drawers': 'Shtanga + tortmalar',
+  'interior.sections': "Bo'lim",
+  'interior.section': "{n}-bo'lim",
+  'interior.applyAll': "Barcha bo'limlarga qo'llash",
+  'interior.skipped': "{sections}-bo'limga qo'llanmadi: {reason}",
+  'interior.details': "{n}-bo'lim tafsilotlari",
+  'interior.details.shelves': 'Javonlar ({count}), pastki yuzi: {positions} mm',
+  'interior.details.rail': "Shtanga o'qi: {y} mm, osish balandligi: {h} mm",
+  'interior.details.drawer': 'Tortma {y} mm: old {fw} × {fh}, quti {bw} × {bh} × {bd} mm',
 
   'decor.white': 'Oq',
   'decor.lightGrey': 'Och kulrang',
@@ -60,6 +78,9 @@ export const uz = {
 
   'reason.DOOR_TOO_WIDE': 'Eshik tabaqasi juda keng',
   'reason.HINGE_CONFLICT': "Eshik ilmoqlari to'qnashadi",
+  'reason.RAIL_DEPTH_SHORT': 'Shtanga uchun chuqurlik yetarli emas',
+  'reason.RAIL_HEIGHT_SHORT': 'Kiyim osish uchun balandlik yetarli emas',
+  'reason.DRAWER_SECTION_TOO_WIDE': "Tortma uchun bo'lim juda keng",
   'reason.SHELF_SPAN': 'Javon uchun juda keng',
   'reason.default': "Bu o'lchamda mumkin emas",
 
@@ -114,6 +135,14 @@ export const uz = {
   'issue.DOOR_TOO_HEIGHT':
     'Eshik balandligi {doorHeightMm} mm — {maxMm} mm dan baland (qiyshayish xavfi)',
   'issue.MATERIAL_UNKNOWN': "Noma'lum material: {material}",
+  'issue.RAIL_DEPTH_SHORT':
+    "{sectionNumber}-bo'lim: ichki chuqurlik {innerDepthMm} mm — shtanga uchun kamida {minMm} mm kerak",
+  'issue.RAIL_HEIGHT_SHORT':
+    "{sectionNumber}-bo'lim: osish balandligi {clearHangingHeightMm} mm — kamida {minMm} mm kerak",
+  'issue.DRAWER_SECTION_TOO_WIDE':
+    "{sectionNumber}-bo'lim: tortma oldi {frontWidthMm} mm — {maxMm} mm dan keng",
+  'issue.MIGRATION_DOORS_CHANGED':
+    "{sectionNumber}-bo'lim eshigi yangi qoida bo'yicha o'zgardi: {from} → {to}",
   'issue.MIGRATION_THICKNESS_UNAVAILABLE': "Katalogda {panelThickness} mm plita yo'q",
   'issue.UNSUPPORTED_SCHEMA': "Qo'llab-quvvatlanmaydigan buyurtma sxemasi: {schemaVersion}",
 } as const;

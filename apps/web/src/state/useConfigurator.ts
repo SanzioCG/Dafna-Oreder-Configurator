@@ -26,6 +26,8 @@ export interface ViewGeometry {
 export interface Configurator {
   params: Params;
   setParam: (key: string, value: ParamValue) => void;
+  /** set several params at once (same customer repair + toast rules) */
+  setParams: (patch: Params) => void;
   /** Engine result for the current params (may contain errors and then has no geometry). */
   result: GenerateResult;
   /** Last result that produced geometry — what the viewer shows. */
@@ -50,7 +52,12 @@ function toView(result: GenerateResult, p: Params): ViewGeometry {
  * is disabled (with a reason), and a change that would make the current option produce one
  * resets that option. Staff mode keeps everything selectable and just shows the issue.
  */
-export const CUSTOMER_BLOCKING_WARNINGS = ['SHELF_SPAN'];
+export const CUSTOMER_BLOCKING_WARNINGS = [
+  'SHELF_SPAN',
+  'RAIL_DEPTH_SHORT',
+  'RAIL_HEIGHT_SHORT',
+  'DRAWER_SECTION_TOO_WIDE',
+];
 
 export function isCustomerBlocking(issue: Issue): boolean {
   return issue.severity === 'error' || CUSTOMER_BLOCKING_WARNINGS.includes(issue.code);
@@ -135,7 +142,7 @@ export function nearestValidNumber(
  * so it runs synchronously on every change (debounce = 0 ms, within the 50 ms budget).
  */
 export function useConfigurator(mode: Mode = 'customer'): Configurator {
-  const [params, setParams] = useState<Params>(() => defaultParams(TEMPLATE));
+  const [params, setParamsState] = useState<Params>(() => defaultParams(TEMPLATE));
   const [notice, setNotice] = useState<ResetNotice | null>(null);
   // Latest params for synchronous repair outside the state updater (updaters must stay pure).
   const paramsRef = useRef(params);
@@ -167,7 +174,32 @@ export function useConfigurator(mode: Mode = 'customer'): Configurator {
         }
       }
       paramsRef.current = next;
-      setParams(next);
+      setParamsState(next);
+    },
+    [mode],
+  );
+
+  /**
+   * Several params at once (e.g. "apply to all sections"). Customer mode: the patch is applied as
+   * a whole, then repaired; resets of keys outside the patch are announced like for setParam.
+   */
+  const setParams = useCallback(
+    (patch: Params) => {
+      const prev = paramsRef.current;
+      const keys = Object.keys(patch);
+      if (keys.every((k) => prev[k] === patch[k])) return;
+      let next: Params = { ...prev, ...patch };
+      if (mode === 'customer') {
+        const repaired = repairCustomerParams(next);
+        next = repaired.params;
+        const resets = repaired.resets.filter((r) => !keys.includes(r.key));
+        if (resets.length > 0) {
+          noticeId.current += 1;
+          setNotice({ id: noticeId.current, resets });
+        }
+      }
+      paramsRef.current = next;
+      setParamsState(next);
     },
     [mode],
   );
@@ -190,5 +222,5 @@ export function useConfigurator(mode: Mode = 'customer'): Configurator {
     if (!hasErrors) lastValid.current = view;
   }, [hasErrors, view]);
 
-  return { params, setParam, result, view, hasErrors, notice, dismissNotice };
+  return { params, setParam, setParams, result, view, hasErrors, notice, dismissNotice };
 }

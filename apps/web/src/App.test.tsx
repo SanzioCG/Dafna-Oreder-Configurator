@@ -8,10 +8,21 @@ import type { SceneProps } from './viewer/Scene';
 // receives. The viewer shell (buttons, dimension labels, banners) is the real one.
 vi.mock('./viewer/Scene', () => ({
   MM: 0.001,
-  Scene: ({ view, doorsOpen }: SceneProps) => (
+  Scene: ({
+    view,
+    doorsOpen,
+    interactive,
+    sectionBoxes,
+    selectedSection,
+    onSectionTap,
+  }: SceneProps) => (
     <div
       data-testid="viewer-stub"
       data-doors-open={String(doorsOpen)}
+      data-interactive={String(interactive)}
+      data-selected-section={String(selectedSection)}
+      data-presets={view.result.sections.map((s) => s.preset).join(',')}
+      data-rails={view.result.rails.length}
       data-panels={view.result.panels.filter((p) => !INTERIOR_ROLES.has(p.role)).length}
       data-interior-panels={view.result.panels.filter((p) => INTERIOR_ROLES.has(p.role)).length}
       data-sections={view.result.sections.map((s) => s.innerWidthMm).join(',')}
@@ -20,7 +31,17 @@ vi.mock('./viewer/Scene', () => ({
       data-doors={[
         ...new Set(view.result.panels.filter((p) => p.role === 'door').map((p) => p.material)),
       ].join(',')}
-    />
+    >
+      {interactive &&
+        sectionBoxes.map((b) => (
+          <button
+            key={b.index}
+            type="button"
+            data-testid={`section-hit-${b.index}`}
+            onClick={() => onSectionTap(b.index)}
+          />
+        ))}
+    </div>
   ),
 }));
 
@@ -59,7 +80,8 @@ describe('App (customer mode)', () => {
     expect(screen.getByRole('button', { name: /O'lcham/ }).hasAttribute('disabled')).toBe(false);
     expect(screen.getByRole('button', { name: /Rang/ }).hasAttribute('disabled')).toBe(false);
     expect(tab(uz['step.doors']).hasAttribute('disabled')).toBe(false);
-    for (const key of ['step.interior', 'step.review'] as const) {
+    expect(tab(uz['step.interior']).hasAttribute('disabled')).toBe(false);
+    for (const key of ['step.review'] as const) {
       expect(
         screen.getByRole('button', { name: new RegExp(uz[key]) }).hasAttribute('disabled'),
       ).toBe(true);
@@ -453,5 +475,104 @@ describe('Auto-reset toast (customer choice is never changed silently)', () => {
     typeInto(uz['param.width'], '1360');
     expect(screen.queryByTestId('reset-toast')).toBeNull();
     expect(screen.getByText('SHELF_SPAN')).toBeTruthy();
+  });
+});
+
+describe('Interior step (D-1b)', () => {
+  const stub = () => screen.getByTestId('viewer-stub');
+  const sectionTabs = () => screen.getByRole('radiogroup', { name: uz['interior.sections'] });
+  const presets = (n: number) =>
+    screen.getByRole('radiogroup', { name: uz['param.interior'].replace('{n}', String(n)) });
+  const card = (n: number, preset: string) => {
+    const el = presets(n).querySelector(`[data-preset="${preset}"]`);
+    if (!el) throw new Error(`card ${preset} missing`);
+    return el as HTMLElement;
+  };
+  const openInterior = () => fireEvent.click(tab(uz['step.interior']));
+
+  it('section tabs + preset cards; picking a preset updates the engine result', () => {
+    render(<App />);
+    openInterior();
+    expect(within(sectionTabs()).getAllByRole('radio').length).toBe(3);
+    expect(card(1, 'auto').getAttribute('aria-checked')).toBe('true');
+    expect(card(1, 'auto').textContent).toContain(uz['option.interior.shelves']); // auto resolves to
+    expect(stub().dataset.presets).toBe('shelves,shelves,shelves');
+    fireEvent.click(card(1, 'drawers_shelves'));
+    expect(card(1, 'drawers_shelves').getAttribute('aria-checked')).toBe('true');
+    expect(card(1, 'drawers_shelves').className).toContain('active');
+    expect(stub().dataset.presets).toBe('drawers_shelves,shelves,shelves');
+  });
+
+  it('"apply to all" copies the selected section preset to every section', () => {
+    render(<App />);
+    openInterior();
+    fireEvent.click(card(1, 'empty'));
+    fireEvent.click(screen.getByRole('button', { name: uz['interior.applyAll'] }));
+    expect(stub().dataset.presets).toBe('empty,empty,empty');
+    expect(
+      screen.getByRole('button', { name: uz['interior.applyAll'] }).hasAttribute('disabled'),
+    ).toBe(true);
+  });
+
+  it('tapping a section in 3D selects it (mock Scene)', () => {
+    render(<App />);
+    openInterior();
+    expect(stub().dataset.interactive).toBe('true');
+    expect(stub().dataset.selectedSection).toBe('0');
+    fireEvent.click(screen.getByTestId('section-hit-2'));
+    expect(stub().dataset.selectedSection).toBe('2');
+    const third = within(sectionTabs()).getAllByRole('radio')[2] as HTMLElement;
+    expect(third.getAttribute('aria-checked')).toBe('true');
+    expect(presets(3)).toBeTruthy();
+  });
+
+  it('customer: rail presets are disabled with a reason when the carcass is too shallow', () => {
+    render(<App />);
+    openInterior();
+    for (const p of ['rail', 'rail_shelf', 'rail_drawers']) {
+      expect(card(1, p).hasAttribute('disabled'), p).toBe(true);
+      expect(card(1, p).textContent).toContain(uz['reason.RAIL_DEPTH_SHORT']);
+    }
+    expect(card(1, 'drawers_shelves').hasAttribute('disabled')).toBe(false);
+    cleanup();
+    // staff: selectable, and the warning is shown
+    setUrl('?mode=staff');
+    render(<App />);
+    openInterior();
+    expect(card(1, 'rail').hasAttribute('disabled')).toBe(false);
+    fireEvent.click(card(1, 'rail'));
+    expect(screen.getByText('RAIL_DEPTH_SHORT')).toBeTruthy();
+    expect(screen.getByTestId('interior-details').textContent).toContain('rail (chosen)');
+  });
+
+  it('customer: a preset made invalid by a size change is reset to auto, with a toast', () => {
+    render(<App />);
+    typeInto(uz['param.depth'], '600'); // carcass 579: rail allowed
+    openInterior();
+    fireEvent.click(card(1, 'rail_shelf'));
+    expect(stub().dataset.presets).toBe('rail_shelf,shelves,shelves');
+    expect(Number(stub().dataset.rails)).toBe(1);
+    fireEvent.click(tab(uz['step.size']));
+    typeInto(uz['param.depth'], '516'); // carcass 495 < 530 -> RAIL_DEPTH_SHORT
+    expect(stub().dataset.presets).toBe('shelves,shelves,shelves');
+    expect(screen.getByRole('status').textContent).toContain(
+      `«${uz['option.interior.rail_shelf']}» → «${uz['option.interior.auto']}». Sabab: ${uz['reason.RAIL_DEPTH_SHORT']}.`,
+    );
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('doors open automatically on the step and the previous state comes back after it', () => {
+    render(<App />);
+    expect(stub().dataset.doorsOpen).toBe('false');
+    openInterior();
+    expect(stub().dataset.doorsOpen).toBe('true');
+    fireEvent.click(tab(uz['step.size']));
+    expect(stub().dataset.doorsOpen).toBe('false');
+    // if the customer had opened them before, they stay open afterwards
+    fireEvent.click(screen.getByRole('button', { name: uz['viewer.doorsOpen'] }));
+    openInterior();
+    fireEvent.click(tab(uz['step.color']));
+    expect(stub().dataset.doorsOpen).toBe('true');
+    expect(stub().dataset.interactive).toBe('false');
   });
 });

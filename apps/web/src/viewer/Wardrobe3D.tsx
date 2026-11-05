@@ -1,4 +1,4 @@
-import type { Panel } from '@dafna/engine';
+import type { Panel, Rail } from '@dafna/engine';
 import { Edges } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
@@ -62,10 +62,31 @@ function DoorLeaf({ panel, open }: { panel: Panel; open: boolean }) {
   );
 }
 
-/** Renders panels in product millimetre coordinates (parent group scales to metres). */
-export function Wardrobe3D({ panels, doorsOpen }: { panels: Panel[]; doorsOpen: boolean }) {
+/** Hanging rail: a metal cylinder along X. */
+function RailMesh({ rail }: { rail: Rail }) {
+  return (
+    <mesh position={rail.position} rotation={[0, 0, Math.PI / 2]} castShadow>
+      <cylinderGeometry args={[rail.diameterMm / 2, rail.diameterMm / 2, rail.lengthMm, 24]} />
+      <meshStandardMaterial color="#b9bdc4" metalness={0.75} roughness={0.3} />
+    </mesh>
+  );
+}
+
+/** Renders panels and rails in product millimetre coordinates (parent group scales to metres). */
+export function Wardrobe3D({
+  panels,
+  rails = [],
+  doorsOpen,
+}: {
+  panels: Panel[];
+  rails?: Rail[];
+  doorsOpen: boolean;
+}) {
   return (
     <>
+      {rails.map((r) => (
+        <RailMesh key={`${r.id}:${r.lengthMm}:${r.position.join(',')}`} rail={r} />
+      ))}
       {panels.map((p) => {
         // Re-mount on size/material change so geometry and edges are rebuilt together.
         const key = `${p.id}:${p.lengthMm}:${p.widthMm}:${p.thicknessMm}:${p.material}`;

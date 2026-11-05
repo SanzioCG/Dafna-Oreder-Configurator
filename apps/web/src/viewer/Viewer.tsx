@@ -10,10 +10,16 @@ import {
   type V3,
 } from './Dimensions';
 import { MM, Scene } from './Scene';
+import type { SectionBox } from './SectionPicker';
 
 interface ViewerProps {
   view: ViewGeometry;
   invalid: boolean;
+  /** current wizard step: 'interior' opens the doors and enables section picking */
+  activeStep?: string;
+  /** selected section on the interior step (null elsewhere) */
+  selectedSection?: number | null;
+  onSelectSection?: (index: number) => void;
 }
 
 /** Detects a double tap (touch or mouse) without interfering with orbit gestures. */
@@ -62,10 +68,31 @@ function useUiScale(): number {
 }
 
 /** Viewer shell: 3D scene + DOM overlays (dimension labels, buttons, banners). */
-export function Viewer({ view, invalid }: ViewerProps) {
+export function Viewer({
+  view,
+  invalid,
+  activeStep,
+  selectedSection = null,
+  onSelectSection,
+}: ViewerProps) {
   const { t } = useI18n();
   const [resetToken, setResetToken] = useState(0);
   const [doorsOpen, setDoorsOpen] = useState(false);
+  // Interior step: doors open automatically; leaving the step restores the previous state.
+  const savedDoors = useRef<boolean | null>(null);
+  const interior = activeStep === 'interior';
+  useEffect(() => {
+    if (interior && savedDoors.current === null) {
+      setDoorsOpen((prev) => {
+        savedDoors.current = prev;
+        return true;
+      });
+    } else if (!interior && savedDoors.current !== null) {
+      const restore = savedDoors.current;
+      savedDoors.current = null;
+      setDoorsOpen(restore);
+    }
+  }, [interior]);
   const reframe = () => setResetToken((n) => n + 1);
   const tap = useDoubleTap(reframe);
   const { widthMm: W, heightMm: H, depthMm: D } = view;
@@ -105,6 +132,23 @@ export function Viewer({ view, invalid }: ViewerProps) {
   const labelRefs = useRef(new Map<string, HTMLDivElement>());
   const uiScale = useUiScale();
 
+  // section inner boxes (mm) for picking / highlighting on the interior step
+  const sectionBoxes = useMemo<SectionBox[]>(() => {
+    const dimsInfo = view.result.dimensions;
+    const t = view.result.panels.find((p) => p.id === 'side-left')?.thicknessMm ?? 16;
+    if (!dimsInfo) return [];
+    const z0 = dimsInfo.backThicknessMm;
+    return sections.map((s) => ({
+      index: s.index,
+      x0: s.xStartMm,
+      x1: s.xStartMm + s.innerWidthMm,
+      y0: dimsInfo.plinthHeightMm + t,
+      y1: H - t,
+      z0,
+      z1: z0 + dimsInfo.carcassDepthMm,
+    }));
+  }, [view.result.dimensions, view.result.panels, sections, H]);
+
   return (
     <div className="viewer" {...tap} data-testid="viewer">
       <Scene
@@ -117,6 +161,10 @@ export function Viewer({ view, invalid }: ViewerProps) {
         extent={extent}
         resetToken={resetToken}
         doorsOpen={hasDoors && doorsOpen}
+        interactive={interior}
+        sectionBoxes={sectionBoxes}
+        selectedSection={selectedSection}
+        onSectionTap={(i) => onSelectSection?.(i)}
       />
       <DimensionLabels dims={dims} labelRefs={labelRefs} />
 

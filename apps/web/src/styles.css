@@ -957,3 +957,70 @@ p {
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- interior step ---------- */
+
+.card[data-card='interior'] {
+  --card-bg: var(--card-interior);
+}
+
+/* preset cards: selection contract (selected = brand blue + white, disabled = 40% + reason) */
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  padding-top: 0.9rem; /* room for illustrations overflowing the card top */
+}
+
+.preset-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-height: 7.25rem;
+  padding: 0 0.35rem 0.55rem;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 0.0625rem 0.25rem rgb(42 41 40 / 0.08);
+  text-align: center;
+}
+
+.preset-card.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: var(--shadow-soft);
+}
+
+.preset-card:disabled {
+  opacity: 0.4;
+}
+
+/* the illustration slightly overflows the card's top edge */
+.preset-illustration {
+  width: 3.25rem;
+  height: 4.25rem;
+  margin-top: -0.9rem;
+  padding: 0.2rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 0.125rem 0.4rem rgb(42 41 40 / 0.12);
+}
+
+.preset-card.active .preset-illustration {
+  color: var(--accent);
+}
+
+.preset-label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.preset-sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  opacity: 0.8;
+}
