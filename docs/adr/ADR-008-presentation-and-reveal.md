@@ -88,9 +88,8 @@ During the turn the back is visible. With the defaults it looks finished:
 - So there is no overlap and no z-fighting.
 - The rear plinth sits 3 mm in front of the back plane, under it.
 
-**Finding, not changed:** the plinth has no side closures (engine geometry: only front and back
-plinth boards). In a three-quarter or back view the open plinth ends are visible as dark gaps
-between the side panels. Fixing this is an engine / construction change for Dafna to confirm.
+**Resolved in D-3a.1 (ADR-009):** the open plinth ends found here are gone. The side panels now
+run to the floor and the plinth strips sit between them.
 
 ### Stable state and flow
 
@@ -118,4 +117,3 @@ between the side panels. Fixing this is an engine / construction change for Dafn
   - the turn duration and ramps;
   - the celebration length and particle count;
   - the side-band width (28 %);
-  - the open plinth ends.

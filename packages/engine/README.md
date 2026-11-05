@@ -31,19 +31,19 @@ A `Panel` is a rectangular board. In its local frame it is centred at the origin
 In Three.js: `new BoxGeometry(lengthMm, thicknessMm, widthMm)`, mesh at `position`, rotation in
 radians. Door panels are always given **closed**; opening is a viewer animation only.
 
-## Template format (`templates/wardrobe.v3.json`)
+## Template format (`templates/wardrobe.v4.json`)
 
-Current template: **v3, `templateVersion` 0.4.0, generator `wardrobe-carcass-v3`** (D-1c:
-leaves may share a partition, hinge mount per leaf, default depth 600). `wardrobe.v0.json`
-(D-0), `wardrobe.v1.json` (D-1a) and `wardrobe.v2.json` (D-1b) are kept as an archive only;
-older order drafts are migrated.
+Current template: **v4, `templateVersion` 0.5.0, generator `wardrobe-carcass-v4`** (D-3a.1:
+sides to the floor, plinth strips between the sides — ADR-009). `wardrobe.v0.json` (D-0),
+`wardrobe.v1.json` (D-1a), `wardrobe.v2.json` (D-1b) and `wardrobe.v3.json` (D-1c) are kept as
+an archive only; older order drafts are migrated.
 
 ```jsonc
 {
   "templateId": "wardrobe",
-  "templateVersion": "0.4.0", // stored in every order draft
+  "templateVersion": "0.5.0", // stored in every order draft
   "productType": "wardrobe",
-  "generator": "wardrobe-carcass-v3", // generator code that understands this template
+  "generator": "wardrobe-carcass-v4", // generator code that understands this template
   "units": "mm",
   "parameters": [ParamDef],
   "constants": { "<name>": { "value", "unit?", "unconfirmed", "note?" } },
@@ -132,7 +132,7 @@ const draft = toOrderDraft(params, result); // dafna-order/0.3-draft JSON, no pr
 | `MATERIAL_UNKNOWN`                | error    | material id not in the catalog, or of a disallowed kind            |
 | `GEOMETRY_INVALID`                | error    | a derived inner size ≤ 0 (cannot happen within v2 ranges)          |
 | `DOOR_TOO_WIDE`                   | error    | a single leaf wider than `maxSingleLeafWidthMm` (600, leaf width)  |
-| `UNSUPPORTED_TEMPLATE`            | error    | template `generator` is not `wardrobe-carcass-v3`                  |
+| `UNSUPPORTED_TEMPLATE`            | error    | template `generator` is not `wardrobe-carcass-v4`                  |
 | `UNKNOWN_PARAM`                   | warning  | input key not defined by the template                              |
 | `SHELF_SPAN`                      | warning  | a section inner width > `maxShelfSpanMm` (900)                     |
 | `DOOR_TOO_HEIGHT`                 | warning  | door height > `maxDoorHeightMm` (2400)                             |
@@ -141,19 +141,22 @@ const draft = toOrderDraft(params, result); // dafna-order/0.3-draft JSON, no pr
 | `DRAWER_SECTION_TOO_WIDE`         | warning  | drawer front width > `drawerMaxFrontWidthMm` (900)                 |
 | `MIGRATION_THICKNESS_UNAVAILABLE` | error    | migration: no LDSP with the D-0 `panelThickness` in the catalog    |
 | `MIGRATION_DOORS_CHANGED`         | warning  | migration: a kept single door is now > 600 mm (became double)      |
+| `MIGRATION_CONSTRUCTION_CHANGED`  | warning  | migration: older template + plinth -> sides to the floor (ADR-009) |
 | `UNSUPPORTED_SCHEMA`              | error    | migration: unknown order draft `schemaVersion`                     |
 
 The web app blocks every error plus `SHELF_SPAN`, `RAIL_DEPTH_SHORT`, `RAIL_HEIGHT_SHORT` and
 `DRAWER_SECTION_TOO_WIDE` for customers (`CUSTOMER_BLOCKING_WARNINGS`); staff sees them.
 
-## Construction v3 (carcass, hinged doors, interior)
+## Construction v4 (carcass, hinged doors, interior)
 
 With `t` = corpus thickness, `td` = door thickness, `tb` = back thickness (0 without back),
 `g` = `doorGapFrontMm` (2), `ph` = `plinthHeight` (0 if `base = none`), `n` = section count:
 
 - **depth** (ADR-003): `carcassDepth Dc = depth − tb − (doors ? td + g : 0)`.
-- **carcass**: sides `Hc × Dc × t` on the plinth, top/bottom between the sides, partitions
-  between top and bottom; sections share `width − (n + 1)·t` in whole mm.
+- **carcass** (ADR-009): sides `height × Dc × t` to the floor; plinth = front strip (set back by
+  `plinthRecess`) + back strip, `(width − 2t) × ph × t`, BETWEEN the sides; the bottom rests on
+  the strips at `ph` (carcass height `Hc = height − ph`); top/bottom between the sides,
+  partitions between bottom and top; sections share `width − (n + 1)·t` in whole mm.
   `sections = auto`: smallest `n ∈ {1..4}` with every inner width ≤ 900 **and** (if the doors
   preset is not `none`) no DOOR_TOO_WIDE.
 - **doors** (ADR-006): coverage between partition centre lines; gaps 1.5 at outer edges and next
@@ -187,7 +190,7 @@ dimensions, panels (with edges / grainDirection / operations), rails, sections, 
 generatedAt, migratedFrom? }`. No price fields.
 
 Changes from 0.2: door panels carry `hingeMount` (`full_overlay` | `half_overlay`); template
-0.4.0. 0.2 vs 0.1: added `interior`, `rails`, panel production fields, section interior summary,
+0.4.0, since D-3a.1 0.5.0 (construction only, same fields). 0.2 vs 0.1: added `interior`, `rails`, panel production fields, section interior summary,
 params `interior1..4`. (0.1 vs 0-draft: see git history of this README / ADR-004.)
 
 ## Migration
@@ -196,7 +199,9 @@ params `interior1..4`. (0.1 vs 0-draft: see git history of this README / ADR-004
 steps, then **one** re-generation with the current engine (original `generatedAt` kept,
 `migratedFrom` = original schema):
 
-1. `0.3-draft` → returned unchanged.
+1. `0.3-draft` of the current template (0.5.0) → returned unchanged. A `0.3-draft` of an older
+   template (0.4.0) is regenerated with the same params; with `base = plinth` the
+   `MIGRATION_CONSTRUCTION_CHANGED` warning is added (every older chain below gets it too).
 2. `0-draft` → `migrateParamsFromD0` (`panelThickness` → `corpusMaterial`, `doors = none`) → step 3.
 3. `0.1-draft` → `migrateParamsFrom01`: `interior1..4 = empty` (0.1 had no interior),
    `sections: auto` pinned to the draft's section count → step 4.
