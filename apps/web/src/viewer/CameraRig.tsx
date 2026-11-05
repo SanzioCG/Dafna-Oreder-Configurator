@@ -1,6 +1,9 @@
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import { PerspectiveCamera, Vector3 } from 'three';
+import { boxCenter, fitDistance, type FrameBox } from './framing';
+
+export type { FrameBox } from './framing';
 
 /** Minimal surface of drei's OrbitControls that the rig uses. */
 interface Controls {
@@ -12,25 +15,7 @@ interface Controls {
   removeEventListener: (type: 'start', fn: () => void) => void;
 }
 
-export interface FrameBox {
-  min: [number, number, number];
-  max: [number, number, number];
-}
-
 const DEFAULT_DIR = new Vector3(0.5, 0.3, 1).normalize();
-
-function fitDistance(box: FrameBox, camera: PerspectiveCamera, aspect: number): number {
-  const size = new Vector3(
-    box.max[0] - box.min[0],
-    box.max[1] - box.min[1],
-    box.max[2] - box.min[2],
-  );
-  const radius = size.length() / 2;
-  const vFov = (camera.fov * Math.PI) / 180;
-  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
-  const fov = Math.min(vFov, hFov);
-  return (radius / Math.tan(fov / 2)) * 1.04;
-}
 
 interface Goal {
   center: Vector3;
@@ -40,11 +25,22 @@ interface Goal {
 }
 
 /**
- * Frames the product: jumps on first render, then animates to a new framing whenever the
- * product size or viewport changes (keeping the user's orbit direction), and resets to the
- * default direction when `resetToken` changes (double tap / button).
+ * Frames the product to ~70% of the zone height, centred (see framing.ts): jumps on first
+ * render, then animates to a new framing whenever the product size or viewport changes
+ * (keeping the user's orbit direction), and resets to the default direction when
+ * `resetToken` changes (double tap / button).
  */
-export function CameraRig({ box, resetToken }: { box: FrameBox; resetToken: number }) {
+export function CameraRig({
+  product,
+  extent,
+  resetToken,
+}: {
+  /** the product itself (world metres) */
+  product: FrameBox;
+  /** product + dimension annotations: must stay in view */
+  extent: FrameBox;
+  resetToken: number;
+}) {
   const camera = useThree((s) => s.camera) as PerspectiveCamera;
   const controls = useThree((s) => s.controls) as unknown as Controls | null;
   const aspect = useThree((s) => s.size.width / Math.max(1, s.size.height));
@@ -52,19 +48,22 @@ export function CameraRig({ box, resetToken }: { box: FrameBox; resetToken: numb
   const initialised = useRef(false);
   const lastReset = useRef(resetToken);
 
-  const [x0, y0, z0] = box.min;
-  const [x1, y1, z1] = box.max;
+  const key = JSON.stringify([product, extent]);
 
   useEffect(() => {
-    const b: FrameBox = { min: [x0, y0, z0], max: [x1, y1, z1] };
+    const [p, e] = JSON.parse(key) as [FrameBox, FrameBox];
     const reset = lastReset.current !== resetToken;
     lastReset.current = resetToken;
+    const keepDir = !reset && initialised.current && controls;
+    const dir = keepDir
+      ? camera.position.clone().sub(controls.target).normalize()
+      : DEFAULT_DIR.clone();
     goal.current = {
-      center: new Vector3((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2),
-      distance: fitDistance(b, camera, aspect),
-      dir: reset || !initialised.current ? DEFAULT_DIR.clone() : null,
+      center: boxCenter(p),
+      distance: fitDistance(p, e, camera.fov, aspect, dir),
+      dir: keepDir ? null : DEFAULT_DIR.clone(),
     };
-  }, [x0, y0, z0, x1, y1, z1, aspect, camera, resetToken]);
+  }, [key, aspect, camera, controls, resetToken]);
 
   // A user gesture cancels an automatic re-frame in progress.
   useEffect(() => {

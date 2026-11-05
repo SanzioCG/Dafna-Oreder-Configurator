@@ -7,7 +7,7 @@ import { StepPanel } from './ui/StepPanel';
 import { Viewer } from './viewer/Viewer';
 
 function Configurator({ mode }: { mode: Mode }) {
-  const config = useConfigurator();
+  const config = useConfigurator(mode);
   return (
     <div className={`app mode-${mode}`}>
       <Viewer view={config.view} invalid={config.hasErrors} />

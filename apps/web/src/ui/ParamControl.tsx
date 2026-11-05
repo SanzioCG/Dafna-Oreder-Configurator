@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { optionLabel, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import { NumberField } from './NumberField';
+import { blockingIssue } from './optionAvailability';
 import { Segmented } from './Segmented';
 import { Slider } from './Slider';
 import { SwatchPicker } from './SwatchPicker';
@@ -133,6 +134,12 @@ export function ParamControl({
               : optionLabel(t, optionKey, v)
           }
           ariaLabel={label}
+          disabledReason={(v) => {
+            const code = blockingIssue(def, v, params, mode);
+            if (!code) return undefined;
+            const reason = t(`reason.${code}`);
+            return reason === `reason.${code}` ? t('reason.default') : reason;
+          }}
         />
         {note}
       </div>

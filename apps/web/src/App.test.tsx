@@ -240,3 +240,90 @@ describe('Brand logo in the header', () => {
     expect(logo.getAttribute('src')).toBe('/brand/dafna-logo.svg');
   });
 });
+
+describe('Option availability (customer disables error-producing door options)', () => {
+  const doorsPreset = () => screen.getByRole('radiogroup', { name: uz['param.doors'] });
+  const option = (name: string) =>
+    within(doorsPreset()).getByRole('radio', { name: new RegExp(name) });
+
+  it('customer: "all single" is disabled with a reason on 656 mm sections', () => {
+    render(<App />);
+    fireEvent.click(tab(uz['step.doors']));
+    const allSingle = option(uz['option.doors.all_single']);
+    expect(allSingle.hasAttribute('disabled')).toBe(true);
+    expect(allSingle.textContent).toContain(uz['reason.DOOR_TOO_WIDE']);
+    expect(option(uz['option.doors.auto']).hasAttribute('disabled')).toBe(false);
+    expect(option(uz['option.doors.none']).hasAttribute('disabled')).toBe(false);
+  });
+
+  it('staff: the same option stays selectable', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    fireEvent.click(tab(uz['step.doors']));
+    expect(option(uz['option.doors.all_single']).hasAttribute('disabled')).toBe(false);
+  });
+
+  it('customer: widening the wardrobe resets an option that became invalid (no stale model)', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '1248'); // 2 sections of 600 mm -> single doors allowed
+    fireEvent.click(tab(uz['step.doors']));
+    fireEvent.click(option(uz['option.doors.all_single']));
+    expect(option(uz['option.doors.all_single']).getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(tab(uz['step.size']));
+    typeInto(uz['param.width'], '1360'); // 656 mm sections -> all_single would be DOOR_TOO_WIDE
+    expect(screen.queryByRole('alert')).toBeNull();
+    fireEvent.click(tab(uz['step.doors']));
+    expect(option(uz['option.doors.auto']).getAttribute('aria-checked')).toBe('true');
+  });
+});
+
+describe('Selection state contract', () => {
+  it('"same as corpus" on: no door swatch is shown as selected', () => {
+    render(<App />);
+    fireEvent.click(tab(uz['step.color']));
+    const doors = screen.getByRole('radiogroup', { name: uz['param.doorMaterial'] });
+    expect(within(doors).queryAllByRole('radio', { checked: true })).toEqual([]);
+    const corpus = screen.getByRole('radiogroup', { name: uz['param.corpusMaterial'] });
+    expect(within(corpus).getAllByRole('radio', { checked: true }).length).toBe(1);
+  });
+
+  it('option groups sit in pastel cards, numeric controls in a neutral card', () => {
+    render(<App />);
+    expect(document.querySelector('.card-neutral[data-card="width"]')).toBeTruthy();
+    expect(document.querySelector('.card-pastel[data-card="sections"]')).toBeTruthy();
+    expect(document.querySelectorAll('.card[data-card="height"]').length).toBe(0); // grouped
+  });
+});
+
+describe('Customer blocks SHELF_SPAN options (any step)', () => {
+  const sections = () => screen.getByRole('radiogroup', { name: uz['param.sections'] });
+  const opt = (n: string) =>
+    within(sections())
+      .getAllByRole('radio')
+      .find((r) => r.querySelector('.segment-label')?.textContent === n) as HTMLElement;
+
+  it('customer: "1" section is disabled with a reason at width 1360; 2-4 stay enabled', () => {
+    render(<App />);
+    expect(opt('1').hasAttribute('disabled')).toBe(true);
+    expect(opt('1').textContent).toContain(uz['reason.SHELF_SPAN']);
+    for (const n of ['2', '3', '4']) expect(opt(n).hasAttribute('disabled')).toBe(false);
+  });
+
+  it('staff: "1" stays selectable and shows the SHELF_SPAN warning', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    expect(opt('1').hasAttribute('disabled')).toBe(false);
+    fireEvent.click(opt('1'));
+    expect(screen.getByText('SHELF_SPAN')).toBeTruthy();
+  });
+
+  it('customer: widening resets sections=1 to auto instead of producing SHELF_SPAN', () => {
+    render(<App />);
+    typeInto(uz['param.width'], '900'); // 1 section: 868 mm inner -> allowed
+    fireEvent.click(opt('1'));
+    expect(opt('1').getAttribute('aria-checked')).toBe('true');
+    typeInto(uz['param.width'], '1360');
+    expect(opt(uz['option.sections.auto']).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByTestId('viewer-stub').dataset.sections).toBe('656,656');
+  });
+});

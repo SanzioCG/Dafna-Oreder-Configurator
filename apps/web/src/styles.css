@@ -85,25 +85,28 @@ p {
   color: var(--muted);
 }
 
-/* ---------- layout: neutral stage left, floating white card right ---------- */
+/*
+ * ---------- layout: common background + configurator sheet ----------
+ * One page background behind everything. Left zone (60%): transparent 3D canvas directly on
+ * the background, no frame — the only place where orbit gestures work. Right zone (40%): ONE
+ * white configurator sheet holding everything configurator-related (logo + language, step
+ * bar, step cards, navigation). Nothing crosses the sheet edge; content scrolls inside it.
+ */
 
 .app {
   display: grid;
-  grid-template-columns: 65fr 35fr;
-  gap: var(--gutter);
-  padding: var(--gutter);
+  grid-template-columns: 60fr 40fr;
   height: 100vh;
   height: 100dvh;
+  background: var(--bg);
 }
 
-/* ---------- viewer (3D stage: always neutral; nothing coloured on its edge) ---------- */
+/* ---------- viewer (left zone; transparent, no frame) ---------- */
 
 .viewer {
   position: relative;
   min-width: 0;
-  border-radius: var(--radius-lg);
   overflow: hidden;
-  background: var(--stage-bg);
 }
 
 .viewer canvas {
@@ -113,7 +116,7 @@ p {
 .viewer-hint {
   position: absolute;
   left: 1.5rem;
-  bottom: 1.5rem;
+  top: 1.5rem;
   font-size: 0.9rem;
   color: var(--muted);
   background: var(--frost);
@@ -123,9 +126,10 @@ p {
   pointer-events: none;
 }
 
+/* viewer controls: bottom-left of the 3D zone */
 .viewer-actions {
   position: absolute;
-  right: 1.5rem;
+  left: 1.5rem;
   bottom: 1.5rem;
   display: flex;
   align-items: flex-end;
@@ -154,7 +158,7 @@ p {
   justify-content: center;
   align-items: flex-start;
   padding-top: 1.5rem;
-  background: rgb(238 240 243 / 0.6);
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
   pointer-events: none;
 }
 
@@ -198,25 +202,26 @@ p {
   font-weight: 700;
 }
 
-/* ---------- step panel (white card) ---------- */
+/* ---------- configurator sheet (right zone) ---------- */
 
+/* white sheet, radius 32, soft elevation, inset 24 px from the screen edges */
 .panel {
-  position: relative; /* anchors the floating bottom nav */
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+  margin: var(--sheet-inset) var(--sheet-inset) var(--sheet-inset) 0;
   background: var(--surface);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
-  overflow: hidden;
+  box-shadow: var(--shadow-sheet);
+  overflow: hidden; /* nothing crosses the sheet edge */
 }
 
 .panel-header {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.5rem 0.5rem;
+  padding: 0.9rem 1.5rem 0.55rem;
 }
 
 .brand {
@@ -256,7 +261,7 @@ p {
   gap: 0.25rem;
   padding: 0.25rem;
   border-radius: var(--radius-pill);
-  background: var(--neutral-100);
+  background: var(--bg);
 }
 
 .lang {
@@ -279,7 +284,10 @@ p {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 0.4rem;
-  padding: 0.5rem 1rem;
+  margin: 0 1.5rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  background: var(--bg);
 }
 
 .step-tab {
@@ -297,14 +305,15 @@ p {
   text-align: center;
 }
 
+/* selection contract: selected = solid brand blue + white text */
 .step-tab.active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--accent);
+  color: #fff;
   font-weight: 800;
 }
 
 .step-tab:disabled {
-  color: var(--neutral-400);
+  opacity: 0.4;
 }
 
 .step-num {
@@ -319,9 +328,9 @@ p {
 }
 
 .step-tab.active .step-num {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: #fff;
+  border-color: #fff;
+  color: var(--accent);
 }
 
 .step-soon {
@@ -333,9 +342,9 @@ p {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  /* bottom padding keeps the last control clear of the floating nav */
-  padding: 1rem 1.75rem 6.25rem;
+  gap: 0.85rem;
+  /* step content scrolls inside the sheet if needed (never the page) */
+  padding: 0.75rem 1.5rem 1rem;
   overflow-y: auto;
   touch-action: pan-y;
   overscroll-behavior: contain;
@@ -361,7 +370,7 @@ p {
 }
 
 .summary {
-  margin-top: 0.9rem;
+  margin-top: 0.5rem;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -382,13 +391,51 @@ p {
 .controls {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
+}
+
+/*
+ * Step content cards inside the sheet: flat (the sheet carries the elevation). Numeric and
+ * swatch cards are neutral, option cards pastel (one pastel per card type). Option buttons on
+ * them are white; selection = solid brand blue (contract unchanged).
+ */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.7rem 1.2rem;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+}
+
+.card-pastel {
+  background: var(--card-bg, var(--neutral-100));
+}
+
+.card[data-card='sections'] {
+  --card-bg: var(--card-sections);
+}
+
+.card[data-card='base'] {
+  --card-bg: var(--card-base);
+}
+
+.card[data-card='doors'] {
+  --card-bg: var(--card-doors);
+}
+
+.card[data-card^='doorSection'] {
+  --card-bg: var(--card-door-section);
+}
+
+.card[data-card='backPanel'] {
+  --card-bg: var(--card-technical);
 }
 
 .param {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .param-top {
@@ -552,72 +599,60 @@ p {
 }
 
 /*
- * Option cards (enum parameters): pastel fill, one pastel per parameter (card type);
- * the selected card becomes an outlined card — white fill, 2 px brand-blue border.
+ * Selection state contract (all option buttons/cards):
+ *   selected   = solid brand-blue fill + white text
+ *   unselected = white fill + graphite text
+ *   disabled   = 40% opacity + short reason text
+ * The card behind may be pastel; pastel never indicates state.
  */
 .segmented {
   display: flex;
   gap: 0.6rem;
 }
 
-.param {
-  --option-bg: var(--neutral-100);
-}
-
-.param[data-param='sections'] {
-  --option-bg: var(--card-sections);
-}
-
-.param[data-param='base'] {
-  --option-bg: var(--card-base);
-}
-
-.param[data-param='doors'] {
-  --option-bg: var(--card-doors);
-}
-
-.param[data-param^='doorSection'] {
-  --option-bg: var(--card-door-section);
-}
-
-.param[data-param='backPanel'] {
-  --option-bg: var(--card-technical);
-}
-
 .segment {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
   min-height: var(--tap);
-  padding: 0 0.5rem;
-  border: var(--border-outline);
-  border-color: transparent;
+  padding: 0.3rem 0.5rem;
+  border: 0;
   border-radius: var(--radius-md);
-  background: var(--option-bg);
+  background: var(--surface);
+  color: var(--text);
   font-size: 1.05rem;
   font-weight: 700;
+  box-shadow: 0 0.0625rem 0.25rem rgb(42 41 40 / 0.08);
 }
 
 .segment.active {
-  background: var(--surface);
-  border-color: var(--accent);
-  color: var(--accent);
+  background: var(--accent);
+  color: #fff;
   box-shadow: var(--shadow-soft);
 }
 
-/* floating frosted bottom nav */
+.segment:disabled {
+  opacity: 0.4;
+}
+
+.segment-reason {
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+/* navigation: sticky at the bottom INSIDE the sheet (last flex child; content scrolls above) */
 .panel-footer {
-  position: absolute;
-  left: 1rem;
-  right: 1rem;
-  bottom: 1rem;
+  flex: none;
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.5rem;
-  border-radius: var(--radius-pill);
-  background: var(--frost);
-  backdrop-filter: var(--frost-blur);
-  -webkit-backdrop-filter: var(--frost-blur);
-  box-shadow: var(--shadow-float);
+  padding: 0.75rem 1.5rem 0.9rem;
+  border-top: 0.0625rem solid var(--line);
+  background: var(--surface);
 }
 
 .footer-hint {
@@ -753,19 +788,23 @@ p {
   gap: 0.75rem;
 }
 
-.swatches-muted .swatch:not(.selected) {
-  opacity: 0.55;
-}
-
 .swatch {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.3rem 0;
+  padding: 0.45rem 0.2rem 0.5rem;
   border: 0;
-  background: transparent;
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
   min-height: 4.5rem;
+}
+
+/* selection contract: selected swatch card = solid brand blue + white text */
+.swatch.selected {
+  background: var(--accent);
+  color: #fff;
 }
 
 .swatch-chip {
@@ -781,10 +820,9 @@ p {
     var(--shadow-soft);
 }
 
-/* selection ring: brand blue */
 .swatch.selected .swatch-chip {
-  outline: 0.25rem solid var(--accent);
-  outline-offset: 0.2rem;
+  border-color: #fff;
+  box-shadow: 0 0 0 0.15rem #fff;
 }
 
 .swatch-check {
@@ -806,8 +844,9 @@ p {
   line-height: 1.2;
 }
 
-.swatch.selected .swatch-name {
-  color: var(--accent);
+.swatch.selected .swatch-name,
+.swatch.selected .swatch-name small {
+  color: #fff;
 }
 
 .swatch-name small {

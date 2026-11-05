@@ -1,3 +1,4 @@
+import type { ParamDef } from '@dafna/engine';
 import { useState } from 'react';
 import { LANGS, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
@@ -8,6 +9,35 @@ import { StaffPanel } from './StaffPanel';
 
 /** Served from apps/web/public/brand (Vite copies public/ as-is; BASE_URL keeps it base-safe). */
 export const BRAND_LOGO_URL = `${import.meta.env.BASE_URL}brand/dafna-logo.svg`;
+
+/**
+ * Step content cards inside the sheet. Consecutive numeric parameters share one neutral card;
+ * each swatch parameter gets a neutral card; each option parameter gets its own pastel card (one per
+ * card type, see tokens.css --card-*). Pastel never indicates selection state.
+ */
+interface CardGroup {
+  key: string;
+  tone: 'neutral' | 'pastel';
+  defs: ParamDef[];
+}
+
+export function groupIntoCards(defs: ParamDef[]): CardGroup[] {
+  const groups: CardGroup[] = [];
+  for (const def of defs) {
+    const last = groups[groups.length - 1];
+    if (def.type === 'int') {
+      if (last && last.tone === 'neutral' && last.defs[0]?.type === 'int') last.defs.push(def);
+      else groups.push({ key: def.key, tone: 'neutral', defs: [def] });
+    } else {
+      groups.push({
+        key: def.key,
+        tone: def.control === 'swatch' ? 'neutral' : 'pastel',
+        defs: [def],
+      });
+    }
+  }
+  return groups;
+}
 
 interface StepPanelProps {
   mode: Mode;
@@ -102,26 +132,38 @@ export function StepPanel({ mode, config }: StepPanelProps) {
           </p>
         </div>
         <div className="controls">
-          {defs.map((def) => (
-            <ParamControl
-              key={def.key}
-              def={def}
-              value={config.params[def.key] ?? def.default}
-              mode={mode}
-              hasError={errorKeys.has(def.key)}
-              onChange={config.setParam}
-              params={config.params}
-              hint={
-                hints[def.key] ? (
-                  <p className="param-hint" data-testid={`hint-${def.key}`}>
-                    {hints[def.key]}
-                  </p>
-                ) : undefined
-              }
-            />
+          {groupIntoCards(defs).map((group) => (
+            <section
+              key={group.key}
+              className={`card card-${group.tone}`}
+              data-card={group.defs[0]?.key}
+            >
+              {group.defs.map((def) => (
+                <ParamControl
+                  key={def.key}
+                  def={def}
+                  value={config.params[def.key] ?? def.default}
+                  mode={mode}
+                  hasError={errorKeys.has(def.key)}
+                  onChange={config.setParam}
+                  params={config.params}
+                  hint={
+                    hints[def.key] ? (
+                      <p className="param-hint" data-testid={`hint-${def.key}`}>
+                        {hints[def.key]}
+                      </p>
+                    ) : undefined
+                  }
+                />
+              ))}
+            </section>
           ))}
         </div>
-        {staff && <StaffPanel params={config.params} result={config.result} />}
+        {staff && (
+          <div className="card card-neutral">
+            <StaffPanel params={config.params} result={config.result} />
+          </div>
+        )}
       </div>
 
       <footer className="panel-footer">

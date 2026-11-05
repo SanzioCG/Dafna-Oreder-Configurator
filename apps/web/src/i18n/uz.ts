@@ -58,6 +58,10 @@ export const uz = {
   'decor.anthracite': 'Antratsit',
   'color.sameAsCorpus': 'Korpus bilan bir xil',
 
+  'reason.DOOR_TOO_WIDE': "Bo'lim bitta eshik uchun juda keng",
+  'reason.SHELF_SPAN': 'Javon uchun juda keng',
+  'reason.default': "Bu o'lchamda mumkin emas",
+
   'control.decrease': 'Kamaytirish',
   'control.increase': 'Oshirish',
   'unit.mm': 'mm',
