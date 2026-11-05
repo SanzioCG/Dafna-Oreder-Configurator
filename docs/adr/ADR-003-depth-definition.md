@@ -30,9 +30,9 @@ Staff mode shows the breakdown, e.g. `Orqa 3 + korpus 495 + tirqish 2 + eshik 16
 
 ## Consequences
 
-- With the unchanged default depth 516 mm the carcass is now 495 mm deep (was 513 mm in D-0
-  without doors). Whether the default should change (e.g. 521 mm for a 500 mm carcass) is an
-  open question for Dafna.
+- D-1a kept the default depth 516 mm (carcass 495 with doors). D-1c changed the default to
+  **600 mm** (unconfirmed; carcass 579 with 16 mm doors) so rail presets are available at the
+  default size (RAIL_DEPTH_SHORT threshold 530 unchanged).
 - The overall dimension label and the PDF (D-3) show `depth` directly.
 - Changing the door material thickness (e.g. 18 mm) changes the carcass depth, not the overall
   depth.

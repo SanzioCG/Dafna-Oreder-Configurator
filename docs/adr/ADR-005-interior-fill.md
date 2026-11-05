@@ -37,13 +37,14 @@ plug into the existing mechanisms: customer blocking (`blockingIssue`), auto-res
   for a future Bazis / GibLab export. Default edge rule: visible front edges banded 0.8 mm ABS
   placeholder; no drilling generated.
 
-## Example (default 1360 × 1900 × 516, 3 sections, single doors → auto = shelves)
+## Example (D-1b default 1360 × 1900 × 516, 3 sections, single doors → auto = shelves)
 
 Inner box y 116..1884 (1768 mm) → 5 compartments → 4 shelves with bottom faces at
 457 / 813.5 / 1170.5 / 1527 mm, each 432 × 491 × 16.
 
 ## Consequences
 
-- With the default depth (516 → carcass 495) customers cannot choose rail presets; they need
-  depth ≥ 551 mm. This is intended by the thresholds and should be confirmed by Dafna.
+- With depth 516 (carcass 495) customers cannot choose rail presets; they need depth ≥ 551 mm.
+  D-1c raised the default depth to 600 (carcass 579, unconfirmed), so at the default size rail
+  presets are enabled and `auto` with double doors resolves to rail + shelf.
 - When Dafna confirms values, only template constants change; the generator stays.
