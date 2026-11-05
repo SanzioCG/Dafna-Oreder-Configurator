@@ -36,7 +36,7 @@
     {
       "key": "depth",
       "type": "int",
-      "default": 516,
+      "default": 600,
       "min": 350,
       "max": 650,
       "step": 10,
@@ -44,8 +44,8 @@
       "labelKey": "param.depth",
       "uiStep": "size",
       "customerVisible": true,
-      "unconfirmed": false,
-      "note": "Overall outer depth: back panel + carcass + front door gap + door (ADR-003). Without doors: back + carcass."
+      "unconfirmed": true,
+      "note": "Overall outer depth: back panel + carcass + front door gap + door (ADR-003). Default 600 (D-1c, unconfirmed): carcass 579 with doors, so rail presets (>= 530 inner depth) are available at the default size."
     },
     {
       "key": "sections",

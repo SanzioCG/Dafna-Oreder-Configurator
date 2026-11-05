@@ -17,7 +17,7 @@ const NO_INTERIOR = {
   interior4: 'empty',
 };
 const gen = (overrides: Partial<Params> = {}) =>
-  generate(T, { ...defaultParams(T), doors: 'none', ...NO_INTERIOR, ...overrides });
+  generate(T, { ...defaultParams(T), depth: 516, doors: 'none', ...NO_INTERIOR, ...overrides });
 const mat = (t: number) => (t === 18 ? 'ldsp_white_18' : 'ldsp_white_16');
 const byId = (panels: Panel[], id: string): Panel => {
   const p = panels.find((x) => x.id === id);

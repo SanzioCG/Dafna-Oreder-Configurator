@@ -52,7 +52,7 @@ describe('wardrobe template v3 (0.4.0)', () => {
     expect(summary).toEqual([
       ['width', 'int', 1360, 600, 2400, null, 'size', true, false],
       ['height', 'int', 1900, 1200, 2600, null, 'size', true, false],
-      ['depth', 'int', 516, 350, 650, null, 'size', true, false],
+      ['depth', 'int', 600, 350, 650, null, 'size', true, true],
       ['sections', 'enum', 'auto', null, null, ['auto', 1, 2, 3, 4], 'size', true, false],
       ['corpusMaterial', 'enum', 'ldsp_white_16', null, null, LDSP, 'color', true, false],
       [
@@ -120,6 +120,7 @@ describe('wardrobe template v3 (0.4.0)', () => {
   it('every unconfirmed value carries a note', () => {
     const items = listUnconfirmed(T, C);
     expect(items.map((i) => `${i.kind}:${i.key}`)).toEqual([
+      'param:depth',
       'param:backPanel',
       'param:base',
       'param:plinthHeight',
@@ -253,10 +254,10 @@ describe('toOrderDraft (dafna-order/0.2-draft)', () => {
     expect(
       draft.interior.map((x) => [x.sectionIndex, x.preset, x.presetSource, x.shelves.length]),
     ).toEqual([
-      // double doors -> rail_shelf, but carcass 495 < 530 -> falls back to shelves
-      [0, 'shelves', 'auto', 4],
-      [1, 'shelves', 'auto', 4],
-      [2, 'shelves', 'auto', 4],
+      // default depth 600 -> carcass 579: double doors -> rail_shelf (top shelf only)
+      [0, 'rail_shelf', 'auto', 1],
+      [1, 'rail_shelf', 'auto', 1],
+      [2, 'rail_shelf', 'auto', 1],
     ]);
     expect(draft.panels.every((p) => p.edges && 'grainDirection' in p && p.operations)).toBe(true);
     expect(draft.sections).toEqual(result.sections);

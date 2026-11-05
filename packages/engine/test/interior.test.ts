@@ -249,3 +249,28 @@ describe('interior determinism and ordering', () => {
     expect(gen({ interior4: 'rail' })).toEqual(gen());
   });
 });
+
+describe('default depth 600 (D-1c)', () => {
+  const real = (o: Partial<Params> = {}) => generate(T, { ...defaultParams(T), ...o });
+
+  it('template default depth is 600: carcass 579 with doors, rail presets valid', () => {
+    expect(defaultParams(T).depth).toBe(600);
+    const r = real();
+    expect(r.dimensions?.carcassDepthMm).toBe(579);
+    for (const preset of ['rail', 'rail_shelf', 'rail_drawers']) {
+      expect(validate({ ...defaultParams(T), interior1: preset }), preset).toEqual([]);
+    }
+    // default 1360: 2 sections, double doors -> auto = rail_shelf
+    expect(r.sections.map((s) => [s.preset, s.presetSource])).toEqual([
+      ['rail_shelf', 'auto'],
+      ['rail_shelf', 'auto'],
+    ]);
+    expect(r.rails.length).toBe(2);
+  });
+
+  it('RAIL_DEPTH_SHORT still triggers at depth 516 (threshold 530 unchanged)', () => {
+    expect(
+      validate({ ...defaultParams(T), depth: 516, interior1: 'rail_shelf' }).map((x) => x.code),
+    ).toEqual(['RAIL_DEPTH_SHORT']);
+  });
+});

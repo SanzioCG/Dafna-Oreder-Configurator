@@ -98,7 +98,7 @@ describe('App (customer mode)', () => {
     const stub = screen.getByTestId('viewer-stub');
     expect(stub.dataset.sections).toBe('646,645,645');
     expect(stub.dataset.back).toBe('2000');
-    expect(screen.getByTestId('summary').textContent).toContain('2000 × 1900 × 516');
+    expect(screen.getByTestId('summary').textContent).toContain('2000 × 1900 × 600');
   });
 
   it('2400 mm with doors is valid (no hold, no toast)', () => {
@@ -125,7 +125,7 @@ describe('App (customer mode)', () => {
     fireEvent.click(
       screen.getByRole('button', { name: `${uz['param.height']}: ${uz['control.increase']}` }),
     );
-    expect(screen.getByTestId('summary').textContent).toContain('1360 × 1910 × 516');
+    expect(screen.getByTestId('summary').textContent).toContain('1360 × 1910 × 600');
   });
 
   it('switches language to Russian', () => {
@@ -224,7 +224,7 @@ describe('App (staff mode)', () => {
     setUrl('?mode=staff');
     render(<App />);
     expect(screen.getByTestId('hint-depth').textContent).toBe(
-      'Orqa 3 + korpus 495 + tirqish 2 + eshik 16 = 516 mm',
+      'Orqa 3 + korpus 579 + tirqish 2 + eshik 16 = 600 mm',
     );
     fireEvent.click(tab(uz['step.doors']));
     expect(screen.getByRole('radiogroup', { name: "1-bo'lim eshigi" })).toBeTruthy();
@@ -493,12 +493,13 @@ describe('Interior step (D-1b)', () => {
     openInterior();
     expect(within(sectionTabs()).getAllByRole('radio').length).toBe(2);
     expect(card(1, 'auto').getAttribute('aria-checked')).toBe('true');
-    expect(card(1, 'auto').textContent).toContain(uz['option.interior.shelves']); // auto resolves to
-    expect(stub().dataset.presets).toBe('shelves,shelves');
+    // default depth 600 + double doors: auto resolves to rail + shelf
+    expect(card(1, 'auto').textContent).toContain(uz['option.interior.rail_shelf']);
+    expect(stub().dataset.presets).toBe('rail_shelf,rail_shelf');
     fireEvent.click(card(1, 'drawers_shelves'));
     expect(card(1, 'drawers_shelves').getAttribute('aria-checked')).toBe('true');
     expect(card(1, 'drawers_shelves').className).toContain('active');
-    expect(stub().dataset.presets).toBe('drawers_shelves,shelves');
+    expect(stub().dataset.presets).toBe('drawers_shelves,rail_shelf');
   });
 
   it('"apply to all" copies the selected section preset to every section', () => {
@@ -524,8 +525,17 @@ describe('Interior step (D-1b)', () => {
     expect(presets(2)).toBeTruthy();
   });
 
+  it('customer: rail presets are enabled at the default size (depth 600)', () => {
+    render(<App />);
+    openInterior();
+    for (const p of ['rail', 'rail_shelf', 'rail_drawers']) {
+      expect(card(1, p).hasAttribute('disabled'), p).toBe(false);
+    }
+  });
+
   it('customer: rail presets are disabled with a reason when the carcass is too shallow', () => {
     render(<App />);
+    typeInto(uz['param.depth'], '516'); // carcass 495 < 530
     openInterior();
     for (const p of ['rail', 'rail_shelf', 'rail_drawers']) {
       expect(card(1, p).hasAttribute('disabled'), p).toBe(true);
@@ -536,6 +546,7 @@ describe('Interior step (D-1b)', () => {
     // staff: selectable, and the warning is shown
     setUrl('?mode=staff');
     render(<App />);
+    typeInto(uz['param.depth'], '516');
     openInterior();
     expect(card(1, 'rail').hasAttribute('disabled')).toBe(false);
     fireEvent.click(card(1, 'rail'));
