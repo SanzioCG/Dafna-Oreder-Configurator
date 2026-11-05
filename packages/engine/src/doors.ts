@@ -1,41 +1,37 @@
-import type { DoorType, HingeSide } from './types.js';
+import type { DoorType, HingeMount, HingeSide } from './types.js';
 
 /**
- * Door planning (ADR-006). Pure functions, no template access: wardrobe.ts passes the numbers.
+ * Door planning (ADR-006, revised in D-1c). Pure functions, no template access: wardrobe.ts
+ * passes the numbers.
  *
- * Rules (D-1b, supersede D-1a):
+ * Rules:
  * - A section's door coverage runs between the centre lines of its partitions (outer carcass
  *   edge at the ends). Gaps: `gapEdge` at outer edges and next to a section without a door,
  *   `gapBetween` between neighbouring leaves (also across a partition).
  * - Leaf-width rule (single source): the SINGLE-leaf width of a section is its coverage minus
  *   its gaps. doors=auto: single if that width <= maxSingleLeafWidth, else double.
  *   DOOR_TOO_WIDE is checked on the same (rounded) leaf width.
- * - Hinge rule: no two leaves may hinge on the same partition. A single hinged right followed
- *   by a single hinged left would share the partition; so would a double next to a double.
- *   Within a run of doored sections the valid patterns are  L* D? R*  (at most one double).
- *   Free singles get L for the first max(1, floor(m/2)) sections of a run, R for the rest:
- *   1: L · 2: L,R · 3: L,R,R · 4: L,L,R,R  (adjacent singles meet in the middle).
- *   A run of one section in the right half of the wardrobe hinges right instead.
+ * - Two leaves MAY hinge on the same partition (standard practice: half-overlay hinges on both
+ *   partition faces, each leaf covers half the partition). They just cannot both be fully open
+ *   at once. There is no hinge conflict any more (the D-1b rule was wrong).
+ * - Single doors hinge toward the outer side of their half of the wardrobe (symmetric front):
+ *   1: L · 2: L,R · 3: L,L,R · 4: L,L,R,R  — the middle section of an odd count hinges left.
+ *   Staff overrides (doorSectionN) are taken as given.
+ * - hingeMount: 'full_overlay' if the leaf hinges on an outer side panel, 'half_overlay' if it
+ *   hinges on a partition (data only, for later hardware / export).
  * - Leaf widths are rounded to `rounding` (0.5 mm); the remainder goes to the leaves that lost
  *   the most by rounding (ties: leftmost), so leaves + gaps = covered width exactly.
  */
 
 export type DoorKind = 'single' | 'double';
-type Slot = 'L' | 'R' | 'D' | 'F'; // fixed left/right single, double, free (preset) single
 
 export interface DoorLeaf {
   id: string;
   sectionIndex: number;
   hingeSide: HingeSide;
+  hingeMount: HingeMount;
   xStartMm: number;
   widthMm: number;
-}
-
-export interface HingeConflict {
-  /** 1-based partition number (partition k is between section k and k+1) */
-  partitionNumber: number;
-  /** override param that caused it, or null when the preset/section count did */
-  source: string | null;
 }
 
 export interface DoorPlanInput {
@@ -57,7 +53,6 @@ export interface DoorPlan {
   /** which doorSectionN override produced each section's type (null = preset) */
   source: (string | null)[];
   leaves: DoorLeaf[];
-  conflicts: HingeConflict[];
   /** nominal (unrounded) single-leaf width per section, for the auto rule */
   singleLeafWidths: number[];
 }
@@ -67,47 +62,16 @@ export function doorKindForLeaf(singleLeafWidthMm: number, maxSingleLeafWidthMm:
   return singleLeafWidthMm <= maxSingleLeafWidthMm ? 'single' : 'double';
 }
 
-/** Default split of a run of m free singles: first max(1, floor(m/2)) hinge left. */
-export function defaultLeftCount(m: number): number {
-  return m <= 0 ? 0 : Math.max(1, Math.floor(m / 2));
+/** Hinge side of a preset single door in section `index` of `count` (outer side of its half). */
+export function hingeSideFor(index: number, count: number): HingeSide {
+  return index > (count - 1) / 2 ? 'right' : 'left';
 }
 
-/**
- * Assign hinge sides to one run of doored sections; null if the hinge rule cannot be met.
- * `leftCount` = preferred number of left-hinged free singles (default split).
- */
-export function assignRun(
-  slots: Slot[],
-  leftCount: number = defaultLeftCount(slots.length),
-): ('L' | 'R' | 'D')[] | null {
-  const doubles = slots.map((s, i) => (s === 'D' ? i : -1)).filter((i) => i >= 0);
-  if (doubles.length > 1) return null;
-  if (doubles.length === 1) {
-    const p = doubles[0] as number;
-    const out: ('L' | 'R' | 'D')[] = [];
-    for (let i = 0; i < slots.length; i++) {
-      const s = slots[i];
-      if (i === p) out.push('D');
-      else if (i < p) {
-        if (s === 'R') return null;
-        out.push('L');
-      } else {
-        if (s === 'L') return null;
-        out.push('R');
-      }
-    }
-    return out;
-  }
-  const m = slots.length;
-  const a0 = leftCount;
-  const candidates = Array.from({ length: m + 1 }, (_, a) => a).sort(
-    (x, y) => Math.abs(x - a0) - Math.abs(y - a0) || x - y,
-  );
-  for (const a of candidates) {
-    const ok = slots.every((s, i) => (s === 'L' ? i < a : s === 'R' ? i >= a : true));
-    if (ok) return slots.map((s, i) => (s === 'F' ? (i < a ? 'L' : 'R') : (s as 'L' | 'R')));
-  }
-  return null;
+/** Outer side panel -> full overlay; partition -> half overlay. */
+export function hingeMountFor(sectionIndex: number, side: HingeSide, count: number): HingeMount {
+  const outer =
+    (side === 'left' && sectionIndex === 0) || (side === 'right' && sectionIndex === count - 1);
+  return outer ? 'full_overlay' : 'half_overlay';
 }
 
 /** Round to `step`, distributing the remainder so the sum stays exactly `total`. */
@@ -164,59 +128,19 @@ export function planDoors(input: DoorPlanInput): DoorPlan {
     (_, i) => (right[i] as number) - gapR(i) - ((left[i] as number) + gapL(i)),
   );
 
-  // slot per section
-  const slots: (Slot | null)[] = innerWidths.map((_, i) => {
+  const types: DoorType[] = innerWidths.map((_, i) => {
     const f = fixed[i];
-    if (f === 'none' || (!f && !hasDoor[i])) return null;
-    if (f === 'single_left') return 'L';
-    if (f === 'single_right') return 'R';
-    if (f === 'double') return 'D';
-    if (input.preset === 'all_single') return 'F';
-    return doorKindForLeaf(singleLeafWidths[i] as number, input.maxSingleLeafWidth) === 'single'
-      ? 'F'
-      : 'D';
+    if (f) return f;
+    if (!hasDoor[i]) return 'none';
+    const kind =
+      input.preset === 'all_single'
+        ? 'single'
+        : doorKindForLeaf(singleLeafWidths[i] as number, input.maxSingleLeafWidth);
+    if (kind === 'double') return 'double';
+    return hingeSideFor(i, n) === 'left' ? 'single_left' : 'single_right';
   });
 
-  // hinge assignment per run of consecutive doored sections
-  const assigned: ('L' | 'R' | 'D' | null)[] = slots.map(() => null);
-  const conflicts: HingeConflict[] = [];
-  for (let i = 0; i < n;) {
-    if (!slots[i]) {
-      i++;
-      continue;
-    }
-    let j = i;
-    while (j < n && slots[j]) j++;
-    const run = slots.slice(i, j) as Slot[];
-    // a lone doored section in the right half of the wardrobe hinges right (symmetric front)
-    const leftCount = run.length === 1 && i > (n - 1) / 2 ? 0 : defaultLeftCount(run.length);
-    const ok = assignRun(run, leftCount);
-    // infeasible: keep fixed sides, free singles by the default split, then report conflicts
-    const result =
-      ok ?? run.map((s, k) => (s === 'F' ? (k < leftCount ? 'L' : 'R') : (s as 'L' | 'R' | 'D')));
-    result.forEach((r, k) => (assigned[i + k] = r));
-    if (!ok) {
-      for (let k = i; k < j - 1; k++) {
-        const a = assigned[k];
-        const b = assigned[k + 1];
-        const aRight = a === 'R' || a === 'D';
-        const bLeft = b === 'L' || b === 'D';
-        if (aRight && bLeft) {
-          conflicts.push({
-            partitionNumber: k + 1,
-            source: source[k + 1] ?? source[k] ?? null,
-          });
-        }
-      }
-    }
-    i = j;
-  }
-
-  const types: DoorType[] = assigned.map((a) =>
-    a === 'L' ? 'single_left' : a === 'R' ? 'single_right' : a === 'D' ? 'double' : 'none',
-  );
-
-  // leaves per run, rounded so that leaves + gaps = covered width exactly
+  // leaves per run of doored sections, rounded so that leaves + gaps = covered width exactly
   const leaves: DoorLeaf[] = [];
   for (let i = 0; i < n;) {
     if (types[i] === 'none') {
@@ -257,6 +181,7 @@ export function planDoors(input: DoorPlanInput): DoorPlan {
         id: m.id,
         sectionIndex: m.sectionIndex,
         hingeSide: m.hingeSide,
+        hingeMount: hingeMountFor(m.sectionIndex, m.hingeSide, n),
         xStartMm: x,
         widthMm: w,
       });
@@ -265,5 +190,5 @@ export function planDoors(input: DoorPlanInput): DoorPlan {
     i = j;
   }
 
-  return { types, source, leaves, conflicts, singleLeafWidths };
+  return { types, source, leaves, singleLeafWidths };
 }

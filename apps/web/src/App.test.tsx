@@ -87,36 +87,34 @@ describe('App (customer mode)', () => {
       ).toBe(true);
     }
     const stub = screen.getByTestId('viewer-stub');
-    // D-1b door rules: 1360 mm -> 3 sections with single doors (2 would need adjacent doubles)
-    expect(stub.dataset.panels).toBe('12'); // 9 carcass + 3 door leaves
-    expect(stub.dataset.sections).toBe('432,432,432');
+    // D-1c: 1360 mm -> 2 sections with double doors (shared partition allowed)
+    expect(stub.dataset.panels).toBe('12'); // 8 carcass + 4 door leaves
+    expect(stub.dataset.sections).toBe('656,656');
   });
 
   it('changing width regenerates the engine result', () => {
     render(<App />);
     typeInto(uz['param.width'], '2000');
     const stub = screen.getByTestId('viewer-stub');
-    expect(stub.dataset.sections).toBe('480,480,480,480');
+    expect(stub.dataset.sections).toBe('646,645,645');
     expect(stub.dataset.back).toBe('2000');
     expect(screen.getByTestId('summary').textContent).toContain('2000 × 1900 × 516');
   });
 
-  it('a width with no valid door layout is held at the nearest valid one, with a toast', () => {
+  it('2400 mm with doors is valid (no hold, no toast)', () => {
     render(<App />);
-    typeInto(uz['param.width'], '2400'); // 4 x 580: both end sections would need doubles
+    typeInto(uz['param.width'], '2400');
     const stub = screen.getByTestId('viewer-stub');
-    expect(stub.dataset.back).toBe('2399');
-    expect(stub.dataset.sections).toBe('580,580,580,579');
+    expect(stub.dataset.back).toBe('2400');
+    expect(stub.dataset.sections).toBe('779,779,778');
+    expect(screen.queryByTestId('reset-toast')).toBeNull();
     expect(screen.queryByRole('alert')).toBeNull();
-    expect(screen.getByRole('status').textContent).toContain(
-      `${uz['param.width']}: «2400» → «2399». Sabab: ${uz['reason.HINGE_CONFLICT']}.`,
-    );
   });
 
   it('hard-clamps out-of-range input and hides staff-only parameters', () => {
     render(<App />);
-    typeInto(uz['param.width'], '9999'); // clamped to 2400, then held at 2399 (door layout)
-    expect(screen.getByTestId('viewer-stub').dataset.back).toBe('2399');
+    typeInto(uz['param.width'], '9999'); // clamped to 2400
+    expect(screen.getByTestId('viewer-stub').dataset.back).toBe('2400');
     expect(screen.queryByRole('textbox', { name: uz['param.plinthRecess'] })).toBeNull();
     expect(screen.queryByText(uz['staff.download'])).toBeNull();
     expect(screen.queryByText(uz['staff.badge'])).toBeNull();
@@ -181,7 +179,7 @@ describe('App color step', () => {
     render(<App />);
     openColorStep();
     fireEvent.click(swatch(corpus(), 'ldsp_white_18'));
-    expect(screen.getByTestId('viewer-stub').dataset.sections).toBe('430,429,429');
+    expect(screen.getByTestId('viewer-stub').dataset.sections).toBe('653,653');
   });
 });
 
@@ -200,7 +198,7 @@ describe('App doors', () => {
     expect(stub.dataset.doorsOpen).toBe('true');
     expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(button.textContent).toBe(uz['viewer.doorsClose']);
-    expect(sectionLabels()).toBe(3);
+    expect(sectionLabels()).toBe(2);
 
     fireEvent.click(button);
     expect(stub.dataset.doorsOpen).toBe('false');
@@ -231,8 +229,7 @@ describe('App (staff mode)', () => {
     fireEvent.click(tab(uz['step.doors']));
     expect(screen.getByRole('radiogroup', { name: "1-bo'lim eshigi" })).toBeTruthy();
     expect(screen.getByRole('radiogroup', { name: "2-bo'lim eshigi" })).toBeTruthy();
-    expect(screen.getByRole('radiogroup', { name: "3-bo'lim eshigi" })).toBeTruthy();
-    expect(screen.queryByRole('radiogroup', { name: "4-bo'lim eshigi" })).toBeNull();
+    expect(screen.queryByRole('radiogroup', { name: "3-bo'lim eshigi" })).toBeNull();
     const s1 = screen.getByRole('radiogroup', { name: "1-bo'lim eshigi" });
     expect(
       within(s1)
@@ -245,15 +242,18 @@ describe('App (staff mode)', () => {
     setUrl('?mode=staff');
     render(<App />);
     expect(screen.queryByRole('alert')).toBeNull();
-    // staff may pick 2 sections at 1360: two adjacent double doors -> HINGE_CONFLICT
-    const sections = screen.getByRole('radiogroup', { name: uz['param.sections'] });
-    fireEvent.click(within(sections).getByRole('radio', { name: '2' }));
-    expect(screen.getByRole('alert').textContent).toContain(uz['viewer.invalid']);
-    expect(screen.getAllByText('HINGE_CONFLICT').length).toBe(1);
+    // explicit 2 sections (auto would switch to 3 sections for all-single doors)
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: uz['param.sections'] })).getByRole('radio', {
+        name: '2',
+      }),
+    );
     fireEvent.click(tab(uz['step.doors']));
     const preset = screen.getByRole('radiogroup', { name: uz['param.doors'] });
+    // all single doors on 656 mm sections: 677 mm leaves -> DOOR_TOO_WIDE x2 (staff may pick it)
     fireEvent.click(within(preset).getByRole('radio', { name: uz['option.doors.all_single'] }));
-    expect(screen.getAllByText('DOOR_TOO_WIDE').length).toBe(2); // 677 mm leaves
+    expect(screen.getByRole('alert').textContent).toContain(uz['viewer.invalid']);
+    expect(screen.getAllByText('DOOR_TOO_WIDE').length).toBe(2);
     fireEvent.click(within(preset).getByRole('radio', { name: uz['option.doors.none'] }));
     expect(screen.queryByRole('alert')).toBeNull();
   });
@@ -362,13 +362,11 @@ describe('Customer blocks SHELF_SPAN options (any step)', () => {
       .getAllByRole('radio')
       .find((r) => r.querySelector('.segment-label')?.textContent === n) as HTMLElement;
 
-  it('customer at 1360: "1" disabled (SHELF_SPAN), "2" disabled (HINGE_CONFLICT), 3-4 enabled', () => {
+  it('customer at 1360: "1" disabled (SHELF_SPAN), 2-4 enabled (shared partitions are fine)', () => {
     render(<App />);
     expect(opt('1').hasAttribute('disabled')).toBe(true);
     expect(opt('1').textContent).toContain(uz['reason.SHELF_SPAN']);
-    expect(opt('2').hasAttribute('disabled')).toBe(true);
-    expect(opt('2').textContent).toContain(uz['reason.HINGE_CONFLICT']);
-    for (const n of ['3', '4']) expect(opt(n).hasAttribute('disabled')).toBe(false);
+    for (const n of ['2', '3', '4']) expect(opt(n).hasAttribute('disabled')).toBe(false);
   });
 
   it('staff: "1" stays selectable and shows the SHELF_SPAN warning', () => {
@@ -386,7 +384,7 @@ describe('Customer blocks SHELF_SPAN options (any step)', () => {
     expect(opt('1').getAttribute('aria-checked')).toBe('true');
     typeInto(uz['param.width'], '1360');
     expect(opt(uz['option.sections.auto']).getAttribute('aria-checked')).toBe('true');
-    expect(screen.getByTestId('viewer-stub').dataset.sections).toBe('432,432,432');
+    expect(screen.getByTestId('viewer-stub').dataset.sections).toBe('656,656');
   });
 });
 
@@ -493,14 +491,14 @@ describe('Interior step (D-1b)', () => {
   it('section tabs + preset cards; picking a preset updates the engine result', () => {
     render(<App />);
     openInterior();
-    expect(within(sectionTabs()).getAllByRole('radio').length).toBe(3);
+    expect(within(sectionTabs()).getAllByRole('radio').length).toBe(2);
     expect(card(1, 'auto').getAttribute('aria-checked')).toBe('true');
     expect(card(1, 'auto').textContent).toContain(uz['option.interior.shelves']); // auto resolves to
-    expect(stub().dataset.presets).toBe('shelves,shelves,shelves');
+    expect(stub().dataset.presets).toBe('shelves,shelves');
     fireEvent.click(card(1, 'drawers_shelves'));
     expect(card(1, 'drawers_shelves').getAttribute('aria-checked')).toBe('true');
     expect(card(1, 'drawers_shelves').className).toContain('active');
-    expect(stub().dataset.presets).toBe('drawers_shelves,shelves,shelves');
+    expect(stub().dataset.presets).toBe('drawers_shelves,shelves');
   });
 
   it('"apply to all" copies the selected section preset to every section', () => {
@@ -508,7 +506,7 @@ describe('Interior step (D-1b)', () => {
     openInterior();
     fireEvent.click(card(1, 'empty'));
     fireEvent.click(screen.getByRole('button', { name: uz['interior.applyAll'] }));
-    expect(stub().dataset.presets).toBe('empty,empty,empty');
+    expect(stub().dataset.presets).toBe('empty,empty');
     expect(
       screen.getByRole('button', { name: uz['interior.applyAll'] }).hasAttribute('disabled'),
     ).toBe(true);
@@ -519,11 +517,11 @@ describe('Interior step (D-1b)', () => {
     openInterior();
     expect(stub().dataset.interactive).toBe('true');
     expect(stub().dataset.selectedSection).toBe('0');
-    fireEvent.click(screen.getByTestId('section-hit-2'));
-    expect(stub().dataset.selectedSection).toBe('2');
-    const third = within(sectionTabs()).getAllByRole('radio')[2] as HTMLElement;
-    expect(third.getAttribute('aria-checked')).toBe('true');
-    expect(presets(3)).toBeTruthy();
+    fireEvent.click(screen.getByTestId('section-hit-1'));
+    expect(stub().dataset.selectedSection).toBe('1');
+    const second = within(sectionTabs()).getAllByRole('radio')[1] as HTMLElement;
+    expect(second.getAttribute('aria-checked')).toBe('true');
+    expect(presets(2)).toBeTruthy();
   });
 
   it('customer: rail presets are disabled with a reason when the carcass is too shallow', () => {
@@ -550,11 +548,12 @@ describe('Interior step (D-1b)', () => {
     typeInto(uz['param.depth'], '600'); // carcass 579: rail allowed
     openInterior();
     fireEvent.click(card(1, 'rail_shelf'));
-    expect(stub().dataset.presets).toBe('rail_shelf,shelves,shelves');
-    expect(Number(stub().dataset.rails)).toBe(1);
+    // section 2 is auto: double doors + deep enough -> rail_shelf as well
+    expect(stub().dataset.presets).toBe('rail_shelf,rail_shelf');
+    expect(Number(stub().dataset.rails)).toBe(2);
     fireEvent.click(tab(uz['step.size']));
     typeInto(uz['param.depth'], '516'); // carcass 495 < 530 -> RAIL_DEPTH_SHORT
-    expect(stub().dataset.presets).toBe('shelves,shelves,shelves');
+    expect(stub().dataset.presets).toBe('shelves,shelves');
     expect(screen.getByRole('status').textContent).toContain(
       `«${uz['option.interior.rail_shelf']}» → «${uz['option.interior.auto']}». Sabab: ${uz['reason.RAIL_DEPTH_SHORT']}.`,
     );

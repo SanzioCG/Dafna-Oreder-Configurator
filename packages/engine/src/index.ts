@@ -32,12 +32,11 @@ export {
 export {
   planDoors,
   doorKindForLeaf,
-  defaultLeftCount,
-  assignRun,
+  hingeSideFor,
+  hingeMountFor,
   roundLeaves,
   type DoorPlan,
   type DoorPlanInput,
-  type HingeConflict,
 } from './doors.js';
 export {
   INTERIOR_PRESETS,

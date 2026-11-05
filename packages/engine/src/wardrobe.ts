@@ -1,5 +1,5 @@
 import { getMaterial, materialsV0 } from './catalog.js';
-import { planDoors, type DoorLeaf, type DoorPlan, type HingeConflict } from './doors.js';
+import { planDoors, type DoorLeaf, type DoorPlan } from './doors.js';
 import {
   resolveInterior,
   type InteriorConstants,
@@ -24,7 +24,7 @@ import type {
   Vec3,
 } from './types.js';
 
-export const WARDROBE_GENERATOR = 'wardrobe-carcass-v2';
+export const WARDROBE_GENERATOR = 'wardrobe-carcass-v3';
 
 /** Rotations (degrees, XYZ) from the panel local frame (L→X, T→Y, W→Z) to product axes. */
 const ROT_HORIZONTAL: Vec3 = [0, 0, 0]; // length X, thickness Y, width Z
@@ -63,15 +63,11 @@ export interface WardrobeLayout {
   /** Z of the carcass front edge */
   carcassFrontZMm: number;
   sectionCount: number;
-  /** sections param was 'auto' (used to attribute HINGE_CONFLICT) */
-  sectionsWereAuto: boolean;
   sectionInnerWidthsMm: number[];
   doorTypes: DoorType[];
   /** which doorSectionN override produced each section's door type (null = preset) */
   doorTypeSource: (string | null)[];
   doorLeaves: DoorLeaf[];
-  /** partitions where two leaves would hinge (only with invalid overrides / section counts) */
-  hingeConflicts: HingeConflict[];
   doorHeightMm: number;
   maxShelfSpanMm: number;
   maxSingleLeafWidthMm: number;
@@ -102,7 +98,7 @@ export function maxSectionInnerWidth(widthMm: number, t: number, n: number): num
 /**
  * Minimum section count from the template's numeric `sections` options that keeps every section
  * inner width <= maxShelfSpanMm and, if given, satisfies `acceptable(n)` (the door layout is
- * valid: no DOOR_TOO_WIDE, no HINGE_CONFLICT). Falls back to the largest option.
+ * valid: no single leaf wider than maxSingleLeafWidth). Falls back to the largest option.
  */
 export function autoSectionCount(
   template: Template,
@@ -145,7 +141,6 @@ function doorPlanFor(
 
 /** True if the door plan has no DOOR_TOO_WIDE single leaf and no hinge conflict. */
 function doorPlanValid(plan: DoorPlan, maxLeaf: number): boolean {
-  if (plan.conflicts.length > 0) return false;
   return plan.leaves.every((l) => plan.types[l.sectionIndex] === 'double' || l.widthMm <= maxLeaf);
 }
 
@@ -268,12 +263,10 @@ export function computeLayout(
     carcassBackZMm: backThicknessMm,
     carcassFrontZMm: backThicknessMm + carcassDepthMm,
     sectionCount,
-    sectionsWereAuto: params.sections === 'auto',
     sectionInnerWidthsMm,
     doorTypes: doors.types,
     doorTypeSource: doors.source,
     doorLeaves: doors.leaves,
-    hingeConflicts: doors.conflicts,
     doorHeightMm: carcassHeightMm - 2 * doorGapEdgeMm,
     maxShelfSpanMm: getNumberConstant(template, 'maxShelfSpanMm'),
     maxSingleLeafWidthMm,
@@ -358,17 +351,6 @@ function layoutIssues(layout: WardrobeLayout): Issue[] {
       }),
     );
   }
-  // HINGE_CONFLICT: two leaves on one partition (bad override, or an explicit section count
-  // whose auto layout needs two adjacent double doors)
-  for (const c of layout.hingeConflicts) {
-    issues.push(
-      makeIssue('HINGE_CONFLICT', 'error', c.source ?? hingeParamKey(layout), {
-        partitionNumber: c.partitionNumber,
-        sectionNumber: c.partitionNumber,
-        nextSectionNumber: c.partitionNumber + 1,
-      }),
-    );
-  }
   // interior warnings (only for explicitly chosen presets; 'auto' never warns)
   layout.interior.forEach((plan, index) => {
     for (const code of plan.warnings) {
@@ -400,11 +382,6 @@ function layoutIssues(layout: WardrobeLayout): Issue[] {
     );
   }
   return issues;
-}
-
-/** Without a responsible override, the explicit section count is what makes doors collide. */
-function hingeParamKey(layout: WardrobeLayout): string {
-  return layout.sectionsWereAuto ? 'doors' : 'sections';
 }
 
 function checkTemplate(template: Template): Issue | null {
@@ -584,6 +561,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
       rotation: ROT_VERTICAL_XY,
       sectionIndex: leaf.sectionIndex,
       hingeSide: leaf.hingeSide,
+      hingeMount: leaf.hingeMount,
     });
   }
 

@@ -67,35 +67,27 @@ describe('0.1 drafts -> 0.2', () => {
     ]);
     const { draft, issues } = migrateOrderDraft(d01Singles);
     if (!draft) throw new Error('no draft');
-    // L,R,L hangs doors 2 and 3 on the same partition -> D-1b rule gives L,R,R
+    // interim (D-1c commit 1): auto hinge rule gives L,L,R; preserved in the migration commit
     expect(draft.sections.map((s) => s.doorType)).toEqual([
       'single_left',
-      'single_right',
+      'single_left',
       'single_right',
     ]);
-    expect(issues).toEqual([
-      {
-        code: 'MIGRATION_DOORS_CHANGED',
-        severity: 'warning',
-        paramKey: 'doorSection3',
-        messageKey: 'issue.MIGRATION_DOORS_CHANGED',
-        values: { sectionIndex: 2, sectionNumber: 3, from: 'single_left', to: 'single_right' },
-      },
+    expect(issues.map((i) => [i.code, i.values.sectionNumber])).toEqual([
+      ['MIGRATION_DOORS_CHANGED', 2],
+      ['MIGRATION_DOORS_CHANGED', 3],
     ]);
     // every panel keeps its size and place (leaf widths here are whole mm, rounding changes nothing)
     expect(draft.panels.map(geometry)).toEqual((d01Singles.panels as Panel[]).map(geometry));
-    expect(draft.panels.find((p) => p.id === 'door-3')?.hingeSide).toBe('right');
     expect(draft.materials.corpus?.id).toBe('ldsp_oak_light_16');
     expect(draft.materials.doors?.id).toBe('ldsp_anthracite_16');
   });
 
-  it('0.1 default (2 sections, two adjacent double doors) cannot be built: no draft, HINGE_CONFLICT', () => {
+  it('0.1 default (2 sections, two adjacent double doors) migrates again (D-1c)', () => {
     expect(d01Default.sections.map((s) => s.doorType)).toEqual(['double', 'double']);
     const { draft, issues } = migrateOrderDraft(d01Default);
-    expect(draft).toBeNull();
-    expect(issues.map((i) => [i.code, i.severity, i.paramKey, i.values.partitionNumber])).toEqual([
-      ['HINGE_CONFLICT', 'error', 'sections', 1],
-    ]);
+    expect(issues).toEqual([]);
+    expect(draft?.sections.map((s) => s.doorType)).toEqual(['double', 'double']);
   });
 });
 

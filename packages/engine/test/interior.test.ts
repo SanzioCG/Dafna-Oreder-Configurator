@@ -9,7 +9,9 @@ import {
   type Params,
 } from '../src/index.js';
 
-const gen = (overrides: Partial<Params> = {}) => generate(T, { ...defaultParams(T), ...overrides });
+/** D-1b reference configuration (3 sections, depth 516) so the exact mm below stay comparable. */
+const gen = (overrides: Partial<Params> = {}) =>
+  generate(T, { ...defaultParams(T), sections: 3, depth: 516, ...overrides });
 const sec = (r: GenerateResult, i: number) => {
   const s = r.sections[i];
   if (!s) throw new Error(`section ${i} missing`);
