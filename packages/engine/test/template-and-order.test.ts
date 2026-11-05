@@ -26,7 +26,7 @@ const LDSP = [
   'ldsp_white_18',
 ];
 
-describe('wardrobe template v2 (0.3.0)', () => {
+describe('wardrobe template v3 (0.4.0)', () => {
   it('defines the parameters with the specified ranges and defaults', () => {
     const summary = T.parameters.map((d) => [
       d.key,
@@ -52,7 +52,7 @@ describe('wardrobe template v2 (0.3.0)', () => {
     expect(summary).toEqual([
       ['width', 'int', 1360, 600, 2400, null, 'size', true, false],
       ['height', 'int', 1900, 1200, 2600, null, 'size', true, false],
-      ['depth', 'int', 516, 350, 650, null, 'size', true, false],
+      ['depth', 'int', 600, 350, 650, null, 'size', true, true],
       ['sections', 'enum', 'auto', null, null, ['auto', 1, 2, 3, 4], 'size', true, false],
       ['corpusMaterial', 'enum', 'ldsp_white_16', null, null, LDSP, 'color', true, false],
       [
@@ -120,6 +120,7 @@ describe('wardrobe template v2 (0.3.0)', () => {
   it('every unconfirmed value carries a note', () => {
     const items = listUnconfirmed(T, C);
     expect(items.map((i) => `${i.kind}:${i.key}`)).toEqual([
+      'param:depth',
       'param:backPanel',
       'param:base',
       'param:plinthHeight',
@@ -161,11 +162,14 @@ describe('wardrobe template v2 (0.3.0)', () => {
       'rule:plinth-front-under-carcass',
       'rule:doors-overlay',
       'rule:door-split-at-partition-centre',
-      'rule:auto-sections-door-feasible',
+
       'rule:interior-default-rule',
       'rule:interior-layout',
       'rule:edge-default-rule',
       'rule:grain-placeholder',
+      'rule:door-hinge-sides',
+      'rule:door-hinge-mount',
+      'rule:auto-sections-door-leaf',
       ...C.materials.map((m) => `material:${m.id}`),
     ]);
     for (const i of items) {
@@ -219,7 +223,7 @@ describe('material catalog v0', () => {
   });
 });
 
-describe('toOrderDraft (dafna-order/0.2-draft)', () => {
+describe('toOrderDraft (dafna-order/0.3-draft)', () => {
   const params = {
     ...defaultParams(T),
     width: 2000,
@@ -230,20 +234,19 @@ describe('toOrderDraft (dafna-order/0.2-draft)', () => {
   const draft = toOrderDraft(params, result, { now: () => new Date('2026-11-05T10:00:00.000Z') });
 
   it('has the 0.2 schema, materials, doors and interior per section, rails', () => {
-    expect(draft.schemaVersion).toBe('dafna-order/0.2-draft');
+    expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');
     expect(draft.productType).toBe('wardrobe');
-    expect(draft.templateVersion).toBe('0.3.0');
+    expect(draft.templateVersion).toBe('0.4.0');
     expect(draft.catalogVersion).toBe('0.1.0');
     expect(draft.params).toEqual(params);
     expect(draft.materials.corpus?.id).toBe('ldsp_oak_light_16');
     expect(draft.materials.doors?.id).toBe('ldsp_anthracite_16');
     expect(draft.materials.back?.id).toBe('hdf_white_3');
-    // 2000 -> 3 sections would need adjacent double doors -> 4 sections of 480 mm, singles L,L,R,R
+    // 2000 -> 3 sections (646/645/645), leaves > 600 -> 3 double doors (shared partitions OK)
     expect(draft.doors).toEqual([
-      { sectionIndex: 0, type: 'single_left', leaves: ['door-1'] },
-      { sectionIndex: 1, type: 'single_left', leaves: ['door-2'] },
-      { sectionIndex: 2, type: 'single_right', leaves: ['door-3'] },
-      { sectionIndex: 3, type: 'single_right', leaves: ['door-4'] },
+      { sectionIndex: 0, type: 'double', leaves: ['door-1-left', 'door-1-right'] },
+      { sectionIndex: 1, type: 'double', leaves: ['door-2-left', 'door-2-right'] },
+      { sectionIndex: 2, type: 'double', leaves: ['door-3-left', 'door-3-right'] },
     ]);
     expect(draft.dimensions).toEqual(result.dimensions);
     expect(draft.panels).toEqual(result.panels);
@@ -251,10 +254,10 @@ describe('toOrderDraft (dafna-order/0.2-draft)', () => {
     expect(
       draft.interior.map((x) => [x.sectionIndex, x.preset, x.presetSource, x.shelves.length]),
     ).toEqual([
-      [0, 'shelves', 'auto', 4],
-      [1, 'shelves', 'auto', 4],
-      [2, 'shelves', 'auto', 4],
-      [3, 'shelves', 'auto', 4],
+      // default depth 600 -> carcass 579: double doors -> rail_shelf (top shelf only)
+      [0, 'rail_shelf', 'auto', 1],
+      [1, 'rail_shelf', 'auto', 1],
+      [2, 'rail_shelf', 'auto', 1],
     ]);
     expect(draft.panels.every((p) => p.edges && 'grainDirection' in p && p.operations)).toBe(true);
     expect(draft.sections).toEqual(result.sections);
@@ -278,7 +281,7 @@ describe('toOrderDraft (dafna-order/0.2-draft)', () => {
   });
 });
 
-describe('D-0 order draft migration (chain D-0 -> 0.1 -> 0.2)', () => {
+describe('D-0 order draft migration (chain D-0 -> 0.3)', () => {
   const geometry = (p: Panel) => [
     p.id,
     p.role,
@@ -296,7 +299,7 @@ describe('D-0 order draft migration (chain D-0 -> 0.1 -> 0.2)', () => {
     const { draft, issues } = migrateOrderDraft(d0);
     expect(issues).toEqual([]);
     if (!draft) throw new Error('no draft');
-    expect(draft.schemaVersion).toBe('dafna-order/0.2-draft');
+    expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');
     expect(draft.migratedFrom).toBe('dafna-order/0-draft');
     expect(draft.params.interior1).toBe('empty');
     expect(draft.rails).toEqual([]);

@@ -31,18 +31,19 @@ A `Panel` is a rectangular board. In its local frame it is centred at the origin
 In Three.js: `new BoxGeometry(lengthMm, thicknessMm, widthMm)`, mesh at `position`, rotation in
 radians. Door panels are always given **closed**; opening is a viewer animation only.
 
-## Template format (`templates/wardrobe.v2.json`)
+## Template format (`templates/wardrobe.v3.json`)
 
-Current template: **v2, `templateVersion` 0.3.0, generator `wardrobe-carcass-v2`** (D-1b:
-leaf/hinge door rules, interior fill, production fields). `wardrobe.v0.json` (D-0) and
-`wardrobe.v1.json` (D-1a) are kept as an archive only; older order drafts are migrated.
+Current template: **v3, `templateVersion` 0.4.0, generator `wardrobe-carcass-v3`** (D-1c:
+leaves may share a partition, hinge mount per leaf, default depth 600). `wardrobe.v0.json`
+(D-0), `wardrobe.v1.json` (D-1a) and `wardrobe.v2.json` (D-1b) are kept as an archive only;
+older order drafts are migrated.
 
 ```jsonc
 {
   "templateId": "wardrobe",
-  "templateVersion": "0.3.0", // stored in every order draft
+  "templateVersion": "0.4.0", // stored in every order draft
   "productType": "wardrobe",
-  "generator": "wardrobe-carcass-v2", // generator code that understands this template
+  "generator": "wardrobe-carcass-v3", // generator code that understands this template
   "units": "mm",
   "parameters": [ParamDef],
   "constants": { "<name>": { "value", "unit?", "unconfirmed", "note?" } },
@@ -70,7 +71,7 @@ leaf/hinge door rules, interior fill, production fields). `wardrobe.v0.json` (D-
 | `materialKinds`    | enum of material ids: allowed catalog kinds (checked by `validate`)             |
 | `appliesToSection` | 1-based section a parameter belongs to (UI hides it if there are fewer)         |
 
-Parameters (v2): `width`, `height`, `depth`, `sections`, `corpusMaterial`, `doorMaterial`
+Parameters (v3): `width`, `height`, `depth` (default 600, unconfirmed), `sections`, `corpusMaterial`, `doorMaterial`
 (`same_as_corpus` or a material id), `backPanel`, `base`, `plinthHeight`, `plinthRecess`,
 `doors` (`none` | `all_single` | `auto`), `doorSection1..4` (staff override: `preset` | `none` |
 `single_left` | `single_right` | `double`), `interior1..4` (`auto` | `empty` | `shelves` | `rail`
@@ -99,7 +100,7 @@ import {
 const params = { ...defaultParams(T), width: 1800, interior1: 'drawers_shelves' };
 const issues = validate(params); // Issue[] — never throws
 const result = generate(T, params); // { panels, rails, sections, issues, dimensions } — never throws
-const draft = toOrderDraft(params, result); // dafna-order/0.2-draft JSON, no price fields
+const draft = toOrderDraft(params, result); // dafna-order/0.3-draft JSON, no price fields
 ```
 
 - `validate(params, template = wardrobeTemplate, catalog = materialsV0)` → `Issue[]`.
@@ -111,9 +112,11 @@ const draft = toOrderDraft(params, result); // dafna-order/0.2-draft JSON, no pr
   drawer parts (`sN-drawer-K-front|side-left|side-right|back|bottom`) and shelves bottom to top
   (`sN-shelf-K`, `sN-shelf-fixed`, `sN-shelf-top`). Rails: `sN-rail`.
 - `toOrderDraft(params, result, { template?, catalog?, now? })` → `OrderDraft`.
-- `migrateOrderDraft(draft)`, `migrateParamsFromD0`, `migrateParamsFrom01` — see Migration.
+- `migrateOrderDraft(draft)`, `migrateParamsFromD0`, `migrateParamsFrom01`,
+  `migrateParamsFrom02` — see Migration.
 - `listUnconfirmed(template, catalog?)` → every unconfirmed parameter, constant, rule, material.
-- Building blocks: `planDoors`, `doorKindForLeaf`, `assignRun`, `roundLeaves` (doors.ts);
+- Building blocks: `planDoors`, `doorKindForLeaf`, `hingeSideFor`, `hingeMountFor`,
+  `roundLeaves` (doors.ts);
   `planInterior`, `resolveInterior`, `evenShelfBottoms`, `defaultPresetFor` (interior.ts);
   `computeLayout`, `autoSectionCount`, `distributeEvenly`, `clampParam`, `getMaterial`.
 
@@ -129,8 +132,7 @@ const draft = toOrderDraft(params, result); // dafna-order/0.2-draft JSON, no pr
 | `MATERIAL_UNKNOWN`                | error    | material id not in the catalog, or of a disallowed kind            |
 | `GEOMETRY_INVALID`                | error    | a derived inner size ≤ 0 (cannot happen within v2 ranges)          |
 | `DOOR_TOO_WIDE`                   | error    | a single leaf wider than `maxSingleLeafWidthMm` (600, leaf width)  |
-| `HINGE_CONFLICT`                  | error    | two leaves would hinge on one partition (ADR-006)                  |
-| `UNSUPPORTED_TEMPLATE`            | error    | template `generator` is not `wardrobe-carcass-v2`                  |
+| `UNSUPPORTED_TEMPLATE`            | error    | template `generator` is not `wardrobe-carcass-v3`                  |
 | `UNKNOWN_PARAM`                   | warning  | input key not defined by the template                              |
 | `SHELF_SPAN`                      | warning  | a section inner width > `maxShelfSpanMm` (900)                     |
 | `DOOR_TOO_HEIGHT`                 | warning  | door height > `maxDoorHeightMm` (2400)                             |
@@ -138,13 +140,13 @@ const draft = toOrderDraft(params, result); // dafna-order/0.2-draft JSON, no pr
 | `RAIL_HEIGHT_SHORT`               | warning  | rail preset, clear hanging height < `railMinHangingHeightMm` (900) |
 | `DRAWER_SECTION_TOO_WIDE`         | warning  | drawer front width > `drawerMaxFrontWidthMm` (900)                 |
 | `MIGRATION_THICKNESS_UNAVAILABLE` | error    | migration: no LDSP with the D-0 `panelThickness` in the catalog    |
-| `MIGRATION_DOORS_CHANGED`         | warning  | migration: the D-1b hinge rule changed a section's door type       |
+| `MIGRATION_DOORS_CHANGED`         | warning  | migration: a kept single door is now > 600 mm (became double)      |
 | `UNSUPPORTED_SCHEMA`              | error    | migration: unknown order draft `schemaVersion`                     |
 
 The web app blocks every error plus `SHELF_SPAN`, `RAIL_DEPTH_SHORT`, `RAIL_HEIGHT_SHORT` and
 `DRAWER_SECTION_TOO_WIDE` for customers (`CUSTOMER_BLOCKING_WARNINGS`); staff sees them.
 
-## Construction v2 (carcass, hinged doors, interior)
+## Construction v3 (carcass, hinged doors, interior)
 
 With `t` = corpus thickness, `td` = door thickness, `tb` = back thickness (0 without back),
 `g` = `doorGapFrontMm` (2), `ph` = `plinthHeight` (0 if `base = none`), `n` = section count:
@@ -153,13 +155,15 @@ With `t` = corpus thickness, `td` = door thickness, `tb` = back thickness (0 wit
 - **carcass**: sides `Hc × Dc × t` on the plinth, top/bottom between the sides, partitions
   between top and bottom; sections share `width − (n + 1)·t` in whole mm.
   `sections = auto`: smallest `n ∈ {1..4}` with every inner width ≤ 900 **and** (if the doors
-  preset is not `none`) a door layout without DOOR_TOO_WIDE / HINGE_CONFLICT.
+  preset is not `none`) no DOOR_TOO_WIDE.
 - **doors** (ADR-006): coverage between partition centre lines; gaps 1.5 at outer edges and next
   to an empty section, 3 between leaves. Single-leaf width = coverage − gaps; `auto`: single if
-  ≤ 600, else double. Hinges: per run of doored sections `L* D? R*` — 1: L, 2: L,R, 3: L,R,R,
-  4: L,L,R,R; a lone doored section in the right half hinges right. Leaf widths rounded to
-  0.5 mm, remainder to the leaves that lost most; `Σ leaves + gaps = covered width` exactly.
-  Consequence: no layout exists with doors at 2400 mm (16 mm board) / 2398–2400 mm (18 mm).
+  ≤ 600, else double. Leaves may share a partition (no hinge constraint). Single hinges: section
+  `i` of `n` hinges right if `i > (n − 1)/2`, else left — 1: L, 2: L,R, 3: L,L,R, 4: L,L,R,R.
+  `hingeMount` per leaf (unconfirmed): `full_overlay` on an outer side, `half_overlay` on a
+  partition. Leaf widths rounded to 0.5 mm, remainder to the leaves that lost most;
+  `Σ leaves + gaps = covered width` exactly. Default 1360 → 2 sections, 2 doubles; 2400 → 3
+  doubles.
 - **interior** (ADR-005), per section inner box `y ∈ [ph + t, height − t]`:
   drawers (2 × 170 front, 3 gaps) at the bottom with a fixed shelf directly above; rail presets
   put a top shelf 400 below the top inner face and the rail axis 60 below it (or below the top);
@@ -175,15 +179,16 @@ With `t` = corpus thickness, `td` = door thickness, `tb` = back thickness (0 wit
 
 Every assumption is listed as `unconfirmed` in the template or the catalog and shown in staff mode.
 
-## Order draft schema `dafna-order/0.2-draft`
+## Order draft schema `dafna-order/0.3-draft`
 
 `{ schemaVersion, productType, templateVersion, catalogVersion, params, materials, doors,
 interior: [{ sectionIndex, preset, presetSource, shelves, rails, drawers, clearHangingHeightMm }],
 dimensions, panels (with edges / grainDirection / operations), rails, sections, issues,
 generatedAt, migratedFrom? }`. No price fields.
 
-Changes from 0.1: added `interior`, `rails`, panel production fields, section interior summary,
-params `interior1..4`; template 0.3.0. (0.1 vs 0-draft: see git history of this README / ADR-004.)
+Changes from 0.2: door panels carry `hingeMount` (`full_overlay` | `half_overlay`); template
+0.4.0. 0.2 vs 0.1: added `interior`, `rails`, panel production fields, section interior summary,
+params `interior1..4`. (0.1 vs 0-draft: see git history of this README / ADR-004.)
 
 ## Migration
 
@@ -191,14 +196,18 @@ params `interior1..4`; template 0.3.0. (0.1 vs 0-draft: see git history of this 
 steps, then **one** re-generation with the current engine (original `generatedAt` kept,
 `migratedFrom` = original schema):
 
-1. `0.2-draft` → returned unchanged.
+1. `0.3-draft` → returned unchanged.
 2. `0-draft` → `migrateParamsFromD0` (`panelThickness` → `corpusMaterial`, `doors = none`) → step 3.
 3. `0.1-draft` → `migrateParamsFrom01`: `interior1..4 = empty` (0.1 had no interior),
-   `sections: auto` pinned to the draft's section count (the D-1b auto rule also considers doors).
-4. A door type changed by the D-1b hinge rule → `MIGRATION_DOORS_CHANGED` warning (e.g. 0.1
-   L,R,L → L,R,R). An order that cannot be built any more (two adjacent double doors →
-   `HINGE_CONFLICT`) → `draft: null` with the errors; staff must re-confirm it.
-5. Unknown schema → `UNSUPPORTED_SCHEMA`.
+   `sections: auto` pinned to the draft's section count → step 4.
+4. `0.2-draft` → `migrateParamsFrom02`: `sections: auto` pinned to the draft's section count
+   (the D-1c auto rule picks fewer sections, e.g. 1360: 3 → 2); depth/interior kept.
+5. Door types and hinge sides of the old draft are kept: where the current rule differs, the old
+   type is pinned as a `doorSectionN` override (e.g. 0.1 L,R,L stays L,R,L). Only an override
+   that is now invalid (single leaf > 600 → DOOR_TOO_WIDE) is dropped → `MIGRATION_DOORS_CHANGED`
+   warning. Remaining errors → `draft: null` with the errors.
+6. Unknown schema → `UNSUPPORTED_SCHEMA`.
 
-Verified with real drafts in `test/fixtures/` (D-0 drafts and 0.1 drafts generated by the D-1a
-engine at main @ 10d0238).
+Verified with real drafts in `test/fixtures/` (D-0 drafts, 0.1 drafts from the D-1a engine at
+main @ 10d0238, 0.2 drafts from the D-1b engine at main @ 67e7eda). Drafts refused by D-1b
+with `HINGE_CONFLICT` (two adjacent doubles) migrate again.

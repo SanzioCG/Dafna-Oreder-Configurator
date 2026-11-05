@@ -18,7 +18,7 @@ export interface OrderDraftOptions {
 }
 
 /**
- * Builds the order draft JSON (schema dafna-order/0.2-draft). Contains no price fields
+ * Builds the order draft JSON (schema dafna-order/0.3-draft: door panels carry hingeMount). Contains no price fields
  * (price comes in a later batch). Materials are embedded as full catalog entries so the draft
  * stays readable even after the catalog changes.
  */

@@ -112,31 +112,6 @@ export function repairCustomerParams(params: Params): { params: Params; resets: 
   return { params: out, resets };
 }
 
-export function hasCustomerBlocking(params: Params): string | null {
-  return validate(params, TEMPLATE, CATALOG).find(isCustomerBlocking)?.code ?? null;
-}
-
-/**
- * Customer numeric change (e.g. width 2400 with doors): if even after resetting options the
- * result is still blocked, the value is held at the nearest valid value between the requested
- * and the previous value (1 mm steps). Returns null if no such value exists (change rejected).
- */
-export function nearestValidNumber(
-  prev: Params,
-  key: string,
-  requested: number,
-): { params: Params; resets: AutoReset[]; value: number; code: string } | null {
-  const code = hasCustomerBlocking(repairCustomerParams({ ...prev, [key]: requested }).params);
-  if (!code) return null;
-  const from = Number(prev[key]);
-  const dir = Math.sign(from - requested);
-  for (let v = requested + dir; dir !== 0 && (dir > 0 ? v <= from : v >= from); v += dir) {
-    const cand = repairCustomerParams({ ...prev, [key]: v });
-    if (!hasCustomerBlocking(cand.params)) return { ...cand, value: v, code };
-  }
-  return null;
-}
-
 /**
  * Holds the parameter state and runs the engine. Generation takes well under a millisecond,
  * so it runs synchronously on every change (debounce = 0 ms, within the 50 ms budget).
@@ -158,16 +133,7 @@ export function useConfigurator(mode: Mode = 'customer'): Configurator {
         const repaired = repairCustomerParams(next);
         next = repaired.params;
         // the option the customer just picked is never "auto-reset" (it was enabled, so valid)
-        let resets = repaired.resets.filter((r) => r.key !== key);
-        if (typeof value === 'number' && hasCustomerBlocking(next)) {
-          const held = nearestValidNumber(prev, key, value);
-          if (!held) return; // no valid value between: keep the previous state
-          next = held.params;
-          resets = [
-            ...held.resets.filter((r) => r.key !== key),
-            { key, from: value, to: held.value, code: held.code },
-          ];
-        }
+        const resets = repaired.resets.filter((r) => r.key !== key);
         if (resets.length > 0) {
           noticeId.current += 1;
           setNotice({ id: noticeId.current, resets });

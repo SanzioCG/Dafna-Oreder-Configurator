@@ -1,0 +1,550 @@
+{
+  "templateId": "wardrobe",
+  "templateVersion": "0.4.0",
+  "productType": "wardrobe",
+  "generator": "wardrobe-carcass-v3",
+  "units": "mm",
+  "parameters": [
+    {
+      "key": "width",
+      "type": "int",
+      "default": 1360,
+      "min": 600,
+      "max": 2400,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.width",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "Overall product width, outer faces of the side panels."
+    },
+    {
+      "key": "height",
+      "type": "int",
+      "default": 1900,
+      "min": 1200,
+      "max": 2600,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.height",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "Overall product height from the floor, plinth included."
+    },
+    {
+      "key": "depth",
+      "type": "int",
+      "default": 600,
+      "min": 350,
+      "max": 650,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.depth",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Overall outer depth: back panel + carcass + front door gap + door (ADR-003). Default 600 (D-1c, unconfirmed): carcass 579 with doors, so rail presets (>= 530 inner depth) are available at the default size."
+    },
+    {
+      "key": "sections",
+      "type": "enum",
+      "default": "auto",
+      "options": ["auto", 1, 2, 3, 4],
+      "labelKey": "param.sections",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "auto = minimum section count that keeps each section inner width <= maxShelfSpanMm."
+    },
+    {
+      "key": "corpusMaterial",
+      "type": "enum",
+      "default": "ldsp_white_16",
+      "options": [
+        "ldsp_white_16",
+        "ldsp_light_grey_16",
+        "ldsp_beige_16",
+        "ldsp_oak_light_16",
+        "ldsp_anthracite_16",
+        "ldsp_white_18"
+      ],
+      "labelKey": "param.corpusMaterial",
+      "uiStep": "color",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "control": "swatch",
+      "materialKinds": ["ldsp", "mdf"],
+      "note": "Carcass, partition and plinth board. Its thickness drives all carcass geometry (replaces D-0 panelThickness). Decors themselves are unconfirmed placeholders (catalog)."
+    },
+    {
+      "key": "doorMaterial",
+      "type": "enum",
+      "default": "same_as_corpus",
+      "options": [
+        "same_as_corpus",
+        "ldsp_white_16",
+        "ldsp_light_grey_16",
+        "ldsp_beige_16",
+        "ldsp_oak_light_16",
+        "ldsp_anthracite_16",
+        "ldsp_white_18"
+      ],
+      "labelKey": "param.doorMaterial",
+      "uiStep": "color",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "control": "swatch",
+      "materialKinds": ["ldsp", "mdf"],
+      "note": "'same_as_corpus' = door decor follows corpusMaterial. Door thickness = this material's thickness."
+    },
+    {
+      "key": "backPanel",
+      "type": "enum",
+      "default": "hdf_overlay",
+      "options": ["none", "hdf_overlay"],
+      "labelKey": "param.backPanel",
+      "uiStep": "size",
+      "customerVisible": false,
+      "unconfirmed": true,
+      "note": "Assumed: HDF back nailed over the carcass back (overlay). Material and thickness = constants.backMaterial (catalog)."
+    },
+    {
+      "key": "base",
+      "type": "enum",
+      "default": "plinth",
+      "options": ["plinth", "none"],
+      "labelKey": "param.base",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Assumed: plinth by default; 'none' = carcass bottom directly on the floor (no legs in v0)."
+    },
+    {
+      "key": "plinthHeight",
+      "type": "int",
+      "default": 100,
+      "min": 60,
+      "max": 150,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.plinthHeight",
+      "uiStep": "size",
+      "customerVisible": false,
+      "unconfirmed": true,
+      "note": "Assumed plinth height range and default. Used only when base = plinth."
+    },
+    {
+      "key": "plinthRecess",
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "unit": "mm",
+      "labelKey": "param.plinthRecess",
+      "uiStep": "size",
+      "customerVisible": false,
+      "unconfirmed": true,
+      "note": "Assumed: setback of the front plinth strip from the carcass front edge. Back strip is never recessed."
+    },
+    {
+      "key": "doors",
+      "type": "enum",
+      "default": "auto",
+      "options": ["none", "all_single", "auto"],
+      "labelKey": "param.doors",
+      "uiStep": "doors",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "Preset for all sections. auto: single door if the single-leaf width (coverage minus gaps) <= maxSingleLeafWidthMm, else double. Single doors hinge toward the outer side of their half (ADR-006 rev. D-1c)."
+    },
+    {
+      "key": "doorSection1",
+      "type": "enum",
+      "default": "preset",
+      "options": ["preset", "none", "single_left", "single_right", "double"],
+      "labelKey": "param.doorSection",
+      "uiStep": "doors",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "appliesToSection": 1,
+      "note": "Staff override for section 1. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "doorSection2",
+      "type": "enum",
+      "default": "preset",
+      "options": ["preset", "none", "single_left", "single_right", "double"],
+      "labelKey": "param.doorSection",
+      "uiStep": "doors",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "appliesToSection": 2,
+      "note": "Staff override for section 2. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "doorSection3",
+      "type": "enum",
+      "default": "preset",
+      "options": ["preset", "none", "single_left", "single_right", "double"],
+      "labelKey": "param.doorSection",
+      "uiStep": "doors",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "appliesToSection": 3,
+      "note": "Staff override for section 3. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "doorSection4",
+      "type": "enum",
+      "default": "preset",
+      "options": ["preset", "none", "single_left", "single_right", "double"],
+      "labelKey": "param.doorSection",
+      "uiStep": "doors",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "appliesToSection": 4,
+      "note": "Staff override for section 4. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "interior1",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "rail",
+        "rail_shelf",
+        "drawers_shelves",
+        "rail_drawers"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 1,
+      "control": "presetCards",
+      "note": "Interior fill of section 1. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "interior2",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "rail",
+        "rail_shelf",
+        "drawers_shelves",
+        "rail_drawers"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 2,
+      "control": "presetCards",
+      "note": "Interior fill of section 2. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "interior3",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "rail",
+        "rail_shelf",
+        "drawers_shelves",
+        "rail_drawers"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 3,
+      "control": "presetCards",
+      "note": "Interior fill of section 3. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "interior4",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "rail",
+        "rail_shelf",
+        "drawers_shelves",
+        "rail_drawers"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 4,
+      "control": "presetCards",
+      "note": "Interior fill of section 4. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
+    }
+  ],
+  "constants": {
+    "maxShelfSpanMm": {
+      "value": 900,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed maximum section inner width before shelves sag (SHELF_SPAN warning, sections=auto)."
+    },
+    "backMaterial": {
+      "value": "hdf_white_3",
+      "unconfirmed": true,
+      "note": "Assumed back panel material (catalog id). Its thickness is the back thickness."
+    },
+    "doorGapFrontMm": {
+      "value": 2,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed gap between the carcass front edge and the back face of the overlay door."
+    },
+    "doorGapBetweenMm": {
+      "value": 3,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed gap between two adjacent door leaves."
+    },
+    "doorGapEdgeMm": {
+      "value": 1.5,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed gap between a door leaf and the outer carcass edge (left, right, top, bottom). Also used next to a section without a door."
+    },
+    "maxSingleLeafWidthMm": {
+      "value": 600,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed maximum width of one door leaf. Single source for doors=auto (single vs double) and DOOR_TOO_WIDE; measured on the leaf, not the section opening."
+    },
+    "doorLeafRoundingMm": {
+      "value": 0.5,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed rounding step for door leaf widths; the remainder goes to the leaves that lost most by rounding so leaves + gaps = covered width exactly."
+    },
+    "maxDoorHeightMm": {
+      "value": 2400,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed door height above which DOOR_TOO_HEIGHT warns (warping risk)."
+    },
+    "shelfPitchTargetMm": {
+      "value": 334,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed target pitch of removable shelves; the count is derived from the available height (compartments = round(height / pitch)), openings are equal."
+    },
+    "shelfFrontSetbackMm": {
+      "value": 4,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed setback of shelves from the carcass front (removable shelves); shelf depth = carcass inner depth - setback."
+    },
+    "railTopShelfDropMm": {
+      "value": 400,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed distance from the carcass top inner face down to the top face of the shelf above a rail (rail presets)."
+    },
+    "railAxisDropMm": {
+      "value": 60,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed distance from the underside of the shelf/top above a rail down to the rail axis."
+    },
+    "railDiameterMm": {
+      "value": 25,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed hanging rail diameter."
+    },
+    "drawerFrontHeightMm": {
+      "value": 170,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed internal drawer front height."
+    },
+    "drawerCountPerSection": {
+      "value": 2,
+      "unconfirmed": true,
+      "note": "Assumed number of internal drawers per drawer preset, stacked at the bottom of the section."
+    },
+    "drawerGapMm": {
+      "value": 3,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed vertical gap below, between and above internal drawer fronts (drawer zone = gap + count x (front + gap))."
+    },
+    "drawerFrontSetbackMm": {
+      "value": 4,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed setback of internal drawer fronts behind the carcass front edge (they sit behind the doors)."
+    },
+    "drawerSlideClearanceMm": {
+      "value": 13,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed slide clearance per side: drawer box width = section inner width - 2 x 13. Internal fronts are as wide as the box (simplified)."
+    },
+    "drawerBoxHeightReductionMm": {
+      "value": 40,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed: drawer box height = front height - 40, box centred on the front (simplified box, no slide hardware)."
+    },
+    "drawerBackClearanceMm": {
+      "value": 20,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed free space behind a drawer box."
+    },
+    "drawerSlideMinMm": {
+      "value": 250,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed shortest slide; box depth = longest slide (250..550, 50 steps) that fits."
+    },
+    "drawerSlideMaxMm": {
+      "value": 550,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed longest slide."
+    },
+    "drawerSlideStepMm": {
+      "value": 50,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed slide length step."
+    },
+    "railMinDepthMm": {
+      "value": 530,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed minimum carcass inner depth for hanging clothes (RAIL_DEPTH_SHORT warning below)."
+    },
+    "railMinHangingHeightMm": {
+      "value": 900,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed minimum clear hanging height under a rail (RAIL_HEIGHT_SHORT warning below)."
+    },
+    "drawerMaxFrontWidthMm": {
+      "value": 900,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed maximum internal drawer front width (DRAWER_SECTION_TOO_WIDE warning above)."
+    },
+    "edgeBandId": {
+      "value": "abs_0_8_placeholder",
+      "unconfirmed": true,
+      "note": "Placeholder edge band id for visible front edges until Dafna sends its edge band list."
+    },
+    "edgeBandThicknessMm": {
+      "value": 0.8,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed ABS edge band thickness on visible front edges. Panel dimensions stay finished sizes (band not subtracted)."
+    }
+  },
+  "constructionRules": [
+    {
+      "id": "sides-on-plinth",
+      "unconfirmed": true,
+      "note": "Side panels run the full carcass height and stand on the plinth (carcass height = height - plinthHeight)."
+    },
+    {
+      "id": "top-bottom-between-sides",
+      "unconfirmed": true,
+      "note": "Top and bottom are fitted between the side panels (length = width - 2 x panelThickness)."
+    },
+    {
+      "id": "equal-sections-integer-mm",
+      "unconfirmed": true,
+      "note": "Sections share the inner width equally in whole millimetres; any remainder (< sections mm) goes +1 mm to the leftmost sections."
+    },
+    {
+      "id": "plinth-front-back-strips",
+      "unconfirmed": true,
+      "note": "Plinth = front and back strips, full product width, board thickness = panelThickness. Front strip set back by plinthRecess, back strip flush with the carcass back. No side returns in v0."
+    },
+    {
+      "id": "partitions-between-top-bottom",
+      "unconfirmed": true,
+      "note": "Vertical partitions are fitted between top and bottom and run the full carcass depth."
+    },
+    {
+      "id": "depth-definition",
+      "unconfirmed": false,
+      "note": "depth = back + carcass + (doors ? doorGapFront + door : 0). carcassDepth = depth - back - (doors ? door + doorGapFront : 0). Decided in D-1a (ADR-003)."
+    },
+    {
+      "id": "back-overlay-covers-carcass",
+      "unconfirmed": true,
+      "note": "The overlay back covers the carcass only (width x carcass height), not the plinth."
+    },
+    {
+      "id": "plinth-front-under-carcass",
+      "unconfirmed": true,
+      "note": "The front plinth strip is set back from the carcass front (not from the door) by plinthRecess."
+    },
+    {
+      "id": "doors-overlay",
+      "unconfirmed": true,
+      "note": "Doors are overlay (nakladnye): they cover the carcass front. Height = carcass height - 2 x doorGapEdge; the plinth stays visible."
+    },
+    {
+      "id": "door-split-at-partition-centre",
+      "unconfirmed": true,
+      "note": "Door coverage of a section ends at the centre line of its partitions (outer carcass edge for the end sections); a double door splits its coverage in two leaves. Leaf widths are rounded to doorLeafRoundingMm (ADR-006)."
+    },
+    {
+      "id": "interior-default-rule",
+      "unconfirmed": true,
+      "note": "interior 'auto': single door -> shelves, double door -> rail_shelf, no door -> shelves; if that preset would produce a warning (e.g. rail in a shallow carcass), shelves instead."
+    },
+    {
+      "id": "interior-layout",
+      "unconfirmed": true,
+      "note": "Drawers stack at the bottom of the section with a fixed shelf directly above; rail presets put a top shelf 400 mm below the top inner face and the rail axis 60 mm below the shelf (or the top); remaining free space without a rail gets evenly spaced removable shelves."
+    },
+    {
+      "id": "edge-default-rule",
+      "unconfirmed": true,
+      "note": "Visible front edges are banded (sides, partitions, top, bottom, shelves: local front edge; doors and drawer fronts: all four edges); back, plinth, drawer box parts: no band."
+    },
+    {
+      "id": "grain-placeholder",
+      "unconfirmed": true,
+      "note": "grainDirection = 'length' for LDSP/MDF parts, null for HDF; real grain rules need Dafna data (oak decors)."
+    },
+    {
+      "id": "door-hinge-sides",
+      "unconfirmed": true,
+      "note": "Single doors hinge toward the outer side of their half of the wardrobe: 1: L, 2: L,R, 3: L,L,R, 4: L,L,R,R (middle of an odd count: left). Two leaves may hinge on the same partition (half-overlay hinges on both faces); they cannot both be fully open at once."
+    },
+    {
+      "id": "door-hinge-mount",
+      "unconfirmed": true,
+      "note": "hingeMount per leaf: 'full_overlay' when hinged on an outer side panel, 'half_overlay' when hinged on a partition (each leaf covers half the partition). Data only, for later hardware / export."
+    },
+    {
+      "id": "auto-sections-door-leaf",
+      "unconfirmed": true,
+      "note": "sections=auto picks the smallest count that keeps every section inner width <= maxShelfSpanMm and, unless doors=none, no single leaf wider than maxSingleLeafWidthMm (relevant for doors=all_single)."
+    }
+  ]
+}

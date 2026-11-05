@@ -105,6 +105,8 @@ export type PanelRole =
   | 'drawer_bottom';
 export type DoorType = 'none' | 'single_left' | 'single_right' | 'double';
 export type HingeSide = 'left' | 'right';
+/** full_overlay = hinged on an outer side panel; half_overlay = hinged on a partition. */
+export type HingeMount = 'full_overlay' | 'half_overlay';
 
 export type Vec3 = [number, number, number];
 
@@ -215,6 +217,8 @@ export interface Panel {
   sectionIndex?: number;
   /** doors only */
   hingeSide?: HingeSide;
+  /** doors only: hinge mounting (data only, unconfirmed; for later hardware / export) */
+  hingeMount?: HingeMount;
   /** production data (D-1b): edge banding per local edge */
   edges: PanelEdges;
   /** grain along the panel length / width; null = no grain (HDF) */
@@ -282,7 +286,8 @@ export interface OrderDraftDoor {
   leaves: string[];
 }
 
-export const ORDER_SCHEMA_VERSION = 'dafna-order/0.2-draft';
+export const ORDER_SCHEMA_VERSION = 'dafna-order/0.3-draft';
+export const ORDER_SCHEMA_VERSION_02 = 'dafna-order/0.2-draft';
 export const ORDER_SCHEMA_VERSION_01 = 'dafna-order/0.1-draft';
 export const ORDER_SCHEMA_VERSION_D0 = 'dafna-order/0-draft';
 
