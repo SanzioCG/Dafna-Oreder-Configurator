@@ -294,8 +294,8 @@ p {
   flex-direction: column;
   min-width: 0;
   min-height: 0;
-  background: var(--surface);
-  border-left: var(--border-w) solid var(--border);
+  background: var(--panel);
+  border-left: var(--border-w) solid var(--divider);
   overflow: hidden;
 }
 
@@ -373,7 +373,7 @@ p {
   gap: var(--space-1);
   margin: 0 var(--space-5);
   padding-bottom: var(--space-3);
-  border-bottom: var(--border-w) solid var(--border);
+  border-bottom: var(--border-w) solid var(--divider);
 }
 
 .step-tab {
@@ -472,7 +472,7 @@ p {
   flex-direction: column;
   gap: var(--space-3);
   padding-top: var(--space-4);
-  border-top: var(--border-w) solid var(--border);
+  border-top: var(--border-w) solid var(--divider);
 }
 
 .controls > .card:first-child {
@@ -694,8 +694,8 @@ p {
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-5) var(--space-4);
-  border-top: var(--border-w) solid var(--border);
-  background: var(--surface);
+  border-top: var(--border-w) solid var(--divider);
+  background: var(--panel);
 }
 
 .footer-center {
@@ -832,7 +832,7 @@ p {
 .panels td {
   text-align: left;
   padding: var(--space-1) var(--space-2);
-  border-bottom: var(--border-w) solid var(--border);
+  border-bottom: var(--border-w) solid var(--divider);
 }
 
 /* ---------- material swatches ---------- */
@@ -1142,7 +1142,7 @@ p {
   column-gap: var(--space-3);
   align-items: center;
   padding: var(--space-2) 0;
-  border-bottom: var(--border-w) solid var(--border);
+  border-bottom: var(--border-w) solid var(--divider);
 }
 
 .summary-row dt {
@@ -1203,7 +1203,7 @@ p {
   border-radius: var(--radius-lg);
   background: var(--surface);
   color: var(--text);
-  border: var(--border-w) solid var(--border);
+  border: var(--border-w) solid var(--divider);
 }
 
 .contact-card h2 {
