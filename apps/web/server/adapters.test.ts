@@ -185,6 +185,39 @@ describe('Google Sheets store', () => {
     expect(requests.some((r) => r.updateDimensionProperties?.properties.hiddenByUser)).toBe(true);
   });
 
+  it('fresh spreadsheet without the "Arizalar" tab: the first lookup creates it (was a 400)', async () => {
+    let tabExists = false;
+    const f = fakeFetch((c) => {
+      if (c.url.startsWith('https://oauth2'))
+        return { json: { access_token: 'AT', expires_in: 3600 } };
+      if (c.url.includes('?fields=sheets')) {
+        return {
+          json: {
+            sheets: [
+              { properties: { sheetId: 0, title: 'Sheet1' } },
+              ...(tabExists ? [{ properties: { sheetId: 9, title: SHEET_TITLE } }] : []),
+            ],
+          },
+        };
+      }
+      if (c.url.endsWith(':batchUpdate') && JSON.stringify(c.body).includes('addSheet')) {
+        tabExists = true;
+        return { json: { replies: [{ addSheet: { properties: { sheetId: 9 } } }] } };
+      }
+      // Google answers 400 "Unable to parse range" for a tab that does not exist
+      if (c.url.includes(encodeURIComponent(`${SHEET_TITLE}!`)) && !tabExists) {
+        return { status: 400, json: { error: { code: 400 } } };
+      }
+      if (c.method === 'GET') return { json: {} };
+      return { json: {} };
+    });
+    const store = new GoogleSheetsStore({ sheetId: 'S1', account, fetch: f.impl });
+    expect(await store.findByKey('nope-0123456789ab')).toBeNull();
+    expect(tabExists).toBe(true);
+    const put = f.calls.find((c) => c.method === 'PUT')!;
+    expect((put.body as { values: string[][] }).values[0]).toEqual(HEADERS);
+  });
+
   it('idempotency lookup, Telegram bookkeeping and retry selection read the sheet', async () => {
     const row = (over: Partial<LeadRecord>) => leadToRow({ ...LEAD, ...over });
     const f = sheet([
