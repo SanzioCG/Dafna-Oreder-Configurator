@@ -4,10 +4,16 @@ import {
   evenShelfBottoms,
   generate,
   validate,
-  wardrobeTemplate as T,
+  TEMPLATE_ARCHIVE,
   type GenerateResult,
   type Params,
 } from '../src/index.js';
+
+/**
+ * Generator mechanics (D-1b…D-6 presets) are pinned to template 0.6.0: same generator as the
+ * current template, whose own GOST presets are covered by test/ergonomics.test.ts (D-7).
+ */
+const T = TEMPLATE_ARCHIVE['0.6.0']!;
 
 /** D-1b reference configuration (3 sections, depth 516) so the exact mm below stay comparable. */
 const gen = (overrides: Partial<Params> = {}) =>
@@ -258,7 +264,7 @@ describe('default depth 600 (D-1c)', () => {
     const r = real();
     expect(r.dimensions?.carcassDepthMm).toBe(579);
     for (const preset of ['rail', 'rail_shelf', 'rail_drawers']) {
-      expect(validate({ ...defaultParams(T), interior1: preset }), preset).toEqual([]);
+      expect(validate({ ...defaultParams(T), interior1: preset }, T), preset).toEqual([]);
     }
     // default 1360: 2 sections, double doors -> auto = rail_shelf
     expect(r.sections.map((s) => [s.preset, s.presetSource])).toEqual([
@@ -270,7 +276,7 @@ describe('default depth 600 (D-1c)', () => {
 
   it('RAIL_DEPTH_SHORT still triggers at depth 516 (threshold 530 unchanged)', () => {
     expect(
-      validate({ ...defaultParams(T), depth: 516, interior1: 'rail_shelf' }).map((x) => x.code),
+      validate({ ...defaultParams(T), depth: 516, interior1: 'rail_shelf' }, T).map((x) => x.code),
     ).toEqual(['RAIL_DEPTH_SHORT']);
   });
 });

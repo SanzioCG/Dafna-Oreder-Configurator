@@ -7,11 +7,17 @@ import {
   hingeSideFor,
   roundLeaves,
   validate,
-  wardrobeTemplate as T,
+  TEMPLATE_ARCHIVE,
   type GenerateResult,
   type Panel,
   type Params,
 } from '../src/index.js';
+
+/**
+ * Generator mechanics (D-1b…D-6 presets) are pinned to template 0.6.0: same generator as the
+ * current template, whose own GOST presets are covered by test/ergonomics.test.ts (D-7).
+ */
+const T = TEMPLATE_ARCHIVE['0.6.0']!;
 
 const NO_INTERIOR = {
   interior1: 'empty',

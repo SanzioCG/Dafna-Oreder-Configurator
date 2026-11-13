@@ -21,6 +21,10 @@ import appBare from './fixtures/applications/0.5.0.d450-nodoors-noback-nobase.js
 import app6Default from './fixtures/applications/0.6.0.default.json' with { type: 'json' };
 import app6Lmdf from './fixtures/applications/0.6.0.w2400-egger-lmdf16_7-doors.json' with { type: 'json' };
 import app6W18 from './fixtures/applications/0.6.0.w1000-w1000_18mm-nodoors.json' with { type: 'json' };
+// D-7 (template 0.7.0): standard sizes, GOST 13025.1-85 storage presets
+import app7Default from './fixtures/applications/0.7.0.default.json' with { type: 'json' };
+import app7Gost from './fixtures/applications/0.7.0.w2400-h2400-gost-presets.json' with { type: 'json' };
+import app7D450 from './fixtures/applications/0.7.0.w800-d450-shelves.json' with { type: 'json' };
 
 interface ApplicationFixture {
   templateVersion: string;
@@ -34,6 +38,9 @@ const FIXTURES: Record<string, ApplicationFixture> = {
   '0.6.0 default': app6Default as unknown as ApplicationFixture,
   '0.6.0 w2400 EGGER + LMDF 16.7 doors': app6Lmdf as unknown as ApplicationFixture,
   '0.6.0 w1000 W1000 18 mm, no doors': app6W18 as unknown as ApplicationFixture,
+  '0.7.0 default': app7Default as unknown as ApplicationFixture,
+  '0.7.0 w2400 h2400 GOST presets': app7Gost as unknown as ApplicationFixture,
+  '0.7.0 w800 d450 shelves': app7D450 as unknown as ApplicationFixture,
 };
 
 describe('reproducibility: stored applications regenerate exactly (ADR-011)', () => {
@@ -85,6 +92,7 @@ describe('template archive', () => {
       '0.4.0',
       '0.5.0',
       '0.6.0',
+      '0.7.0',
     ]);
     // every template version is mapped to the catalog it was released with
     expect(Object.keys(TEMPLATE_CATALOG)).toEqual(Object.keys(TEMPLATE_ARCHIVE));

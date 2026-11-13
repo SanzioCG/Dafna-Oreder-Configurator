@@ -459,10 +459,10 @@ function submitDepsFromEnv(env) {
 // ../../packages/engine/src/types.ts
 var ORDER_SCHEMA_VERSION = "dafna-order/0.3-draft";
 
-// ../../packages/engine/templates/wardrobe.v5.json
-var wardrobe_v5_default = {
+// ../../packages/engine/templates/wardrobe.v6.json
+var wardrobe_v6_default = {
   templateId: "wardrobe",
-  templateVersion: "0.6.0",
+  templateVersion: "0.7.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -470,7 +470,7 @@ var wardrobe_v5_default = {
     {
       key: "width",
       type: "int",
-      default: 1360,
+      default: 1500,
       min: 600,
       max: 2400,
       step: 10,
@@ -479,12 +479,13 @@ var wardrobe_v5_default = {
       uiStep: "size",
       customerVisible: true,
       unconfirmed: false,
-      note: "Overall product width, outer faces of the side panels."
+      note: "Overall product width, outer faces of the side panels. Customers choose only customerValues (staff: free min..max). Standard sizes (D-7): industry-common wardrobe sizes, unconfirmed until Dafna confirms its range.",
+      customerValues: [800, 1e3, 1200, 1500, 1600, 1800, 2e3, 2400]
     },
     {
       key: "height",
       type: "int",
-      default: 1900,
+      default: 2100,
       min: 1200,
       max: 2600,
       step: 10,
@@ -493,7 +494,8 @@ var wardrobe_v5_default = {
       uiStep: "size",
       customerVisible: true,
       unconfirmed: false,
-      note: "Overall product height from the floor, plinth included."
+      note: "Overall product height from the floor, plinth included. Customers choose only customerValues. Standard sizes (D-7): industry-common wardrobe sizes, unconfirmed until Dafna confirms its range.",
+      customerValues: [2100, 2400]
     },
     {
       key: "depth",
@@ -507,7 +509,8 @@ var wardrobe_v5_default = {
       uiStep: "size",
       customerVisible: true,
       unconfirmed: true,
-      note: "Overall outer depth: back panel + carcass + front door gap + door (ADR-003). Default 600 (D-1c, unconfirmed): carcass 579 with doors, so rail presets (>= 530 inner depth) are available at the default size."
+      note: "Overall outer depth: back panel + carcass + front door gap + door (ADR-003). Default 600 (D-1c, unconfirmed): carcass 579 with doors, so rail presets (>= 530 inner depth) are available at the default size. Customers choose 600 (hanging clothes: inner depth >= 560, GOST 13025.1-85) or 450 (shelves / drawers only).",
+      customerValues: [450, 600]
     },
     {
       key: "sections",
@@ -714,10 +717,10 @@ var wardrobe_v5_default = {
         "auto",
         "empty",
         "shelves",
-        "rail",
-        "rail_shelf",
+        "long_hang",
+        "short_hang",
         "drawers_shelves",
-        "rail_drawers"
+        "short_hang_drawers"
       ],
       labelKey: "param.interior",
       uiStep: "interior",
@@ -725,7 +728,7 @@ var wardrobe_v5_default = {
       unconfirmed: false,
       appliesToSection: 1,
       control: "presetCards",
-      note: "Interior fill of section 1. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
+      note: "Interior fill of section 1 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections."
     },
     {
       key: "interior2",
@@ -735,10 +738,10 @@ var wardrobe_v5_default = {
         "auto",
         "empty",
         "shelves",
-        "rail",
-        "rail_shelf",
+        "long_hang",
+        "short_hang",
         "drawers_shelves",
-        "rail_drawers"
+        "short_hang_drawers"
       ],
       labelKey: "param.interior",
       uiStep: "interior",
@@ -746,7 +749,7 @@ var wardrobe_v5_default = {
       unconfirmed: false,
       appliesToSection: 2,
       control: "presetCards",
-      note: "Interior fill of section 2. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
+      note: "Interior fill of section 2 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections."
     },
     {
       key: "interior3",
@@ -756,10 +759,10 @@ var wardrobe_v5_default = {
         "auto",
         "empty",
         "shelves",
-        "rail",
-        "rail_shelf",
+        "long_hang",
+        "short_hang",
         "drawers_shelves",
-        "rail_drawers"
+        "short_hang_drawers"
       ],
       labelKey: "param.interior",
       uiStep: "interior",
@@ -767,7 +770,7 @@ var wardrobe_v5_default = {
       unconfirmed: false,
       appliesToSection: 3,
       control: "presetCards",
-      note: "Interior fill of section 3. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
+      note: "Interior fill of section 3 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections."
     },
     {
       key: "interior4",
@@ -777,10 +780,10 @@ var wardrobe_v5_default = {
         "auto",
         "empty",
         "shelves",
-        "rail",
-        "rail_shelf",
+        "long_hang",
+        "short_hang",
         "drawers_shelves",
-        "rail_drawers"
+        "short_hang_drawers"
       ],
       labelKey: "param.interior",
       uiStep: "interior",
@@ -788,7 +791,7 @@ var wardrobe_v5_default = {
       unconfirmed: false,
       appliesToSection: 4,
       control: "presetCards",
-      note: "Interior fill of section 4. 'auto' = template default rule (single door -> shelves, double door -> rail_shelf, no door -> shelves; falls back to shelves if the default would warn). Ignored if the wardrobe has fewer sections."
+      note: "Interior fill of section 4 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections."
     }
   ],
   constants: {
@@ -929,10 +932,10 @@ var wardrobe_v5_default = {
       note: "Assumed slide length step."
     },
     railMinDepthMm: {
-      value: 530,
+      value: 560,
       unit: "mm",
-      unconfirmed: true,
-      note: "Assumed minimum carcass inner depth for hanging clothes (RAIL_DEPTH_SHORT warning below)."
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawings 1-2: clothing compartment depth >= 560 mm (RAIL_DEPTH_SHORT below). Was 530 (assumed) up to template 0.6.0."
     },
     railMinHangingHeightMm: {
       value: 900,
@@ -956,6 +959,58 @@ var wardrobe_v5_default = {
       unit: "mm",
       unconfirmed: true,
       note: "Assumed ABS edge band thickness on visible front edges. Panel dimensions stay finished sizes (band not subtracted)."
+    },
+    railTopMaxMm: {
+      value: 1900,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, cl. 2.3: rail top edge at most 1900 mm from the floor (higher only with a pull-down rail)."
+    },
+    railTopToShelfMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawings 1-2: >= 50 mm from the rail top to the shelf above. 60 chosen for hanger hooks (unconfirmed)."
+    },
+    longHangMinMm: {
+      value: 1400,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawing 1 (coats, dresses): >= 1400 mm from the rail top to the element below."
+    },
+    shortHangMinMm: {
+      value: 900,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawing 2 (suits, jackets, shirts): >= 900 mm from the rail top to the element below."
+    },
+    shortHangClearMm: {
+      value: 1e3,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Short-clothes hanging zone actually planned above the shelves (>= 900 by GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB); 1000 = margin for longer jackets (unconfirmed)."
+    },
+    drawerTopMaxMm: {
+      value: 1250,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, cl. 7: top drawer edge at most 1250 mm from the floor (DRAWER_TOO_HIGH above)."
+    },
+    minShelfGapMm: {
+      value: 170,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, cl. 3.1: clear gap between shelves >= 170 mm; smaller leftovers get no shelf / antresol."
+    },
+    autoPresetDouble: {
+      value: "short_hang",
+      unconfirmed: true,
+      note: "'auto' fill behind a double door: short clothes + shelves (D-7, unconfirmed)."
+    },
+    autoPresetSingle: {
+      value: "shelves",
+      unconfirmed: true,
+      note: "'auto' fill behind a single door or without a door: shelves (unchanged)."
     }
   },
   constructionRules: [
@@ -1043,12 +1098,17 @@ var wardrobe_v5_default = {
       id: "auto-sections-door-leaf",
       unconfirmed: true,
       note: "sections=auto picks the smallest count that keeps every section inner width <= maxShelfSpanMm and, unless doors=none, no single leaf wider than maxSingleLeafWidthMm (relevant for doors=all_single)."
+    },
+    {
+      id: "ergonomics-gost-13025",
+      unconfirmed: false,
+      note: "D-7: long_hang / short_hang / short_hang_drawers follow GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB: rail top <= 1900 from the floor and >= 50 below the shelf above; >= 1400 (long) / >= 900 (short) below the rail top; inner depth >= 560 for a rail; top drawer edge <= 1250; shelves >= 170 apart; space above the rail that fits a >= 170 compartment becomes an antresol (rarely used items, GOST table 6 note)."
     }
   ]
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v5_default;
+var wardrobeTemplate = wardrobe_v6_default;
 function getParamDef(template, key) {
   return template.parameters.find((p) => p.key === key);
 }
@@ -1712,10 +1772,14 @@ var INTERIOR_PRESETS = [
   "rail",
   "rail_shelf",
   "drawers_shelves",
-  "rail_drawers"
+  "rail_drawers",
+  "long_hang",
+  "short_hang",
+  "short_hang_drawers"
 ];
-function defaultPresetFor(doorType) {
-  return doorType === "double" ? "rail_shelf" : "shelves";
+function defaultPresetFor(doorType, c) {
+  if (doorType === "double") return c?.autoPresetDouble ?? "rail_shelf";
+  return c?.autoPresetSingle ?? "shelves";
 }
 var half = (v) => Math.round(v * 2) / 2;
 function evenShelfBottoms(yFrom, yTo, t, pitch) {
@@ -1731,6 +1795,9 @@ function slideLength(depthAvailable, c) {
   return Math.max(c.drawerSlideMinMm, Math.min(c.drawerSlideMaxMm, fit));
 }
 function planInterior(box, preset, c) {
+  if (preset === "long_hang" || preset === "short_hang" || preset === "short_hang_drawers") {
+    return c.ergonomics ? planErgonomic(box, preset, c, c.ergonomics) : planInterior(box, "shelves", c);
+  }
   const { t, yBottom, yTop } = box;
   const n = box.index + 1;
   const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
@@ -1797,11 +1864,86 @@ function planInterior(box, preset, c) {
   }
   return { preset, shelves, rails, drawers, clearHangingHeightMm, warnings };
 }
+function drawerStack(box, c, n) {
+  const { t, yBottom } = box;
+  const boxW = box.innerW - 2 * c.drawerSlideClearanceMm;
+  const depth = slideLength(
+    box.innerDepth - c.drawerFrontSetbackMm - t - c.drawerBackClearanceMm,
+    c
+  );
+  const drawers = [];
+  for (let i = 0; i < c.drawerCount; i++) {
+    drawers.push({
+      id: `s${n}-drawer-${i + 1}`,
+      frontYMm: yBottom + c.drawerGapMm + i * (c.drawerFrontHeightMm + c.drawerGapMm),
+      frontHeightMm: c.drawerFrontHeightMm,
+      frontWidthMm: boxW,
+      boxWidthMm: boxW,
+      boxDepthMm: depth,
+      boxHeightMm: c.drawerFrontHeightMm - c.drawerBoxHeightReductionMm
+    });
+  }
+  const zone = c.drawerGapMm + c.drawerCount * (c.drawerFrontHeightMm + c.drawerGapMm);
+  return { drawers, shelfY: yBottom + zone, floorY: yBottom + zone + t };
+}
+function planErgonomic(box, preset, c, e) {
+  const { t, yBottom, yTop } = box;
+  const n = box.index + 1;
+  const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
+  const shelves = [];
+  const rails = [];
+  let drawers = [];
+  const addShelf = (yMm, kind, id) => shelves.push({ id, yMm: half(yMm), kind, lengthMm: box.innerW, depthMm: shelfDepth });
+  let floorY = yBottom;
+  if (preset === "short_hang_drawers") {
+    const stack = drawerStack(box, c, n);
+    drawers = stack.drawers;
+    addShelf(stack.shelfY, "fixed", `s${n}-shelf-fixed`);
+    floorY = stack.floorY;
+  }
+  const railTop = Math.min(e.railTopMaxMm, yTop - e.railTopToShelfMm);
+  rails.push({
+    id: `s${n}-rail`,
+    axisYMm: half(railTop - c.railDiameterMm / 2),
+    lengthMm: box.innerW,
+    diameterMm: c.railDiameterMm,
+    zMm: box.zBack + box.innerDepth / 2
+  });
+  const dividerY = railTop + e.railTopToShelfMm;
+  if (yTop - (dividerY + t) >= e.minShelfGapMm) {
+    addShelf(dividerY, "top", `s${n}-shelf-top`);
+    evenShelfBottoms(dividerY + t, yTop, t, c.shelfPitchTargetMm).forEach(
+      (y, i) => addShelf(y, "removable", `s${n}-shelf-antresol-${i + 1}`)
+    );
+  }
+  let clear = railTop - floorY;
+  if (preset === "short_hang") {
+    const shelfTop = railTop - e.shortHangClearMm;
+    if (shelfTop - t - floorY >= e.minShelfGapMm) {
+      addShelf(shelfTop - t, "fixed", `s${n}-shelf-fixed`);
+      evenShelfBottoms(floorY, shelfTop - t, t, c.shelfPitchTargetMm).forEach(
+        (y, i) => addShelf(y, "removable", `s${n}-shelf-${i + 1}`)
+      );
+      clear = railTop - shelfTop;
+    }
+  }
+  shelves.sort((a, b) => a.yMm - b.yMm);
+  const warnings = [];
+  if (box.innerDepth < c.railMinDepthMm) warnings.push("RAIL_DEPTH_SHORT");
+  const minClear = preset === "long_hang" ? e.longHangMinMm : e.shortHangMinMm;
+  if (clear < minClear) warnings.push("RAIL_HEIGHT_SHORT");
+  const top = drawers.at(-1);
+  if (top && top.frontYMm + top.frontHeightMm > e.drawerTopMaxMm) warnings.push("DRAWER_TOO_HIGH");
+  if ((drawers[0]?.frontWidthMm ?? 0) > c.drawerMaxFrontWidthMm) {
+    warnings.push("DRAWER_SECTION_TOO_WIDE");
+  }
+  return { preset, shelves, rails, drawers, clearHangingHeightMm: clear, warnings };
+}
 function resolveInterior(box, choice, doorType, c) {
   if (choice !== "auto" && INTERIOR_PRESETS.includes(choice)) {
     return { ...planInterior(box, choice, c), source: "chosen" };
   }
-  const preferred = planInterior(box, defaultPresetFor(doorType), c);
+  const preferred = planInterior(box, defaultPresetFor(doorType, c), c);
   if (preferred.warnings.length === 0) return { ...preferred, source: "auto" };
   return { ...planInterior(box, "shelves", c), source: "auto" };
 }
@@ -1870,8 +2012,32 @@ function interiorConstants(template) {
     drawerSlideStepMm: n("drawerSlideStepMm"),
     railMinDepthMm: n("railMinDepthMm"),
     railMinHangingHeightMm: n("railMinHangingHeightMm"),
-    drawerMaxFrontWidthMm: n("drawerMaxFrontWidthMm")
+    drawerMaxFrontWidthMm: n("drawerMaxFrontWidthMm"),
+    ...ergonomicConstants(template)
   };
+}
+function ergonomicConstants(template) {
+  const has = (name) => template.constants[name] !== void 0;
+  const out = {};
+  if (has("railTopMaxMm")) {
+    const n = (name) => getNumberConstant(template, name);
+    out.ergonomics = {
+      railTopMaxMm: n("railTopMaxMm"),
+      railTopToShelfMm: n("railTopToShelfMm"),
+      longHangMinMm: n("longHangMinMm"),
+      shortHangMinMm: n("shortHangMinMm"),
+      shortHangClearMm: n("shortHangClearMm"),
+      drawerTopMaxMm: n("drawerTopMaxMm"),
+      minShelfGapMm: n("minShelfGapMm")
+    };
+  }
+  if (has("autoPresetDouble")) {
+    out.autoPresetDouble = getStringConstant(template, "autoPresetDouble");
+  }
+  if (has("autoPresetSingle")) {
+    out.autoPresetSingle = getStringConstant(template, "autoPresetSingle");
+  }
+  return out;
 }
 function computeLayout(template, params, catalog = currentCatalog) {
   const corpusMaterial = requireMaterial(catalog, params.corpusMaterial);
@@ -2399,7 +2565,8 @@ var TEMPLATE_CATALOG = {
   "0.3.0": materialsV0.catalogVersion,
   "0.4.0": materialsV0.catalogVersion,
   "0.5.0": materialsV0.catalogVersion,
-  "0.6.0": materialsV1.catalogVersion
+  "0.6.0": materialsV1.catalogVersion,
+  "0.7.0": materialsV1.catalogVersion
 };
 
 // src/lead/phone.ts
@@ -2567,6 +2734,12 @@ var ru = {
   "option.interior.rail_shelf": "\u0428\u0442\u0430\u043D\u0433\u0430 + \u043F\u043E\u043B\u043A\u0430",
   "option.interior.drawers_shelves": "\u042F\u0449\u0438\u043A\u0438 + \u043F\u043E\u043B\u043A\u0438",
   "option.interior.rail_drawers": "\u0428\u0442\u0430\u043D\u0433\u0430 + \u044F\u0449\u0438\u043A\u0438",
+  "option.interior.long_hang": "\u0414\u043B\u0438\u043D\u043D\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430",
+  "option.interior.short_hang": "\u041A\u043E\u0440\u043E\u0442\u043A\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430 + \u043F\u043E\u043B\u043A\u0438",
+  "option.interior.short_hang_drawers": "\u041A\u043E\u0440\u043E\u0442\u043A\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430 + \u044F\u0449\u0438\u043A\u0438",
+  "creason.DRAWER_TOO_HIGH": "\u042F\u0449\u0438\u043A \u043E\u043A\u0430\u0436\u0435\u0442\u0441\u044F \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u0432\u044B\u0441\u043E\u043A\u043E",
+  "c.depthHang": "\u0434\u043B\u044F \u043E\u0434\u0435\u0436\u0434\u044B \u043D\u0430 \u0432\u0435\u0448\u0430\u043B\u043A\u0430\u0445",
+  "c.depthShallow": "\u0443\u0437\u043A\u043E\u0435 \u043C\u0435\u0441\u0442\u043E: \u043F\u043E\u043B\u043A\u0438 \u0438 \u044F\u0449\u0438\u043A\u0438",
   "interior.sections": "\u0421\u0435\u043A\u0446\u0438\u044F",
   "interior.section": "\u0421\u0435\u043A\u0446\u0438\u044F {n}",
   "interior.applyAll": "\u041F\u0440\u0438\u043C\u0435\u043D\u0438\u0442\u044C \u043A\u043E \u0432\u0441\u0435\u043C \u0441\u0435\u043A\u0446\u0438\u044F\u043C",
@@ -2691,6 +2864,12 @@ var ru = {
   "c.hint.rail_shelf": "\u0412\u0435\u0448\u0430\u043B\u043A\u0430 \u0438 \u043F\u043E\u043B\u043A\u0430 \u0441\u0432\u0435\u0440\u0445\u0443",
   "c.hint.drawers_shelves": "\u0411\u0435\u043B\u044C\u0451, \u0430\u043A\u0441\u0435\u0441\u0441\u0443\u0430\u0440\u044B",
   "c.hint.rail_drawers": "\u0412\u0435\u0448\u0430\u043B\u043A\u0430 \u0438 \u044F\u0449\u0438\u043A\u0438 \u0441\u043D\u0438\u0437\u0443",
+  "c.opt.long_hang": "\u0414\u043B\u0438\u043D\u043D\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430",
+  "c.opt.short_hang": "\u041A\u043E\u0440\u043E\u0442\u043A\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430",
+  "c.opt.short_hang_drawers": "\u041A\u043E\u0440\u043E\u0442\u043A\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430 + \u044F\u0449\u0438\u043A\u0438",
+  "c.hint.long_hang": "\u041F\u0430\u043B\u044C\u0442\u043E, \u043F\u043B\u0430\u0449\u0438, \u043F\u043B\u0430\u0442\u044C\u044F",
+  "c.hint.short_hang": "\u0420\u0443\u0431\u0430\u0448\u043A\u0438, \u043F\u0438\u0434\u0436\u0430\u043A\u0438; \u0432\u043D\u0438\u0437\u0443 \u043F\u043E\u043B\u043A\u0438",
+  "c.hint.short_hang_drawers": "\u041D\u0430 \u0432\u0435\u0448\u0430\u043B\u043A\u0430\u0445, \u0432\u043D\u0438\u0437\u0443 \u044F\u0449\u0438\u043A\u0438",
   "c.hint.empty": "\u0417\u0430\u043F\u043E\u043B\u043D\u0438\u0442\u0435 \u0441\u0430\u043C\u0438",
   "c.param.doors": "\u0414\u0432\u0435\u0440\u0438",
   "c.param.sections": "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u0447\u0430\u0441\u0442\u0435\u0439",
@@ -2822,6 +3001,12 @@ var uz = {
   "option.interior.rail_shelf": "Shtanga + javon",
   "option.interior.drawers_shelves": "Tortmalar + javonlar",
   "option.interior.rail_drawers": "Shtanga + tortmalar",
+  "option.interior.long_hang": "Uzun kiyimlar",
+  "option.interior.short_hang": "Kalta kiyimlar + javonlar",
+  "option.interior.short_hang_drawers": "Kalta kiyimlar + tortmalar",
+  "creason.DRAWER_TOO_HIGH": "Tortma juda baland bo'lib qoladi",
+  "c.depthHang": "kiyim ilish uchun",
+  "c.depthShallow": "tor joy: javon va tortmalar",
   "interior.sections": "Bo'lim",
   "interior.section": "{n}-bo'lim",
   "interior.applyAll": "Barcha bo'limlarga qo'llash",
@@ -2947,6 +3132,12 @@ var uz = {
   "c.hint.rail_shelf": "Ilingan kiyim va ustida javon",
   "c.hint.drawers_shelves": "Ichki kiyim, aksessuarlar",
   "c.hint.rail_drawers": "Ilingan kiyim va pastda tortmalar",
+  "c.opt.long_hang": "Uzun kiyimlar",
+  "c.opt.short_hang": "Kalta kiyimlar",
+  "c.opt.short_hang_drawers": "Kalta kiyim + tortma",
+  "c.hint.long_hang": "Palto, plash, uzun ko'ylak",
+  "c.hint.short_hang": "Ko'ylak, pidjak; pastda javonlar",
+  "c.hint.short_hang_drawers": "Ilinadigan kiyim, pastda tortmalar",
   "c.hint.empty": "O'zingiz to'ldirasiz",
   "c.param.doors": "Eshiklar",
   "c.param.sections": "Qismlar soni",
@@ -3096,9 +3287,17 @@ async function handleSubmit(req, deps2) {
   const blocking = [...resolved.issues, ...result.issues].filter(
     (i) => isCustomerBlocking(i) || i.code === "UNKNOWN_PARAM"
   );
-  if (blocking.length > 0 || !result.dimensions) {
+  const nonStandard = wardrobeTemplate.parameters.filter(
+    (d) => d.customerValues && !d.customerValues.includes(Number(resolved.params[d.key]))
+  );
+  if (blocking.length > 0 || nonStandard.length > 0 || !result.dimensions) {
     return fail(422, "invalid_configuration", {
-      issues: [...new Set(blocking.map((i) => i.code))]
+      issues: [
+        .../* @__PURE__ */ new Set([
+          ...blocking.map((i) => i.code),
+          ...nonStandard.length > 0 ? ["NON_STANDARD_SIZE"] : []
+        ])
+      ]
     });
   }
   const key = b.idempotencyKey;

@@ -95,9 +95,17 @@ function typeInto(label: string, value: string) {
 const input = (label: string) => screen.getByRole('textbox', { name: label }) as HTMLInputElement;
 const plus = (label: string) =>
   screen.getByRole('button', { name: `${label}: ${uz['control.increase']}` });
-const minus = (label: string) =>
-  screen.getByRole('button', { name: `${label}: ${uz['control.decrease']}` });
-const chipsGroup = () => screen.getByRole('radiogroup', { name: uz['c.widthChips'] });
+/** D-7: customers choose a standard width (chips in sm) */
+const widthGroup = () => screen.getByRole('radiogroup', { name: uz['param.width'] });
+const pickWidth = (label: string) =>
+  fireEvent.click(within(widthGroup()).getByRole('radio', { name: label }));
+/** D-7: depth 45 sm (no room for a hanging rail, GOST 13025.1-85: inner depth >= 560) */
+const pickShallow = () =>
+  fireEvent.click(
+    within(screen.getByRole('radiogroup', { name: uz['param.depth'] })).getByRole('radio', {
+      name: new RegExp('^45 sm'),
+    }),
+  );
 
 // ---------------------------------------------------------------------------------------------
 
@@ -119,7 +127,7 @@ describe('shell', () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: ru['lang.ru'] }));
     expect(screen.getByRole('heading', { name: ru['step.size.title'] })).toBeTruthy();
-    expect(screen.getByRole('textbox', { name: ru['param.width'] })).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: ru['param.width'] })).toBeTruthy();
   });
 });
 
@@ -145,7 +153,9 @@ describe('start screen (step 0, customers)', () => {
     expect(screen.queryByTestId('start-screen')).toBeNull();
     expect(tab(uz['step.size']).getAttribute('aria-current')).toBe('step');
     expect(stub().dataset.width).toBe('2000');
-    expect(input(uz['param.width']).value).toBe('200');
+    expect(
+      within(widthGroup()).getByRole('radio', { name: '200 sm' }).getAttribute('aria-checked'),
+    ).toBe('true');
   });
 
   it('staff start directly on step 1', () => {
@@ -156,55 +166,48 @@ describe('start screen (step 0, customers)', () => {
   });
 });
 
-describe('step 1 "Joy"', () => {
-  it('width stepper in whole sm, 10 mm per step; slider and input share one state', () => {
-    renderApp();
-    expect(input(uz['param.width']).value).toBe('136');
-    fireEvent.click(plus(uz['param.width']));
-    expect(input(uz['param.width']).value).toBe('137');
-    expect(stub().dataset.width).toBe('1370');
-    fireEvent.click(minus(uz['param.width']));
-    fireEvent.click(minus(uz['param.width']));
-    expect(stub().dataset.width).toBe('1350');
-    const slider = screen.getByRole('slider', { name: uz['param.width'] });
-    expect(slider.getAttribute('aria-valuenow')).toBe('135');
-    fireEvent.keyDown(slider, { key: 'ArrowRight' });
-    expect(stub().dataset.width).toBe('1360');
-    expect(screen.getByTestId('scale-width').textContent).toBe('60 sm240 sm');
-  });
-
-  it('quick chips 100 / 120 / 150 / 180 / 200 / 240 sm set the width', () => {
+describe('step 1 "Joy" (D-7: standard sizes only)', () => {
+  it('8 standard widths in sm; no free input, stepper or slider for customers', () => {
     renderApp();
     expect(
-      within(chipsGroup())
+      within(widthGroup())
         .getAllByRole('radio')
         .map((r) => r.textContent),
-    ).toEqual(['100 sm', '120 sm', '150 sm', '180 sm', '200 sm', '240 sm']);
-    fireEvent.click(within(chipsGroup()).getByRole('radio', { name: '200 sm' }));
-    expect(stub().dataset.width).toBe('2000');
+    ).toEqual(['80 sm', '100 sm', '120 sm', '150 sm', '160 sm', '180 sm', '200 sm', '240 sm']);
     expect(
-      within(chipsGroup()).getByRole('radio', { name: '200 sm' }).getAttribute('aria-checked'),
+      within(widthGroup()).getByRole('radio', { name: '150 sm' }).getAttribute('aria-checked'),
     ).toBe('true');
+    expect(screen.queryByRole('textbox', { name: uz['param.width'] })).toBeNull();
+    expect(screen.queryByRole('slider')).toBeNull();
+    expect(screen.queryByRole('button', { name: uz['c.details'] })).toBeNull();
+    pickWidth('200 sm');
+    expect(stub().dataset.width).toBe('2000');
   });
 
-  it('typed values outside the range are corrected on blur, with the reason in sm', () => {
+  it('height 210 / 240 sm; depth 60 sm (hanging clothes) / 45 sm (shelves, drawers)', () => {
     renderApp();
-    typeInto(uz['param.width'], '999');
-    expect(input(uz['param.width']).value).toBe('240');
-    expect(stub().dataset.width).toBe('2400');
-    expect(screen.getByTestId('range-width').textContent).toBe(
-      "Kenglik 60–240 sm oralig'ida bo'lishi kerak. 999 qabul qilinmadi, 240 sm qo'yildi.",
-    );
+    const height = screen.getByRole('radiogroup', { name: uz['param.height'] });
+    expect(
+      within(height)
+        .getAllByRole('radio')
+        .map((r) => r.textContent),
+    ).toEqual(['210 sm', '240 sm']);
+    fireEvent.click(within(height).getByRole('radio', { name: '240 sm' }));
+    expect(stub().dataset.height).toBe('2400');
+    const depth = screen.getByRole('radiogroup', { name: uz['param.depth'] });
+    const [d45, d60] = within(depth).getAllByRole('radio');
+    expect(d45?.textContent).toBe(`45 sm${uz['c.depthShallow']}`);
+    expect(d60?.textContent).toBe(`60 sm${uz['c.depthHang']}`);
+    expect(d60?.getAttribute('aria-checked')).toBe('true');
+    fireEvent.click(d45 as HTMLElement);
+    expect(stub().dataset.depth).toBe('450');
   });
 
-  it('"Batafsil" reveals height and depth steppers (sm)', () => {
-    renderApp();
-    expect(screen.queryByRole('textbox', { name: uz['param.height'] })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: uz['c.details'] }));
-    expect(input(uz['param.height']).value).toBe('190');
-    expect(input(uz['param.depth']).value).toBe('60');
-    fireEvent.click(plus(uz['param.height']));
-    expect(stub().dataset.height).toBe('1910');
+  it('staff keep free sizes (stepper, typed value in mm)', () => {
+    setUrl('?mode=staff');
+    render(<App />);
+    typeInto(uz['param.width'], '1234');
+    expect(stub().dataset.width).toBe('1234');
   });
 
   it('"Pastki yopiq taglik" = base plinth, ON by default', () => {
@@ -218,7 +221,7 @@ describe('step 1 "Joy"', () => {
   it('section count is not shown to customers and stays auto', () => {
     renderApp();
     expect(screen.queryByRole('radiogroup', { name: uz['param.sections'] })).toBeNull();
-    fireEvent.click(within(chipsGroup()).getByRole('radio', { name: '240 sm' }));
+    pickWidth('240 sm');
     expect(stub().dataset.sections?.split(',').length).toBe(3); // auto from width
   });
 });
@@ -290,11 +293,11 @@ describe('step 3 "Ichki"', () => {
     fireEvent.click(tab(uz['step.interior']));
     const expected: [string, string][] = [
       ['auto', uz['c.opt.auto']],
-      ['rail', uz['c.opt.rail']],
+      ['long_hang', uz['c.opt.long_hang']],
+      ['short_hang', uz['c.opt.short_hang']],
+      ['short_hang_drawers', uz['c.opt.short_hang_drawers']],
       ['shelves', uz['c.opt.shelves']],
-      ['rail_shelf', uz['c.opt.rail_shelf']],
       ['drawers_shelves', uz['c.opt.drawers_shelves']],
-      ['rail_drawers', uz['c.opt.rail_drawers']],
       ['empty', uz['c.opt.empty']],
     ];
     expect(
@@ -303,10 +306,10 @@ describe('step 3 "Ichki"', () => {
     for (const [preset, title] of expected) {
       expect(option(preset).querySelector('.option-title')?.textContent).toContain(title);
     }
-    expect(option('rail').textContent).toContain(uz['c.hint.rail']);
+    expect(option('long_hang').textContent).toContain(uz['c.hint.long_hang']);
     expect(option('auto').textContent).toContain(uz['c.recommended']);
-    fireEvent.click(option('rail'));
-    expect(stub().dataset.presets?.split(',')[0]).toBe('rail');
+    fireEvent.click(option('long_hang'));
+    expect(stub().dataset.presets?.split(',')[0]).toBe('long_hang');
     fireEvent.click(option('drawers_shelves'));
     expect(stub().dataset.presets?.split(',')[0]).toBe('drawers_shelves');
   });
@@ -323,31 +326,31 @@ describe('step 3 "Ichki"', () => {
     fireEvent.click(screen.getByTestId('section-hit-1'));
     expect(within(parts).getAllByRole('radio')[1]?.getAttribute('aria-checked')).toBe('true');
     fireEvent.click(option('shelves'));
-    expect(stub().dataset.presets).toBe('rail_shelf,shelves');
+    expect(stub().dataset.presets).toBe('short_hang,shelves');
     fireEvent.click(screen.getByRole('button', { name: uz['c.applyAll'] }));
     expect(stub().dataset.presets).toBe('shelves,shelves');
   });
 
   it('disabled options show a plain-language reason (no codes)', () => {
     renderApp();
-    fireEvent.click(screen.getByRole('button', { name: uz['c.details'] }));
-    typeInto(uz['param.depth'], '52'); // 52 sm: no room for a hanging rail
+    pickShallow(); // 45 sm: no room for a hanging rail
     fireEvent.click(tab(uz['step.interior']));
-    expect(option('rail').disabled).toBe(true);
-    expect(option('rail').textContent).toContain(uz['creason.RAIL_DEPTH_SHORT']);
-    expect(option('rail').textContent).not.toMatch(/[A-Z]{3,}_[A-Z_]+/);
+    for (const preset of ['long_hang', 'short_hang', 'short_hang_drawers']) {
+      expect(option(preset).disabled, preset).toBe(true);
+      expect(option(preset).textContent).toContain(uz['creason.RAIL_DEPTH_SHORT']);
+      expect(option(preset).textContent).not.toMatch(/[A-Z]{3,}_[A-Z_]+/);
+    }
     expect(option('shelves').disabled).toBe(false);
   });
 
   it('a choice made invalid later is reset with a plain-language toast', () => {
     renderApp();
     fireEvent.click(tab(uz['step.interior']));
-    fireEvent.click(option('rail'));
+    fireEvent.click(option('long_hang'));
     fireEvent.click(tab(uz['step.size']));
-    fireEvent.click(screen.getByRole('button', { name: uz['c.details'] }));
-    typeInto(uz['param.depth'], '52');
+    pickShallow();
     const toast = screen.getByTestId('reset-toast').textContent ?? '';
-    expect(toast).toContain(uz['c.opt.rail']);
+    expect(toast).toContain(uz['c.opt.long_hang']);
     expect(toast).toContain(uz['c.opt.auto']);
     expect(toast).toContain(uz['creason.RAIL_DEPTH_SHORT']);
     for (const w of CUSTOMER_BANNED_WORDS) expect(toast.toLowerCase()).not.toContain(w);
@@ -367,7 +370,7 @@ describe('customer words', () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: ru['lang.ru'] }));
     fireEvent.click(tab(ru['step.interior']));
-    expect(document.querySelector('.option-list')?.textContent).toContain(ru['c.opt.rail']);
+    expect(document.querySelector('.option-list')?.textContent).toContain(ru['c.opt.long_hang']);
     expect(screen.getByRole('switch', { name: ru['c.withDoors'] })).toBeTruthy();
   });
 });
@@ -375,15 +378,15 @@ describe('customer words', () => {
 describe('units', () => {
   it('customer overlay in whole sm, staff in mm', () => {
     renderApp();
-    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('136 sm');
-    expect(screen.getByTestId('summary').textContent).toContain('136 × 190 × 60 sm');
+    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('150 sm');
+    expect(screen.getByTestId('summary').textContent).toContain('150 × 210 × 60 sm');
     fireEvent.click(tab(uz['step.interior']));
-    expect(document.querySelector('[data-dim="section-0"]')?.textContent).toBe('66 sm');
+    expect(document.querySelector('[data-dim="section-0"]')?.textContent).toBe('73 sm');
     cleanup();
     setUrl('?mode=staff');
     render(<App />);
-    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('1360 mm');
-    expect(screen.getByTestId('summary').textContent).toContain('1360 × 1900 × 600 mm');
+    expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('1500 mm');
+    expect(screen.getByTestId('summary').textContent).toContain('1500 × 2100 × 600 mm');
   });
 });
 
@@ -427,14 +430,14 @@ describe('global customer actions', () => {
     window.addEventListener('dafna:consultant-request', on);
     try {
       renderApp();
-      fireEvent.click(plus(uz['param.width']));
+      pickWidth('180 sm');
       fireEvent.click(screen.getByRole('button', { name: uz['consultant.call'] }));
       expect(events).toHaveLength(1);
       const dialog = screen.getByRole('dialog', { name: uz['consultant.call'] });
       expect(dialog.textContent).toContain('1408');
       fireEvent.click(within(dialog).getByRole('button', { name: uz['consultant.close'] }));
       expect(screen.queryByRole('dialog')).toBeNull();
-      expect(stub().dataset.width).toBe('1370');
+      expect(stub().dataset.width).toBe('1800');
     } finally {
       window.removeEventListener('dafna:consultant-request', on);
     }
@@ -451,10 +454,10 @@ describe('theme', () => {
   it('customer: Dark by default; Light / Dark switch available, configuration kept', () => {
     renderApp();
     expect(document.documentElement.dataset.theme).toBe('dark');
-    fireEvent.click(plus(uz['param.width']));
+    pickWidth('180 sm');
     fireEvent.click(screen.getByRole('button', { name: uz['theme.dark'] }));
     expect(document.documentElement.dataset.theme).toBe('light');
-    expect(stub().dataset.width).toBe('1370');
+    expect(stub().dataset.width).toBe('1800');
     expect(tab(uz['step.size']).getAttribute('aria-current')).toBe('step');
   });
 
@@ -467,7 +470,7 @@ describe('theme', () => {
     fireEvent.click(screen.getByRole('button', { name: uz['theme.dark'] }));
     expect(document.documentElement.dataset.theme).toBe('light');
     expect(logo()).toMatch(/dafna-logo\.svg$/);
-    expect(stub().dataset.width).toBe('1370');
+    expect(stub().dataset.width).toBe('1510');
   });
 });
 
@@ -575,14 +578,14 @@ describe('presentation and flow', () => {
 
   it('the review pill opens the presentation; edit returns to step 3 with nothing lost', () => {
     renderApp();
-    fireEvent.click(plus(uz['param.width']));
+    pickWidth('180 sm');
     fireEvent.click(tab(uz['step.review']));
     expect(flow()).toBe('presentation');
     fireEvent.click(skip() as HTMLElement);
     fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
     expect(flow()).toBe('configurator');
     expect(tab(uz['step.interior']).getAttribute('aria-current')).toBe('step');
-    expect(stub().dataset.width).toBe('1370');
+    expect(stub().dataset.width).toBe('1800');
   });
 
   it('same configuration again: no animation; after an edit: short version', () => {
@@ -594,7 +597,7 @@ describe('presentation and flow', () => {
     expect(stub().dataset.reveal).toBe('none');
     fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
     fireEvent.click(tab(uz['step.size']));
-    fireEvent.click(plus(uz['param.width']));
+    pickWidth('180 sm');
     fireEvent.click(tab(uz['step.review']));
     expect(stub().dataset.reveal).toBe('short');
   });
@@ -619,10 +622,9 @@ describe('reset toast timing', () => {
     try {
       renderApp();
       fireEvent.click(tab(uz['step.interior']));
-      fireEvent.click(document.querySelector('[data-preset="rail"]') as HTMLElement);
+      fireEvent.click(document.querySelector('[data-preset="long_hang"]') as HTMLElement);
       fireEvent.click(tab(uz['step.size']));
-      fireEvent.click(screen.getByRole('button', { name: uz['c.details'] }));
-      typeInto(uz['param.depth'], '52');
+      pickShallow();
       expect(screen.getByTestId('reset-toast')).toBeTruthy();
       act(() => vi.advanceTimersByTime(3000));
       expect(screen.queryByTestId('reset-toast')).toBeNull();
@@ -653,7 +655,7 @@ describe('presentation — designer final (D-4)', () => {
     expect(head.textContent).toContain(uz['present.subtitle']);
     // D-5: overall size (sm) next to the decors
     expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '136 × 190 × 60 sm · Korpus: Белый шагрень · Eshik: Клён сахарный шампань',
+      '150 × 210 × 60 sm · Korpus: Белый шагрень · Eshik: Клён сахарный шампань',
     );
   });
 
@@ -663,7 +665,7 @@ describe('presentation — designer final (D-4)', () => {
     fireEvent.click(toggle(uz['c.withDoors']));
     fireEvent.click(tab(uz['step.review']));
     expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '136 × 190 × 60 sm · Korpus: Белый шагрень',
+      '150 × 210 × 60 sm · Korpus: Белый шагрень',
     );
   });
 
@@ -686,7 +688,7 @@ describe('presentation — designer final (D-4)', () => {
     render(<App />);
     fireEvent.click(tab(uz['step.review']));
     expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '1360 × 1900 × 600 mm · Korpus: Белый шагрень · Eshik: Белый шагрень',
+      '1500 × 2100 × 600 mm · Korpus: Белый шагрень · Eshik: Белый шагрень',
     );
   });
 });

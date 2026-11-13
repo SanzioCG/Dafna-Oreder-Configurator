@@ -4,6 +4,7 @@ import wardrobeV2Json from '../templates/wardrobe.v2.json' with { type: 'json' }
 import wardrobeV3Json from '../templates/wardrobe.v3.json' with { type: 'json' };
 import wardrobeV4Json from '../templates/wardrobe.v4.json' with { type: 'json' };
 import wardrobeV5Json from '../templates/wardrobe.v5.json' with { type: 'json' };
+import wardrobeV6Json from '../templates/wardrobe.v6.json' with { type: 'json' };
 import { materialsV0, materialsV1 } from './catalog.js';
 import { toOrderDraft } from './order.js';
 import type { GenerateResult, MaterialCatalog, OrderDraft, Template } from './types.js';
@@ -20,6 +21,7 @@ export const TEMPLATE_ARCHIVE: Readonly<Record<string, Template>> = {
   '0.4.0': wardrobeV3Json as Template,
   '0.5.0': wardrobeV4Json as Template,
   '0.6.0': wardrobeV5Json as Template,
+  '0.7.0': wardrobeV6Json as Template,
 };
 
 /** Material catalogs by catalogVersion (same rule: archived, never edited). */
@@ -40,6 +42,7 @@ export const TEMPLATE_CATALOG: Readonly<Record<string, string>> = {
   '0.4.0': materialsV0.catalogVersion,
   '0.5.0': materialsV0.catalogVersion,
   '0.6.0': materialsV1.catalogVersion,
+  '0.7.0': materialsV1.catalogVersion,
 };
 
 type Generator = (template: Template, params: unknown, catalog: MaterialCatalog) => GenerateResult;
