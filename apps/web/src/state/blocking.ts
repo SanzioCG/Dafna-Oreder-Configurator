@@ -10,6 +10,12 @@ export const CUSTOMER_BLOCKING_WARNINGS = [
   'RAIL_DEPTH_SHORT',
   'RAIL_HEIGHT_SHORT',
   'DRAWER_SECTION_TOO_WIDE',
+  // D-7 / D-8
+  'DRAWER_TOO_HIGH',
+  'FILE_DRAWER_TOO_SMALL',
+  'PEDESTAL_TOO_HIGH',
+  'DESK_HEIGHT_NOT_ERGONOMIC',
+  'DESK_TOO_SMALL',
 ];
 
 export function isCustomerBlocking(issue: Issue): boolean {

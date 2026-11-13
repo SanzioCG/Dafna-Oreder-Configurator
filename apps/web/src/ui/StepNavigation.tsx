@@ -8,9 +8,12 @@ import { STEPS } from '../steps';
 export function StepNavigation({
   step,
   onStepChange,
+  product = 'wardrobe',
 }: {
   step: string;
   onStepChange: (step: string) => void;
+  /** D-8: step 3 is "Ichki" (wardrobe), "Tortmalar" (pedestal), "Oyoqlar" (desk) */
+  product?: string;
 }) {
   const { t } = useI18n();
   return (
@@ -27,7 +30,11 @@ export function StepNavigation({
           <span className="step-num" style={{ '--step': s.color } as React.CSSProperties}>
             {i + 1}
           </span>
-          <span className="step-label">{t(s.labelKey)}</span>
+          <span className="step-label">
+            {s.key === 'interior' && product !== 'wardrobe'
+              ? t(`step.interior.${product}`)
+              : t(s.labelKey)}
+          </span>
           {!s.enabled && <span className="step-soon">{t('step.comingSoon')}</span>}
         </button>
       ))}

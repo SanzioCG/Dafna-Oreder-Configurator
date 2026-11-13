@@ -1,20 +1,27 @@
 import {
+  PRODUCT_TEMPLATES,
+  allMaterials,
   defaultParams,
   generate,
   getParamDef,
-  currentCatalog,
   validate,
   wardrobeTemplate,
   type GenerateResult,
   type ParamValue,
   type Params,
+  type Template,
 } from '@dafna/engine';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Mode } from '../mode';
 import { isCustomerBlocking } from './blocking';
 
+/** the default product (the configurator starts with a wardrobe) */
 export const TEMPLATE = wardrobeTemplate;
-export const CATALOG = currentCatalog;
+/**
+ * Material lookup for the UI (names, colours): catalog 1.1.0 is a superset of every current
+ * product's catalog. Engine calls use the catalog of their template (catalogForTemplate).
+ */
+export const CATALOG = allMaterials;
 
 export interface ViewGeometry {
   result: GenerateResult;
@@ -24,6 +31,11 @@ export interface ViewGeometry {
 }
 
 export interface Configurator {
+  /** D-8: the product being configured ('wardrobe' | 'pedestal' | 'desk') and its template */
+  product: string;
+  template: Template;
+  /** switch product (start screen): its template defaults, or the given params */
+  switchProduct: (product: string, params?: Params) => void;
   params: Params;
   setParam: (key: string, value: ParamValue) => void;
   /** set several params at once (same customer repair + toast rules) */
@@ -71,13 +83,16 @@ export interface ResetNotice {
  * Only enum options are reset; numeric params are already clamped in customer mode.
  * Returns the repaired params and every reset made, so the UI can tell the customer.
  */
-export function repairCustomerParams(params: Params): { params: Params; resets: AutoReset[] } {
+export function repairCustomerParams(
+  params: Params,
+  template: Template = TEMPLATE,
+): { params: Params; resets: AutoReset[] } {
   let out = params;
   const resets: AutoReset[] = [];
   for (let i = 0; i < 3; i++) {
-    const blocked = validate(out, TEMPLATE, CATALOG)
+    const blocked = validate(out, template)
       .filter((issue) => isCustomerBlocking(issue) && issue.paramKey)
-      .map((issue) => ({ issue, def: getParamDef(TEMPLATE, issue.paramKey as string) }))
+      .map((issue) => ({ issue, def: getParamDef(template, issue.paramKey as string) }))
       .filter(
         ({ def }) =>
           def && def.type === 'enum' && def.customerVisible && out[def.key] !== def.default,
@@ -103,6 +118,9 @@ export function repairCustomerParams(params: Params): { params: Params; resets: 
  * so it runs synchronously on every change (debounce = 0 ms, within the 50 ms budget).
  */
 export function useConfigurator(mode: Mode = 'customer'): Configurator {
+  const [template, setTemplate] = useState<Template>(TEMPLATE);
+  const templateRef = useRef(template);
+  templateRef.current = template;
   const [params, setParamsState] = useState<Params>(() => defaultParams(TEMPLATE));
   const [notice, setNotice] = useState<ResetNotice | null>(null);
   // Latest params for synchronous repair outside the state updater (updaters must stay pure).
@@ -116,7 +134,7 @@ export function useConfigurator(mode: Mode = 'customer'): Configurator {
       if (prev[key] === value) return;
       let next: Params = { ...prev, [key]: value };
       if (mode === 'customer') {
-        const repaired = repairCustomerParams(next);
+        const repaired = repairCustomerParams(next, templateRef.current);
         next = repaired.params;
         // the option the customer just picked is never "auto-reset" (it was enabled, so valid)
         const resets = repaired.resets.filter((r) => r.key !== key);
@@ -142,7 +160,7 @@ export function useConfigurator(mode: Mode = 'customer'): Configurator {
       if (keys.every((k) => prev[k] === patch[k])) return;
       let next: Params = { ...prev, ...patch };
       if (mode === 'customer') {
-        const repaired = repairCustomerParams(next);
+        const repaired = repairCustomerParams(next, templateRef.current);
         next = repaired.params;
         const resets = repaired.resets.filter((r) => !keys.includes(r.key));
         if (resets.length > 0) {
@@ -157,22 +175,46 @@ export function useConfigurator(mode: Mode = 'customer'): Configurator {
   );
   const dismissNotice = useCallback(() => setNotice(null), []);
 
-  const result = useMemo(() => generate(TEMPLATE, params), [params]);
+  // only staff can enter invalid values; the viewer keeps the last valid model of THIS product
+  const lastValid = useRef<ViewGeometry | null>(null);
+
+  const switchProduct = useCallback((product: string, initial?: Params) => {
+    const next = PRODUCT_TEMPLATES[product] ?? TEMPLATE;
+    const p = initial ?? defaultParams(next);
+    templateRef.current = next;
+    paramsRef.current = p;
+    lastValid.current = null;
+    setTemplate(next);
+    setParamsState(p);
+    setNotice(null);
+  }, []);
+
+  const result = useMemo(() => generate(template, params), [template, params]);
   const hasErrors = result.issues.some((i) => i.severity === 'error');
 
-  // Only staff mode can enter invalid values; the viewer then keeps the last valid model.
-  const lastValid = useRef<ViewGeometry | null>(null);
   const view = useMemo(
     () =>
       hasErrors
         ? (lastValid.current ??
-          toView(generate(TEMPLATE, defaultParams(TEMPLATE)), defaultParams(TEMPLATE)))
+          toView(generate(template, defaultParams(template)), defaultParams(template)))
         : toView(result, params),
-    [hasErrors, result, params],
+    [hasErrors, result, params, template],
   );
   useEffect(() => {
     if (!hasErrors) lastValid.current = view;
   }, [hasErrors, view]);
 
-  return { params, setParam, setParams, result, view, hasErrors, notice, dismissNotice };
+  return {
+    product: template.templateId,
+    template,
+    switchProduct,
+    params,
+    setParam,
+    setParams,
+    result,
+    view,
+    hasErrors,
+    notice,
+    dismissNotice,
+  };
 }

@@ -41,10 +41,7 @@ export function SubmittedScreen({ id, summary, renderPng, onFinish }: Props) {
     return () => window.clearInterval(timer);
   }, []);
 
-  const colors = [
-    `${t('present.corpus')}: ${summary.corpus}`,
-    ...(summary.door ? [`${t('present.door')}: ${summary.door}`] : []),
-  ].join(' · ');
+  const colors = summary.colorsLine;
 
   return (
     <div

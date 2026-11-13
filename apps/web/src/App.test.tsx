@@ -126,7 +126,7 @@ describe('shell', () => {
   it('switches to Russian', () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: ru['lang.ru'] }));
-    expect(screen.getByRole('heading', { name: ru['step.size.title'] })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: ru['step.size.title.wardrobe'] })).toBeTruthy();
     expect(screen.getByRole('radiogroup', { name: ru['param.width'] })).toBeTruthy();
   });
 });

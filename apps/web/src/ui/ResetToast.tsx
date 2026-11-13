@@ -1,7 +1,8 @@
 import { getParamDef } from '@dafna/engine';
 import { useEffect } from 'react';
 import { optionLabel, useI18n } from '../i18n/I18n';
-import { TEMPLATE, type ResetNotice } from '../state/useConfigurator';
+import type { ResetNotice } from '../state/useConfigurator';
+import { useTemplate } from '../state/templateContext';
 import type { Mode } from '../mode';
 import { CloseIcon } from './icons';
 import { customerOptionLabel, customerParamLabel, customerReason } from './plainText';
@@ -25,6 +26,7 @@ export function ResetToast({
   mode?: Mode;
 }) {
   const { t } = useI18n();
+  const template = useTemplate();
 
   useEffect(() => {
     if (!notice) return;
@@ -51,7 +53,7 @@ export function ResetToast({
     >
       <ul>
         {notice.resets.map((r) => {
-          const def = getParamDef(TEMPLATE, r.key);
+          const def = getParamDef(template, r.key);
           const optionKey = def ? def.labelKey.replace(/^param\./, '') : r.key;
           if (mode === 'customer') {
             return (

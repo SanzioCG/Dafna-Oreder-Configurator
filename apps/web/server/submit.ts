@@ -1,4 +1,4 @@
-import { ORDER_SCHEMA_VERSION, generate, resolveParams, wardrobeTemplate } from '@dafna/engine';
+import { ORDER_SCHEMA_VERSION, PRODUCT_TEMPLATES, generate, resolveParams } from '@dafna/engine';
 import type { SubmitErrorCode, SubmitRequest } from '../src/lead/api';
 import { cleanContact, validateContact, type ContactInput } from '../src/lead/contact';
 import { phoneE164 } from '../src/lead/phone';
@@ -97,6 +97,9 @@ export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Resp
     bad.push('idempotencyKey');
   }
   if (b.lang !== 'uz' && b.lang !== 'ru') bad.push('lang');
+  // D-8: the product being ordered; kiosks before D-8 send none = wardrobe
+  const template = PRODUCT_TEMPLATES[typeof b.product === 'string' ? b.product : 'wardrobe'];
+  if (!template) bad.push('product');
   if (b.kioskId !== undefined && (typeof b.kioskId !== 'string' || !KIOSK_RE.test(b.kioskId))) {
     bad.push('kioskId');
   }
@@ -125,13 +128,14 @@ export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Resp
   const contact = cleanContact(contactIn);
 
   // the engine is the authority: never trust the kiosk's own validation
-  const resolved = resolveParams(wardrobeTemplate, b.params);
-  const result = generate(wardrobeTemplate, b.params);
+  const tpl = template!;
+  const resolved = resolveParams(tpl, b.params);
+  const result = generate(tpl, b.params);
   const blocking = [...resolved.issues, ...result.issues].filter(
     (i) => isCustomerBlocking(i) || i.code === 'UNKNOWN_PARAM',
   );
   // D-7: a kiosk application uses the standard sizes only (staff build custom sizes elsewhere)
-  const nonStandard = wardrobeTemplate.parameters.filter(
+  const nonStandard = tpl.parameters.filter(
     (d) => d.customerValues && !d.customerValues.includes(Number(resolved.params[d.key])),
   );
   if (blocking.length > 0 || nonStandard.length > 0 || !result.dimensions) {
@@ -156,7 +160,7 @@ export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Resp
   if (existing) return json(200, { id: existing.id, status: 'submitted' });
 
   const now = deps.now();
-  const summary = summarizeResult(resolved.params, result, 'uz');
+  const summary = summarizeResult(resolved.params, result, 'uz', tpl);
   let lead: LeadRecord;
   let stored;
   try {
@@ -183,10 +187,12 @@ export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Resp
       managerNote: '',
       paramsJson: JSON.stringify(resolved.params),
       schemaVersion: ORDER_SCHEMA_VERSION,
-      templateVersion: wardrobeTemplate.templateVersion,
+      templateVersion: tpl.templateVersion,
       engineVersion: deps.engineVersion,
       idempotencyKey: key,
       telegramAttempts: 0,
+      product: summary.productName,
+      templateId: tpl.templateId,
     };
     stored = await deps.store.append(lead);
   } catch (e) {

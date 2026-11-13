@@ -2,7 +2,7 @@ import { generate, getParamDef, type InteriorPreset, type Params } from '@dafna/
 import { useMemo, useState } from 'react';
 import { useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
-import { TEMPLATE, type Configurator } from '../state/useConfigurator';
+import type { Configurator } from '../state/useConfigurator';
 import { Button } from './Button';
 import { PresetIcon } from './icons';
 import { blockingIssue } from './optionAvailability';
@@ -50,7 +50,7 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
   const sections = config.view.result.sections;
   const count = sections.length;
   const sel = Math.max(0, Math.min(selected, count - 1));
-  const def = getParamDef(TEMPLATE, `interior${sel + 1}`);
+  const def = getParamDef(config.template, `interior${sel + 1}`);
   const value = def ? (config.params[def.key] ?? def.default) : 'auto';
   const [skipped, setSkipped] = useState<{ sections: number[]; code: string } | null>(null);
 
@@ -58,7 +58,7 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
   const autoPreset = useMemo<InteriorPreset>(() => {
     if (!def) return 'shelves';
     if (value === 'auto') return sections[sel]?.preset ?? 'shelves';
-    const r = generate(TEMPLATE, { ...config.params, [def.key]: 'auto' });
+    const r = generate(config.template, { ...config.params, [def.key]: 'auto' });
     return r.sections[sel]?.preset ?? 'shelves';
   }, [def, value, sections, sel, config.params]);
 
@@ -77,9 +77,9 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
     let skippedCode = '';
     for (let i = 0; i < count; i++) {
       if (i === sel) continue;
-      const d = getParamDef(TEMPLATE, `interior${i + 1}`);
+      const d = getParamDef(config.template, `interior${i + 1}`);
       if (!d) continue;
-      const code = blockingIssue(d, value, config.params, mode);
+      const code = blockingIssue(d, value, config.params, mode, config.template);
       if (code) {
         skippedSections.push(i + 1);
         skippedCode = skippedCode || code;
@@ -130,7 +130,9 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
         <div className="option-list" role="radiogroup" aria-label={t('c.partFill', { n: sel + 1 })}>
           {options.map((o) => {
             const isSelected = o === value;
-            const code = isSelected ? null : blockingIssue(def, o, config.params, mode);
+            const code = isSelected
+              ? null
+              : blockingIssue(def, o, config.params, mode, config.template);
             const preset = o === 'auto' ? autoPreset : (o as InteriorPreset);
             return (
               <button

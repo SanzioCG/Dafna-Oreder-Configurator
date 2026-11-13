@@ -2,7 +2,7 @@ import { clampParam, getParamDef } from '@dafna/engine';
 import { useState } from 'react';
 import { useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
-import { TEMPLATE, type Configurator } from '../state/useConfigurator';
+import type { Configurator } from '../state/useConfigurator';
 import { fromDisplay, toDisplay, unitSystemFor } from '../viewer/dimensions';
 import { DimensionControl } from './DimensionControl';
 import { ChevronIcon } from './icons';
@@ -28,7 +28,7 @@ export function SizeStep({ mode, config }: { mode: Mode; config: Configurator })
   const staff = mode === 'staff';
 
   const dimension = (key: 'width' | 'height' | 'depth', label: string) => {
-    const def = getParamDef(TEMPLATE, key);
+    const def = getParamDef(config.template, key);
     if (!def) return null;
     const mm = Number(config.params[key] ?? def.default);
     const step = toDisplay(SIZE_STEP_MM, units);
@@ -55,11 +55,10 @@ export function SizeStep({ mode, config }: { mode: Mode; config: Configurator })
   };
 
   const width = Number(config.params.width);
-  const plinth = config.params.base === 'plinth';
 
   // D-7: customers choose standard sizes only (template customerValues); staff keep free input
   const standard = (key: 'width' | 'height' | 'depth') =>
-    getParamDef(TEMPLATE, key)?.customerValues;
+    getParamDef(config.template, key)?.customerValues;
   if (!staff && standard('width')) {
     const chipGroup = (
       key: 'width' | 'height' | 'depth',
@@ -67,7 +66,7 @@ export function SizeStep({ mode, config }: { mode: Mode; config: Configurator })
       hint?: (mm: number) => string,
     ) => {
       const values = standard(key) ?? [];
-      const current = Number(config.params[key] ?? getParamDef(TEMPLATE, key)?.default);
+      const current = Number(config.params[key] ?? getParamDef(config.template, key)?.default);
       return (
         <div className="param" data-param={key}>
           <span className="param-label">{label}</span>
@@ -96,21 +95,19 @@ export function SizeStep({ mode, config }: { mode: Mode; config: Configurator })
     return (
       <section className="card step-card" data-step="size" data-card="size">
         <div className="card-head">
-          <h2>{t('step.size.title')}</h2>
-          <p className="muted">{t('step.size.hint')}</p>
+          <h2>{t(`step.size.title.${config.product}`)}</h2>
+          <p className="muted">{t(`step.size.hint.${config.product}`)}</p>
         </div>
         {chipGroup('width', t('param.width'))}
         {chipGroup('height', t('param.height'))}
-        {chipGroup('depth', t('param.depth'), (mm) =>
-          t(mm >= 560 ? 'c.depthHang' : 'c.depthShallow'),
+        {chipGroup(
+          'depth',
+          t('param.depth'),
+          config.product !== 'wardrobe'
+            ? undefined
+            : (mm) => t(mm >= 560 ? 'c.depthHang' : 'c.depthShallow'),
         )}
-        <Toggle
-          checked={plinth}
-          onChange={(on) => config.setParam('base', on ? 'plinth' : 'none')}
-          testId="toggle-base"
-        >
-          {t('c.base')}
-        </Toggle>
+        <BaseToggle config={config} />
       </section>
     );
   }
@@ -118,8 +115,8 @@ export function SizeStep({ mode, config }: { mode: Mode; config: Configurator })
   return (
     <section className="card step-card" data-step="size" data-card="size">
       <div className="card-head">
-        <h2>{t('step.size.title')}</h2>
-        <p className="muted">{t('step.size.hint')}</p>
+        <h2>{t(`step.size.title.${config.product}`)}</h2>
+        <p className="muted">{t(`step.size.hint.${config.product}`)}</p>
       </div>
 
       <div className="chips" role="radiogroup" aria-label={t('c.widthChips')}>
@@ -158,13 +155,37 @@ export function SizeStep({ mode, config }: { mode: Mode; config: Configurator })
         </div>
       )}
 
+      <BaseToggle config={config} />
+    </section>
+  );
+}
+
+/**
+ * Base choice per product (D-8): wardrobe "Pastki yopiq taglik" (plinth / none), pedestal
+ * "G'ildirakli" (castors / plinth); products without a base param (desk) show nothing.
+ */
+export function BaseToggle({ config }: { config: Configurator }) {
+  const { t } = useI18n();
+  const def = getParamDef(config.template, 'base');
+  if (!def?.options) return null;
+  if (def.options.includes('castors')) {
+    return (
       <Toggle
-        checked={plinth}
-        onChange={(on) => config.setParam('base', on ? 'plinth' : 'none')}
+        checked={config.params.base === 'castors'}
+        onChange={(on) => config.setParam('base', on ? 'castors' : 'plinth')}
         testId="toggle-base"
       >
-        {t('c.base')}
+        {t('c.castors')}
       </Toggle>
-    </section>
+    );
+  }
+  return (
+    <Toggle
+      checked={config.params.base === 'plinth'}
+      onChange={(on) => config.setParam('base', on ? 'plinth' : 'none')}
+      testId="toggle-base"
+    >
+      {t('c.base')}
+    </Toggle>
   );
 }

@@ -1,4 +1,4 @@
-import { getMaterial, currentCatalog } from './catalog.js';
+import { catalogForTemplate, getMaterial } from './catalog.js';
 import { resolveParams } from './params.js';
 import { getStringConstant, wardrobeTemplate } from './template.js';
 import {
@@ -28,7 +28,7 @@ export function toOrderDraft(
   options: OrderDraftOptions = {},
 ): OrderDraft {
   const template = options.template ?? wardrobeTemplate;
-  const catalog = options.catalog ?? currentCatalog;
+  const catalog = options.catalog ?? catalogForTemplate(template);
   const now = options.now ?? (() => new Date());
   const resolved = resolveParams(template, params).params;
   const hasDoors = result.sections.some((s) => s.doorType !== 'none');
@@ -38,7 +38,7 @@ export function toOrderDraft(
 
   return {
     schemaVersion: ORDER_SCHEMA_VERSION,
-    productType: 'wardrobe',
+    productType: template.productType,
     templateVersion: template.templateVersion,
     catalogVersion: catalog.catalogVersion,
     params: resolved,

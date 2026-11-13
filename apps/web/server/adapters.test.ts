@@ -28,6 +28,8 @@ const LEAD: LeadRecord = {
   engineVersion: 'abc1234',
   idempotencyKey: 'key-0123456789abcdef',
   telegramAttempts: 0,
+  product: 'Shkaf',
+  templateId: 'wardrobe',
 };
 
 /** the parts of a Sheets batchUpdate request the tests look at */
@@ -267,6 +269,6 @@ describe('Google Sheets store', () => {
       { range: `${SHEET_TITLE}!N3`, values: [['sent']] },
       { range: `${SHEET_TITLE}!U3`, values: [[3]] },
     ]);
-    expect(LAST_COLUMN).toBe('U');
+    expect(LAST_COLUMN).toBe('W'); // D-8: + Mahsulot, templateId
   });
 });

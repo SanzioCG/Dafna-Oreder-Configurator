@@ -1,15 +1,38 @@
-import { generate, getMaterial, type Panel, type Params } from '@dafna/engine';
+import { generate, getMaterial, type Panel, type Params, type Template } from '@dafna/engine';
 import { useMemo } from 'react';
 import { CATALOG, TEMPLATE } from '../state/useConfigurator';
+
+/** parts drawn in the front view (carcass, fronts, work top, legs, frame) */
+const VISIBLE = [
+  'side',
+  'top',
+  'bottom',
+  'plinth',
+  'door',
+  'drawer_front',
+  'worktop',
+  'leg',
+  'modesty',
+  'frame',
+];
+const FRONT = ['door', 'drawer_front'];
 
 /**
  * Small pre-rendered front view of a configured wardrobe, drawn from ENGINE output (panel
  * x / y extents in the front plane): carcass, plinth and door leaves in their decor colour,
  * 2 px --ink lines. No WebGL — four of them on the start screen cost nothing.
  */
-export function ModelThumbnail({ params, label }: { params: Params; label: string }) {
+export function ModelThumbnail({
+  params,
+  label,
+  template = TEMPLATE,
+}: {
+  params: Params;
+  label: string;
+  template?: Template;
+}) {
   const shapes = useMemo(() => {
-    const r = generate(TEMPLATE, params);
+    const r = generate(template, params);
     const W = r.dimensions?.widthMm ?? Number(params.width);
     const H = r.dimensions?.heightMm ?? Number(params.height);
     const front = (p: Panel) => {
@@ -20,13 +43,11 @@ export function ModelThumbnail({ params, label }: { params: Params; label: strin
       return { x: p.position[0] - xLen / 2, y: H - (p.position[1] + yLen / 2), w: xLen, h: yLen };
     };
     const color = (p: Panel) => getMaterial(CATALOG, p.material)?.colorHex ?? '#ffffff';
-    const visible = r.panels.filter((p) =>
-      ['side', 'top', 'bottom', 'plinth', 'door'].includes(p.role),
-    );
-    // doors last so they cover the carcass front
-    visible.sort((a, b) => Number(a.role === 'door') - Number(b.role === 'door'));
+    const visible = r.panels.filter((p) => VISIBLE.includes(p.role));
+    // fronts last so they cover the carcass front
+    visible.sort((a, b) => Number(FRONT.includes(a.role)) - Number(FRONT.includes(b.role)));
     return { W, H, rects: visible.map((p) => ({ id: p.id, ...front(p), fill: color(p) })) };
-  }, [params]);
+  }, [params, template]);
 
   const pad = 40;
   return (

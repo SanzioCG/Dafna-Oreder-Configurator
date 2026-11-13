@@ -27,12 +27,20 @@ export const COLUMNS: { key: keyof LeadRecord; header: string }[] = [
   { key: 'engineVersion', header: 'engineVersion' },
   { key: 'idempotencyKey', header: 'idempotencyKey' },
   { key: 'telegramAttempts', header: 'Telegram urinishlar' },
+  // D-8 (appended: existing sheets keep their columns)
+  { key: 'product', header: 'Mahsulot' },
+  { key: 'templateId', header: 'templateId' },
 ];
 
 export const HEADERS = COLUMNS.map((c) => c.header);
 export const STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === 'status');
 export const TELEGRAM_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === 'telegram');
 export const FIRST_TECHNICAL_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === 'idempotencyKey');
+/** technical columns hidden by the setup script: idempotencyKey … Telegram urinishlar, templateId */
+export const HIDDEN_COLUMN_RANGES: [number, number][] = [
+  [FIRST_TECHNICAL_COLUMN_INDEX, COLUMNS.findIndex((c) => c.key === 'telegramAttempts') + 1],
+  [COLUMNS.findIndex((c) => c.key === 'templateId'), COLUMNS.length],
+];
 
 /** "A".."Z" for a 0-based column index (the sheet stays well under 26 columns). */
 export function columnLetter(index: number): string {

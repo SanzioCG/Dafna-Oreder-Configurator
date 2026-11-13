@@ -7,10 +7,12 @@ import {
   type Params,
 } from '@dafna/engine';
 import { useI18n, type Translate } from '../i18n/I18n';
-import { CATALOG, TEMPLATE } from '../state/useConfigurator';
+import type { Template } from '@dafna/engine';
+import { useTemplate } from '../state/templateContext';
+import { TEMPLATE } from '../state/useConfigurator';
 
-export function issueText(t: Translate, issue: Issue): string {
-  const def = issue.paramKey ? getParamDef(TEMPLATE, issue.paramKey) : undefined;
+export function issueText(t: Translate, issue: Issue, template: Template = TEMPLATE): string {
+  const def = issue.paramKey ? getParamDef(template, issue.paramKey) : undefined;
   return t(issue.messageKey, { ...issue.values, param: def ? t(def.labelKey) : issue.paramKey });
 }
 
@@ -34,10 +36,11 @@ interface StaffPanelProps {
 /** Staff-only tools: all issues, order draft download, unconfirmed assumptions, panel list. */
 export function StaffPanel({ params, result }: StaffPanelProps) {
   const { t } = useI18n();
-  const unconfirmed = listUnconfirmed(TEMPLATE, CATALOG);
+  const template = useTemplate();
+  const unconfirmed = listUnconfirmed(template);
 
   const download = () => {
-    const draft = toOrderDraft(params, result, { template: TEMPLATE, catalog: CATALOG });
+    const draft = toOrderDraft(params, result, { template });
     const stamp = draft.generatedAt.replace(/[:.]/g, '-');
     downloadJson(`dafna-order-draft-${stamp}.json`, draft);
   };
@@ -56,7 +59,7 @@ export function StaffPanel({ params, result }: StaffPanelProps) {
           {result.issues.map((issue, i) => (
             <li key={`${issue.code}-${i}`} className={`issue issue-${issue.severity}`}>
               <span className="issue-severity">{t(`severity.${issue.severity}`)}</span>
-              <span>{issueText(t, issue)}</span>
+              <span>{issueText(t, issue, template)}</span>
               <code>{issue.code}</code>
             </li>
           ))}

@@ -1085,6 +1085,14 @@ p {
   font-variant-numeric: tabular-nums;
 }
 
+/* D-8 start screen: product choice (Shkaf / Ofis tumbasi / Stol) */
+.product-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
 /* D-7 standard sizes: 8 widths in 4 columns, height / depth as two big choices */
 [data-step='size'] [data-param='width'] .chips {
   grid-template-columns: repeat(4, minmax(0, 1fr));

@@ -1,4 +1,6 @@
 import wardrobeV6Json from '../templates/wardrobe.v6.json' with { type: 'json' };
+import pedestalV1Json from '../templates/pedestal.v1.json' with { type: 'json' };
+import deskV1Json from '../templates/desk.v1.json' with { type: 'json' };
 import type {
   Material,
   MaterialCatalog,
@@ -14,6 +16,19 @@ import type {
  * v5 D-6) are archived (regenerate.ts); older order drafts are migrated with migrateOrderDraft().
  */
 export const wardrobeTemplate: Template = wardrobeV6Json as Template;
+
+/** D-8: office pedestal (ofis tumbasi), template 0.1.0 (pedestal.ts, ADR-014). */
+export const pedestalTemplate: Template = pedestalV1Json as Template;
+
+/** D-8: office / writing desk (stol), template 0.1.0 (desk.ts, ADR-014). */
+export const deskTemplate: Template = deskV1Json as Template;
+
+/** The current template of every product, by templateId (= productType). */
+export const PRODUCT_TEMPLATES: Readonly<Record<string, Template>> = {
+  wardrobe: wardrobeTemplate,
+  pedestal: pedestalTemplate,
+  desk: deskTemplate,
+};
 
 export function getParamDef(template: Template, key: string): ParamDef | undefined {
   return template.parameters.find((p) => p.key === key);

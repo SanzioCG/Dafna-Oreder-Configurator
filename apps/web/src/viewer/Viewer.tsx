@@ -8,9 +8,7 @@ import {
   type MutableRefObject,
   type ReactNode,
 } from 'react';
-import { getMaterial } from '@dafna/engine';
 import { Confetti, type ConfettiHandle } from '../presentation/Confetti';
-import { CATALOG } from '../state/useConfigurator';
 import { RevealDirector, type RevealEvent, type RevealKind } from '../presentation/reveal';
 import { useI18n } from '../i18n/I18n';
 import { useTheme } from '../theme/ThemeProvider';
@@ -55,6 +53,8 @@ interface ViewerProps {
   presentationContent?: ReactNode;
   /** filled with a PNG capture of the 3D view (contact screen, D-5) */
   captureRef?: MutableRefObject<CaptureFn | null>;
+  /** D-8: "Korpus: … · Eshik: …" / "Stoleshnitsa: … · Oyoq: …" (product summary) */
+  summaryColors?: string;
 }
 
 interface RevealUi {
@@ -132,6 +132,7 @@ export function Viewer({
   onRevealEvents,
   presentationContent,
   captureRef,
+  summaryColors,
 }: ViewerProps) {
   const { t } = useI18n();
   const { theme, logoUrl } = useTheme();
@@ -167,7 +168,12 @@ export function Viewer({
   const extent = useMemo<FrameBox>(
     () => ({
       min: [(-W / 2) * MM, 0, (-D / 2) * MM],
-      max: [(W / 2 + DIMENSION_MARGIN.right) * MM, (H + DIMENSION_MARGIN.top) * MM, (D / 2) * MM],
+      // label margins shrink with small products (pedestal, D-8); a wardrobe keeps the full ones
+      max: [
+        (W / 2 + Math.min(DIMENSION_MARGIN.right, W * 0.25)) * MM,
+        (H + Math.min(DIMENSION_MARGIN.top, H * 0.2)) * MM,
+        (D / 2) * MM,
+      ],
     }),
     [W, H, D],
   );
@@ -271,18 +277,10 @@ export function Viewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only an explicit selection moves the camera
   }, [selectionSeq]);
 
-  // presentation summary line, e.g. "136 × 190 × 60 sm · Korpus: Oq · Eshik: Och eman"
-  const decor = (id: string | undefined) => {
-    const m = id ? getMaterial(CATALOG, id) : undefined;
-    return m ? t(m.decorName) : '';
-  };
-  const corpusId = view.result.panels.find((p) => p.role === 'side')?.material;
-  const doorId = view.result.panels.find((p) => p.role === 'door')?.material;
-  // D-5: the overall size is back next to the decors (customer cm, staff mm)
+  // presentation summary line: overall size + the product's decors (lead/summary)
   const presentSummaryLine = [
     formatSize(engineSize.widthMm, engineSize.heightMm, engineSize.depthMm, units, unitLabel),
-    `${t('present.corpus')}: ${decor(corpusId)}`,
-    ...(doorId ? [`${t('present.door')}: ${decor(doorId)}`] : []),
+    ...(summaryColors ? [summaryColors] : []),
   ].join(' · ');
 
   // ---- presentation reveal (driven in the render loop; React hears discrete events) ----

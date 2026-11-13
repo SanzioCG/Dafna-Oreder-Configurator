@@ -11,9 +11,9 @@ import { useI18n } from './i18n/I18n';
 import { ConsultantButton } from './ui/ConsultantButton';
 import { ConsultantModal } from './ui/ConsultantModal';
 import { nextFlow, type FlowEvent, type FlowState } from './state/flow';
-import { TEMPLATE, useConfigurator } from './state/useConfigurator';
+import { useConfigurator } from './state/useConfigurator';
+import { TemplateContext } from './state/templateContext';
 import { modelParams } from './state/presets';
-import { defaultParams } from '@dafna/engine';
 import { ThemeProvider, useTheme } from './theme/ThemeProvider';
 import { StepPanel } from './ui/StepPanel';
 import type { CaptureFn } from './viewer/renderCapture';
@@ -108,74 +108,78 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
     setConsultantOpen(true);
   };
   return (
-    <div className={`app mode-${mode}${inPresentation ? ' presenting' : ''}`} data-flow={flow}>
-      <Viewer
-        view={config.view}
-        mode={mode}
-        invalid={config.hasErrors}
-        activeStep={step}
-        selectedSection={picking ? section : null}
-        onSelectSection={selectSection}
-        selectionSeq={selectionSeq}
-        presentation={inPresentation ? presentation : null}
-        onRevealEvents={onRevealEvents}
-        captureRef={captureRef}
-        presentationContent={
-          flow === 'ready_to_confirm' ? (
-            <div className="present-actions" data-testid="present-actions">
-              <Button variant="success" large onClick={() => dispatch('confirm')}>
-                {t('present.confirm')}
-              </Button>
-              <Button variant="secondary" onClick={() => edit()}>
-                {t('present.edit')}
-              </Button>
-            </div>
-          ) : null
-        }
-      />
-      <StepPanel
-        mode={mode}
-        config={config}
-        step={step}
-        onStepChange={changeStep}
-        hidden={inPresentation}
-        selectedSection={section}
-        onSelectSection={selectSection}
-        onCallConsultant={callConsultant}
-        onPickModel={(m) => {
-          config.setParams(modelParams(m));
-          setStep('size');
-        }}
-        onScratch={() => {
-          config.setParams(defaultParams(TEMPLATE));
-          setStep('size');
-        }}
-      />
-      {flow === 'contact' && (
-        <ContactScreen
-          params={config.params}
-          kioskId={kioskId()}
-          onBack={() => dispatch('back')}
-          captureRender={() => captureRef.current?.() ?? null}
-          onSubmitted={(id, renderPng) => {
-            setSubmission({ id, renderPng });
-            dispatch('submitted');
+    <TemplateContext.Provider value={config.template}>
+      <div className={`app mode-${mode}${inPresentation ? ' presenting' : ''}`} data-flow={flow}>
+        <Viewer
+          view={config.view}
+          mode={mode}
+          invalid={config.hasErrors}
+          activeStep={step}
+          selectedSection={picking ? section : null}
+          onSelectSection={selectSection}
+          selectionSeq={selectionSeq}
+          presentation={inPresentation ? presentation : null}
+          onRevealEvents={onRevealEvents}
+          captureRef={captureRef}
+          summaryColors={summarizeParams(config.params, lang, config.template).colorsLine}
+          presentationContent={
+            flow === 'ready_to_confirm' ? (
+              <div className="present-actions" data-testid="present-actions">
+                <Button variant="success" large onClick={() => dispatch('confirm')}>
+                  {t('present.confirm')}
+                </Button>
+                <Button variant="secondary" onClick={() => edit()}>
+                  {t('present.edit')}
+                </Button>
+              </div>
+            ) : null
+          }
+        />
+        <StepPanel
+          mode={mode}
+          config={config}
+          step={step}
+          onStepChange={changeStep}
+          hidden={inPresentation}
+          selectedSection={section}
+          onSelectSection={selectSection}
+          onCallConsultant={callConsultant}
+          onPickModel={(m) => {
+            config.switchProduct(m.product, modelParams(m));
+            setStep('size');
+          }}
+          onScratch={(product) => {
+            config.switchProduct(product);
+            setStep('size');
           }}
         />
-      )}
-      {flow === 'submitted' && submission && (
-        <SubmittedScreen
-          id={submission.id}
-          renderPng={submission.renderPng}
-          summary={summarizeParams(config.params, lang)}
-          onFinish={onFinish}
-        />
-      )}
-      {mode === 'customer' && inPresentation && (
-        <ConsultantButton className="present-consultant" onCall={callConsultant} />
-      )}
-      {consultantOpen && <ConsultantModal onClose={() => setConsultantOpen(false)} />}
-    </div>
+        {flow === 'contact' && (
+          <ContactScreen
+            product={config.product}
+            params={config.params}
+            kioskId={kioskId()}
+            onBack={() => dispatch('back')}
+            captureRender={() => captureRef.current?.() ?? null}
+            onSubmitted={(id, renderPng) => {
+              setSubmission({ id, renderPng });
+              dispatch('submitted');
+            }}
+          />
+        )}
+        {flow === 'submitted' && submission && (
+          <SubmittedScreen
+            id={submission.id}
+            renderPng={submission.renderPng}
+            summary={summarizeParams(config.params, lang, config.template)}
+            onFinish={onFinish}
+          />
+        )}
+        {mode === 'customer' && inPresentation && (
+          <ConsultantButton className="present-consultant" onCall={callConsultant} />
+        )}
+        {consultantOpen && <ConsultantModal onClose={() => setConsultantOpen(false)} />}
+      </div>
+    </TemplateContext.Provider>
   );
 }
 

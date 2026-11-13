@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { defaultParams, wardrobeTemplate } from '@dafna/engine';
+import { defaultParams, deskTemplate, pedestalTemplate, wardrobeTemplate } from '@dafna/engine';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { SubmitRequest } from '../src/lead/api';
 import { HEADERS, leadToRow, rowToLead } from './columns';
@@ -117,6 +117,8 @@ describe('sheet row mapping', () => {
       'engineVersion',
       'idempotencyKey',
       'Telegram urinishlar',
+      'Mahsulot',
+      'templateId',
     ]);
   });
 
@@ -214,6 +216,55 @@ describe('POST /api/submit', () => {
     expect(status).toBe(503);
     expect(json.error.code).toBe('storage_failed');
     expect(notifier.calls).toBe(0);
+  });
+
+  it('D-8: pedestal and desk applications: product, templateId, decors, layout', async () => {
+    const desk = await send(
+      body({
+        idempotencyKey: 'desk-0123456789abcdef',
+        product: 'desk',
+        params: {
+          ...defaultParams(deskTemplate),
+          legs: 'metal',
+          topMaterial: 'egger_h3700_st10_25',
+        },
+      }),
+    );
+    expect(desk.status).toBe(200);
+    const d = store.rows[0]!;
+    expect([d.product, d.templateId, d.templateVersion, d.sizeMm]).toEqual([
+      'Stol',
+      'desk',
+      '0.1.0',
+      '1200 × 740 × 700',
+    ]);
+    expect(d.corpus).toBe('Орех Пацифик натуральный (EGGER H3700 ST10)');
+    expect(d.door).toBe('Металл чёрный');
+    expect(d.sections).toBe('Metall oyoqlar');
+    const ped = await send(
+      body({
+        idempotencyKey: 'ped-0123456789abcdefg',
+        product: 'pedestal',
+        params: defaultParams(pedestalTemplate),
+      }),
+    );
+    expect(ped.status).toBe(200);
+    expect([store.rows[1]!.product, store.rows[1]!.sections, store.rows[1]!.doors]).toEqual([
+      'Ofis tumbasi',
+      '3 ta tortma',
+      "G'ildirakli",
+    ]);
+    // the A4 file drawer at 400 mm is blocked for customers
+    const file = await send(
+      body({
+        idempotencyKey: 'ped-file-0123456789ab',
+        product: 'pedestal',
+        params: { ...defaultParams(pedestalTemplate), layout: 'drawers2_file' },
+      }),
+    );
+    expect(file.json.error.issues).toEqual(['FILE_DRAWER_TOO_SMALL']);
+    expect((await send(body({ product: 'sofa' }))).json.error.fields).toEqual(['product']);
+    expect(notifier.sent[0]!.lead.product).toBe('Stol');
   });
 
   it('D-7: kiosk applications use standard sizes only (NON_STANDARD_SIZE)', async () => {

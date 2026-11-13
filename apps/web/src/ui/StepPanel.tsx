@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { LANGS, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import type { ReadyModel } from '../state/presets';
-import { TEMPLATE, type Configurator } from '../state/useConfigurator';
+import type { Configurator } from '../state/useConfigurator';
+import type { ProductId } from '../state/presets';
 import { STEPS, neighbourStep } from '../steps';
 import { StartScreen } from '../start/StartScreen';
 import { useTheme } from '../theme/ThemeProvider';
@@ -13,6 +14,7 @@ import { ColorStep } from './ColorStep';
 import { ConsultantButton } from './ConsultantButton';
 import { ArrowLeftIcon, ArrowRightIcon, MoonIcon, SunIcon } from './icons';
 import { InteriorStep } from './InteriorStep';
+import { OptionsStep } from './OptionsStep';
 import { ParamControl } from './ParamControl';
 import { ResetToast } from './ResetToast';
 import { SizeStep } from './SizeStep';
@@ -59,7 +61,7 @@ interface StepPanelProps {
   onCallConsultant?: () => void;
   /** start screen: a ready-made model was picked / "Noldan boshlash" */
   onPickModel?: (model: ReadyModel) => void;
-  onScratch?: () => void;
+  onScratch?: (product: ProductId) => void;
 }
 
 /**
@@ -92,7 +94,7 @@ export function StepPanel({
   const sectionCount = config.view.result.sections.length;
   const uiSteps = stepDef?.uiSteps ?? [];
   const defs = staff
-    ? TEMPLATE.parameters.filter(
+    ? config.template.parameters.filter(
         (d) =>
           uiSteps.includes(d.uiStep) &&
           (d.appliesToSection === undefined || d.appliesToSection <= sectionCount),
@@ -150,28 +152,34 @@ export function StepPanel({
         </div>
       </header>
 
-      <StepNavigation step={step} onStepChange={setStep} />
+      <StepNavigation step={step} onStepChange={setStep} product={config.product} />
 
       {step === 'start' && (
         <div className="panel-body">
           <StartScreen
             mode={mode}
             onPick={(m) => onPickModel?.(m)}
-            onScratch={() => onScratch?.()}
+            onScratch={(p) => onScratch?.(p)}
+            initialProduct={config.product as ProductId}
           />
         </div>
       )}
       <div className="panel-body" hidden={step === 'start'}>
         <p className="summary" data-testid="summary">
           <strong>{formatSize(v.widthMm, v.heightMm, v.depthMm, units, unit)}</strong>
-          <span className="summary-sections">
-            {t(staff ? 'summary.sections' : 'c.parts', { count: sectionCount })}
-          </span>
+          {sectionCount > 0 && config.product === 'wardrobe' && (
+            <span className="summary-sections">
+              {t(staff ? 'summary.sections' : 'c.parts', { count: sectionCount })}
+            </span>
+          )}
         </p>
         <div className="controls">
           {step === 'size' && <SizeStep mode={mode} config={config} />}
           {step === 'color' && <ColorStep mode={mode} config={config} />}
-          {step === 'interior' && (
+          {step === 'interior' && config.product !== 'wardrobe' && (
+            <OptionsStep mode={mode} config={config} />
+          )}
+          {step === 'interior' && config.product === 'wardrobe' && (
             <InteriorStep
               mode={mode}
               config={config}
