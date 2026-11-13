@@ -86,6 +86,8 @@ export interface ResetNotice {
 export function repairCustomerParams(
   params: Params,
   template: Template = TEMPLATE,
+  /** the keys the customer just set: never reset (they chose an enabled option) */
+  keep: string[] = [],
 ): { params: Params; resets: AutoReset[] } {
   let out = params;
   const resets: AutoReset[] = [];
@@ -95,7 +97,12 @@ export function repairCustomerParams(
       .map((issue) => ({ issue, def: getParamDef(template, issue.paramKey as string) }))
       .filter(
         ({ def }) =>
-          def && def.type === 'enum' && def.customerVisible && out[def.key] !== def.default,
+          def &&
+          !keep.includes(def.key) &&
+          def.customerVisible &&
+          out[def.key] !== def.default &&
+          // enums, and D-8 standard sizes (e.g. 110 sm standing height without the lift frame)
+          (def.type === 'enum' || (def.type === 'int' && def.customerValues !== undefined)),
       );
     if (blocked.length === 0) break;
     out = { ...out };
@@ -134,7 +141,7 @@ export function useConfigurator(mode: Mode = 'customer'): Configurator {
       if (prev[key] === value) return;
       let next: Params = { ...prev, [key]: value };
       if (mode === 'customer') {
-        const repaired = repairCustomerParams(next, templateRef.current);
+        const repaired = repairCustomerParams(next, templateRef.current, [key]);
         next = repaired.params;
         // the option the customer just picked is never "auto-reset" (it was enabled, so valid)
         const resets = repaired.resets.filter((r) => r.key !== key);
@@ -160,7 +167,7 @@ export function useConfigurator(mode: Mode = 'customer'): Configurator {
       if (keys.every((k) => prev[k] === patch[k])) return;
       let next: Params = { ...prev, ...patch };
       if (mode === 'customer') {
-        const repaired = repairCustomerParams(next, templateRef.current);
+        const repaired = repairCustomerParams(next, templateRef.current, keys);
         next = repaired.params;
         const resets = repaired.resets.filter((r) => !keys.includes(r.key));
         if (resets.length > 0) {

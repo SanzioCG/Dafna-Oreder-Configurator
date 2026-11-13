@@ -1464,8 +1464,8 @@ var desk_v1_default = {
       uiStep: "size",
       customerVisible: true,
       unconfirmed: false,
-      customerValues: [740],
-      note: "Work-top height. EN 527-1: fixed-height desks 740 \xB1 20 (DESK_HEIGHT_NOT_ERGONOMIC outside). The lift frame adjusts on site; 740 is its drawn height."
+      customerValues: [740, 1100],
+      note: "Work-top height. EN 527-1: fixed-height desks 740 \xB1 20 (DESK_HEIGHT_NOT_ERGONOMIC outside, so customers can pick 1100 only with the lift frame). Lift frame: 740 sitting / 1100 standing shown to the customer (standing height unconfirmed; the frame adjusts continuously on site)."
     },
     {
       key: "legs",
@@ -4478,6 +4478,8 @@ var ru = {
   "creason.DOOR_TOO_WIDE": "\u041F\u0440\u0438 \u0442\u0430\u043A\u043E\u0439 \u0448\u0438\u0440\u0438\u043D\u0435 \u0434\u0432\u0435\u0440\u044C \u0431\u0443\u0434\u0435\u0442 \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u0448\u0438\u0440\u043E\u043A\u043E\u0439",
   "creason.default": "\u041D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u043F\u0440\u0438 \u044D\u0442\u043E\u043C \u0440\u0430\u0437\u043C\u0435\u0440\u0435",
   // D-8: office pedestal + desk
+  "c.heightSit": "\u0440\u0430\u0431\u043E\u0442\u0430 \u0441\u0438\u0434\u044F",
+  "c.heightStand": "\u0440\u0430\u0431\u043E\u0442\u0430 \u0441\u0442\u043E\u044F",
   "step.size.title.wardrobe": "\u0413\u0434\u0435 \u0431\u0443\u0434\u0435\u0442 \u0441\u0442\u043E\u044F\u0442\u044C \u0448\u043A\u0430\u0444?",
   "step.size.hint.wardrobe": "\u0418\u0437\u043C\u0435\u0440\u044C\u0442\u0435 \u0448\u0438\u0440\u0438\u043D\u0443 \u0441\u0442\u0435\u043D\u044B",
   "step.size.title.pedestal": "\u0420\u0430\u0437\u043C\u0435\u0440 \u0442\u0443\u043C\u0431\u044B",
@@ -4543,7 +4545,7 @@ var ru = {
   "present.legs": "\u041E\u043F\u043E\u0440\u044B",
   "creason.FILE_DRAWER_TOO_SMALL": "\u041F\u0440\u0438 \u044D\u0442\u043E\u0439 \u0448\u0438\u0440\u0438\u043D\u0435 \u043F\u0430\u043F\u043A\u0430 A4 \u043D\u0435 \u043F\u043E\u043C\u0435\u0449\u0430\u0435\u0442\u0441\u044F: \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 45 \u0441\u043C",
   "creason.PEDESTAL_TOO_HIGH": "\u041D\u0435 \u043F\u043E\u043C\u0435\u0449\u0430\u0435\u0442\u0441\u044F \u043F\u043E\u0434 \u0441\u0442\u043E\u043B",
-  "creason.DESK_HEIGHT_NOT_ERGONOMIC": "\u042D\u0442\u0430 \u0432\u044B\u0441\u043E\u0442\u0430 \u043D\u0435\u0443\u0434\u043E\u0431\u043D\u0430",
+  "creason.DESK_HEIGHT_NOT_ERGONOMIC": "\u0422\u043E\u043B\u044C\u043A\u043E \u0441 \u043F\u043E\u0434\u044A\u0451\u043C\u043D\u044B\u043C \u043A\u0430\u0440\u043A\u0430\u0441\u043E\u043C",
   "creason.DESK_TOO_SMALL": "\u0421\u0442\u043E\u043B \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u043C\u0430\u043B\u0435\u043D\u044C\u043A\u0438\u0439",
   "issue.FILE_DRAWER_TOO_SMALL": "\u042F\u0449\u0438\u043A \u0434\u043B\u044F \u043F\u0430\u043F\u043E\u043A A4 \u043C\u0430\u043B: \u043A\u043E\u0440\u043E\u0431 {boxWidthMm} \xD7 {boxHeightMm} \u043C\u043C, \u043D\u0443\u0436\u043D\u043E \u2265 {minWidthMm} \xD7 {minHeightMm} \u043C\u043C.",
   "issue.PEDESTAL_TOO_HIGH": "\u0422\u0443\u043C\u0431\u0430 \u0432\u044B\u0441\u043E\u0442\u043E\u0439 {heightMm} \u043C\u043C \u043D\u0435 \u043F\u043E\u043C\u0435\u0449\u0430\u0435\u0442\u0441\u044F \u043F\u043E\u0434 \u0441\u0442\u043E\u043B (\u2264 {maxMm} \u043C\u043C).",
@@ -4823,6 +4825,8 @@ var uz = {
   "creason.DOOR_TOO_WIDE": "Bu kenglikda eshik juda keng bo'lib qoladi",
   "creason.default": "Bu o'lchamda mumkin emas",
   // D-8: office pedestal + desk
+  "c.heightSit": "o'tirib ishlash",
+  "c.heightStand": "turib ishlash",
   "step.size.title.wardrobe": "Shkaf qayerga turadi?",
   "step.size.hint.wardrobe": "Devor kengligini o'lchang",
   "step.size.title.pedestal": "Tumba o'lchami",
@@ -4888,7 +4892,7 @@ var uz = {
   "present.legs": "Oyoq",
   "creason.FILE_DRAWER_TOO_SMALL": "Bu kenglikda A4 papka sig'maydi: 45 sm tanlang",
   "creason.PEDESTAL_TOO_HIGH": "Stol ostiga sig'maydi",
-  "creason.DESK_HEIGHT_NOT_ERGONOMIC": "Bu balandlik qulay emas",
+  "creason.DESK_HEIGHT_NOT_ERGONOMIC": "Faqat ko'tariladigan karkasda",
   "creason.DESK_TOO_SMALL": "Stol juda kichik",
   "issue.FILE_DRAWER_TOO_SMALL": "A4 papka tortmasi kichik: quti {boxWidthMm} \xD7 {boxHeightMm} mm, kerak \u2265 {minWidthMm} \xD7 {minHeightMm} mm.",
   "issue.PEDESTAL_TOO_HIGH": "Tumba balandligi {heightMm} mm stol ostiga sig'maydi (\u2264 {maxMm} mm).",

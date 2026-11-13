@@ -5,6 +5,8 @@ import type { Mode } from '../mode';
 import type { Configurator } from '../state/useConfigurator';
 import { fromDisplay, toDisplay, unitSystemFor } from '../viewer/dimensions';
 import { DimensionControl } from './DimensionControl';
+import { blockingIssue } from './optionAvailability';
+import { customerReason } from './plainText';
 import { ChevronIcon } from './icons';
 import { Toggle } from './Toggle';
 
@@ -73,18 +75,25 @@ export function SizeStep({ mode, config }: { mode: Mode; config: Configurator })
           <div className="chips" role="radiogroup" aria-label={label}>
             {values.map((mm) => {
               const selected = current === mm;
+              const def = getParamDef(config.template, key);
+              const code =
+                selected || !def
+                  ? null
+                  : blockingIssue(def, mm, config.params, mode, config.template);
               return (
                 <button
                   key={mm}
                   type="button"
                   role="radio"
                   aria-checked={selected}
+                  disabled={code !== null}
                   data-value={mm}
                   className={selected ? 'segment chip active' : 'segment chip'}
                   onClick={() => config.setParam(key, mm)}
                 >
                   {`${toDisplay(mm, units)} ${unit}`}
                   {hint && <small className="chip-hint">{hint(mm)}</small>}
+                  {code && <small className="chip-hint">{customerReason(t, code)}</small>}
                 </button>
               );
             })}
@@ -99,7 +108,13 @@ export function SizeStep({ mode, config }: { mode: Mode; config: Configurator })
           <p className="muted">{t(`step.size.hint.${config.product}`)}</p>
         </div>
         {chipGroup('width', t('param.width'))}
-        {chipGroup('height', t('param.height'))}
+        {chipGroup(
+          'height',
+          t('param.height'),
+          config.product === 'desk'
+            ? (mm) => t(mm >= 1000 ? 'c.heightStand' : 'c.heightSit')
+            : undefined,
+        )}
         {chipGroup(
           'depth',
           t('param.depth'),

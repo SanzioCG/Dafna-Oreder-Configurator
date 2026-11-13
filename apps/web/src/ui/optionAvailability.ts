@@ -6,7 +6,7 @@ import {
   type Template,
 } from '@dafna/engine';
 import type { Mode } from '../mode';
-import { TEMPLATE, isCustomerBlocking } from '../state/useConfigurator';
+import { TEMPLATE, isCustomerBlocking, repairCustomerParams } from '../state/useConfigurator';
 
 /**
  * Customer mode: an enum option that would produce an engine error or a blocking warning
@@ -21,6 +21,9 @@ export function blockingIssue(
   template: Template = TEMPLATE,
 ): string | null {
   if (mode === 'staff') return null;
-  const issue = validate({ ...params, [def.key]: option }, template).find(isCustomerBlocking);
+  // what the customer would get: the option plus the automatic resets it causes (toast);
+  // only an option that is still blocked after those resets is disabled
+  const trial = repairCustomerParams({ ...params, [def.key]: option }, template, [def.key]).params;
+  const issue = validate(trial, template).find(isCustomerBlocking);
   return issue?.code ?? null;
 }

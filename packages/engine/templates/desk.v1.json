@@ -47,8 +47,8 @@
       "uiStep": "size",
       "customerVisible": true,
       "unconfirmed": false,
-      "customerValues": [740],
-      "note": "Work-top height. EN 527-1: fixed-height desks 740 ± 20 (DESK_HEIGHT_NOT_ERGONOMIC outside). The lift frame adjusts on site; 740 is its drawn height."
+      "customerValues": [740, 1100],
+      "note": "Work-top height. EN 527-1: fixed-height desks 740 ± 20 (DESK_HEIGHT_NOT_ERGONOMIC outside, so customers can pick 1100 only with the lift frame). Lift frame: 740 sitting / 1100 standing shown to the customer (standing height unconfirmed; the frame adjusts continuously on site)."
     },
     {
       "key": "legs",

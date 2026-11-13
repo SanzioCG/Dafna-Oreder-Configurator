@@ -294,6 +294,8 @@ export const uz = {
   'creason.default': "Bu o'lchamda mumkin emas",
 
   // D-8: office pedestal + desk
+  'c.heightSit': "o'tirib ishlash",
+  'c.heightStand': 'turib ishlash',
   'step.size.title.wardrobe': 'Shkaf qayerga turadi?',
   'step.size.hint.wardrobe': "Devor kengligini o'lchang",
   'step.size.title.pedestal': "Tumba o'lchami",
@@ -361,7 +363,7 @@ export const uz = {
   'present.legs': 'Oyoq',
   'creason.FILE_DRAWER_TOO_SMALL': "Bu kenglikda A4 papka sig'maydi: 45 sm tanlang",
   'creason.PEDESTAL_TOO_HIGH': "Stol ostiga sig'maydi",
-  'creason.DESK_HEIGHT_NOT_ERGONOMIC': 'Bu balandlik qulay emas',
+  'creason.DESK_HEIGHT_NOT_ERGONOMIC': "Faqat ko'tariladigan karkasda",
   'creason.DESK_TOO_SMALL': 'Stol juda kichik',
   'issue.FILE_DRAWER_TOO_SMALL':
     'A4 papka tortmasi kichik: quti {boxWidthMm} × {boxHeightMm} mm, kerak ≥ {minWidthMm} × {minHeightMm} mm.',

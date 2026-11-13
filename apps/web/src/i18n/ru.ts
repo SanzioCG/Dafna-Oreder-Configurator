@@ -290,6 +290,8 @@ export const ru: Messages = {
   'creason.default': 'Недоступно при этом размере',
 
   // D-8: office pedestal + desk
+  'c.heightSit': 'работа сидя',
+  'c.heightStand': 'работа стоя',
   'step.size.title.wardrobe': 'Где будет стоять шкаф?',
   'step.size.hint.wardrobe': 'Измерьте ширину стены',
   'step.size.title.pedestal': 'Размер тумбы',
@@ -355,7 +357,7 @@ export const ru: Messages = {
   'present.legs': 'Опоры',
   'creason.FILE_DRAWER_TOO_SMALL': 'При этой ширине папка A4 не помещается: выберите 45 см',
   'creason.PEDESTAL_TOO_HIGH': 'Не помещается под стол',
-  'creason.DESK_HEIGHT_NOT_ERGONOMIC': 'Эта высота неудобна',
+  'creason.DESK_HEIGHT_NOT_ERGONOMIC': 'Только с подъёмным каркасом',
   'creason.DESK_TOO_SMALL': 'Стол слишком маленький',
   'issue.FILE_DRAWER_TOO_SMALL':
     'Ящик для папок A4 мал: короб {boxWidthMm} × {boxHeightMm} мм, нужно ≥ {minWidthMm} × {minHeightMm} мм.',

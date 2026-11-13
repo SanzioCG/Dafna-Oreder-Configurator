@@ -121,4 +121,25 @@ describe('D-8 desk', () => {
       '120 × 74 × 70 sm · Stoleshnitsa: Белый 22 мм · Oyoq: Белый шагрень',
     );
   });
+
+  it('lift frame: 74 sm sitting / 110 sm standing; fixed legs keep 74 sm', () => {
+    render(<App />);
+    pickProduct('desk');
+    pickModel('model.deskLift');
+    const height = () => screen.getByRole('radiogroup', { name: uz['param.height'] });
+    const chip = (label: string) =>
+      within(height()).getByRole('radio', { name: new RegExp(`^${label}`) }) as HTMLButtonElement;
+    expect(chip('74 sm').textContent).toContain(uz['c.heightSit']);
+    expect(chip('110 sm').textContent).toContain(uz['c.heightStand']);
+    expect(chip('110 sm').disabled).toBe(false);
+    fireEvent.click(chip('110 sm'));
+    expect(stub().dataset.height).toBe('1100');
+    // switching to fixed legs brings the desk back to 74 sm, and 110 sm is not offered
+    fireEvent.click(tab(uz['step.interior.desk']));
+    fireEvent.click(option('ldsp'));
+    expect(stub().dataset.height).toBe('740');
+    fireEvent.click(tab(uz['step.size']));
+    expect(chip('110 sm').disabled).toBe(true);
+    expect(chip('110 sm').textContent).toContain(uz['creason.DESK_HEIGHT_NOT_ERGONOMIC']);
+  });
 });
