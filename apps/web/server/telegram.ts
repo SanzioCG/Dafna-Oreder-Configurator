@@ -44,6 +44,8 @@ export interface TelegramConfig {
   fetch?: typeof fetch;
   /** non-production only: every call fails (verifies the failure + retry path) */
   forceFail?: boolean;
+  /** D-11: the order sheet PDF for the workshop (null = cannot be built) */
+  orderPdf?: (lead: LeadRecord) => Promise<Uint8Array | null>;
 }
 
 export class TelegramNotifier implements Notifier {
@@ -71,6 +73,35 @@ export class TelegramNotifier implements Notifier {
   }
 
   async notify(lead: LeadRecord, renderPng?: Uint8Array): Promise<void> {
+    await this.sendSummary(lead, renderPng);
+    await this.sendOrderPdf(lead);
+  }
+
+  /**
+   * D-11: the order sheet as a document after the summary. A bonus like the photo: when it
+   * cannot be built or sent, the notification still counts as delivered (the summary is there,
+   * and a retry would only duplicate it).
+   */
+  private async sendOrderPdf(lead: LeadRecord): Promise<void> {
+    if (!this.config.orderPdf) return;
+    try {
+      const pdf = await this.config.orderPdf(lead);
+      if (!pdf) return;
+      const form = new FormData();
+      form.append('chat_id', this.config.chatId);
+      form.append('caption', `📄 ${lead.id}: chizma, detallar va furnitura`);
+      form.append(
+        'document',
+        new Blob([pdf as BlobPart], { type: 'application/pdf' }),
+        `Dafna-${lead.id}.pdf`,
+      );
+      await this.call('sendDocument', form);
+    } catch {
+      // the summary is delivered; the PDF can be rebuilt from the sheet row's params
+    }
+  }
+
+  private async sendSummary(lead: LeadRecord, renderPng?: Uint8Array): Promise<void> {
     const text = telegramText(lead);
     if (renderPng && text.length <= CAPTION_LIMIT) {
       const form = new FormData();

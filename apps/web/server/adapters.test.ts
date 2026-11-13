@@ -109,6 +109,34 @@ describe('Telegram notifier', () => {
     expect((err as Error).message).not.toContain('T0KEN');
   });
 
+  it('D-11: the order PDF follows the summary as a document; a PDF failure never fails it', async () => {
+    const f = fakeFetch((c) =>
+      c.url.endsWith('sendDocument')
+        ? { status: 400, json: { ok: false } }
+        : { json: { ok: true } },
+    );
+    const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46]);
+    const n = new TelegramNotifier({
+      token: 'T',
+      chatId: '1',
+      fetch: f.impl,
+      orderPdf: async () => pdf,
+    });
+    await n.notify(LEAD);
+    expect(f.calls.map((c) => c.url.split('/').pop())).toEqual(['sendMessage', 'sendDocument']);
+    const doc = (f.calls[1]!.body as FormData).get('document') as File;
+    expect(doc.name).toBe('Dafna-DFN-261105-K7QM.pdf');
+    expect(doc.type).toBe('application/pdf');
+
+    const broken = new TelegramNotifier({
+      token: 'T',
+      chatId: '1',
+      fetch: fakeFetch(() => ({ json: { ok: true } })).impl,
+      orderPdf: () => Promise.reject(new Error('engine')),
+    });
+    await expect(broken.notify(LEAD)).resolves.toBeUndefined();
+  });
+
   it('forceFail (preview-only failure simulation) never calls Telegram', async () => {
     const f = fakeFetch(() => ({ json: { ok: true } }));
     const n = new TelegramNotifier({ token: 'T', chatId: '1', fetch: f.impl, forceFail: true });

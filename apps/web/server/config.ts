@@ -1,3 +1,4 @@
+import { buildOrderPdf, orderPdfInput } from './orderPdf';
 import { RateLimiter } from './rateLimit';
 import { GoogleSheetsStore, parseServiceAccount } from './sheets';
 import type { SubmitDeps } from './submit';
@@ -37,6 +38,10 @@ export function notifierFromEnv(env: Env): TelegramNotifier {
     token: env.TELEGRAM_BOT_TOKEN ?? '',
     chatId: env.TELEGRAM_CHAT_ID ?? '',
     forceFail: env.TELEGRAM_FORCE_FAIL === '1' && env.VERCEL_ENV !== 'production',
+    orderPdf: async (lead) => {
+      const input = orderPdfInput(lead);
+      return input ? buildOrderPdf(input) : null;
+    },
   });
 }
 
