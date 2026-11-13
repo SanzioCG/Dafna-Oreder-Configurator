@@ -653,7 +653,7 @@ describe('presentation — designer final (D-4)', () => {
     expect(head.textContent).toContain(uz['present.subtitle']);
     // D-5: overall size (sm) next to the decors
     expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '136 × 190 × 60 sm · Korpus: Oq · Eshik: Shampan zarang',
+      '136 × 190 × 60 sm · Korpus: Белый шагрень · Eshik: Клён сахарный шампань',
     );
   });
 
@@ -663,7 +663,7 @@ describe('presentation — designer final (D-4)', () => {
     fireEvent.click(toggle(uz['c.withDoors']));
     fireEvent.click(tab(uz['step.review']));
     expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '136 × 190 × 60 sm · Korpus: Oq',
+      '136 × 190 × 60 sm · Korpus: Белый шагрень',
     );
   });
 
@@ -686,7 +686,7 @@ describe('presentation — designer final (D-4)', () => {
     render(<App />);
     fireEvent.click(tab(uz['step.review']));
     expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '1360 × 1900 × 600 mm · Korpus: Oq · Eshik: Oq',
+      '1360 × 1900 × 600 mm · Korpus: Белый шагрень · Eshik: Белый шагрень',
     );
   });
 });
