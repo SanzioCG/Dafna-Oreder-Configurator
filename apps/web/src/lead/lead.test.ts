@@ -1,4 +1,5 @@
-import { defaultParams, wardrobeTemplate } from '@dafna/engine';
+import { currentCatalog, defaultParams, wardrobeTemplate } from '@dafna/engine';
+import { translate } from '../i18n/translate';
 import { describe, expect, it } from 'vitest';
 import { submitApplication } from './api';
 import { validateContact } from './contact';
@@ -48,13 +49,23 @@ describe('contact validation', () => {
   });
 });
 
+describe('decor names are never translated', () => {
+  it('every catalog 1.0.0 decor has the same name in uz and ru', () => {
+    for (const m of currentCatalog.materials.filter((x) => x.customerVisible)) {
+      expect(translate('uz', m.decorName), m.id).toBe(translate('ru', m.decorName));
+      expect(translate('uz', m.decorName), m.id).not.toBe(m.decorName); // key exists
+    }
+  });
+});
+
 describe('lead summary', () => {
   it('default wardrobe: sizes, decors, sections and doors in uz / ru', () => {
     const uz = summarizeParams(defaultParams(wardrobeTemplate), 'uz');
     expect(uz.sizeMm).toBe('1360 × 1900 × 600');
     expect(uz.sizeCm).toBe('136 × 190 × 60 sm');
-    expect(uz.corpus).toBe('Oq');
-    expect(uz.door).toBe('Oq');
+    // decor names are catalog names, the same in uz and ru (never translated)
+    expect(uz.corpus).toBe('Белый шагрень');
+    expect(uz.door).toBe('Белый шагрень');
     expect(uz.sections).toMatch(/^2 ta qism: 1\) .+; 2\) .+$/);
     expect(uz.doors).toMatch(/^1\) .+; 2\) .+$/);
     const ru = summarizeParams(defaultParams(wardrobeTemplate), 'ru');

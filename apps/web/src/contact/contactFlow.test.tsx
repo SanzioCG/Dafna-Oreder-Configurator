@@ -130,7 +130,7 @@ describe('D-5 contact screen', () => {
     expect(screen.getByText(uz['submitted.title'])).toBeTruthy();
     expect(screen.getByText(uz['submitted.text'])).toBeTruthy();
     expect(screen.getByTestId('submitted-summary').textContent).toBe(
-      '136 × 190 × 60 sm · Korpus: Oq · Eshik: Oq',
+      '136 × 190 × 60 sm · Korpus: Белый шагрень · Eshik: Белый шагрень',
     );
   });
 

@@ -131,7 +131,7 @@ describe('sheet row mapping', () => {
     expect(row[4]).toBe("G'ulomov");
     expect(row[5]).toBe('+998901234567');
     expect(row[6]).toBe('1360 × 1900 × 600');
-    expect(row[7]).toBe('Oq');
+    expect(row[7]).toBe('Белый шагрень');
     expect(row[11]).toBe('chilonzor-1');
     expect(row[14]).toBe(''); // manager note starts empty
     expect(JSON.parse(String(row[15]))).toEqual(defaultParams(wardrobeTemplate));
@@ -176,8 +176,8 @@ describe('POST /api/submit', () => {
       }),
     );
     const lead = store.rows[0]!;
-    expect(lead.corpus).toBe('Kulrang tosh (EGGER U727 ST9)');
-    expect(lead.door).toBe('Gladston eman, tamaki (EGGER H3325 ST28)');
+    expect(lead.corpus).toBe('Серый камень (EGGER U727 ST9)');
+    expect(lead.door).toBe('Дуб Гладстоун табак (EGGER H3325 ST28)');
     expect(lead.templateVersion).toBe('0.6.0');
   });
 
