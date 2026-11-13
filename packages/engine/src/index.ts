@@ -41,6 +41,8 @@ export {
   migrateOrderDraft,
   mapMaterialsV0toV1,
   MATERIALS_CHANGED_IN,
+  INTERIOR_CHANGED_IN,
+  INTERIOR_MAP_07,
   type MigrationOptions,
 } from './migrate.js';
 export {
@@ -58,6 +60,7 @@ export {
   evenShelfBottoms,
   planInterior,
   resolveInterior,
+  type Ergonomics,
   slideLength,
   type InteriorConstants,
   type InteriorPlan,

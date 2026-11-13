@@ -1,4 +1,4 @@
-import wardrobeV5Json from '../templates/wardrobe.v5.json' with { type: 'json' };
+import wardrobeV6Json from '../templates/wardrobe.v6.json' with { type: 'json' };
 import type {
   Material,
   MaterialCatalog,
@@ -9,11 +9,11 @@ import type {
 } from './types.js';
 
 /**
- * The current wardrobe (shkaf) template: v5 (templateVersion 0.6.0, D-6: Dafna's real decors,
- * catalog 1.0.0; construction = v4 / ADR-009, same generator). Older templates (v0 D-0 … v4
- * D-3a.1) are archived (regenerate.ts); older order drafts are migrated with migrateOrderDraft().
+ * The current wardrobe (shkaf) template: v6 (templateVersion 0.7.0, D-7: standard customer sizes
+ * and GOST 13025.1-85 storage presets; catalog 1.0.0, same generator). Older templates (v0 D-0 …
+ * v5 D-6) are archived (regenerate.ts); older order drafts are migrated with migrateOrderDraft().
  */
-export const wardrobeTemplate: Template = wardrobeV5Json as Template;
+export const wardrobeTemplate: Template = wardrobeV6Json as Template;
 
 export function getParamDef(template: Template, key: string): ParamDef | undefined {
   return template.parameters.find((p) => p.key === key);

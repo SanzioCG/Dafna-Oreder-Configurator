@@ -1085,6 +1085,23 @@ p {
   font-variant-numeric: tabular-nums;
 }
 
+/* D-7 standard sizes: 8 widths in 4 columns, height / depth as two big choices */
+[data-step='size'] [data-param='width'] .chips {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+[data-step='size'] [data-param='height'] .chips,
+[data-step='size'] [data-param='depth'] .chips {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chip-hint {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: normal;
+  line-height: var(--lh-snug);
+}
+
 .disclosure {
   align-self: flex-start;
   padding: 0 var(--space-2);

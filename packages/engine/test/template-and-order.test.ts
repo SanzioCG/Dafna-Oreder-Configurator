@@ -11,10 +11,13 @@ import {
   migrateOrderDraft,
   migrateParamsFromD0,
   toOrderDraft,
-  wardrobeTemplate as T,
+  TEMPLATE_ARCHIVE,
   type OrderDraft,
   type Panel,
 } from '../src/index.js';
+
+/** Template 0.6.0 spec (D-6); the current template 0.7.0 is specified in test/ergonomics.test.ts. */
+const T = TEMPLATE_ARCHIVE['0.6.0']!;
 import d0Default from './fixtures/d0-order-draft.default.json' with { type: 'json' };
 import d0T18 from './fixtures/d0-order-draft.w2000-t18.json' with { type: 'json' };
 import { toAdr009 } from './construction.js';
@@ -281,7 +284,10 @@ describe('toOrderDraft (dafna-order/0.3-draft)', () => {
     doorMaterial: 'egger_u963_st9_16',
   };
   const result = generate(T, params);
-  const draft = toOrderDraft(params, result, { now: () => new Date('2026-11-05T10:00:00.000Z') });
+  const draft = toOrderDraft(params, result, {
+    template: T,
+    now: () => new Date('2026-11-05T10:00:00.000Z'),
+  });
 
   it('has the 0.2 schema, materials, doors and interior per section, rails', () => {
     expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');

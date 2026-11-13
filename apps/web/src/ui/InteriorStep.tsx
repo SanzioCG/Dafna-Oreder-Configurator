@@ -11,9 +11,16 @@ import { SelectionGrid } from './SelectionGrid';
 import { StatusMessage } from './StatusMessage';
 import { Toggle } from './Toggle';
 
-/** Display order of the interior options (plain-language list, brief D-4). */
+/**
+ * Display order of the interior options (plain-language list, brief D-4). Only the options the
+ * current template offers are shown: 0.7.0 (D-7) has the GOST storage set (long / short clothes),
+ * older templates the rail presets.
+ */
 export const INTERIOR_ORDER = [
   'auto',
+  'long_hang',
+  'short_hang',
+  'short_hang_drawers',
   'rail',
   'shelves',
   'rail_shelf',

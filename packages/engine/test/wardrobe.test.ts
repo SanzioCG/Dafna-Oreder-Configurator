@@ -3,11 +3,17 @@ import {
   defaultParams,
   generate,
   validate,
-  wardrobeTemplate as T,
+  TEMPLATE_ARCHIVE,
   type Panel,
   type Params,
   type Section,
 } from '../src/index.js';
+
+/**
+ * Generator mechanics (D-1b…D-6 presets) are pinned to template 0.6.0: same generator as the
+ * current template, whose own GOST presets are covered by test/ergonomics.test.ts (D-7).
+ */
+const T = TEMPLATE_ARCHIVE['0.6.0']!;
 
 /** Carcass tests run without doors and without interior (D-0 geometry); see doors/interior tests. */
 const NO_INTERIOR = {

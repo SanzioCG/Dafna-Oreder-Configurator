@@ -84,6 +84,11 @@ const drawer = (y: number) => (
   </g>
 );
 
+/** a hanging garment under a rail at y: short (to y+6) or long (to y+12) */
+const garment = (y: number, long: boolean) => (
+  <path key={`g${y}${long}`} d={`M10 ${y + 2}l-1.5 ${long ? 12 : 6}h7l-1.5 -${long ? 12 : 6}`} />
+);
+
 const PRESET_PARTS: Record<InteriorPreset, ReactNode[]> = {
   empty: [],
   shelves: [shelf(7), shelf(12), shelf(17)],
@@ -91,6 +96,9 @@ const PRESET_PARTS: Record<InteriorPreset, ReactNode[]> = {
   rail_shelf: [shelf(6), rail(9)],
   drawers_shelves: [shelf(8), shelf(13.5), drawer(17.5)],
   rail_drawers: [rail(5), drawer(13), drawer(17.5)],
+  long_hang: [shelf(4.5), rail(6), garment(7.5, true)],
+  short_hang: [rail(5), garment(6.5, false), shelf(15), shelf(18.5)],
+  short_hang_drawers: [rail(5), garment(6.5, false), drawer(14), drawer(18)],
 };
 
 /** Interior preset icon; `auto` draws a small "A" badge over the resolved preset. */

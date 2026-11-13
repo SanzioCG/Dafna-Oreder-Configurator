@@ -31,6 +31,11 @@ export interface ParamDef {
   materialKinds?: MaterialKind[];
   /** 1-based section number this parameter applies to (UI hides it if there are fewer sections) */
   appliesToSection?: number;
+  /**
+   * int only (D-7): the standard sizes a customer may choose. Staff keep the full min..max
+   * range; the API rejects a customer application with any other value (NON_STANDARD_SIZE).
+   */
+  customerValues?: number[];
 }
 
 export interface TemplateConstant {
@@ -160,7 +165,18 @@ export interface GrooveOperation {
 export type Operation = DrillingOperation | GrooveOperation;
 
 export type InteriorPreset =
-  'empty' | 'shelves' | 'rail' | 'rail_shelf' | 'drawers_shelves' | 'rail_drawers';
+  | 'empty'
+  | 'shelves'
+  | 'rail'
+  | 'rail_shelf'
+  | 'drawers_shelves'
+  | 'rail_drawers'
+  /** D-7 (GOST 13025.1-85): long clothes, rail top <= 1900, >= 1400 mm below, antresol above */
+  | 'long_hang'
+  /** D-7: short clothes, >= 900 mm below the rail, shelves under the hanging zone */
+  | 'short_hang'
+  /** D-7: drawers at the bottom, short clothes above */
+  | 'short_hang_drawers';
 
 export interface ShelfSummary {
   /** panel id */

@@ -49,6 +49,13 @@ const typeKeys = (text: string) => [...text].forEach((ch) => key(ch));
 const field = (id: string) => document.getElementById(`contact-${id}`) as HTMLInputElement;
 const submitBtn = () => screen.getByTestId('contact-submit') as HTMLButtonElement;
 const next = () => fireEvent.click(screen.getByTestId('kb-next'));
+/** D-7: customers choose a standard width */
+const pickWidth = (label: string) =>
+  fireEvent.click(
+    within(screen.getByRole('radiogroup', { name: uz['param.width'] })).getByRole('radio', {
+      name: label,
+    }),
+  );
 
 function start() {
   render(<App />);
@@ -122,7 +129,7 @@ describe('D-5 contact screen', () => {
     });
     expect(body.lang).toBe('uz');
     expect(String(body.idempotencyKey).length).toBeGreaterThanOrEqual(16);
-    expect((body.params as Record<string, unknown>).width).toBe(1360);
+    expect((body.params as Record<string, unknown>).width).toBe(1500);
     expect(body.website).toBeUndefined(); // honeypot stays empty
     expect(JSON.stringify(body)).not.toMatch(/TOKEN|private_key|SHEET/i);
     expect(flow()).toBe('submitted');
@@ -130,7 +137,7 @@ describe('D-5 contact screen', () => {
     expect(screen.getByText(uz['submitted.title'])).toBeTruthy();
     expect(screen.getByText(uz['submitted.text'])).toBeTruthy();
     expect(screen.getByTestId('submitted-summary').textContent).toBe(
-      '136 × 190 × 60 sm · Korpus: Белый шагрень · Eshik: Белый шагрень',
+      '150 × 210 × 60 sm · Korpus: Белый шагрень · Eshik: Белый шагрень',
     );
   });
 
@@ -177,14 +184,12 @@ describe('D-5 contact screen', () => {
 
   it('"Konfiguratsiyaga qaytish": back to the presentation, nothing lost', () => {
     start();
-    fireEvent.click(
-      screen.getByRole('button', { name: `${uz['param.width']}: ${uz['control.increase']}` }),
-    );
+    pickWidth('180 sm');
     toContact();
     fireEvent.click(screen.getByTestId('contact-back'));
     expect(flow()).toBe('ready_to_confirm');
     fireEvent.click(screen.getByRole('button', { name: uz['present.edit'] }));
-    expect(stub().dataset.width).toBe('1370');
+    expect(stub().dataset.width).toBe('1800');
   });
 });
 
@@ -194,9 +199,7 @@ describe('D-5 session reset', () => {
     start();
     fireEvent.click(screen.getByTestId('theme-toggle')); // customer picks Light
     expect(document.documentElement.dataset.theme).toBe('light');
-    fireEvent.click(
-      screen.getByRole('button', { name: `${uz['param.width']}: ${uz['control.increase']}` }),
-    );
+    pickWidth('180 sm');
     toContact();
     fillValid();
     await act(async () => fireEvent.click(submitBtn()));
@@ -206,7 +209,7 @@ describe('D-5 session reset', () => {
     expect(window.localStorage.getItem('dafna.theme')).toBeNull();
     expect(screen.queryByTestId('contact-screen')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: uz['start.scratch'] }));
-    expect(stub().dataset.width).toBe('1360');
+    expect(stub().dataset.width).toBe('1500');
   });
 
   it('the 45 s countdown also resets the session, language back to uz', async () => {

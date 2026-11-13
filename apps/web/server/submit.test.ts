@@ -130,7 +130,7 @@ describe('sheet row mapping', () => {
     expect(row[3]).toBe('Aziz');
     expect(row[4]).toBe("G'ulomov");
     expect(row[5]).toBe('+998901234567');
-    expect(row[6]).toBe('1360 × 1900 × 600');
+    expect(row[6]).toBe('1500 × 2100 × 600');
     expect(row[7]).toBe('Белый шагрень');
     expect(row[11]).toBe('chilonzor-1');
     expect(row[14]).toBe(''); // manager note starts empty
@@ -178,7 +178,7 @@ describe('POST /api/submit', () => {
     const lead = store.rows[0]!;
     expect(lead.corpus).toBe('Серый камень (EGGER U727 ST9)');
     expect(lead.door).toBe('Дуб Гладстоун табак (EGGER H3325 ST28)');
-    expect(lead.templateVersion).toBe('0.6.0');
+    expect(lead.templateVersion).toBe('0.7.0');
   });
 
   it('a new key -> a new application', async () => {
@@ -214,6 +214,19 @@ describe('POST /api/submit', () => {
     expect(status).toBe(503);
     expect(json.error.code).toBe('storage_failed');
     expect(notifier.calls).toBe(0);
+  });
+
+  it('D-7: kiosk applications use standard sizes only (NON_STANDARD_SIZE)', async () => {
+    const odd = await send(body({ params: { ...defaultParams(wardrobeTemplate), width: 1370 } }));
+    expect(odd.status).toBe(422);
+    expect(odd.json.error.issues).toEqual(['NON_STANDARD_SIZE']);
+    const ok = await send(
+      body({
+        params: { ...defaultParams(wardrobeTemplate), width: 2400, height: 2400, depth: 450 },
+      }),
+    );
+    expect(ok.status).toBe(200);
+    expect(store.rows).toHaveLength(1);
   });
 
   it('re-validates the configuration with the engine', async () => {

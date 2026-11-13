@@ -12,6 +12,7 @@ import type {
   Dimensions,
   DoorType,
   GenerateResult,
+  InteriorPreset,
   Issue,
   Material,
   MaterialCatalog,
@@ -165,7 +166,38 @@ export function interiorConstants(template: Template): InteriorConstants {
     railMinDepthMm: n('railMinDepthMm'),
     railMinHangingHeightMm: n('railMinHangingHeightMm'),
     drawerMaxFrontWidthMm: n('drawerMaxFrontWidthMm'),
+    ...ergonomicConstants(template),
   };
+}
+
+type ErgonomicPart = Pick<
+  InteriorConstants,
+  'ergonomics' | 'autoPresetSingle' | 'autoPresetDouble'
+>;
+
+/** D-7: GOST functional sizes and 'auto' presets, only in templates that define them (0.7.0+). */
+function ergonomicConstants(template: Template): ErgonomicPart {
+  const has = (name: string) => template.constants[name] !== undefined;
+  const out: ErgonomicPart = {};
+  if (has('railTopMaxMm')) {
+    const n = (name: string) => getNumberConstant(template, name);
+    out.ergonomics = {
+      railTopMaxMm: n('railTopMaxMm'),
+      railTopToShelfMm: n('railTopToShelfMm'),
+      longHangMinMm: n('longHangMinMm'),
+      shortHangMinMm: n('shortHangMinMm'),
+      shortHangClearMm: n('shortHangClearMm'),
+      drawerTopMaxMm: n('drawerTopMaxMm'),
+      minShelfGapMm: n('minShelfGapMm'),
+    };
+  }
+  if (has('autoPresetDouble')) {
+    out.autoPresetDouble = getStringConstant(template, 'autoPresetDouble') as InteriorPreset;
+  }
+  if (has('autoPresetSingle')) {
+    out.autoPresetSingle = getStringConstant(template, 'autoPresetSingle') as InteriorPreset;
+  }
+  return out;
 }
 
 /** Derives all dimensions from a complete, valid parameter set. */

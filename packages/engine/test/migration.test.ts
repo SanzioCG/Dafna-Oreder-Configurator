@@ -2,14 +2,21 @@ import { describe, expect, it } from 'vitest';
 import {
   defaultParams,
   generate,
-  migrateOrderDraft,
+  migrateOrderDraft as migrateToCurrent,
   migrateParamsFrom01,
   migrateParamsFrom02,
   toOrderDraft,
-  wardrobeTemplate as T,
+  TEMPLATE_ARCHIVE,
   type Panel,
   regenerateApplication,
 } from '../src/index.js';
+
+/**
+ * These chains migrate to template 0.6.0 (the presets their geometry checks are about);
+ * 0.6.0 -> 0.7.0 (GOST presets) is covered by test/ergonomics.test.ts.
+ */
+const T = TEMPLATE_ARCHIVE['0.6.0']!;
+const migrateOrderDraft = (d: unknown) => migrateToCurrent(d, { template: T });
 import { toAdr009 } from './construction.js';
 import appDefault from './fixtures/applications/0.5.0.default.json' with { type: 'json' };
 import appMixed from './fixtures/applications/0.5.0.w2400-4sections-mixed.json' with { type: 'json' };
@@ -181,7 +188,7 @@ describe('full chain D-0 -> 0.1 -> 0.2 -> 0.3', () => {
   it('migrating twice is a no-op; unknown schemas are rejected', () => {
     const once = migrateOrderDraft(d0Default).draft;
     expect(migrateOrderDraft(once).draft).toBe(once);
-    const current = toOrderDraft(defaultParams(T), generate(T, defaultParams(T)));
+    const current = toOrderDraft(defaultParams(T), generate(T, defaultParams(T)), { template: T });
     expect(migrateOrderDraft(current).draft).toBe(current);
     expect(codes(migrateOrderDraft({ schemaVersion: 'dafna-order/9-draft' }).issues)).toEqual([
       'UNSUPPORTED_SCHEMA',

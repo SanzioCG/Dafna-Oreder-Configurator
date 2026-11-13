@@ -14,9 +14,10 @@ export const WIDTH_CHIPS_CM = [100, 120, 150, 180, 200, 240];
 export const SIZE_STEP_MM = 10;
 
 /**
- * Step 1 "Joy" (mint card): "Shkaf qayerga turadi?". Width is the main control (quick chips,
- * a big − value + stepper, slider); height and depth live under "Batafsil"; "Pastki yopiq
- * taglik" = base plinth. Section count is never shown to customers (always auto).
+ * Step 1 "Joy" (mint card): "Shkaf qayerga turadi?". D-7: customers choose standard sizes only
+ * (template customerValues: width, height, depth chips; depth 60 sm = hanging clothes, 45 sm =
+ * shelves and drawers) plus "Pastki yopiq taglik" (base plinth). Staff keep free input (chips,
+ * stepper, slider, height and depth under "Batafsil"). Section count is always auto for customers.
  * Customers see whole centimetres, staff millimetres; the engine stays in mm.
  */
 export function SizeStep({ mode, config }: { mode: Mode; config: Configurator }) {
@@ -55,6 +56,65 @@ export function SizeStep({ mode, config }: { mode: Mode; config: Configurator })
 
   const width = Number(config.params.width);
   const plinth = config.params.base === 'plinth';
+
+  // D-7: customers choose standard sizes only (template customerValues); staff keep free input
+  const standard = (key: 'width' | 'height' | 'depth') =>
+    getParamDef(TEMPLATE, key)?.customerValues;
+  if (!staff && standard('width')) {
+    const chipGroup = (
+      key: 'width' | 'height' | 'depth',
+      label: string,
+      hint?: (mm: number) => string,
+    ) => {
+      const values = standard(key) ?? [];
+      const current = Number(config.params[key] ?? getParamDef(TEMPLATE, key)?.default);
+      return (
+        <div className="param" data-param={key}>
+          <span className="param-label">{label}</span>
+          <div className="chips" role="radiogroup" aria-label={label}>
+            {values.map((mm) => {
+              const selected = current === mm;
+              return (
+                <button
+                  key={mm}
+                  type="button"
+                  role="radio"
+                  aria-checked={selected}
+                  data-value={mm}
+                  className={selected ? 'segment chip active' : 'segment chip'}
+                  onClick={() => config.setParam(key, mm)}
+                >
+                  {`${toDisplay(mm, units)} ${unit}`}
+                  {hint && <small className="chip-hint">{hint(mm)}</small>}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      );
+    };
+    return (
+      <section className="card step-card" data-step="size" data-card="size">
+        <div className="card-head">
+          <h2>{t('step.size.title')}</h2>
+          <p className="muted">{t('step.size.hint')}</p>
+        </div>
+        {chipGroup('width', t('param.width'))}
+        {chipGroup('height', t('param.height'))}
+        {chipGroup('depth', t('param.depth'), (mm) =>
+          t(mm >= 560 ? 'c.depthHang' : 'c.depthShallow'),
+        )}
+        <Toggle
+          checked={plinth}
+          onChange={(on) => config.setParam('base', on ? 'plinth' : 'none')}
+          testId="toggle-base"
+        >
+          {t('c.base')}
+        </Toggle>
+      </section>
+    );
+  }
+
   return (
     <section className="card step-card" data-step="size" data-card="size">
       <div className="card-head">

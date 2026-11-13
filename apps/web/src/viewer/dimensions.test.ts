@@ -52,8 +52,8 @@ describe('buildDimensions uses engine output', () => {
     expect(all.map((d) => [d.key, d.kind, d.label])).toEqual([
       ['section-0', 'secondary', fmt(r.sections[0]?.innerWidthMm ?? 0)],
       ['section-1', 'secondary', fmt(r.sections[1]?.innerWidthMm ?? 0)],
-      ['width', 'primary', '136 sm'],
-      ['height', 'primary', '190 sm'],
+      ['width', 'primary', '150 sm'],
+      ['height', 'primary', '210 sm'],
       ['depth', 'primary', '60 sm'],
     ]);
     const primaryOnly = buildDimensions(dims, r.sections, fmt, { primary: true, secondary: false });

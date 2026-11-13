@@ -130,9 +130,18 @@ export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Resp
   const blocking = [...resolved.issues, ...result.issues].filter(
     (i) => isCustomerBlocking(i) || i.code === 'UNKNOWN_PARAM',
   );
-  if (blocking.length > 0 || !result.dimensions) {
+  // D-7: a kiosk application uses the standard sizes only (staff build custom sizes elsewhere)
+  const nonStandard = wardrobeTemplate.parameters.filter(
+    (d) => d.customerValues && !d.customerValues.includes(Number(resolved.params[d.key])),
+  );
+  if (blocking.length > 0 || nonStandard.length > 0 || !result.dimensions) {
     return fail(422, 'invalid_configuration', {
-      issues: [...new Set(blocking.map((i) => i.code))],
+      issues: [
+        ...new Set([
+          ...blocking.map((i) => i.code),
+          ...(nonStandard.length > 0 ? ['NON_STANDARD_SIZE'] : []),
+        ]),
+      ],
     });
   }
 

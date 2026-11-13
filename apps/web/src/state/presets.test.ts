@@ -21,7 +21,7 @@ describe('ready-made models (start screen)', () => {
       expect(r.issues.filter(isCustomerBlocking)).toEqual([]);
       expect(r.panels.length).toBeGreaterThan(0);
       // default height / depth, recommended (auto) interior
-      expect(modelParams(m).height).toBe(1900);
+      expect(modelParams(m).height).toBe(2100);
       expect(modelParams(m).interior1).toBe('auto');
     },
   );

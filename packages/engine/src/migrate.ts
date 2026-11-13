@@ -176,6 +176,29 @@ export const CONSTRUCTION_CHANGED_IN = '0.5.0';
 /** Template version that replaced the placeholder decors with Dafna's catalog 1.0.0 (D-6). */
 export const MATERIALS_CHANGED_IN = '0.6.0';
 
+/** Template version whose interior presets follow GOST 13025.1-85 (D-7). */
+export const INTERIOR_CHANGED_IN = '0.7.0';
+
+/** Pre-0.7.0 hanging presets -> the GOST presets of template 0.7.0. */
+export const INTERIOR_MAP_07: Readonly<Record<string, string>> = {
+  rail: 'long_hang',
+  rail_shelf: 'short_hang',
+  rail_drawers: 'short_hang_drawers',
+};
+
+/** Maps explicit interiorN choices the target template no longer offers (reported after generate). */
+function mapInteriorTo07(input: Params, template: Template): Params {
+  const params: Params = { ...input };
+  for (const def of template.parameters) {
+    if (!def.key.startsWith('interior') || !def.options) continue;
+    const v = params[def.key];
+    if (typeof v === 'string' && !def.options.includes(v) && INTERIOR_MAP_07[v]) {
+      params[def.key] = INTERIOR_MAP_07[v];
+    }
+  }
+  return params;
+}
+
 /**
  * Placeholder decors (catalog 0.1.0) -> catalog 1.0.0 (MATERIAL_MAP_V0_V1). Never silent: every
  * decor that changes is reported as MIGRATION_MATERIAL_CHANGED (the board thickness can change
@@ -294,6 +317,10 @@ export function migrateOrderDraft(
     issues.push(...mapped.issues);
   }
 
+  // D-7: template 0.7.0 replaced rail / rail_shelf / rail_drawers by the GOST presets
+  const toErgonomic = !templateBefore(template.templateVersion, INTERIOR_CHANGED_IN);
+  if (toErgonomic) params = mapInteriorTo07(params, template);
+
   const kept = preserveDoors(params, doorTypesOf(d), template, catalog);
   params = kept.params;
   issues.push(...kept.issues);
@@ -301,6 +328,24 @@ export function migrateOrderDraft(
   const result = generate(template, params, catalog);
   const errors = result.issues.filter((i) => i.severity === 'error');
   if (errors.length > 0) return { draft: null, issues: [...issues, ...errors] };
+
+  // never silently: report every section whose interior fill is now different (mapped preset,
+  // or 'auto' resolving to a GOST preset)
+  if (toErgonomic && templateBefore(fromTemplate, INTERIOR_CHANGED_IN)) {
+    const old = Array.isArray(d.sections) ? (d.sections as Record<string, unknown>[]) : [];
+    result.sections.forEach((s, i) => {
+      const from = old[i]?.preset;
+      if (typeof from === 'string' && from !== s.preset) {
+        issues.push(
+          makeIssue('MIGRATION_INTERIOR_CHANGED', 'warning', `interior${i + 1}`, {
+            sectionNumber: i + 1,
+            from,
+            to: s.preset,
+          }),
+        );
+      }
+    });
+  }
 
   // ADR-009: drafts made before template 0.5.0 had the sides standing on the plinth. With a
   // plinth the regenerated panels differ (side length, plinth strip length) — never silently.
