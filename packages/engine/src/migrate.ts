@@ -1,4 +1,4 @@
-import { materialsV0 } from './catalog.js';
+import { MATERIAL_MAP_V0_V1, currentCatalog } from './catalog.js';
 import { toOrderDraft } from './order.js';
 import { makeIssue } from './params.js';
 import { defaultParams, wardrobeTemplate } from './template.js';
@@ -45,7 +45,7 @@ export function migrateParamsFromD0(
   options: MigrationOptions = {},
 ): { params: Params; issues: Issue[] } {
   const template = options.template ?? wardrobeTemplate;
-  const catalog = options.catalog ?? materialsV0;
+  const catalog = options.catalog ?? currentCatalog;
   const issues: Issue[] = [];
   const raw: Record<string, unknown> =
     d0Params !== null && typeof d0Params === 'object' ? (d0Params as Record<string, unknown>) : {};
@@ -173,6 +173,29 @@ function preserveDoors(
 /** Template version that introduced sides to the floor + plinth strips between the sides. */
 export const CONSTRUCTION_CHANGED_IN = '0.5.0';
 
+/** Template version that replaced the placeholder decors with Dafna's catalog 1.0.0 (D-6). */
+export const MATERIALS_CHANGED_IN = '0.6.0';
+
+/**
+ * Placeholder decors (catalog 0.1.0) -> catalog 1.0.0 (MATERIAL_MAP_V0_V1). Never silent: every
+ * decor that changes is reported as MIGRATION_MATERIAL_CHANGED (the board thickness can change
+ * too, e.g. 18 mm white -> EGGER W1000 18 mm keeps 18 mm).
+ */
+export function mapMaterialsV0toV1(input: Params): { params: Params; issues: Issue[] } {
+  const params: Params = { ...input };
+  const issues: Issue[] = [];
+  for (const key of ['corpusMaterial', 'doorMaterial']) {
+    const from = params[key];
+    if (typeof from !== 'string') continue;
+    const to = MATERIAL_MAP_V0_V1[from];
+    if (to && to !== from) {
+      params[key] = to;
+      issues.push(makeIssue('MIGRATION_MATERIAL_CHANGED', 'warning', key, { from, to }));
+    }
+  }
+  return { params, issues };
+}
+
 /** true if `version` (x.y.z) is older than `than`; unknown versions count as older. */
 export function templateBefore(version: string | null, than: string): boolean {
   if (!version) return true;
@@ -221,7 +244,7 @@ export function migrateOrderDraft(
   options: MigrationOptions = {},
 ): { draft: OrderDraft | null; issues: Issue[] } {
   const template = options.template ?? wardrobeTemplate;
-  const catalog = options.catalog ?? materialsV0;
+  const catalog = options.catalog ?? currentCatalog;
   const d = draft !== null && typeof draft === 'object' ? (draft as Record<string, unknown>) : {};
 
   const fromTemplate = typeof d.templateVersion === 'string' ? d.templateVersion : null;
@@ -262,6 +285,13 @@ export function migrateOrderDraft(
     params = migrateParamsFrom02(migrateParamsFrom01(params01, count, { template }), count, {
       template,
     });
+  }
+
+  // D-6: drafts before template 0.6.0 used the placeholder decors of catalog 0.1.0
+  if (templateBefore(fromTemplate, MATERIALS_CHANGED_IN)) {
+    const mapped = mapMaterialsV0toV1(params);
+    params = mapped.params;
+    issues.push(...mapped.issues);
   }
 
   const kept = preserveDoors(params, doorTypesOf(d), template, catalog);

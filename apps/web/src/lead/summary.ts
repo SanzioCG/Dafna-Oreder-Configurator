@@ -1,7 +1,7 @@
 import {
   generate,
   getMaterial,
-  materialsV0,
+  currentCatalog,
   resolveParams,
   wardrobeTemplate,
   type GenerateResult,
@@ -24,6 +24,9 @@ export interface LeadSummary {
   corpus: string;
   /** null when the wardrobe has no doors */
   door: string | null;
+  /** supplier code of the corpus / door decor ("EGGER U727 ST9"), null for Dafna boards */
+  corpusCode: string | null;
+  doorCode: string | null;
   /** "3 ta qism: 1) Shtanga + javon; 2) Javonlar; 3) Tortmalar + javonlar" */
   sections: string;
   /** "1) Ikki tabaqali; 2) Chap ilmoq; 3) Yo'q" */
@@ -40,7 +43,7 @@ export function summarizeResult(params: Params, result: GenerateResult, lang: La
     return s === k ? value : s;
   };
   const decor = (id: string | undefined) => {
-    const m = id ? getMaterial(materialsV0, id) : undefined;
+    const m = id ? getMaterial(currentCatalog, id) : undefined;
     return m ? t(m.decorName) : (id ?? '');
   };
   const { params: p } = resolveParams(wardrobeTemplate, params);
@@ -59,6 +62,8 @@ export function summarizeResult(params: Params, result: GenerateResult, lang: La
     sizeCm: `${cm(w)} × ${cm(h)} × ${cm(d)} ${t('unit.cm')}`,
     corpus: decor(corpusId),
     door: doorId ? decor(doorId) : null,
+    corpusCode: (corpusId && getMaterial(currentCatalog, corpusId)?.code) || null,
+    doorCode: (doorId && getMaterial(currentCatalog, doorId)?.code) || null,
     sections: `${t('c.parts', { count: result.sections.length })}: ${parts.join('; ')}`,
     doors: doors.join('; '),
   };

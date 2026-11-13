@@ -18,7 +18,7 @@ const NO_INTERIOR = {
 };
 const gen = (overrides: Partial<Params> = {}) =>
   generate(T, { ...defaultParams(T), depth: 516, doors: 'none', ...NO_INTERIOR, ...overrides });
-const mat = (t: number) => (t === 18 ? 'ldsp_white_18' : 'ldsp_white_16');
+const mat = (t: number) => (t === 18 ? 'egger_w1000_st9_18' : 'ldsp_white_16');
 const byId = (panels: Panel[], id: string): Panel => {
   const p = panels.find((x) => x.id === id);
   if (!p) throw new Error(`panel ${id} not found`);
@@ -188,7 +188,9 @@ describe('corpus material 16 vs 18 mm at the same width', () => {
     expect(byId(r18.panels, 'top').lengthMm).toBe(1360 - 36);
     expect(byId(r18.panels, 'partition-1').lengthMm).toBe(1800 - 36);
     expect(
-      r18.panels.filter((p) => p.material === 'ldsp_white_18').every((p) => p.thicknessMm === 18),
+      r18.panels
+        .filter((p) => p.material === 'egger_w1000_st9_18')
+        .every((p) => p.thicknessMm === 18),
     ).toBe(true);
     expect(r18.sections[0]?.innerHeightMm).toBe(1800 - 36);
   });
@@ -365,7 +367,7 @@ describe('determinism', () => {
   it('same input -> deep-equal output', () => {
     const inputs: Partial<Params>[] = [
       {},
-      { width: 2400, sections: 4, corpusMaterial: 'ldsp_white_18' },
+      { width: 2400, sections: 4, corpusMaterial: 'egger_w1000_st9_18' },
       { base: 'none', backPanel: 'none', width: 777, height: 2111, depth: 401 },
       { width: 1360, sections: 1 },
     ];
@@ -406,7 +408,10 @@ describe('plinth construction (ADR-009): sides to the floor, strips between the 
   ];
 
   it.each([16, 18])('%i mm board: strips fill exactly the gap between the sides', (t) => {
-    const r = gen({ corpusMaterial: t === 16 ? 'ldsp_white_16' : 'ldsp_white_18', width: 1500 });
+    const r = gen({
+      corpusMaterial: t === 16 ? 'ldsp_white_16' : 'egger_w1000_st9_18',
+      width: 1500,
+    });
     for (const id of ['plinth-front', 'plinth-back']) {
       const p = byId(r.panels, id);
       expect(p.lengthMm).toBe(1500 - 2 * t);

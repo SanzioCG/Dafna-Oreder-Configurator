@@ -39,6 +39,11 @@ export function MaterialSwatch({
     .map((o) => getMaterial(CATALOG, o))
     .filter((m) => m !== undefined)
     .filter((m) => mode === 'staff' || m.customerVisible || m.id === effective);
+  // catalog 1.0.0: plain colours first, then wood decors, each under a small heading
+  const groups = (['plain', 'wood', undefined] as const)
+    .map((g) => ({ g, items: materials.filter((m) => m.group === g) }))
+    .filter((x) => x.items.length > 0);
+  const grouped = groups.length > 1;
 
   return (
     <div className="swatch-picker">
@@ -49,38 +54,49 @@ export function MaterialSwatch({
       )}
       {/* same as corpus: the door follows the corpus decor; door swatches are hidden */}
       {!same && (
-        <div className="swatches" role="radiogroup" aria-label={label}>
-          {materials.map((m) => {
-            // selection contract: while "same as corpus" is on, the toggle carries the state and
-            // no door swatch is shown as selected (opacity is reserved for "disabled")
-            const selected = !same && m.id === effective;
-            const name = t(m.decorName);
-            const extra = mode === 'staff' ? ` ${m.thicknessMm} ${t('unit.mm')}` : '';
-            return (
-              <button
-                key={m.id}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                aria-label={`${name}${extra}`}
-                data-material={m.id}
-                className={selected ? 'swatch selected' : 'swatch'}
-                onClick={() => onChange(m.id)}
-              >
-                <span className="swatch-chip" style={{ background: m.colorHex }}>
-                  {selected && (
-                    <span className="swatch-check">
-                      <CheckIcon />
-                    </span>
-                  )}
-                </span>
-                <span className="swatch-name">
-                  {name}
-                  {extra && <small>{extra}</small>}
-                </span>
-              </button>
-            );
-          })}
+        <div className="swatch-groups" role="radiogroup" aria-label={label}>
+          {groups.map(({ g, items }) => (
+            <div className="swatch-group" key={g ?? 'other'} data-group={g ?? 'other'}>
+              {grouped && g && <p className="swatch-group-title">{t(`color.group.${g}`)}</p>}
+              <div className="swatches">
+                {items.map((m) => {
+                  // selection contract: while "same as corpus" is on, the toggle carries the state and
+                  // no door swatch is shown as selected (opacity is reserved for "disabled")
+                  const selected = !same && m.id === effective;
+                  const name = t(m.decorName);
+                  // staff: board thickness and the supplier code (EGGER …) for production
+                  const extra =
+                    mode === 'staff'
+                      ? ` ${m.thicknessMm} ${t('unit.mm')}${m.code ? ` · ${m.code}` : ''}`
+                      : '';
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      aria-label={`${name}${extra}`}
+                      data-material={m.id}
+                      className={selected ? 'swatch selected' : 'swatch'}
+                      onClick={() => onChange(m.id)}
+                    >
+                      <span className="swatch-chip" style={{ background: m.colorHex }}>
+                        {selected && (
+                          <span className="swatch-check">
+                            <CheckIcon />
+                          </span>
+                        )}
+                      </span>
+                      <span className="swatch-name">
+                        {name}
+                        {extra && <small>{extra}</small>}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

@@ -6,7 +6,8 @@ import {
   getMaterial,
   getParamDef,
   listUnconfirmed,
-  materialsV0 as C,
+  materialsV0 as C0,
+  materialsV1 as C,
   migrateOrderDraft,
   migrateParamsFromD0,
   toOrderDraft,
@@ -18,16 +19,40 @@ import d0Default from './fixtures/d0-order-draft.default.json' with { type: 'jso
 import d0T18 from './fixtures/d0-order-draft.w2000-t18.json' with { type: 'json' };
 import { toAdr009 } from './construction.js';
 
+/** catalog 1.0.0 (D-6): Dafna LDSP 16 / 18 mm — corpus and doors */
 const LDSP = [
   'ldsp_white_16',
-  'ldsp_light_grey_16',
-  'ldsp_beige_16',
-  'ldsp_oak_light_16',
-  'ldsp_anthracite_16',
-  'ldsp_white_18',
+  'ldsp_white_moisture_16',
+  'egger_w1000_st9_18',
+  'egger_u104_st9_16',
+  'egger_u702_st9_16',
+  'egger_u707_st9_16',
+  'egger_u727_st9_16',
+  'egger_u788_st9_16',
+  'egger_f765_st20_16',
+  'ldsp_aluminium_16',
+  'egger_u963_st9_16',
+  'egger_u502_st9_16',
+  'egger_u665_st9_16',
+  'egger_u335_st9_16',
+  'ldsp_red_16',
+  'egger_h3860_st9_16',
+  'egger_h3730_st10_16',
+  'ldsp_oak_wotan_16',
+  'egger_h3710_st12_16',
+  'egger_h3133_st12_16',
+  'egger_h2033_st10_16',
+  'egger_h1199_st12_16',
+];
+/** LMDF 16 / 16.7 mm — doors only */
+const LMDF = [
+  'lmdf_egger_h1367_st40_16',
+  'lmdf_egger_h1385_st40_16',
+  'lmdf_egger_h1344_st32_16_7',
+  'lmdf_egger_h3325_st28_16_7',
 ];
 
-describe('wardrobe template v4 (0.5.0)', () => {
+describe('wardrobe template v5 (0.6.0)', () => {
   it('defines the parameters with the specified ranges and defaults', () => {
     const summary = T.parameters.map((d) => [
       d.key,
@@ -62,7 +87,7 @@ describe('wardrobe template v4 (0.5.0)', () => {
         'same_as_corpus',
         null,
         null,
-        ['same_as_corpus', ...LDSP],
+        ['same_as_corpus', ...LDSP, ...LMDF],
         'color',
         true,
         false,
@@ -116,6 +141,10 @@ describe('wardrobe template v4 (0.5.0)', () => {
       }
     }
     expect(getMaterial(C, T.constants.backMaterial?.value)?.kind).toBe('hdf');
+    // the corpus is LDSP only; LMDF (kind mdf) is a door material
+    for (const o of getParamDef(T, 'corpusMaterial')?.options ?? []) {
+      expect(getMaterial(C, o)?.kind, String(o)).toBe('ldsp');
+    }
   });
 
   it('every unconfirmed value carries a note', () => {
@@ -202,9 +231,9 @@ describe('wardrobe template v4 (0.5.0)', () => {
   });
 });
 
-describe('material catalog v0', () => {
+describe('material catalog v0 (archived)', () => {
   it('has the placeholder decors, all unconfirmed, with the required fields', () => {
-    expect(C.materials.map((m) => [m.id, m.kind, m.thicknessMm, m.customerVisible])).toEqual([
+    expect(C0.materials.map((m) => [m.id, m.kind, m.thicknessMm, m.customerVisible])).toEqual([
       ['ldsp_white_16', 'ldsp', 16, true],
       ['ldsp_light_grey_16', 'ldsp', 16, true],
       ['ldsp_beige_16', 'ldsp', 16, true],
@@ -213,7 +242,7 @@ describe('material catalog v0', () => {
       ['ldsp_white_18', 'ldsp', 18, false],
       ['hdf_white_3', 'hdf', 3, false],
     ]);
-    for (const m of C.materials) {
+    for (const m of C0.materials) {
       expect(m.unconfirmed).toBe(true);
       expect(m.decorName).toMatch(/^decor\./);
       expect(m.colorHex).toMatch(/^#[0-9a-f]{6}$/);
@@ -222,12 +251,34 @@ describe('material catalog v0', () => {
   });
 });
 
+describe('material catalog 1.0.0 (D-6: Dafna price list)', () => {
+  it('LDSP 16 / 18 mm, LMDF 16 / 16.7 mm, HDF back; EGGER codes; all unconfirmed', () => {
+    expect(C.catalogVersion).toBe('1.0.0');
+    const ids = C.materials.map((m) => m.id);
+    expect(ids).toEqual([...LDSP, ...LMDF, 'hdf_white_3']);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const m of C.materials) {
+      expect(m.unconfirmed, m.id).toBe(true);
+      expect(m.note, m.id).toBeTruthy();
+      expect(m.decorName).toMatch(/^decor\./);
+      expect(m.colorHex).toMatch(/^#[0-9a-f]{6}$/);
+      expect(m.textureUrl).toBeNull();
+      if (m.id.includes('egger')) expect(m.code, m.id).toMatch(/^EGGER [A-Z]\d{3,4} ST\d{1,2}$/);
+    }
+    const thick = (id: string) => getMaterial(C, id)?.thicknessMm;
+    expect(LDSP.map(thick).every((t) => t === 16 || t === 18)).toBe(true);
+    expect(LMDF.map(thick).every((t) => t === 16 || t === 16.7)).toBe(true);
+    expect(LMDF.every((id) => getMaterial(C, id)?.kind === 'mdf')).toBe(true);
+    expect(getMaterial(C, 'egger_u727_st9_16')?.code).toBe('EGGER U727 ST9');
+  });
+});
+
 describe('toOrderDraft (dafna-order/0.3-draft)', () => {
   const params = {
     ...defaultParams(T),
     width: 2000,
-    corpusMaterial: 'ldsp_oak_light_16',
-    doorMaterial: 'ldsp_anthracite_16',
+    corpusMaterial: 'egger_h3860_st9_16',
+    doorMaterial: 'egger_u963_st9_16',
   };
   const result = generate(T, params);
   const draft = toOrderDraft(params, result, { now: () => new Date('2026-11-05T10:00:00.000Z') });
@@ -235,11 +286,11 @@ describe('toOrderDraft (dafna-order/0.3-draft)', () => {
   it('has the 0.2 schema, materials, doors and interior per section, rails', () => {
     expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');
     expect(draft.productType).toBe('wardrobe');
-    expect(draft.templateVersion).toBe('0.5.0');
-    expect(draft.catalogVersion).toBe('0.1.0');
+    expect(draft.templateVersion).toBe('0.6.0');
+    expect(draft.catalogVersion).toBe('1.0.0');
     expect(draft.params).toEqual(params);
-    expect(draft.materials.corpus?.id).toBe('ldsp_oak_light_16');
-    expect(draft.materials.doors?.id).toBe('ldsp_anthracite_16');
+    expect(draft.materials.corpus?.id).toBe('egger_h3860_st9_16');
+    expect(draft.materials.doors?.id).toBe('egger_u963_st9_16');
     expect(draft.materials.back?.id).toBe('hdf_white_3');
     // 2000 -> 3 sections (646/645/645), leaves > 600 -> 3 double doors (shared partitions OK)
     expect(draft.doors).toEqual([
@@ -293,7 +344,7 @@ describe('D-0 order draft migration (chain D-0 -> 0.3)', () => {
 
   it.each([
     ['default (16 mm)', d0Default, 'ldsp_white_16'],
-    ['width 2000, 18 mm, recess 20', d0T18, 'ldsp_white_18'],
+    ['width 2000, 18 mm, recess 20', d0T18, 'egger_w1000_st9_18'],
   ])('%s: same geometry, new material ids, schema 0.2', (_name, d0, corpus) => {
     const { draft, issues } = migrateOrderDraft(d0);
     expect(issues.map((i) => i.code)).toEqual(['MIGRATION_CONSTRUCTION_CHANGED']);

@@ -66,6 +66,10 @@ export interface Material {
   decorName: string;
   thicknessMm: number;
   colorHex: string;
+  /** supplier decor code, e.g. "EGGER U727 ST9" (catalog 1.0.0+; production / Bazis export) */
+  code?: string;
+  /** customer swatch grouping: plain colours vs wood decors (catalog 1.0.0+) */
+  group?: 'plain' | 'wood';
   /** null until real decor textures exist */
   textureUrl: string | null;
   /** false = staff-only (e.g. back panel HDF, legacy 18 mm board) */
