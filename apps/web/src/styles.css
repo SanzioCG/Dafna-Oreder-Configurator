@@ -932,6 +932,20 @@ p {
   gap: var(--space-4);
 }
 
+/* catalog 1.0.0: plain colours, then wood decors */
+.swatch-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.swatch-group-title {
+  margin-bottom: var(--space-2);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  color: var(--ink);
+}
+
 .swatches {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(6.25rem, 1fr));

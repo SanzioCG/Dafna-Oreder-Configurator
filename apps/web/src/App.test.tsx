@@ -227,15 +227,22 @@ describe('step 2 "Rang"', () => {
   const corpus = () => screen.getByRole('radiogroup', { name: uz['param.corpusMaterial'] });
   const doorGroup = () => screen.queryByRole('radiogroup', { name: uz['param.doorMaterial'] });
 
-  it('5 customer decors (no 18 mm, no thickness); the corpus decor applies immediately', () => {
+  it('22 Dafna corpus decors in two groups, no LMDF, no thickness; applies immediately', () => {
     renderApp();
     fireEvent.click(tab(uz['step.color']));
-    expect(corpus().querySelectorAll('.swatch').length).toBe(5);
-    expect(corpus().querySelector('[data-material="ldsp_white_18"]')).toBeNull();
-    expect(corpus().textContent).not.toMatch(/\d+ mm/);
-    fireEvent.click(corpus().querySelector('[data-material="ldsp_anthracite_16"]') as HTMLElement);
-    expect(stub().dataset.corpus).toBe('ldsp_anthracite_16');
-    expect(stub().dataset.doors).toBe('ldsp_anthracite_16');
+    expect(corpus().querySelectorAll('.swatch').length).toBe(22);
+    // plain colours first, then wood decors, each with a heading
+    expect(
+      [...corpus().querySelectorAll('.swatch-group')].map((g) => g.getAttribute('data-group')),
+    ).toEqual(['plain', 'wood']);
+    expect(corpus().textContent).toContain(uz['color.group.plain']);
+    expect(corpus().textContent).toContain(uz['color.group.wood']);
+    // LMDF is a door material only
+    expect(corpus().querySelector('[data-material^="lmdf_"]')).toBeNull();
+    expect(corpus().textContent).not.toMatch(/\d+ mm|EGGER/);
+    fireEvent.click(corpus().querySelector('[data-material="egger_u963_st9_16"]') as HTMLElement);
+    expect(stub().dataset.corpus).toBe('egger_u963_st9_16');
+    expect(stub().dataset.doors).toBe('egger_u963_st9_16');
   });
 
   it('"Eshiklar boshqa rangda" OFF hides door swatches (doors follow the corpus); ON shows them', () => {
@@ -248,8 +255,12 @@ describe('step 2 "Rang"', () => {
     expect(
       group.querySelector('[data-material="ldsp_white_16"]')?.getAttribute('aria-checked'),
     ).toBe('true');
-    fireEvent.click(group.querySelector('[data-material="ldsp_oak_light_16"]') as HTMLElement);
-    expect(stub().dataset.doors).toBe('ldsp_oak_light_16');
+    // doors also offer the LMDF fronts (16 / 16.7 mm)
+    expect(group.querySelectorAll('[data-material^="lmdf_"]').length).toBe(4);
+    fireEvent.click(
+      group.querySelector('[data-material="lmdf_egger_h3325_st28_16_7"]') as HTMLElement,
+    );
+    expect(stub().dataset.doors).toBe('lmdf_egger_h3325_st28_16_7');
     expect(stub().dataset.corpus).toBe('ldsp_white_16');
     fireEvent.click(toggle(uz['c.doorsOther']));
     expect(doorGroup()).toBeNull();
@@ -526,7 +537,10 @@ describe('staff engineering controls', () => {
     const corpus = within(settings()).getByRole('radiogroup', {
       name: uz['param.corpusMaterial'],
     });
-    expect(corpus.querySelector('[data-material="ldsp_white_18"]')).not.toBeNull();
+    // staff sees thickness and the EGGER code
+    expect(
+      corpus.querySelector('[data-material="egger_w1000_st9_18"]')?.getAttribute('aria-label'),
+    ).toBe(`${uz['decor.whitePremium']} 18 mm · EGGER W1000 ST9`);
     fireEvent.click(tab(uz['step.interior']));
     const door1 = within(settings()).getByRole('radiogroup', { name: "1-bo'lim eshigi" });
     fireEvent.click(within(door1).getByRole('radio', { name: uz['option.doorSection.none'] }));
@@ -628,7 +642,7 @@ describe('presentation — designer final (D-4)', () => {
     fireEvent.click(
       (
         screen.getByRole('radiogroup', { name: uz['param.doorMaterial'] }) as HTMLElement
-      ).querySelector('[data-material="ldsp_oak_light_16"]') as HTMLElement,
+      ).querySelector('[data-material="egger_h3860_st9_16"]') as HTMLElement,
     );
     fireEvent.click(tab(uz['step.review']));
     expect(document.querySelector('canvas.confetti')).not.toBeNull(); // candy celebration layer
@@ -639,7 +653,7 @@ describe('presentation — designer final (D-4)', () => {
     expect(head.textContent).toContain(uz['present.subtitle']);
     // D-5: overall size (sm) next to the decors
     expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '136 × 190 × 60 sm · Korpus: Oq · Eshik: Och eman',
+      '136 × 190 × 60 sm · Korpus: Oq · Eshik: Shampan zarang',
     );
   });
 

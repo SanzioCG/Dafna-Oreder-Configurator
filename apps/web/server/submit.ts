@@ -49,6 +49,9 @@ function clientIp(req: Request): string {
   return (fwd ? fwd.split(',')[0] : req.headers.get('x-real-ip'))?.trim() || 'unknown';
 }
 
+/** "Kulrang tosh (EGGER U727 ST9)"; Dafna boards without a supplier code stay as they are */
+const withCode = (name: string, code: string | null) => (code ? `${name} (${code})` : name);
+
 const isObject = (v: unknown): v is Record<string, unknown> =>
   v !== null && typeof v === 'object' && !Array.isArray(v);
 
@@ -160,8 +163,9 @@ export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Resp
       lastName: contact.lastName ?? '',
       phone: phoneE164(contact.phone),
       sizeMm: summary.sizeMm,
-      corpus: summary.corpus,
-      door: summary.door ?? '—',
+      // manager / production need the supplier code next to the decor name
+      corpus: withCode(summary.corpus, summary.corpusCode),
+      door: summary.door ? withCode(summary.door, summary.doorCode) : '—',
       sections: summary.sections,
       doors: summary.doors,
       kiosk: kioskId,

@@ -2,7 +2,7 @@ import {
   defaultParams,
   generate,
   getParamDef,
-  materialsV0,
+  currentCatalog,
   validate,
   wardrobeTemplate,
   type GenerateResult,
@@ -14,7 +14,7 @@ import type { Mode } from '../mode';
 import { isCustomerBlocking } from './blocking';
 
 export const TEMPLATE = wardrobeTemplate;
-export const CATALOG = materialsV0;
+export const CATALOG = currentCatalog;
 
 export interface ViewGeometry {
   result: GenerateResult;

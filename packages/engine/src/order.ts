@@ -1,4 +1,4 @@
-import { getMaterial, materialsV0 } from './catalog.js';
+import { getMaterial, currentCatalog } from './catalog.js';
 import { resolveParams } from './params.js';
 import { getStringConstant, wardrobeTemplate } from './template.js';
 import {
@@ -28,7 +28,7 @@ export function toOrderDraft(
   options: OrderDraftOptions = {},
 ): OrderDraft {
   const template = options.template ?? wardrobeTemplate;
-  const catalog = options.catalog ?? materialsV0;
+  const catalog = options.catalog ?? currentCatalog;
   const now = options.now ?? (() => new Date());
   const resolved = resolveParams(template, params).params;
   const hasDoors = result.sections.some((s) => s.doorType !== 'none');

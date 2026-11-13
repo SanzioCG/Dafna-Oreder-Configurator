@@ -8,8 +8,11 @@ import {
   toOrderDraft,
   wardrobeTemplate as T,
   type Panel,
+  regenerateApplication,
 } from '../src/index.js';
 import { toAdr009 } from './construction.js';
+import appDefault from './fixtures/applications/0.5.0.default.json' with { type: 'json' };
+import appMixed from './fixtures/applications/0.5.0.w2400-4sections-mixed.json' with { type: 'json' };
 import d0Default from './fixtures/d0-order-draft.default.json' with { type: 'json' };
 // Real 0.1 drafts, produced by the D-1a engine (main @ 10d0238).
 import d01Default from './fixtures/d01-order-draft.default.json' with { type: 'json' };
@@ -68,8 +71,18 @@ describe('0.1 drafts -> 0.3', () => {
   it('original hinge sides L,R,L are preserved (overrides), geometry identical, no warnings', () => {
     expect(doorsOf(d01Singles.sections)).toEqual(['single_left', 'single_right', 'single_left']);
     const { draft, issues } = migrateOrderDraft(d01Singles);
-    expect(codes(issues)).toEqual(['MIGRATION_CONSTRUCTION_CHANGED']);
+    // D-6: the placeholder decors move to Dafna's catalog (oak light -> EGGER H3860, anthracite
+    // -> EGGER U963), reported; the geometry is unchanged (both 16 mm)
+    expect(codes(issues)).toEqual([
+      'MIGRATION_MATERIAL_CHANGED',
+      'MIGRATION_MATERIAL_CHANGED',
+      'MIGRATION_CONSTRUCTION_CHANGED',
+    ]);
     if (!draft) throw new Error('no draft');
+    expect([draft.params.corpusMaterial, draft.params.doorMaterial]).toEqual([
+      'egger_h3860_st9_16',
+      'egger_u963_st9_16',
+    ]);
     expect(doorsOf(draft.sections)).toEqual(['single_left', 'single_right', 'single_left']);
     // the current auto rule would give L,L,R: sections 2 and 3 are pinned as overrides
     expect([
@@ -112,9 +125,11 @@ describe('0.1 drafts -> 0.3', () => {
     expect(doorsOf(draft.sections)).toEqual(['double', 'double']);
     expect(issues.map((i) => [i.code, i.values.sectionNumber, i.values.from, i.values.to])).toEqual(
       [
+        ['MIGRATION_MATERIAL_CHANGED', undefined, 'ldsp_oak_light_16', 'egger_h3860_st9_16'],
+        ['MIGRATION_MATERIAL_CHANGED', undefined, 'ldsp_anthracite_16', 'egger_u963_st9_16'],
         ['MIGRATION_DOORS_CHANGED', 1, 'single_left', 'double'],
         ['MIGRATION_DOORS_CHANGED', 2, 'single_right', 'double'],
-        ['MIGRATION_CONSTRUCTION_CHANGED', undefined, '0.2.0', '0.5.0'],
+        ['MIGRATION_CONSTRUCTION_CHANGED', undefined, '0.2.0', '0.6.0'],
       ],
     );
   });
@@ -174,7 +189,7 @@ describe('full chain D-0 -> 0.1 -> 0.2 -> 0.3', () => {
   });
 });
 
-describe('template 0.4.0 -> 0.5.0 (ADR-009, same schema 0.3)', () => {
+describe('template 0.4.0 -> current (ADR-009, same schema 0.3)', () => {
   const old = (base: 'plinth' | 'none') => {
     const params = { ...defaultParams(T), base };
     const current = toOrderDraft(params, generate(T, params));
@@ -196,10 +211,10 @@ describe('template 0.4.0 -> 0.5.0 (ADR-009, same schema 0.3)', () => {
     const d = old('plinth');
     const { draft, issues } = migrateOrderDraft(d);
     if (!draft) throw new Error('no draft');
-    expect(draft.templateVersion).toBe('0.5.0');
+    expect(draft.templateVersion).toBe('0.6.0');
     expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');
     expect(issues.map((i) => [i.code, i.severity, i.values.from, i.values.to])).toEqual([
-      ['MIGRATION_CONSTRUCTION_CHANGED', 'warning', '0.4.0', '0.5.0'],
+      ['MIGRATION_CONSTRUCTION_CHANGED', 'warning', '0.4.0', '0.6.0'],
     ]);
     expect(draft.panels.map(geometry)).toEqual(toAdr009(d.panels as Panel[]).map(geometry));
     expect(draft.params).toEqual(d.params);
@@ -210,7 +225,35 @@ describe('template 0.4.0 -> 0.5.0 (ADR-009, same schema 0.3)', () => {
     const d = old('none');
     const { draft, issues } = migrateOrderDraft(d);
     expect(issues).toEqual([]);
-    expect(draft?.templateVersion).toBe('0.5.0');
+    expect(draft?.templateVersion).toBe('0.6.0');
     expect(draft?.panels.map(geometry)).toEqual((d.panels as Panel[]).map(geometry));
+  });
+});
+
+describe('template 0.5.0 -> 0.6.0 (D-6: catalog 1.0.0)', () => {
+  it('placeholder decors are mapped to Dafna decors, reported, geometry unchanged', () => {
+    const r = regenerateApplication(appMixed.params, '0.5.0', {
+      generatedAt: '2026-11-06T09:00:00.000Z',
+    });
+    if (!r.ok) throw new Error(r.code);
+    const { draft, issues } = migrateOrderDraft(r.draft);
+    if (!draft) throw new Error('no draft');
+    expect(draft.templateVersion).toBe('0.6.0');
+    expect(draft.catalogVersion).toBe('1.0.0');
+    expect(issues.map((i) => [i.code, i.paramKey, i.values.from, i.values.to])).toEqual([
+      ['MIGRATION_MATERIAL_CHANGED', 'corpusMaterial', 'ldsp_anthracite_16', 'egger_u963_st9_16'],
+      ['MIGRATION_MATERIAL_CHANGED', 'doorMaterial', 'ldsp_oak_light_16', 'egger_h3860_st9_16'],
+    ]);
+    expect(draft.panels.map(geometry)).toEqual(r.draft.panels.map(geometry));
+    expect(draft.generatedAt).toBe('2026-11-06T09:00:00.000Z');
+  });
+
+  it('the white board keeps its id: no warning, nothing changes', () => {
+    const r = regenerateApplication(appDefault.params, '0.5.0');
+    if (!r.ok) throw new Error(r.code);
+    const { draft, issues } = migrateOrderDraft(r.draft);
+    expect(issues).toEqual([]);
+    expect(draft?.params.corpusMaterial).toBe('ldsp_white_16');
+    expect(draft?.panels.map(geometry)).toEqual(r.draft.panels.map(geometry));
   });
 });

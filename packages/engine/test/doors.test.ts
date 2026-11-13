@@ -61,8 +61,8 @@ describe('depth definition: carcassDepth = depth - back - (doors ? door + gap : 
   it.each([
     ['ldsp_white_16', 'same_as_corpus', 'auto', 'hdf_overlay', 516 - 3 - 16 - 2],
     ['ldsp_white_16', 'same_as_corpus', 'none', 'hdf_overlay', 516 - 3],
-    ['ldsp_white_18', 'same_as_corpus', 'auto', 'hdf_overlay', 516 - 3 - 18 - 2],
-    ['ldsp_white_18', 'ldsp_white_16', 'auto', 'hdf_overlay', 516 - 3 - 16 - 2],
+    ['egger_w1000_st9_18', 'same_as_corpus', 'auto', 'hdf_overlay', 516 - 3 - 18 - 2],
+    ['egger_w1000_st9_18', 'ldsp_white_16', 'auto', 'hdf_overlay', 516 - 3 - 16 - 2],
     ['ldsp_white_16', 'same_as_corpus', 'auto', 'none', 516 - 16 - 2],
   ])(
     '%s / door %s / doors %s / back %s -> %i',
@@ -179,7 +179,7 @@ describe('hinge sides: outer side of each half (shared partitions allowed)', () 
   });
 
   it('every auto configuration is valid (600-2400 mm, 16 and 18 mm)', () => {
-    for (const corpusMaterial of ['ldsp_white_16', 'ldsp_white_18']) {
+    for (const corpusMaterial of ['ldsp_white_16', 'egger_w1000_st9_18']) {
       for (let width = 600; width <= 2400; width += 1) {
         expect(codes(gen({ width, corpusMaterial })), `${corpusMaterial} ${width}`).toEqual([]);
       }
@@ -220,9 +220,9 @@ describe('leaf rounding (0.5 mm) — leaves + gaps = covered width exactly', () 
     [2, 'ldsp_white_16'],
     [3, 'ldsp_white_16'],
     [4, 'ldsp_white_16'],
-    [2, 'ldsp_white_18'],
-    [3, 'ldsp_white_18'],
-    [4, 'ldsp_white_18'],
+    [2, 'egger_w1000_st9_18'],
+    [3, 'egger_w1000_st9_18'],
+    [4, 'egger_w1000_st9_18'],
   ])('%i sections, %s: every valid width sums exactly', (sections, corpusMaterial) => {
     let checked = 0;
     for (let width = 600; width <= 2400; width += 7) {
@@ -263,7 +263,7 @@ describe('door height and other checks', () => {
   });
 
   it('18 mm corpus: 2 sections of 653, double doors, thickness propagates', () => {
-    const r = gen({ corpusMaterial: 'ldsp_white_18' });
+    const r = gen({ corpusMaterial: 'egger_w1000_st9_18' });
     expect(r.issues).toEqual([]);
     expect(r.sections.map((s) => [s.innerWidthMm, s.doorType])).toEqual([
       [653, 'double'],

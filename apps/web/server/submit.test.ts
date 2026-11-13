@@ -165,6 +165,22 @@ describe('POST /api/submit', () => {
     expect(notifier.calls).toBe(1);
   });
 
+  it('decor names carry the EGGER code for the manager (sheet + Telegram)', async () => {
+    await send(
+      body({
+        params: {
+          ...defaultParams(wardrobeTemplate),
+          corpusMaterial: 'egger_u727_st9_16',
+          doorMaterial: 'lmdf_egger_h3325_st28_16_7',
+        },
+      }),
+    );
+    const lead = store.rows[0]!;
+    expect(lead.corpus).toBe('Kulrang tosh (EGGER U727 ST9)');
+    expect(lead.door).toBe('Gladston eman, tamaki (EGGER H3325 ST28)');
+    expect(lead.templateVersion).toBe('0.6.0');
+  });
+
   it('a new key -> a new application', async () => {
     const a = await send(body());
     const b = await send(body({ idempotencyKey: '11111111-2222-4333-8444-555555555555' }));

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   REGENERABLE_SINCE,
   TEMPLATE_ARCHIVE,
+  TEMPLATE_CATALOG,
   defaultParams,
   generate,
   materialsV0,
@@ -16,6 +17,10 @@ import { templateBefore } from '../src/migrate.js';
 import appDefault from './fixtures/applications/0.5.0.default.json' with { type: 'json' };
 import appMixed from './fixtures/applications/0.5.0.w2400-4sections-mixed.json' with { type: 'json' };
 import appBare from './fixtures/applications/0.5.0.d450-nodoors-noback-nobase.json' with { type: 'json' };
+// D-6 (template 0.6.0, catalog 1.0.0): Dafna decors, an LMDF 16.7 mm door, an 18 mm corpus
+import app6Default from './fixtures/applications/0.6.0.default.json' with { type: 'json' };
+import app6Lmdf from './fixtures/applications/0.6.0.w2400-egger-lmdf16_7-doors.json' with { type: 'json' };
+import app6W18 from './fixtures/applications/0.6.0.w1000-w1000_18mm-nodoors.json' with { type: 'json' };
 
 interface ApplicationFixture {
   templateVersion: string;
@@ -26,6 +31,9 @@ const FIXTURES: Record<string, ApplicationFixture> = {
   default: appDefault as unknown as ApplicationFixture,
   'w2400-4sections-mixed': appMixed as unknown as ApplicationFixture,
   'd450-nodoors-noback-nobase': appBare as unknown as ApplicationFixture,
+  '0.6.0 default': app6Default as unknown as ApplicationFixture,
+  '0.6.0 w2400 EGGER + LMDF 16.7 doors': app6Lmdf as unknown as ApplicationFixture,
+  '0.6.0 w1000 W1000 18 mm, no doors': app6W18 as unknown as ApplicationFixture,
 };
 
 describe('reproducibility: stored applications regenerate exactly (ADR-011)', () => {
@@ -36,6 +44,14 @@ describe('reproducibility: stored applications regenerate exactly (ADR-011)', ()
       if (r.ok) expect(r.draft).toEqual(fx.expected);
     });
   }
+
+  it('0.5.0 applications keep catalog 0.1.0; 0.6.0 applications use catalog 1.0.0', () => {
+    expect(FIXTURES.default!.expected.catalogVersion).toBe(materialsV0.catalogVersion);
+    expect(FIXTURES['0.6.0 default']!.expected.catalogVersion).toBe('1.0.0');
+    const lmdf = FIXTURES['0.6.0 w2400 EGGER + LMDF 16.7 doors']!.expected;
+    expect(lmdf.panels.find((p) => p.role === 'door')?.thicknessMm).toBe(16.7);
+    expect(lmdf.materials.doors?.code).toBe('EGGER H3325 ST28');
+  });
 
   it('the current template version has at least one application fixture', () => {
     expect(Object.values(FIXTURES).map((f) => f.templateVersion)).toContain(
@@ -62,7 +78,16 @@ describe('reproducibility: stored applications regenerate exactly (ADR-011)', ()
 
 describe('template archive', () => {
   it('holds every released template version, current one included, all loadable', () => {
-    expect(Object.keys(TEMPLATE_ARCHIVE)).toEqual(['0.1.0', '0.2.0', '0.3.0', '0.4.0', '0.5.0']);
+    expect(Object.keys(TEMPLATE_ARCHIVE)).toEqual([
+      '0.1.0',
+      '0.2.0',
+      '0.3.0',
+      '0.4.0',
+      '0.5.0',
+      '0.6.0',
+    ]);
+    // every template version is mapped to the catalog it was released with
+    expect(Object.keys(TEMPLATE_CATALOG)).toEqual(Object.keys(TEMPLATE_ARCHIVE));
     expect(TEMPLATE_ARCHIVE[wardrobeTemplate.templateVersion]).toBe(wardrobeTemplate);
     for (const [version, t] of Object.entries(TEMPLATE_ARCHIVE)) {
       expect(t.templateVersion).toBe(version);
@@ -85,7 +110,7 @@ describe('template archive', () => {
         expect(r.ok).toBe(true);
         if (r.ok) {
           expect(r.draft.templateVersion).toBe(version);
-          expect(r.draft.catalogVersion).toBe(materialsV0.catalogVersion);
+          expect(r.draft.catalogVersion).toBe(TEMPLATE_CATALOG[version]);
           expect(r.draft.issues.filter((i) => i.severity === 'error')).toEqual([]);
           expect(r.draft.panels.length).toBeGreaterThan(0);
         }

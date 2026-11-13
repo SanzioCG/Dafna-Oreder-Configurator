@@ -459,10 +459,10 @@ function submitDepsFromEnv(env) {
 // ../../packages/engine/src/types.ts
 var ORDER_SCHEMA_VERSION = "dafna-order/0.3-draft";
 
-// ../../packages/engine/templates/wardrobe.v4.json
-var wardrobe_v4_default = {
+// ../../packages/engine/templates/wardrobe.v5.json
+var wardrobe_v5_default = {
   templateId: "wardrobe",
-  templateVersion: "0.5.0",
+  templateVersion: "0.6.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -526,11 +526,27 @@ var wardrobe_v4_default = {
       default: "ldsp_white_16",
       options: [
         "ldsp_white_16",
-        "ldsp_light_grey_16",
-        "ldsp_beige_16",
-        "ldsp_oak_light_16",
-        "ldsp_anthracite_16",
-        "ldsp_white_18"
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
       ],
       labelKey: "param.corpusMaterial",
       uiStep: "color",
@@ -538,7 +554,7 @@ var wardrobe_v4_default = {
       unconfirmed: false,
       control: "swatch",
       materialKinds: ["ldsp", "mdf"],
-      note: "Carcass, partition and plinth board. Its thickness drives all carcass geometry (replaces D-0 panelThickness). Decors themselves are unconfirmed placeholders (catalog)."
+      note: "Carcass, partition and plinth board (LDSP only). Its thickness drives all carcass geometry. Decors = Dafna price list (catalog 1.0.0), colours unconfirmed."
     },
     {
       key: "doorMaterial",
@@ -547,11 +563,31 @@ var wardrobe_v4_default = {
       options: [
         "same_as_corpus",
         "ldsp_white_16",
-        "ldsp_light_grey_16",
-        "ldsp_beige_16",
-        "ldsp_oak_light_16",
-        "ldsp_anthracite_16",
-        "ldsp_white_18"
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16",
+        "lmdf_egger_h1367_st40_16",
+        "lmdf_egger_h1385_st40_16",
+        "lmdf_egger_h1344_st32_16_7",
+        "lmdf_egger_h3325_st28_16_7"
       ],
       labelKey: "param.doorMaterial",
       uiStep: "color",
@@ -559,7 +595,7 @@ var wardrobe_v4_default = {
       unconfirmed: false,
       control: "swatch",
       materialKinds: ["ldsp", "mdf"],
-      note: "'same_as_corpus' = door decor follows corpusMaterial. Door thickness = this material's thickness."
+      note: "'same_as_corpus' = door decor follows corpusMaterial. Door thickness = this material's thickness (LMDF 16 / 16.7 mm: doors only)."
     },
     {
       key: "backPanel",
@@ -1012,7 +1048,7 @@ var wardrobe_v4_default = {
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v4_default;
+var wardrobeTemplate = wardrobe_v5_default;
 function getParamDef(template, key) {
   return template.parameters.find((p) => p.key === key);
 }
@@ -1115,8 +1151,361 @@ var materials_v0_default = {
   ]
 };
 
+// ../../packages/engine/catalog/materials.v1.json
+var materials_v1_default = {
+  catalogVersion: "1.0.0",
+  materials: [
+    {
+      id: "ldsp_white_16",
+      kind: "ldsp",
+      decorName: "decor.whiteShagreen",
+      thicknessMm: 16,
+      colorHex: "#f4f4f1",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "ldsp_white_moisture_16",
+      kind: "ldsp",
+      decorName: "decor.whiteMoisture",
+      thicknessMm: 16,
+      colorHex: "#f6f6f4",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_w1000_st9_18",
+      kind: "ldsp",
+      decorName: "decor.whitePremium",
+      code: "EGGER W1000 ST9",
+      thicknessMm: 18,
+      colorHex: "#f6f6f2",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u104_st9_16",
+      kind: "ldsp",
+      decorName: "decor.alabasterWhite",
+      code: "EGGER U104 ST9",
+      thicknessMm: 16,
+      colorHex: "#ebe6d3",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u702_st9_16",
+      kind: "ldsp",
+      decorName: "decor.cashmereGrey",
+      code: "EGGER U702 ST9",
+      thicknessMm: 16,
+      colorHex: "#ddd3c4",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u707_st9_16",
+      kind: "ldsp",
+      decorName: "decor.silkGrey",
+      code: "EGGER U707 ST9",
+      thicknessMm: 16,
+      colorHex: "#dcdcd7",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u727_st9_16",
+      kind: "ldsp",
+      decorName: "decor.stoneGrey",
+      code: "EGGER U727 ST9",
+      thicknessMm: 16,
+      colorHex: "#a69d91",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u788_st9_16",
+      kind: "ldsp",
+      decorName: "decor.arcticGrey",
+      code: "EGGER U788 ST9",
+      thicknessMm: 16,
+      colorHex: "#9b9c9d",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_f765_st20_16",
+      kind: "ldsp",
+      decorName: "decor.silverMatt",
+      code: "EGGER F765 ST20",
+      thicknessMm: 16,
+      colorHex: "#a7a9aa",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "ldsp_aluminium_16",
+      kind: "ldsp",
+      decorName: "decor.aluminium",
+      thicknessMm: 16,
+      colorHex: "#c0c4c9",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u963_st9_16",
+      kind: "ldsp",
+      decorName: "decor.anthraciteGrey",
+      code: "EGGER U963 ST9",
+      thicknessMm: 16,
+      colorHex: "#3b3c3e",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u502_st9_16",
+      kind: "ldsp",
+      decorName: "decor.smokyBlue",
+      code: "EGGER U502 ST9",
+      thicknessMm: 16,
+      colorHex: "#566f87",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u665_st9_16",
+      kind: "ldsp",
+      decorName: "decor.stoneGreen",
+      code: "EGGER U665 ST9",
+      thicknessMm: 16,
+      colorHex: "#4e5d58",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u335_st9_16",
+      kind: "ldsp",
+      decorName: "decor.redBrown",
+      code: "EGGER U335 ST9",
+      thicknessMm: 16,
+      colorHex: "#8a4a47",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "ldsp_red_16",
+      kind: "ldsp",
+      decorName: "decor.red",
+      thicknessMm: 16,
+      colorHex: "#e8211f",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h3860_st9_16",
+      kind: "ldsp",
+      decorName: "decor.mapleChampagne",
+      code: "EGGER H3860 ST9",
+      thicknessMm: 16,
+      colorHex: "#e4d6c4",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h3730_st10_16",
+      kind: "ldsp",
+      decorName: "decor.hickoryNatural",
+      code: "EGGER H3730 ST10",
+      thicknessMm: 16,
+      colorHex: "#c69661",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "ldsp_oak_wotan_16",
+      kind: "ldsp",
+      decorName: "decor.oakWotan",
+      thicknessMm: 16,
+      colorHex: "#b7874f",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h3710_st12_16",
+      kind: "ldsp",
+      decorName: "decor.walnutCarini",
+      code: "EGGER H3710 ST12",
+      thicknessMm: 16,
+      colorHex: "#7a5b44",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h3133_st12_16",
+      kind: "ldsp",
+      decorName: "decor.oakDavosTruffle",
+      code: "EGGER H3133 ST12",
+      thicknessMm: 16,
+      colorHex: "#7d6453",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h2033_st10_16",
+      kind: "ldsp",
+      decorName: "decor.oakHantonDark",
+      code: "EGGER H2033 ST10",
+      thicknessMm: 16,
+      colorHex: "#6c4a33",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h1199_st12_16",
+      kind: "ldsp",
+      decorName: "decor.oakThermo",
+      code: "EGGER H1199 ST12",
+      thicknessMm: 16,
+      colorHex: "#3b2d27",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "lmdf_egger_h1367_st40_16",
+      kind: "mdf",
+      decorName: "decor.oakCasellaLight",
+      code: "EGGER H1367 ST40",
+      thicknessMm: 16,
+      colorHex: "#d3ae83",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet. LMDF: doors only."
+    },
+    {
+      id: "lmdf_egger_h1385_st40_16",
+      kind: "mdf",
+      decorName: "decor.oakCasellaNatural",
+      code: "EGGER H1385 ST40",
+      thicknessMm: 16,
+      colorHex: "#c49a6b",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet. LMDF: doors only."
+    },
+    {
+      id: "lmdf_egger_h1344_st32_16_7",
+      kind: "mdf",
+      decorName: "decor.oakShermanCognac",
+      code: "EGGER H1344 ST32",
+      thicknessMm: 16.7,
+      colorHex: "#8c5a34",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet. LMDF: doors only."
+    },
+    {
+      id: "lmdf_egger_h3325_st28_16_7",
+      kind: "mdf",
+      decorName: "decor.oakGladstoneTobacco",
+      code: "EGGER H3325 ST28",
+      thicknessMm: 16.7,
+      colorHex: "#5c4b3f",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet. LMDF: doors only."
+    },
+    {
+      id: "hdf_white_3",
+      kind: "hdf",
+      decorName: "decor.white",
+      thicknessMm: 3,
+      colorHex: "#f3f2ee",
+      textureUrl: null,
+      customerVisible: false,
+      unconfirmed: true,
+      note: "Assumed back panel material (HDF 3 mm, white). Unchanged from catalog 0.1.0."
+    }
+  ]
+};
+
 // ../../packages/engine/src/catalog.ts
 var materialsV0 = materials_v0_default;
+var materialsV1 = materials_v1_default;
+var currentCatalog = materialsV1;
 function getMaterial(catalog, id) {
   return typeof id === "string" ? catalog.materials.find((m) => m.id === id) : void 0;
 }
@@ -1484,7 +1873,7 @@ function interiorConstants(template) {
     drawerMaxFrontWidthMm: n("drawerMaxFrontWidthMm")
   };
 }
-function computeLayout(template, params, catalog = materialsV0) {
+function computeLayout(template, params, catalog = currentCatalog) {
   const corpusMaterial = requireMaterial(catalog, params.corpusMaterial);
   const doorMaterial = requireMaterial(
     catalog,
@@ -1686,7 +2075,7 @@ function checkTemplate(template) {
   }
   return null;
 }
-function validate(params, template = wardrobeTemplate, catalog = materialsV0) {
+function validate(params, template = wardrobeTemplate, catalog = currentCatalog) {
   const templateIssue = checkTemplate(template);
   if (templateIssue) return [templateIssue];
   const resolved = resolveParams(template, params);
@@ -1982,7 +2371,7 @@ function buildDimensions(layout) {
     plinthHeightMm: layout.plinthHeightMm
   };
 }
-function generate(template, params, catalog = materialsV0) {
+function generate(template, params, catalog = currentCatalog) {
   const issues = validate(params, template, catalog);
   if (issues.some((i) => i.severity === "error")) {
     return { panels: [], rails: [], sections: [], issues, dimensions: null };
@@ -2001,7 +2390,16 @@ function generate(template, params, catalog = materialsV0) {
 
 // ../../packages/engine/src/regenerate.ts
 var CATALOG_ARCHIVE = {
-  [materialsV0.catalogVersion]: materialsV0
+  [materialsV0.catalogVersion]: materialsV0,
+  [materialsV1.catalogVersion]: materialsV1
+};
+var TEMPLATE_CATALOG = {
+  "0.1.0": materialsV0.catalogVersion,
+  "0.2.0": materialsV0.catalogVersion,
+  "0.3.0": materialsV0.catalogVersion,
+  "0.4.0": materialsV0.catalogVersion,
+  "0.5.0": materialsV0.catalogVersion,
+  "0.6.0": materialsV1.catalogVersion
 };
 
 // src/lead/phone.ts
@@ -2182,6 +2580,35 @@ var ru = {
   "decor.beige": "\u0411\u0435\u0436\u0435\u0432\u044B\u0439",
   "decor.oakLight": "\u0421\u0432\u0435\u0442\u043B\u044B\u0439 \u0434\u0443\u0431",
   "decor.anthracite": "\u0410\u043D\u0442\u0440\u0430\u0446\u0438\u0442",
+  "decor.whiteShagreen": "\u0411\u0435\u043B\u044B\u0439 \u0448\u0430\u0433\u0440\u0435\u043D\u044C",
+  "decor.whiteMoisture": "\u0411\u0435\u043B\u044B\u0439 \u0432\u043B\u0430\u0433\u043E\u0441\u0442\u043E\u0439\u043A\u0438\u0439",
+  "decor.whitePremium": "\u0411\u0435\u043B\u044B\u0439 \u043F\u0440\u0435\u043C\u0438\u0443\u043C",
+  "decor.alabasterWhite": "\u0410\u043B\u0435\u0431\u0430\u0441\u0442\u0440 \u0431\u0435\u043B\u044B\u0439",
+  "decor.cashmereGrey": "\u041A\u0430\u0448\u0435\u043C\u0438\u0440 \u0441\u0435\u0440\u044B\u0439",
+  "decor.silkGrey": "\u0428\u0451\u043B\u043A \u0441\u0435\u0440\u044B\u0439",
+  "decor.stoneGrey": "\u0421\u0435\u0440\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C",
+  "decor.arcticGrey": "\u0410\u0440\u043A\u0442\u0438\u043A\u0430 \u0441\u0435\u0440\u044B\u0439",
+  "decor.silverMatt": "\u0421\u0435\u0440\u0435\u0431\u0440\u0438\u0441\u0442\u044B\u0439 \u043C\u0430\u0442\u043E\u0432\u044B\u0439",
+  "decor.aluminium": "\u0410\u043B\u044E\u043C\u0438\u043D\u0438\u0439",
+  "decor.anthraciteGrey": "\u0410\u043D\u0442\u0440\u0430\u0446\u0438\u0442 \u0441\u0435\u0440\u044B\u0439",
+  "decor.smokyBlue": "\u0421\u0438\u043D\u0438\u0439 \u0434\u044B\u043C\u0447\u0430\u0442\u044B\u0439",
+  "decor.stoneGreen": "\u0417\u0435\u043B\u0451\u043D\u044B\u0439 \u043A\u0430\u043C\u0435\u043D\u044C",
+  "decor.redBrown": "\u041A\u0440\u0430\u0441\u043D\u043E-\u043A\u043E\u0440\u0438\u0447\u043D\u0435\u0432\u044B\u0439",
+  "decor.red": "\u041A\u0440\u0430\u0441\u043D\u044B\u0439",
+  "decor.mapleChampagne": "\u041A\u043B\u0451\u043D \u0441\u0430\u0445\u0430\u0440\u043D\u044B\u0439 \u0448\u0430\u043C\u043F\u0430\u043D\u044C",
+  "decor.hickoryNatural": "\u0413\u0438\u043A\u043E\u0440\u0438 \u043D\u0430\u0442\u0443\u0440\u0430\u043B\u044C\u043D\u044B\u0439",
+  "decor.oakWotan": "\u0414\u0443\u0431 \u0412\u043E\u0442\u0430\u043D",
+  "decor.walnutCarini": "\u041E\u0440\u0435\u0445 \u041A\u0430\u0440\u0438\u043D\u0438",
+  "decor.oakDavosTruffle": "\u0414\u0443\u0431 \u0414\u0430\u0432\u043E\u0441 \u0442\u0440\u044E\u0444\u0435\u043B\u044C",
+  "decor.oakHantonDark": "\u0414\u0443\u0431 \u0425\u0430\u043D\u0442\u043E\u043D \u0442\u0451\u043C\u043D\u044B\u0439",
+  "decor.oakThermo": "\u0414\u0443\u0431 \u0422\u0435\u0440\u043C\u043E",
+  "decor.oakCasellaLight": "\u0414\u0443\u0431 \u041A\u0430\u0441\u0435\u043B\u043B\u0430 \u0441\u0432\u0435\u0442\u043B\u044B\u0439",
+  "decor.oakCasellaNatural": "\u0414\u0443\u0431 \u041A\u0430\u0441\u0435\u043B\u043B\u0430 \u043D\u0430\u0442\u0443\u0440\u0430\u043B\u044C\u043D\u044B\u0439",
+  "decor.oakShermanCognac": "\u0414\u0443\u0431 \u0428\u0435\u0440\u043C\u0430\u043D \u043A\u043E\u043D\u044C\u044F\u043A",
+  "decor.oakGladstoneTobacco": "\u0414\u0443\u0431 \u0413\u043B\u0430\u0434\u0441\u0442\u043E\u0443\u043D \u0442\u0430\u0431\u0430\u043A",
+  "color.group.plain": "\u041E\u0434\u043D\u043E\u0442\u043E\u043D\u043D\u044B\u0435",
+  "color.group.wood": "\u0414\u0435\u0440\u0435\u0432\u043E",
+  "color.doorOnly": "\u0442\u043E\u043B\u044C\u043A\u043E \u0444\u0430\u0441\u0430\u0434",
   "color.sameAsCorpus": "\u041A\u0430\u043A \u043A\u043E\u0440\u043F\u0443\u0441",
   "reason.DOOR_TOO_WIDE": "\u0421\u043B\u0438\u0448\u043A\u043E\u043C \u0448\u0438\u0440\u043E\u043A\u0430\u044F \u0441\u0442\u0432\u043E\u0440\u043A\u0430",
   "reason.RAIL_DEPTH_SHORT": "\u041C\u0430\u043B\u0430 \u0433\u043B\u0443\u0431\u0438\u043D\u0430 \u0434\u043B\u044F \u0448\u0442\u0430\u043D\u0433\u0438",
@@ -2408,6 +2835,35 @@ var uz = {
   "decor.beige": "Bej",
   "decor.oakLight": "Och eman",
   "decor.anthracite": "Antratsit",
+  "decor.whiteShagreen": "Oq",
+  "decor.whiteMoisture": "Oq, namga chidamli",
+  "decor.whitePremium": "Premium oq",
+  "decor.alabasterWhite": "Alebastr oq",
+  "decor.cashmereGrey": "Kashemir kulrang",
+  "decor.silkGrey": "Ipak kulrang",
+  "decor.stoneGrey": "Kulrang tosh",
+  "decor.arcticGrey": "Arktika kulrang",
+  "decor.silverMatt": "Kumushrang matoviy",
+  "decor.aluminium": "Alyuminiy",
+  "decor.anthraciteGrey": "Antratsit kulrang",
+  "decor.smokyBlue": "Tutunli ko'k",
+  "decor.stoneGreen": "Yashil tosh",
+  "decor.redBrown": "Qizil-jigarrang",
+  "decor.red": "Qizil",
+  "decor.mapleChampagne": "Shampan zarang",
+  "decor.hickoryNatural": "Tabiiy gikori",
+  "decor.oakWotan": "Votan eman",
+  "decor.walnutCarini": "Karini yong'oq",
+  "decor.oakDavosTruffle": "Davos eman, tryufel",
+  "decor.oakHantonDark": "To'q Xanton eman",
+  "decor.oakThermo": "Termo eman",
+  "decor.oakCasellaLight": "Och Kasella eman",
+  "decor.oakCasellaNatural": "Kasella eman",
+  "decor.oakShermanCognac": "Sherman eman, konyak",
+  "decor.oakGladstoneTobacco": "Gladston eman, tamaki",
+  "color.group.plain": "Bir xil ranglar",
+  "color.group.wood": "Yog'och",
+  "color.doorOnly": "faqat eshik",
   "color.sameAsCorpus": "Korpus bilan bir xil",
   "reason.DOOR_TOO_WIDE": "Eshik tabaqasi juda keng",
   "reason.RAIL_DEPTH_SHORT": "Shtanga uchun chuqurlik yetarli emas",
@@ -2523,7 +2979,7 @@ function summarizeResult(params, result, lang) {
     return s === k ? value : s;
   };
   const decor = (id) => {
-    const m = id ? getMaterial(materialsV0, id) : void 0;
+    const m = id ? getMaterial(currentCatalog, id) : void 0;
     return m ? t(m.decorName) : id ?? "";
   };
   const { params: p } = resolveParams(wardrobeTemplate, params);
@@ -2542,6 +2998,8 @@ function summarizeResult(params, result, lang) {
     sizeCm: `${cm(w)} \xD7 ${cm(h)} \xD7 ${cm(d)} ${t("unit.cm")}`,
     corpus: decor(corpusId),
     door: doorId ? decor(doorId) : null,
+    corpusCode: corpusId && getMaterial(currentCatalog, corpusId)?.code || null,
+    doorCode: doorId && getMaterial(currentCatalog, doorId)?.code || null,
     sections: `${t("c.parts", { count: result.sections.length })}: ${parts.join("; ")}`,
     doors: doors.join("; ")
   };
@@ -2575,6 +3033,7 @@ function clientIp(req) {
   const fwd = req.headers.get("x-forwarded-for");
   return (fwd ? fwd.split(",")[0] : req.headers.get("x-real-ip"))?.trim() || "unknown";
 }
+var withCode = (name, code) => code ? `${name} (${code})` : name;
 var isObject = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 function decodeRender(value) {
   if (value === void 0 || value === null || value === "") return void 0;
@@ -2667,8 +3126,9 @@ async function handleSubmit(req, deps2) {
       lastName: contact.lastName ?? "",
       phone: phoneE164(contact.phone),
       sizeMm: summary.sizeMm,
-      corpus: summary.corpus,
-      door: summary.door ?? "\u2014",
+      // manager / production need the supplier code next to the decor name
+      corpus: withCode(summary.corpus, summary.corpusCode),
+      door: summary.door ? withCode(summary.door, summary.doorCode) : "\u2014",
       sections: summary.sections,
       doors: summary.doors,
       kiosk: kioskId,

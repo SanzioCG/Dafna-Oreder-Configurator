@@ -13,7 +13,13 @@ export {
   listUnconfirmed,
   type UnconfirmedItem,
 } from './template.js';
-export { materialsV0, getMaterial } from './catalog.js';
+export {
+  MATERIAL_MAP_V0_V1,
+  currentCatalog,
+  getMaterial,
+  materialsV0,
+  materialsV1,
+} from './catalog.js';
 export { resolveParams, clampParam, type ResolvedParams } from './params.js';
 export {
   generate,
@@ -33,6 +39,8 @@ export {
   migrateParamsFrom01,
   migrateParamsFrom02,
   migrateOrderDraft,
+  mapMaterialsV0toV1,
+  MATERIALS_CHANGED_IN,
   type MigrationOptions,
 } from './migrate.js';
 export {
@@ -59,6 +67,7 @@ export { interiorConstants } from './wardrobe.js';
 export {
   CATALOG_ARCHIVE,
   REGENERABLE_SINCE,
+  TEMPLATE_CATALOG,
   TEMPLATE_ARCHIVE,
   regenerateApplication,
   type RegenerateFailure,

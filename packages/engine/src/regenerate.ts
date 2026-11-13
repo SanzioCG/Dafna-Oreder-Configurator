@@ -3,7 +3,8 @@ import wardrobeV1Json from '../templates/wardrobe.v1.json' with { type: 'json' }
 import wardrobeV2Json from '../templates/wardrobe.v2.json' with { type: 'json' };
 import wardrobeV3Json from '../templates/wardrobe.v3.json' with { type: 'json' };
 import wardrobeV4Json from '../templates/wardrobe.v4.json' with { type: 'json' };
-import { materialsV0 } from './catalog.js';
+import wardrobeV5Json from '../templates/wardrobe.v5.json' with { type: 'json' };
+import { materialsV0, materialsV1 } from './catalog.js';
 import { toOrderDraft } from './order.js';
 import type { GenerateResult, MaterialCatalog, OrderDraft, Template } from './types.js';
 import { generate } from './wardrobe.js';
@@ -18,11 +19,27 @@ export const TEMPLATE_ARCHIVE: Readonly<Record<string, Template>> = {
   '0.3.0': wardrobeV2Json as Template,
   '0.4.0': wardrobeV3Json as Template,
   '0.5.0': wardrobeV4Json as Template,
+  '0.6.0': wardrobeV5Json as Template,
 };
 
 /** Material catalogs by catalogVersion (same rule: archived, never edited). */
 export const CATALOG_ARCHIVE: Readonly<Record<string, MaterialCatalog>> = {
   [materialsV0.catalogVersion]: materialsV0,
+  [materialsV1.catalogVersion]: materialsV1,
+};
+
+/**
+ * The catalog each template version was released with (its material ids live there). An
+ * application stores only templateVersion, so this mapping is part of the archive: never edit
+ * an entry, add one for every new template version.
+ */
+export const TEMPLATE_CATALOG: Readonly<Record<string, string>> = {
+  '0.1.0': materialsV0.catalogVersion,
+  '0.2.0': materialsV0.catalogVersion,
+  '0.3.0': materialsV0.catalogVersion,
+  '0.4.0': materialsV0.catalogVersion,
+  '0.5.0': materialsV0.catalogVersion,
+  '0.6.0': materialsV1.catalogVersion,
 };
 
 type Generator = (template: Template, params: unknown, catalog: MaterialCatalog) => GenerateResult;
@@ -53,7 +70,7 @@ export type RegenerateFailure = {
 export type RegenerateResult = { ok: true; draft: OrderDraft } | RegenerateFailure;
 
 export interface RegenerateOptions {
-  /** catalog the application was made with (default: the catalog of that time, materials v0) */
+  /** catalog the application was made with (default: TEMPLATE_CATALOG[templateVersion]) */
   catalogVersion?: string;
   /** stored in the draft's generatedAt; default 1970-01-01T00:00:00.000Z keeps it deterministic */
   generatedAt?: string;
@@ -74,7 +91,8 @@ export function regenerateApplication(
   if (!template) return { ok: false, code: 'UNKNOWN_TEMPLATE_VERSION', templateVersion };
   const run = GENERATORS[template.generator];
   if (!run) return { ok: false, code: 'TEMPLATE_NOT_REGENERABLE', templateVersion };
-  const catalog = CATALOG_ARCHIVE[options.catalogVersion ?? materialsV0.catalogVersion];
+  const catalogVersion = options.catalogVersion ?? TEMPLATE_CATALOG[templateVersion] ?? '';
+  const catalog = CATALOG_ARCHIVE[catalogVersion];
   if (!catalog) return { ok: false, code: 'UNKNOWN_CATALOG_VERSION', templateVersion };
   const generatedAt = new Date(options.generatedAt ?? 0);
   const result = run(template, params, catalog);

@@ -1,4 +1,4 @@
-import { getMaterial, materialsV0 } from './catalog.js';
+import { getMaterial, currentCatalog } from './catalog.js';
 import { planDoors, type DoorLeaf, type DoorPlan } from './doors.js';
 import {
   resolveInterior,
@@ -172,7 +172,7 @@ export function interiorConstants(template: Template): InteriorConstants {
 export function computeLayout(
   template: Template,
   params: Params,
-  catalog: MaterialCatalog = materialsV0,
+  catalog: MaterialCatalog = currentCatalog,
 ): WardrobeLayout {
   const corpusMaterial = requireMaterial(catalog, params.corpusMaterial);
   const doorMaterial = requireMaterial(
@@ -397,7 +397,7 @@ function checkTemplate(template: Template): Issue | null {
 export function validate(
   params: unknown,
   template: Template = wardrobeTemplate,
-  catalog: MaterialCatalog = materialsV0,
+  catalog: MaterialCatalog = currentCatalog,
 ): Issue[] {
   const templateIssue = checkTemplate(template);
   if (templateIssue) return [templateIssue];
@@ -734,7 +734,7 @@ function buildDimensions(layout: WardrobeLayout): Dimensions {
 export function generate(
   template: Template,
   params: unknown,
-  catalog: MaterialCatalog = materialsV0,
+  catalog: MaterialCatalog = currentCatalog,
 ): GenerateResult {
   const issues = validate(params, template, catalog);
   if (issues.some((i) => i.severity === 'error')) {
