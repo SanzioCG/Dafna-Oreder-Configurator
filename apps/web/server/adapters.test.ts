@@ -2,6 +2,7 @@
 import { generateKeyPairSync } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { HEADERS, LAST_COLUMN, leadToRow } from './columns';
+import { SHEET_FORMAT_VERSION } from './sheetFormat';
 import { GoogleSheetsStore, parseServiceAccount, SHEET_TITLE } from './sheets';
 import { TelegramNotifier, telegramText } from './telegram';
 import { LEAD_STATUSES, type LeadRecord } from './types';
@@ -201,11 +202,16 @@ describe('Google Sheets store', () => {
   it('setup: header, frozen row, "Holat" dropdown with the 5 statuses, hidden technical columns', async () => {
     const f = sheet([], []);
     const store = new GoogleSheetsStore({ sheetId: 'S1', account, fetch: f.impl });
-    expect(await store.ensureSchema()).toEqual({ created: false, headerWritten: true });
+    expect(await store.ensureSchema()).toEqual({
+      created: false,
+      headerWritten: true,
+      formatted: true,
+    });
     const put = f.calls.find((c) => c.method === 'PUT')!;
     expect((put.body as { values: string[][] }).values[0]).toEqual(HEADERS);
-    const batch = f.calls.find((c) => c.url.endsWith(':batchUpdate'))!;
-    const requests = (batch.body as { requests: SheetRequest[] }).requests;
+    const requests = f.calls
+      .filter((c) => c.url.endsWith(':batchUpdate'))
+      .flatMap((c) => (c.body as { requests: SheetRequest[] }).requests);
     const validation = requests.find((r) => r.setDataValidation)!.setDataValidation!;
     expect(validation.range.startColumnIndex).toBe(2); // column C = Holat
     expect(
@@ -213,6 +219,61 @@ describe('Google Sheets store', () => {
     ).toEqual([...LEAD_STATUSES]);
     expect(validation.rule.strict).toBe(true);
     expect(requests.some((r) => r.updateDimensionProperties?.properties.hiddenByUser)).toBe(true);
+  });
+
+  it('D-11b: an existing sheet is re-formatted once, then left alone', async () => {
+    let version: string | null = null;
+    const f = fakeFetch((c) => {
+      if (c.url.startsWith('https://oauth2'))
+        return { json: { access_token: 'AT', expires_in: 3600 } };
+      if (c.url.includes('?fields=sheets')) {
+        const developerMetadata = version
+          ? [{ metadataId: 1, metadataKey: 'dafna.sheetFormat', metadataValue: version }]
+          : [];
+        return {
+          json: { sheets: [{ properties: { sheetId: 7, title: SHEET_TITLE }, developerMetadata }] },
+        };
+      }
+      if (c.method === 'GET') return { json: { values: [HEADERS] } };
+      if (
+        c.url.endsWith(':batchUpdate') &&
+        JSON.stringify(c.body).includes('createDeveloperMetadata')
+      )
+        version = SHEET_FORMAT_VERSION;
+      return { json: {} };
+    });
+    const store = new GoogleSheetsStore({ sheetId: 'S1', account, fetch: f.impl });
+    expect(await store.ensureSchema()).toEqual({
+      created: false,
+      headerWritten: false,
+      formatted: true,
+    });
+    expect(f.calls.some((c) => c.method === 'PUT')).toBe(false);
+    expect(await store.ensureSchema()).toEqual({
+      created: false,
+      headerWritten: false,
+      formatted: false,
+    });
+    expect(f.calls.filter((c) => c.url.endsWith(':batchUpdate'))).toHaveLength(2);
+  });
+
+  it('D-11b: a formatting error never stops saving (the setup script still reports it)', async () => {
+    const f = fakeFetch((c) => {
+      if (c.url.startsWith('https://oauth2'))
+        return { json: { access_token: 'AT', expires_in: 3600 } };
+      if (c.url.includes('?fields=sheets'))
+        return { json: { sheets: [{ properties: { sheetId: 7, title: SHEET_TITLE } }] } };
+      if (c.url.endsWith(':batchUpdate') && JSON.stringify(c.body).includes('addBanding'))
+        return { status: 400, json: { error: { code: 400 } } };
+      if (c.url.includes(':append'))
+        return { json: { updates: { updatedRange: `${SHEET_TITLE}!A2:W2` } } };
+      if (c.method === 'GET') return { json: { values: [HEADERS] } };
+      return { json: {} };
+    });
+    const store = new GoogleSheetsStore({ sheetId: 'S1', account, fetch: f.impl });
+    expect((await store.append(LEAD)).ref).toBe(2);
+    const strict = new GoogleSheetsStore({ sheetId: 'S1', account, fetch: f.impl });
+    await expect(strict.ensureSchema({ strict: true })).rejects.toThrow();
   });
 
   it('fresh spreadsheet without the "Arizalar" tab: the first lookup creates it (was a 400)', async () => {

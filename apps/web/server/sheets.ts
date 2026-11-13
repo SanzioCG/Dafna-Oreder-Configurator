@@ -2,7 +2,6 @@ import { createSign } from 'node:crypto';
 import {
   COLUMNS,
   HEADERS,
-  HIDDEN_COLUMN_RANGES,
   LAST_COLUMN,
   STATUS_COLUMN_INDEX,
   TELEGRAM_COLUMN_INDEX,
@@ -11,6 +10,12 @@ import {
   rowToLead,
 } from './columns';
 import { parseTashkentTimestamp } from './ids';
+import {
+  FORMAT_METADATA_KEY,
+  PROTECTION_DESCRIPTION,
+  SHEET_FORMAT_VERSION,
+  formatRequests,
+} from './sheetFormat';
 import {
   LEAD_STATUSES,
   MAX_TELEGRAM_ATTEMPTS,
@@ -21,6 +26,14 @@ import {
 } from './types';
 
 export const SHEET_TITLE = 'Arizalar';
+
+interface SheetMeta {
+  properties: { sheetId: number; title: string };
+  developerMetadata?: { metadataId: number; metadataKey: string; metadataValue: string }[];
+  bandedRanges?: { bandedRangeId: number }[];
+  protectedRanges?: { protectedRangeId: number; description?: string }[];
+  conditionalFormats?: unknown[];
+}
 const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const API = 'https://sheets.googleapis.com/v4/spreadsheets';
@@ -188,15 +201,20 @@ export class GoogleSheetsStore implements LeadStore {
   }
 
   /**
-   * Idempotent sheet setup: tab "Arizalar", header row (bold, frozen), "Holat" dropdown with the
-   * five lead statuses, technical columns hidden. Run by the setup script and before the first
+   * Idempotent sheet setup: tab "Arizalar", header row, "Holat" dropdown with the five lead
+   * statuses, and the look of sheetFormat.ts (applied again whenever its version changes). Run by the setup script and before the first
    * append of every server instance (cheap when the header is already right).
    */
-  async ensureSchema(): Promise<{ created: boolean; headerWritten: boolean }> {
-    const meta = await this.api<{ sheets?: { properties: { sheetId: number; title: string } }[] }>(
-      '?fields=sheets.properties(sheetId,title)',
+  async ensureSchema(options: { strict?: boolean } = {}): Promise<{
+    created: boolean;
+    headerWritten: boolean;
+    formatted: boolean;
+  }> {
+    const meta = await this.api<{ sheets?: SheetMeta[] }>(
+      '?fields=sheets(properties(sheetId,title),developerMetadata(metadataId,metadataKey,metadataValue),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId,description),conditionalFormats(ranges))',
     );
-    let tab = meta.sheets?.find((s) => s.properties.title === SHEET_TITLE)?.properties.sheetId;
+    const own = meta.sheets?.find((s) => s.properties.title === SHEET_TITLE);
+    let tab = own?.properties.sheetId;
     let created = false;
     if (tab === undefined) {
       const res = await this.api<{ replies: { addSheet: { properties: { sheetId: number } } }[] }>(
@@ -214,30 +232,21 @@ export class GoogleSheetsStore implements LeadStore {
       `/values/${this.range(`A1:${LAST_COLUMN}1`)}`,
     );
     const current = (head.values?.[0] ?? []).map(String);
-    if (!created && HEADERS.every((h, i) => current[i] === h))
-      return { created, headerWritten: false };
+    const headerOk = !created && HEADERS.every((h, i) => current[i] === h);
+    const formats = own?.developerMetadata?.filter((m) => m.metadataKey === FORMAT_METADATA_KEY);
+    const formatOk = formats?.some((m) => m.metadataValue === SHEET_FORMAT_VERSION) ?? false;
+    if (headerOk && formatOk) return { created, headerWritten: false, formatted: false };
 
-    await this.api(`/values/${this.range(`A1:${LAST_COLUMN}1`)}?valueInputOption=RAW`, {
-      method: 'PUT',
-      body: { values: [HEADERS] },
-    });
+    if (!headerOk) {
+      await this.api(`/values/${this.range(`A1:${LAST_COLUMN}1`)}?valueInputOption=RAW`, {
+        method: 'PUT',
+        body: { values: [HEADERS] },
+      });
+    }
     await this.api(':batchUpdate', {
       method: 'POST',
       body: {
         requests: [
-          {
-            updateSheetProperties: {
-              properties: { sheetId: tab, gridProperties: { frozenRowCount: 1 } },
-              fields: 'gridProperties.frozenRowCount',
-            },
-          },
-          {
-            repeatCell: {
-              range: { sheetId: tab, startRowIndex: 0, endRowIndex: 1 },
-              cell: { userEnteredFormat: { textFormat: { bold: true } } },
-              fields: 'userEnteredFormat.textFormat.bold',
-            },
-          },
           {
             setDataValidation: {
               range: {
@@ -256,16 +265,29 @@ export class GoogleSheetsStore implements LeadStore {
               },
             },
           },
-          ...HIDDEN_COLUMN_RANGES.map(([startIndex, endIndex]) => ({
-            updateDimensionProperties: {
-              range: { sheetId: tab, dimension: 'COLUMNS', startIndex, endIndex },
-              properties: { hiddenByUser: true },
-              fields: 'hiddenByUser',
-            },
-          })),
         ],
       },
     });
-    return { created, headerWritten: true };
+    // D-11b: the look (header, widths, colours, filter, edit warnings) in its own batch: a
+    // formatting error must never stop applications being saved (the setup script is strict)
+    try {
+      await this.api(':batchUpdate', {
+        method: 'POST',
+        body: {
+          requests: formatRequests(tab, {
+            bandedRangeIds: (own?.bandedRanges ?? []).map((b) => b.bandedRangeId),
+            protectedRangeIds: (own?.protectedRanges ?? [])
+              .filter((p) => p.description === PROTECTION_DESCRIPTION)
+              .map((p) => p.protectedRangeId),
+            conditionalFormatCount: own?.conditionalFormats?.length ?? 0,
+            metadataIds: (formats ?? []).map((m) => m.metadataId),
+          }),
+        },
+      });
+    } catch (e) {
+      if (options.strict) throw e;
+      return { created, headerWritten: !headerOk, formatted: false };
+    }
+    return { created, headerWritten: !headerOk, formatted: true };
   }
 }

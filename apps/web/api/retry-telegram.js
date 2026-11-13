@@ -37032,8 +37032,8 @@ var require_strings = __commonJS({
     exports.charFromCode = function(code) {
       return String.fromCharCode(code);
     };
-    exports.charFromHexCode = function(hex) {
-      return exports.charFromCode(parseInt(hex, 16));
+    exports.charFromHexCode = function(hex2) {
+      return exports.charFromCode(parseInt(hex2, 16));
     };
     exports.padStart = function(value, length, padChar) {
       var padding = "";
@@ -43245,8 +43245,8 @@ var require_PDFName = __commonJS({
     var Irregular_1 = require_Irregular();
     var utils_1 = require_utils2();
     var decodeName = function(name) {
-      return name.replace(/#([\dABCDEF]{2})/g, function(_, hex) {
-        return utils_1.charFromHexCode(hex);
+      return name.replace(/#([\dABCDEF]{2})/g, function(_, hex2) {
+        return utils_1.charFromHexCode(hex2);
       });
     };
     var isRegularChar = function(charCode) {
@@ -43274,7 +43274,7 @@ var require_PDFName = __commonJS({
         }
         PDFName2.prototype.asBytes = function() {
           var bytes = [];
-          var hex = "";
+          var hex2 = "";
           var escaped = false;
           var pushByte = function(byte2) {
             if (byte2 !== void 0)
@@ -43292,10 +43292,10 @@ var require_PDFName = __commonJS({
                 pushByte(byte);
             } else {
               if (byte >= CharCodes_1.default.Zero && byte <= CharCodes_1.default.Nine || byte >= CharCodes_1.default.a && byte <= CharCodes_1.default.f || byte >= CharCodes_1.default.A && byte <= CharCodes_1.default.F) {
-                hex += char;
-                if (hex.length === 2 || !(nextChar >= "0" && nextChar <= "9" || nextChar >= "a" && nextChar <= "f" || nextChar >= "A" && nextChar <= "F")) {
-                  pushByte(parseInt(hex, 16));
-                  hex = "";
+                hex2 += char;
+                if (hex2.length === 2 || !(nextChar >= "0" && nextChar <= "9" || nextChar >= "a" && nextChar <= "f" || nextChar >= "A" && nextChar <= "F")) {
+                  pushByte(parseInt(hex2, 16));
+                  hex2 = "";
                 }
               } else {
                 pushByte(byte);
@@ -45374,13 +45374,13 @@ var require_PDFHexString = __commonJS({
           return _this;
         }
         PDFHexString2.prototype.asBytes = function() {
-          var hex = this.value + (this.value.length % 2 === 1 ? "0" : "");
-          var hexLength = hex.length;
-          var bytes = new Uint8Array(hex.length / 2);
+          var hex2 = this.value + (this.value.length % 2 === 1 ? "0" : "");
+          var hexLength = hex2.length;
+          var bytes = new Uint8Array(hex2.length / 2);
           var hexOffset = 0;
           var bytesOffset = 0;
           while (hexOffset < hexLength) {
-            var byte = parseInt(hex.substring(hexOffset, hexOffset + 2), 16);
+            var byte = parseInt(hex2.substring(hexOffset, hexOffset + 2), 16);
             bytes[bytesOffset] = byte;
             hexOffset += 2;
             bytesOffset += 1;
@@ -45423,11 +45423,11 @@ var require_PDFHexString = __commonJS({
         };
         PDFHexString2.fromText = function(value) {
           var encoded = utils_1.utf16Encode(value);
-          var hex = "";
+          var hex2 = "";
           for (var idx = 0, len = encoded.length; idx < len; idx++) {
-            hex += utils_1.toHexStringOfMinLength(encoded[idx], 4);
+            hex2 += utils_1.toHexStringOfMinLength(encoded[idx], 4);
           }
-          return new PDFHexString2(hex);
+          return new PDFHexString2(hex2);
         };
         return PDFHexString2;
       })(PDFObject_1.default)
@@ -45571,8 +45571,8 @@ var require_CMap = __commonJS({
         var ls = unicode_1.lowSurrogate(codePoint);
         return "" + cmapHexString(hs) + cmapHexString(ls);
       }
-      var hex = utils_1.toHexString(codePoint);
-      var msg = "0x" + hex + " is not a valid UTF-8 or UTF-16 codepoint.";
+      var hex2 = utils_1.toHexString(codePoint);
+      var msg = "0x" + hex2 + " is not a valid UTF-8 or UTF-16 codepoint.";
       throw new Error(msg);
     };
   }
@@ -46842,30 +46842,30 @@ var require_UPNG = __commonJS({
         UPNG.decode._filterZero(data, out, di, sw, sh);
         var y = 0, row = starting_row[pass];
         while (row < h) {
-          var col = starting_col[pass];
+          var col2 = starting_col[pass];
           var cdi = di + y * bpll << 3;
-          while (col < w) {
+          while (col2 < w) {
             if (bpp == 1) {
               var val = data[cdi >> 3];
               val = val >> 7 - (cdi & 7) & 1;
-              img[row * bpl + (col >> 3)] |= val << 7 - ((col & 7) << 0);
+              img[row * bpl + (col2 >> 3)] |= val << 7 - ((col2 & 7) << 0);
             }
             if (bpp == 2) {
               var val = data[cdi >> 3];
               val = val >> 6 - (cdi & 7) & 3;
-              img[row * bpl + (col >> 2)] |= val << 6 - ((col & 3) << 1);
+              img[row * bpl + (col2 >> 2)] |= val << 6 - ((col2 & 3) << 1);
             }
             if (bpp == 4) {
               var val = data[cdi >> 3];
               val = val >> 4 - (cdi & 7) & 15;
-              img[row * bpl + (col >> 1)] |= val << 4 - ((col & 1) << 2);
+              img[row * bpl + (col2 >> 1)] |= val << 4 - ((col2 & 1) << 2);
             }
             if (bpp >= 8) {
-              var ii = row * bpl + col * cbpp;
+              var ii = row * bpl + col2 * cbpp;
               for (var j = 0; j < cbpp; j++) img[ii + j] = data[(cdi >> 3) + j];
             }
             cdi += bpp;
-            col += ci;
+            col2 += ci;
           }
           y++;
           row += ri;
@@ -61889,7 +61889,7 @@ function build(template, p, catalog) {
     );
   } else {
     const lift = legs === "metal_lift";
-    const col = lift ? n(template, "liftColumnMm") : n(template, "frameColumnMm");
+    const col2 = lift ? n(template, "liftColumnMm") : n(template, "frameColumnMm");
     const foot = n(template, "frameFootHeightMm");
     const arm = n(template, "frameArmHeightMm");
     const endInset = n(template, "frameEndInsetMm");
@@ -61899,14 +61899,14 @@ function build(template, p, catalog) {
       ["right", W - endInset]
     ]) {
       panels.push(
-        metalBox(`frame-foot-${side}`, frame, [col, foot, footD], [x, foot / 2, D / 2]),
+        metalBox(`frame-foot-${side}`, frame, [col2, foot, footD], [x, foot / 2, D / 2]),
         metalBox(
           `frame-column-${side}`,
           frame,
-          [col, under - foot - arm, col],
+          [col2, under - foot - arm, col2],
           [x, foot + (under - foot - arm) / 2, D / 2]
         ),
-        metalBox(`frame-arm-${side}`, frame, [col, arm, footD], [x, under - arm / 2, D / 2])
+        metalBox(`frame-arm-${side}`, frame, [col2, arm, footD], [x, under - arm / 2, D / 2])
       );
     }
     const beam = n(template, "frameBeamMm");
@@ -61914,7 +61914,7 @@ function build(template, p, catalog) {
       metalBox(
         "frame-beam",
         frame,
-        [W - 2 * endInset - col, beam, beam],
+        [W - 2 * endInset - col2, beam, beam],
         [W / 2, under - arm - beam / 2, D / 2]
       )
     );
@@ -63872,11 +63872,6 @@ var COLUMNS = [
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
 var TELEGRAM_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "telegram");
-var FIRST_TECHNICAL_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "idempotencyKey");
-var HIDDEN_COLUMN_RANGES = [
-  [FIRST_TECHNICAL_COLUMN_INDEX, COLUMNS.findIndex((c) => c.key === "telegramAttempts") + 1],
-  [COLUMNS.findIndex((c) => c.key === "templateId"), COLUMNS.length]
-];
 function columnLetter(index) {
   if (index < 0 || index > 25) throw new Error(`column index out of range: ${index}`);
   return String.fromCharCode(65 + index);
@@ -63915,6 +63910,244 @@ function parseTashkentTimestamp(s) {
   if (!m) return /* @__PURE__ */ new Date(NaN);
   const [, y, mo, d, h, mi, se] = m.map(Number);
   return new Date(Date.UTC(y, mo - 1, d, h, mi, se) - TASHKENT_OFFSET_MS);
+}
+
+// server/sheetFormat.ts
+var SHEET_FORMAT_VERSION = "2";
+var FORMAT_METADATA_KEY = "dafna.sheetFormat";
+var PROTECTION_DESCRIPTION = "dafna: avtomatik ustunlar";
+function hex(h) {
+  const n3 = parseInt(h.replace("#", ""), 16);
+  return { red: (n3 >> 16 & 255) / 255, green: (n3 >> 8 & 255) / 255, blue: (n3 & 255) / 255 };
+}
+var STATUS_COLORS = {
+  Yangi: ["#dcebff", "#0b4fa8"],
+  "Qo'ng'iroq qilindi": ["#fff1c2", "#8a5a00"],
+  Tasdiqlandi: ["#d9f5e3", "#12703a"],
+  "Ishlab chiqarishga berildi": ["#eadfff", "#5b2db0"],
+  "Bekor qilindi": ["#ecedef", "#6b7078"]
+};
+var TELEGRAM_COLORS = {
+  failed: ["#ffe0e0", "#b42318"],
+  pending: ["#fff1c2", "#8a5a00"],
+  sent: ["#ffffff", "#12703a"]
+};
+var COLUMN_WIDTHS = {
+  id: 150,
+  createdAt: 140,
+  status: 190,
+  firstName: 120,
+  lastName: 130,
+  phone: 130,
+  sizeMm: 140,
+  corpus: 210,
+  door: 210,
+  sections: 330,
+  doors: 240,
+  kiosk: 110,
+  lang: 50,
+  telegram: 120,
+  managerNote: 300,
+  product: 120
+};
+var HIDDEN_KEYS = [
+  "paramsJson",
+  "schemaVersion",
+  "templateVersion",
+  "engineVersion",
+  "idempotencyKey",
+  "telegramAttempts",
+  "templateId"
+];
+var WRAPPED_KEYS = ["corpus", "door", "sections", "doors", "managerNote"];
+var EDITABLE_KEYS = ["status", "managerNote"];
+var col = (key) => COLUMNS.findIndex((c) => c.key === key);
+function formatRequests(sheetId, existing) {
+  const n3 = COLUMNS.length;
+  const all = { sheetId, startColumnIndex: 0, endColumnIndex: n3 };
+  const header = { ...all, startRowIndex: 0, endRowIndex: 1 };
+  const data = { ...all, startRowIndex: 1 };
+  const column = (i, startRowIndex = 1) => ({
+    sheetId,
+    startRowIndex,
+    startColumnIndex: i,
+    endColumnIndex: i + 1
+  });
+  const statusLetter = columnLetter(STATUS_COLUMN_INDEX);
+  const cleanup = [
+    ...existing.bandedRangeIds.map((bandedRangeId) => ({ deleteBanding: { bandedRangeId } })),
+    ...existing.protectedRangeIds.map((protectedRangeId) => ({
+      deleteProtectedRange: { protectedRangeId }
+    })),
+    ...Array.from({ length: existing.conditionalFormatCount }, () => ({
+      deleteConditionalFormatRule: { sheetId, index: 0 }
+    })),
+    ...existing.metadataIds.map((metadataId) => ({
+      deleteDeveloperMetadata: { dataFilter: { developerMetadataLookup: { metadataId } } }
+    }))
+  ];
+  const chip = (range, formula, [bg, fg], bold = true) => ({
+    addConditionalFormatRule: {
+      rule: {
+        ranges: [range],
+        booleanRule: {
+          condition: { type: "CUSTOM_FORMULA", values: [{ userEnteredValue: formula }] },
+          format: {
+            backgroundColor: hex(bg),
+            textFormat: { foregroundColor: hex(fg), bold }
+          }
+        }
+      },
+      index: 0
+    }
+  });
+  return [
+    ...cleanup,
+    {
+      updateSheetProperties: {
+        properties: { sheetId, gridProperties: { frozenRowCount: 1, frozenColumnCount: 1 } },
+        fields: "gridProperties.frozenRowCount,gridProperties.frozenColumnCount"
+      }
+    },
+    // header: dark, white bold text, centred vertically, taller
+    {
+      repeatCell: {
+        range: header,
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: hex("#1b1c21"),
+            textFormat: { foregroundColor: hex("#ffffff"), bold: true, fontSize: 10 },
+            verticalAlignment: "MIDDLE",
+            wrapStrategy: "WRAP",
+            padding: { top: 6, bottom: 6, left: 6, right: 6 }
+          }
+        },
+        fields: "userEnteredFormat(backgroundColor,textFormat,verticalAlignment,wrapStrategy,padding)"
+      }
+    },
+    {
+      updateDimensionProperties: {
+        range: { sheetId, dimension: "ROWS", startIndex: 0, endIndex: 1 },
+        properties: { pixelSize: 42 },
+        fields: "pixelSize"
+      }
+    },
+    // data: middle-aligned, clipped by default; long texts wrap
+    {
+      repeatCell: {
+        range: data,
+        cell: { userEnteredFormat: { verticalAlignment: "MIDDLE", wrapStrategy: "CLIP" } },
+        fields: "userEnteredFormat(verticalAlignment,wrapStrategy)"
+      }
+    },
+    ...WRAPPED_KEYS.map((k) => ({
+      repeatCell: {
+        range: column(col(k)),
+        cell: { userEnteredFormat: { wrapStrategy: "WRAP" } },
+        fields: "userEnteredFormat.wrapStrategy"
+      }
+    })),
+    // the ID stands out
+    {
+      repeatCell: {
+        range: column(col("id")),
+        cell: { userEnteredFormat: { textFormat: { bold: true } } },
+        fields: "userEnteredFormat.textFormat.bold"
+      }
+    },
+    // editable columns: centred status chip, tinted note column
+    {
+      repeatCell: {
+        range: column(STATUS_COLUMN_INDEX),
+        cell: { userEnteredFormat: { horizontalAlignment: "CENTER" } },
+        fields: "userEnteredFormat.horizontalAlignment"
+      }
+    },
+    {
+      repeatCell: {
+        range: column(col("managerNote")),
+        cell: { userEnteredFormat: { backgroundColor: hex("#fffbea") } },
+        fields: "userEnteredFormat.backgroundColor"
+      }
+    },
+    // header cells of the editable columns: amber, with a note
+    ...EDITABLE_KEYS.map((k) => ({
+      repeatCell: {
+        range: { ...column(col(k), 0), endRowIndex: 1 },
+        cell: {
+          note: "Shu ustunni menejer to'ldiradi / o'zgartiradi.",
+          userEnteredFormat: {
+            backgroundColor: hex("#ffad1f"),
+            textFormat: { foregroundColor: hex("#1b1c21"), bold: true }
+          }
+        },
+        fields: "note,userEnteredFormat(backgroundColor,textFormat)"
+      }
+    })),
+    // widths, hidden technical columns
+    ...COLUMNS.map((c, i) => {
+      const width = COLUMN_WIDTHS[c.key];
+      const hidden = HIDDEN_KEYS.includes(c.key);
+      return {
+        updateDimensionProperties: {
+          range: { sheetId, dimension: "COLUMNS", startIndex: i, endIndex: i + 1 },
+          properties: { hiddenByUser: hidden, ...width ? { pixelSize: width } : {} },
+          fields: width ? "hiddenByUser,pixelSize" : "hiddenByUser"
+        }
+      };
+    }),
+    // light zebra rows (the conditional colours below win over it)
+    {
+      addBanding: {
+        bandedRange: {
+          range: data,
+          rowProperties: {
+            firstBandColor: hex("#ffffff"),
+            secondBandColor: hex("#f6f7f9")
+          }
+        }
+      }
+    },
+    // conditional colours, added at index 0: the last added is evaluated first
+    chip(data, `=$${statusLetter}2="Bekor qilindi"`, ["#fafafa", "#9aa0a6"], false),
+    ...Object.entries(TELEGRAM_COLORS).map(
+      ([state, colors]) => chip(
+        column(TELEGRAM_COLUMN_INDEX),
+        `=$${columnLetter(TELEGRAM_COLUMN_INDEX)}2="${state}"`,
+        colors
+      )
+    ),
+    ...Object.entries(STATUS_COLORS).map(
+      ([status, colors]) => chip(
+        column(STATUS_COLUMN_INDEX),
+        `=$${statusLetter}2="${status.replace(/"/g, '""')}"`,
+        colors
+      )
+    ),
+    // filter buttons on the header
+    { setBasicFilter: { filter: { range: { ...all, startRowIndex: 0 } } } },
+    // every column except the editable ones warns before an edit
+    {
+      addProtectedRange: {
+        protectedRange: {
+          range: { sheetId },
+          description: PROTECTION_DESCRIPTION,
+          warningOnly: true,
+          unprotectedRanges: EDITABLE_KEYS.map((k) => column(col(k)))
+        }
+      }
+    },
+    {
+      createDeveloperMetadata: {
+        developerMetadata: {
+          metadataKey: FORMAT_METADATA_KEY,
+          metadataValue: SHEET_FORMAT_VERSION,
+          location: { sheetId },
+          visibility: "DOCUMENT"
+        }
+      }
+    }
+  ];
 }
 
 // server/types.ts
@@ -64062,15 +64295,16 @@ var GoogleSheetsStore = class {
     });
   }
   /**
-   * Idempotent sheet setup: tab "Arizalar", header row (bold, frozen), "Holat" dropdown with the
-   * five lead statuses, technical columns hidden. Run by the setup script and before the first
+   * Idempotent sheet setup: tab "Arizalar", header row, "Holat" dropdown with the five lead
+   * statuses, and the look of sheetFormat.ts (applied again whenever its version changes). Run by the setup script and before the first
    * append of every server instance (cheap when the header is already right).
    */
-  async ensureSchema() {
+  async ensureSchema(options = {}) {
     const meta = await this.api(
-      "?fields=sheets.properties(sheetId,title)"
+      "?fields=sheets(properties(sheetId,title),developerMetadata(metadataId,metadataKey,metadataValue),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId,description),conditionalFormats(ranges))"
     );
-    let tab = meta.sheets?.find((s) => s.properties.title === SHEET_TITLE)?.properties.sheetId;
+    const own = meta.sheets?.find((s) => s.properties.title === SHEET_TITLE);
+    let tab = own?.properties.sheetId;
     let created = false;
     if (tab === void 0) {
       const res = await this.api(
@@ -64088,29 +64322,20 @@ var GoogleSheetsStore = class {
       `/values/${this.range(`A1:${LAST_COLUMN}1`)}`
     );
     const current = (head.values?.[0] ?? []).map(String);
-    if (!created && HEADERS.every((h, i) => current[i] === h))
-      return { created, headerWritten: false };
-    await this.api(`/values/${this.range(`A1:${LAST_COLUMN}1`)}?valueInputOption=RAW`, {
-      method: "PUT",
-      body: { values: [HEADERS] }
-    });
+    const headerOk = !created && HEADERS.every((h, i) => current[i] === h);
+    const formats = own?.developerMetadata?.filter((m) => m.metadataKey === FORMAT_METADATA_KEY);
+    const formatOk = formats?.some((m) => m.metadataValue === SHEET_FORMAT_VERSION) ?? false;
+    if (headerOk && formatOk) return { created, headerWritten: false, formatted: false };
+    if (!headerOk) {
+      await this.api(`/values/${this.range(`A1:${LAST_COLUMN}1`)}?valueInputOption=RAW`, {
+        method: "PUT",
+        body: { values: [HEADERS] }
+      });
+    }
     await this.api(":batchUpdate", {
       method: "POST",
       body: {
         requests: [
-          {
-            updateSheetProperties: {
-              properties: { sheetId: tab, gridProperties: { frozenRowCount: 1 } },
-              fields: "gridProperties.frozenRowCount"
-            }
-          },
-          {
-            repeatCell: {
-              range: { sheetId: tab, startRowIndex: 0, endRowIndex: 1 },
-              cell: { userEnteredFormat: { textFormat: { bold: true } } },
-              fields: "userEnteredFormat.textFormat.bold"
-            }
-          },
           {
             setDataValidation: {
               range: {
@@ -64128,18 +64353,27 @@ var GoogleSheetsStore = class {
                 showCustomUi: true
               }
             }
-          },
-          ...HIDDEN_COLUMN_RANGES.map(([startIndex, endIndex]) => ({
-            updateDimensionProperties: {
-              range: { sheetId: tab, dimension: "COLUMNS", startIndex, endIndex },
-              properties: { hiddenByUser: true },
-              fields: "hiddenByUser"
-            }
-          }))
+          }
         ]
       }
     });
-    return { created, headerWritten: true };
+    try {
+      await this.api(":batchUpdate", {
+        method: "POST",
+        body: {
+          requests: formatRequests(tab, {
+            bandedRangeIds: (own?.bandedRanges ?? []).map((b) => b.bandedRangeId),
+            protectedRangeIds: (own?.protectedRanges ?? []).filter((p) => p.description === PROTECTION_DESCRIPTION).map((p) => p.protectedRangeId),
+            conditionalFormatCount: own?.conditionalFormats?.length ?? 0,
+            metadataIds: (formats ?? []).map((m) => m.metadataId)
+          })
+        }
+      });
+    } catch (e) {
+      if (options.strict) throw e;
+      return { created, headerWritten: !headerOk, formatted: false };
+    }
+    return { created, headerWritten: !headerOk, formatted: true };
   }
 };
 

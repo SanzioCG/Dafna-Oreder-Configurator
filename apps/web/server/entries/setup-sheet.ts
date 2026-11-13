@@ -1,5 +1,5 @@
 /**
- * One-off sheet setup (header row, "Holat" dropdown, hidden technical columns):
+ * One-off sheet setup (header row, "Holat" dropdown, the look of sheetFormat.ts):
  *   GOOGLE_SERVICE_ACCOUNT_JSON=… GOOGLE_SHEET_ID=… pnpm --filter @dafna/web setup:sheet
  * Safe to run again. The API also runs the same setup before its first append.
  */
@@ -11,9 +11,11 @@ if (missing.length > 0) {
   process.exit(1);
 }
 storeFromEnv(process.env)
-  .ensureSchema()
+  .ensureSchema({ strict: true })
   .then((r) =>
-    console.log(`sheet ready (tab created: ${r.created}, header written: ${r.headerWritten})`),
+    console.log(
+      `sheet ready (tab created: ${r.created}, header written: ${r.headerWritten}, formatted: ${r.formatted})`,
+    ),
   )
   .catch((e: Error) => {
     console.error(`sheet setup failed: ${e.message}`);
