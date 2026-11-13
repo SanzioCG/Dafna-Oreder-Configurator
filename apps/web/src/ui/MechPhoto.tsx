@@ -1,16 +1,34 @@
 /**
  * D-10b: a picture of each mechanism on its brand option, so the customer sees what goes into the
- * cabinet. Real product photos from Dafna go to apps/web/public/hardware/ and are listed in
- * PHOTOS ("<kind>-<brand>" -> file); until a photo is listed, a drawn sketch of the mechanism
- * type is shown (cup hinge / damper / side-mounted ball-bearing slide / hidden under-mount slide).
+ * cabinet. Photos live in apps/web/public/hardware/ and are listed in PHOTOS; where none is
+ * listed, a drawn sketch of the mechanism type is shown (cup hinge / damper / side-mounted ball-bearing slide / hidden under-mount slide).
  */
 
 export type MechKind = 'hinge' | 'slide';
 
-/** "<kind>-<brand>" -> public path. Add a line when Dafna sends the photo. */
-export const PHOTOS: Record<string, string> = {};
+export interface Photo {
+  src: string;
+  /** shown on hover; licence credit for sample photos (public/hardware/CREDITS.md) */
+  credit?: string;
+}
 
-export function mechPhotoSrc(kind: MechKind, brand: string): string | null {
+/**
+ * "<kind>-<brand>" -> photo. Replace with Dafna's own product photos when they arrive; until then
+ * generic, freely licensed sample photos of the mechanism type (no free photo of a ball-bearing
+ * or under-mount slide was found, so slides keep the sketch).
+ */
+export const PHOTOS: Record<string, Photo> = {
+  'hinge-strax': {
+    src: '/hardware/hinge-standard.jpg',
+    credit: 'Foto: Pavel Krok, CC BY-SA 2.5 (Wikimedia Commons)',
+  },
+  'hinge-hettich': {
+    src: '/hardware/hinge-soft-close.webp',
+    credit: 'Foto: YergoX, CC0 (Wikimedia Commons)',
+  },
+};
+
+export function mechPhoto(kind: MechKind, brand: string): Photo | null {
   return PHOTOS[`${kind}-${brand}`] ?? null;
 }
 
@@ -119,12 +137,12 @@ function SlideSketch({ hidden }: { hidden: boolean }) {
 }
 
 export function MechPhoto({ kind, brand, alt }: { kind: MechKind; brand: string; alt: string }) {
-  const src = mechPhotoSrc(kind, brand);
+  const photo = mechPhoto(kind, brand);
   const soft = brand === 'hettich';
   return (
     <span className="mech-photo" data-testid={`mech-photo-${kind}-${brand}`}>
-      {src ? (
-        <img src={src} alt={alt} loading="lazy" />
+      {photo ? (
+        <img src={photo.src} alt={alt} title={photo.credit} loading="lazy" />
       ) : kind === 'hinge' ? (
         <HingeSketch soft={soft} />
       ) : (
