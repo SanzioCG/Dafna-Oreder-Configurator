@@ -207,8 +207,18 @@ var GoogleSheetsStore = class {
   range(a1) {
     return encodeURIComponent(`${SHEET_TITLE}!${a1}`);
   }
+  /**
+   * Tab + header before ANY read or write (once per instance): reading a range of a tab that
+   * does not exist yet is a 400, so the very first lookup on a fresh spreadsheet must create it.
+   */
+  async ready() {
+    if (this.schemaChecked) return;
+    await this.ensureSchema();
+    this.schemaChecked = true;
+  }
   /** All data rows (row 2…) with their sheet row numbers. */
   async rows() {
+    await this.ready();
     const data = await this.api(
       `/values/${this.range(`A2:${LAST_COLUMN}`)}`
     );
@@ -221,10 +231,7 @@ var GoogleSheetsStore = class {
     return (await this.rows()).some((r) => r.id === id);
   }
   async append(lead) {
-    if (!this.schemaChecked) {
-      await this.ensureSchema();
-      this.schemaChecked = true;
-    }
+    await this.ready();
     const res = await this.api(
       `/values/${this.range(`A:${LAST_COLUMN}`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
       { method: "POST", body: { values: [leadToRow(lead)] } }

@@ -123,8 +123,19 @@ export class GoogleSheetsStore implements LeadStore {
     return encodeURIComponent(`${SHEET_TITLE}!${a1}`);
   }
 
+  /**
+   * Tab + header before ANY read or write (once per instance): reading a range of a tab that
+   * does not exist yet is a 400, so the very first lookup on a fresh spreadsheet must create it.
+   */
+  private async ready(): Promise<void> {
+    if (this.schemaChecked) return;
+    await this.ensureSchema();
+    this.schemaChecked = true;
+  }
+
   /** All data rows (row 2…) with their sheet row numbers. */
   private async rows(): Promise<StoredLead[]> {
+    await this.ready();
     const data = await this.api<{ values?: unknown[][] }>(
       `/values/${this.range(`A2:${LAST_COLUMN}`)}`,
     );
@@ -140,10 +151,7 @@ export class GoogleSheetsStore implements LeadStore {
   }
 
   async append(lead: LeadRecord): Promise<StoredLead> {
-    if (!this.schemaChecked) {
-      await this.ensureSchema();
-      this.schemaChecked = true;
-    }
+    await this.ready();
     const res = await this.api<{ updates?: { updatedRange?: string } }>(
       `/values/${this.range(`A:${LAST_COLUMN}`)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
       { method: 'POST', body: { values: [leadToRow(lead)] } },
