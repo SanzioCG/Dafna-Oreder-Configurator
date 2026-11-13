@@ -35,7 +35,11 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
   const { t, lang } = useI18n();
   // PNG capture of the 3D view, taken when the application is submitted (D-5)
   const captureRef = useRef<CaptureFn | null>(null);
-  const [submission, setSubmission] = useState<{ id: string; renderPng?: string } | null>(null);
+  const [submission, setSubmission] = useState<{
+    id: string;
+    renderPng?: string;
+    assemblyPath?: string;
+  } | null>(null);
   // shared by the sheet and the 3D view: the interior step opens the doors and selects sections
   // customers start on the ready-made models screen (step 0); staff go straight to step 1
   const [step, setStep] = useState(mode === 'customer' ? 'start' : 'size');
@@ -171,8 +175,8 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
             kioskId={kioskId()}
             onBack={() => dispatch('back')}
             captureRender={() => captureRef.current?.() ?? null}
-            onSubmitted={(id, renderPng) => {
-              setSubmission({ id, renderPng });
+            onSubmitted={(id, renderPng, assemblyPath) => {
+              setSubmission({ id, renderPng, assemblyPath });
               dispatch('submitted');
             }}
           />
@@ -181,6 +185,7 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
           <SubmittedScreen
             id={submission.id}
             renderPng={submission.renderPng}
+            assemblyPath={submission.assemblyPath}
             summary={summarizeParams(config.params, lang, config.template)}
             onFinish={onFinish}
           />

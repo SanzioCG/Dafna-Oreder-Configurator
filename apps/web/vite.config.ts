@@ -24,6 +24,18 @@ function devSubmitApi(): Plugin {
         };
         run().catch(next);
       });
+      // D-12: the assembly instructions PDF (same in-memory store as /api/submit)
+      let assembly: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
+      server.middlewares.use('/api/assembly', (req, res, next) => {
+        const run = async () => {
+          if (!assembly) {
+            const mod = await server.ssrLoadModule('/server/devApi.ts');
+            assembly = (mod as typeof import('./server/devApi')).createDevAssemblyHandler();
+          }
+          assembly(req, res);
+        };
+        run().catch(next);
+      });
     },
   };
 }

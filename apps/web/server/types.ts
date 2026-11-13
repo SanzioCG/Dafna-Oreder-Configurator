@@ -60,6 +60,8 @@ export interface StoredLead extends LeadRecord {
 
 export interface LeadStore {
   findByKey(idempotencyKey: string): Promise<StoredLead | null>;
+  /** D-12: the assembly-instructions link looks the application up by its ID */
+  findById(id: string): Promise<StoredLead | null>;
   hasId(id: string): Promise<boolean>;
   append(lead: LeadRecord): Promise<StoredLead>;
   updateTelegram(ref: number, state: TelegramState, attempts: number): Promise<void>;

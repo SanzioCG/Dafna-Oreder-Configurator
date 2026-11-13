@@ -159,6 +159,10 @@ export class GoogleSheetsStore implements LeadStore {
     return (await this.rows()).find((r) => r.idempotencyKey === key) ?? null;
   }
 
+  async findById(id: string): Promise<StoredLead | null> {
+    return (await this.rows()).find((r) => r.id === id) ?? null;
+  }
+
   async hasId(id: string): Promise<boolean> {
     return (await this.rows()).some((r) => r.id === id);
   }

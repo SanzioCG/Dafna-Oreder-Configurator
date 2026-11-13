@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n/I18n';
 import type { LeadSummary } from '../lead/summary';
 import { Button } from '../ui/Button';
+import { QrCode } from '../ui/QrCode';
 import { CheckIcon } from '../ui/icons';
 
 /** Seconds until the kiosk returns to the start screen on its own. */
@@ -12,15 +13,17 @@ interface Props {
   summary: LeadSummary;
   /** PNG data URL captured at submit time (absent when the capture failed) */
   renderPng?: string;
+  /** D-12: "/api/assembly?id=…&t=…" -> QR code for the customer's phone */
+  assemblyPath?: string;
   onFinish: () => void;
 }
 
 /**
  * "Arizangiz yuborildi!" (D-5): the real application ID from the API, what happens next, the
  * render and a short summary. "Yakunlash" or the 45 s countdown -> full session reset.
- * No QR code yet: it needs a protected public page (later batch).
+ * D-12: a QR code to the assembly instructions PDF (signed link, no personal data in it).
  */
-export function SubmittedScreen({ id, summary, renderPng, onFinish }: Props) {
+export function SubmittedScreen({ id, summary, renderPng, assemblyPath, onFinish }: Props) {
   const { t } = useI18n();
   const [left, setLeft] = useState(SUBMITTED_COUNTDOWN_S);
   const finishRef = useRef(onFinish);
@@ -67,6 +70,18 @@ export function SubmittedScreen({ id, summary, renderPng, onFinish }: Props) {
         <p className="submitted-summary" data-testid="submitted-summary">
           {summary.sizeCm} · {colors}
         </p>
+        {assemblyPath && (
+          <div className="submitted-qr" data-testid="submitted-qr">
+            <QrCode
+              value={new URL(assemblyPath, window.location.origin).href}
+              label={t('submitted.qr')}
+            />
+            <p>
+              <strong>{t('submitted.qr')}</strong>
+              <span className="muted">{t('submitted.qrHint')}</span>
+            </p>
+          </div>
+        )}
         <Button
           ref={buttonRef}
           variant="primary"

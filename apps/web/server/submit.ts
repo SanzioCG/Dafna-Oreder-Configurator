@@ -4,6 +4,7 @@ import { cleanContact, validateContact, type ContactInput } from '../src/lead/co
 import { phoneE164 } from '../src/lead/phone';
 import { summarizeResult } from '../src/lead/summary';
 import { isCustomerBlocking } from '../src/state/blocking';
+import { assemblyPath } from './assemblyLink';
 import { makeApplicationId, tashkentTimestamp } from './ids';
 import type { RateLimiter } from './rateLimit';
 import type { LeadRecord, LeadStore, Notifier } from './types';
@@ -28,6 +29,8 @@ export interface SubmitDeps {
   kioskLimiter: RateLimiter;
   /** VERCEL_GIT_COMMIT_SHA (or "dev") */
   engineVersion: string;
+  /** D-12: HMAC key of the assembly-instructions link (absent = no link in the answer) */
+  linkSecret?: string;
   /** error codes only — never contact data or secrets */
   log?: (event: string, detail?: Record<string, unknown>) => void;
 }
@@ -157,7 +160,13 @@ export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Resp
     log('store_lookup_failed', { message: (e as Error).message });
     return fail(503, 'storage_failed');
   }
-  if (existing) return json(200, { id: existing.id, status: 'submitted' });
+  const ok = (id: string) =>
+    json(200, {
+      id,
+      status: 'submitted',
+      ...(deps.linkSecret ? { assemblyPath: assemblyPath(id, deps.linkSecret) } : {}),
+    });
+  if (existing) return ok(existing.id);
 
   const now = deps.now();
   const summary = summarizeResult(resolved.params, result, 'uz', tpl);
@@ -211,5 +220,5 @@ export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Resp
   await deps.store
     .updateTelegram(stored.ref, delivered ? 'sent' : 'failed', 1)
     .catch((err: Error) => log('store_update_failed', { id: lead.id, message: err.message }));
-  return json(200, { id: lead.id, status: 'submitted' });
+  return ok(lead.id);
 }

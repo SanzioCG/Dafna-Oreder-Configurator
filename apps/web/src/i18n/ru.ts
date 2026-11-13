@@ -88,6 +88,8 @@ export const ru: Messages = {
   'submitted.title': 'Ваша заявка отправлена!',
   'submitted.id': 'Номер заявки',
   'submitted.text': 'Наш менеджер свяжется с вами и подтвердит заказ.',
+  'submitted.qr': 'Инструкция по сборке',
+  'submitted.qrHint': 'Наведите камеру телефона — откроется PDF.',
   'submitted.finish': 'Завершить',
   'submitted.countdown': 'Через {s} с вернёмся на главный экран',
 

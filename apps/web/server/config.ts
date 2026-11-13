@@ -1,3 +1,4 @@
+import { linkSecretFrom } from './assemblyLink';
 import { buildOrderPdf, orderPdfInput } from './orderPdf';
 import { RateLimiter } from './rateLimit';
 import { GoogleSheetsStore, parseServiceAccount } from './sheets';
@@ -25,6 +26,13 @@ export function missingEnv(env: Env): string[] {
     missing.push('GOOGLE_SERVICE_ACCOUNT_JSON (invalid JSON)');
   }
   return missing;
+}
+
+/** D-12: the assembly-link key, derived from the service-account key (no extra env var). */
+export function linkSecretFromEnv(env: Env): string {
+  const account = parseServiceAccount(env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  if (!account) throw new Error('google service account missing');
+  return linkSecretFrom(account.private_key);
 }
 
 export function storeFromEnv(env: Env): GoogleSheetsStore {
@@ -57,6 +65,7 @@ export function submitDepsFromEnv(env: Env): SubmitDeps {
     ipLimiter: new RateLimiter(IP_LIMIT.limit, IP_LIMIT.windowMs),
     kioskLimiter: new RateLimiter(KIOSK_LIMIT.limit, KIOSK_LIMIT.windowMs),
     engineVersion: env.VERCEL_GIT_COMMIT_SHA ?? 'dev',
+    linkSecret: linkSecretFromEnv(env),
     log: (event, detail) => console.error(JSON.stringify({ event, ...detail })),
   };
 }

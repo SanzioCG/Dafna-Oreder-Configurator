@@ -7,6 +7,7 @@ import { ID_RE, makeApplicationId, parseTashkentTimestamp, tashkentTimestamp } f
 import { FakeNotifier, MemoryLeadStore } from './memory';
 import { RateLimiter } from './rateLimit';
 import { retryNotifications } from './retry';
+import { assemblyPath } from './assemblyLink';
 import { handleSubmit, type SubmitDeps } from './submit';
 import { MAX_TELEGRAM_ATTEMPTS } from './types';
 
@@ -120,6 +121,21 @@ describe('sheet row mapping', () => {
       'Mahsulot',
       'templateId',
     ]);
+  });
+
+  it('D-12: with a link key the answer carries the signed assembly link (same on a retry)', async () => {
+    const d = { ...deps, linkSecret: 'k' };
+    const first = (await send(body(), d)).json as ApiJson & { assemblyPath?: string };
+    expect(first.assemblyPath).toBe(assemblyPath(first.id, 'k'));
+    const again = (await send(body(), d)).json as ApiJson & { assemblyPath?: string };
+    expect(again.assemblyPath).toBe(first.assemblyPath);
+    expect(
+      (
+        (await send(body({ idempotencyKey: 'other-key-0123456789' }))).json as {
+          assemblyPath?: string;
+        }
+      ).assemblyPath,
+    ).toBeUndefined();
   });
 
   it('a stored lead maps to that row and back', async () => {

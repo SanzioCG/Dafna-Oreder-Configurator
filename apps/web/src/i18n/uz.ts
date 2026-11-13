@@ -84,6 +84,8 @@ export const uz = {
   'submitted.id': 'Ariza raqami',
   'submitted.text': "Menejerimiz siz bilan bog'lanadi va buyurtmani tasdiqlaydi.",
   'submitted.finish': 'Yakunlash',
+  'submitted.qr': "Yig'ish ko'rsatmasi",
+  'submitted.qrHint': 'Telefon kamerasi bilan skanerlang — PDF ochiladi.',
   'submitted.countdown': "{s} soniyadan so'ng bosh ekranga qaytamiz",
 
   'nav.back': 'Orqaga',

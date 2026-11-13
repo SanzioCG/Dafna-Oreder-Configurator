@@ -15,6 +15,9 @@ export class MemoryLeadStore implements LeadStore {
   async findByKey(key: string) {
     return this.rows.find((r) => r.idempotencyKey === key) ?? null;
   }
+  async findById(id: string) {
+    return this.rows.find((r) => r.id === id) ?? null;
+  }
   async hasId(id: string) {
     return this.rows.some((r) => r.id === id);
   }

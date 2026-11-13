@@ -2,7 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
     "api/submit.js": { "maxDuration": 20 },
-    "api/retry-telegram.js": { "maxDuration": 60 }
+    "api/retry-telegram.js": { "maxDuration": 60 },
+    "api/assembly.js": { "maxDuration": 20 }
   },
   "crons": [{ "path": "/api/retry-telegram", "schedule": "0 4 * * *" }]
 }

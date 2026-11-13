@@ -30,7 +30,7 @@ export interface ContactScreenProps {
   params: Params;
   kioskId?: string;
   onBack: () => void;
-  onSubmitted: (id: string, renderPng: string | undefined) => void;
+  onSubmitted: (id: string, renderPng: string | undefined, assemblyPath?: string) => void;
   /** PNG data URL of the 3D view (~1280 px wide), or null when unavailable */
   captureRender?: () => string | null;
   /** injectable for tests */
@@ -163,7 +163,7 @@ export function ContactScreen({
       ...(honeypot ? { website: honeypot } : {}),
     });
     if (outcome.ok) {
-      onSubmitted(outcome.id, renderPng);
+      onSubmitted(outcome.id, renderPng, outcome.assemblyPath);
       return;
     }
     setStatus('error');

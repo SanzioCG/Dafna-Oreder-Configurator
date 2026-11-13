@@ -21,6 +21,8 @@ export interface SubmitRequest {
 export interface SubmitSuccess {
   id: string;
   status: 'submitted';
+  /** D-12: "/api/assembly?id=…&t=…", the customer's assembly instructions (QR) */
+  assemblyPath?: string;
 }
 
 export type SubmitErrorCode =
@@ -41,7 +43,8 @@ export interface SubmitError {
   error: { code: SubmitErrorCode; fields?: string[]; issues?: string[] };
 }
 
-export type SubmitOutcome = { ok: true; id: string } | { ok: false; code: SubmitErrorCode };
+export type SubmitOutcome =
+  { ok: true; id: string; assemblyPath?: string } | { ok: false; code: SubmitErrorCode };
 
 export const SUBMIT_TIMEOUT_MS = 15_000;
 export const SUBMIT_URL = '/api/submit';
@@ -75,7 +78,13 @@ export async function submitApplication(
     });
     const data = (await res.json().catch(() => null)) as SubmitSuccess | SubmitError | null;
     if (res.ok && data && 'id' in data && data.status === 'submitted') {
-      return { ok: true, id: data.id };
+      return {
+        ok: true,
+        id: data.id,
+        ...(typeof data.assemblyPath === 'string' && data.assemblyPath.startsWith('/api/assembly?')
+          ? { assemblyPath: data.assemblyPath }
+          : {}),
+      };
     }
     const code = data && 'error' in data ? data.error.code : 'storage_failed';
     return { ok: false, code };
