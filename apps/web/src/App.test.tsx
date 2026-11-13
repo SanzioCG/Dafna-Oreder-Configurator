@@ -110,7 +110,7 @@ const pickShallow = () =>
 // ---------------------------------------------------------------------------------------------
 
 describe('shell', () => {
-  it("Uzbek, four step pills (Joy, Rang, Ichki, Ko'rib chiqish), all enabled", () => {
+  it("Uzbek, step pills (Joy, Rang, Ichki, Mexanizmlar for a wardrobe with doors, Ko'rib chiqish)", () => {
     renderApp();
     expect(screen.getByText(uz['app.title'])).toBeTruthy();
     const pills = within(screen.getByRole('navigation')).getAllByRole('button');
@@ -118,6 +118,7 @@ describe('shell', () => {
       uz['step.size'],
       uz['step.color'],
       uz['step.interior'],
+      uz['step.hardware'],
       uz['step.review'],
     ]);
     for (const p of pills) expect(p.hasAttribute('disabled')).toBe(false);
@@ -126,7 +127,7 @@ describe('shell', () => {
   it('switches to Russian', () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: ru['lang.ru'] }));
-    expect(screen.getByRole('heading', { name: ru['step.size.title'] })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: ru['step.size.title.wardrobe'] })).toBeTruthy();
     expect(screen.getByRole('radiogroup', { name: ru['param.width'] })).toBeTruthy();
   });
 });

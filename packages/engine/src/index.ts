@@ -7,6 +7,9 @@ export {
 } from './types.js';
 export {
   wardrobeTemplate,
+  pedestalTemplate,
+  deskTemplate,
+  PRODUCT_TEMPLATES,
   defaultParams,
   getParamDef,
   getNumberConstant,
@@ -15,7 +18,10 @@ export {
 } from './template.js';
 export {
   MATERIAL_MAP_V0_V1,
+  allMaterials,
+  catalogForTemplate,
   currentCatalog,
+  materialsV1_1,
   getMaterial,
   materialsV0,
   materialsV1,
@@ -71,9 +77,27 @@ export {
   CATALOG_ARCHIVE,
   REGENERABLE_SINCE,
   TEMPLATE_CATALOG,
+  PRODUCT_ARCHIVE,
   TEMPLATE_ARCHIVE,
   regenerateApplication,
   type RegenerateFailure,
   type RegenerateOptions,
   type RegenerateResult,
 } from './regenerate.js';
+export { PEDESTAL_GENERATOR } from './pedestal.js';
+export { DESK_GENERATOR } from './desk.js';
+export { registerGenerator, generatorFor, type ProductGenerator } from './registry.js';
+export {
+  boardPrice,
+  computeBom,
+  computePrice,
+  hardwareV1,
+  hingeCount,
+  priceListDemo,
+  type BomLine,
+  type HardwareCatalog,
+  type HardwareItem,
+  type PriceList,
+  type PriceResult,
+  type PricedLine,
+} from './bom.js';

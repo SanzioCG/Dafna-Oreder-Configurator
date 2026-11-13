@@ -199,7 +199,7 @@ describe('full chain D-0 -> 0.1 -> 0.2 -> 0.3', () => {
 describe('template 0.4.0 -> current (ADR-009, same schema 0.3)', () => {
   const old = (base: 'plinth' | 'none') => {
     const params = { ...defaultParams(T), base };
-    const current = toOrderDraft(params, generate(T, params));
+    const current = toOrderDraft(params, generate(T, params), { template: T });
     // simulate a draft saved by template 0.4.0 (sides on the plinth, full-width strips)
     const t = 16;
     const ph = base === 'plinth' ? Number(defaultParams(T).plinthHeight) : 0;

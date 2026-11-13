@@ -1,8 +1,8 @@
 import { createSign } from 'node:crypto';
 import {
   COLUMNS,
-  FIRST_TECHNICAL_COLUMN_INDEX,
   HEADERS,
+  HIDDEN_COLUMN_RANGES,
   LAST_COLUMN,
   STATUS_COLUMN_INDEX,
   TELEGRAM_COLUMN_INDEX,
@@ -256,18 +256,13 @@ export class GoogleSheetsStore implements LeadStore {
               },
             },
           },
-          {
+          ...HIDDEN_COLUMN_RANGES.map(([startIndex, endIndex]) => ({
             updateDimensionProperties: {
-              range: {
-                sheetId: tab,
-                dimension: 'COLUMNS',
-                startIndex: FIRST_TECHNICAL_COLUMN_INDEX,
-                endIndex: COLUMNS.length,
-              },
+              range: { sheetId: tab, dimension: 'COLUMNS', startIndex, endIndex },
               properties: { hiddenByUser: true },
               fields: 'hiddenByUser',
             },
-          },
+          })),
         ],
       },
     });

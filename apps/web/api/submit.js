@@ -56,12 +56,19 @@ var COLUMNS = [
   { key: "templateVersion", header: "templateVersion" },
   { key: "engineVersion", header: "engineVersion" },
   { key: "idempotencyKey", header: "idempotencyKey" },
-  { key: "telegramAttempts", header: "Telegram urinishlar" }
+  { key: "telegramAttempts", header: "Telegram urinishlar" },
+  // D-8 (appended: existing sheets keep their columns)
+  { key: "product", header: "Mahsulot" },
+  { key: "templateId", header: "templateId" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
 var TELEGRAM_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "telegram");
 var FIRST_TECHNICAL_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "idempotencyKey");
+var HIDDEN_COLUMN_RANGES = [
+  [FIRST_TECHNICAL_COLUMN_INDEX, COLUMNS.findIndex((c) => c.key === "telegramAttempts") + 1],
+  [COLUMNS.findIndex((c) => c.key === "templateId"), COLUMNS.length]
+];
 function columnLetter(index) {
   if (index < 0 || index > 25) throw new Error(`column index out of range: ${index}`);
   return String.fromCharCode(65 + index);
@@ -100,7 +107,7 @@ var TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1e3;
 function tashkent(now) {
   return new Date(now.getTime() + TASHKENT_OFFSET_MS);
 }
-var pad = (n) => String(n).padStart(2, "0");
+var pad = (n3) => String(n3).padStart(2, "0");
 function tashkentTimestamp(now) {
   const t = tashkent(now);
   return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())} ${pad(t.getUTCHours())}:${pad(t.getUTCMinutes())}:${pad(t.getUTCSeconds())}`;
@@ -332,18 +339,13 @@ var GoogleSheetsStore = class {
               }
             }
           },
-          {
+          ...HIDDEN_COLUMN_RANGES.map(([startIndex, endIndex]) => ({
             updateDimensionProperties: {
-              range: {
-                sheetId: tab,
-                dimension: "COLUMNS",
-                startIndex: FIRST_TECHNICAL_COLUMN_INDEX,
-                endIndex: COLUMNS.length
-              },
+              range: { sheetId: tab, dimension: "COLUMNS", startIndex, endIndex },
               properties: { hiddenByUser: true },
               fields: "hiddenByUser"
             }
-          }
+          }))
         ]
       }
     });
@@ -357,15 +359,16 @@ function telegramText(lead) {
   const name = [lead.firstName, lead.lastName].filter(Boolean).join(" ");
   const [w, h, d] = lead.sizeMm.split(" \xD7 ").map((x) => Math.round(Number(x) / 10));
   const sizeCm = [w, h, d].every((x) => Number.isFinite(x)) ? `${w} \xD7 ${h} \xD7 ${d} sm` : "";
-  const colors = `Korpus: ${lead.corpus}` + (lead.door && lead.door !== "\u2014" ? ` \xB7 Eshik: ${lead.door}` : "");
+  const [main, second] = lead.templateId === "desk" ? ["Stoleshnitsa", "Oyoq"] : lead.templateId === "pedestal" ? ["Korpus", "Old panel"] : ["Korpus", "Eshik"];
+  const colors = `${main}: ${lead.corpus}` + (lead.door && lead.door !== "\u2014" ? ` \xB7 ${second}: ${lead.door}` : "");
   return [
-    `\u{1F195} <b>Yangi ariza ${escapeHtml(lead.id)}</b>`,
+    `\u{1F195} <b>Yangi ariza ${escapeHtml(lead.id)}</b>${lead.product ? ` \xB7 ${escapeHtml(lead.product)}` : ""}`,
     `\u{1F464} ${escapeHtml(name)}`,
     `\u{1F4DE} ${escapeHtml(lead.phone)}`,
     `\u{1F4D0} ${escapeHtml(sizeCm)} (${escapeHtml(lead.sizeMm)} mm)`,
     `\u{1F3A8} ${escapeHtml(colors)}`,
     `\u{1F5C4} ${escapeHtml(lead.sections)}`,
-    `\u{1F6AA} Eshiklar: ${escapeHtml(lead.doors)}`,
+    ...lead.doors ? [`\u{1F6AA} ${lead.templateId === "pedestal" ? "Asos" : "Eshiklar"}: ${escapeHtml(lead.doors)}`] : [],
     `\u{1F4CD} Kiosk: ${escapeHtml(lead.kiosk || "\u2014")} \xB7 Til: ${escapeHtml(lead.lang)}`,
     `Holat: <b>${escapeHtml(lead.status)}</b>`
   ].join("\n");
@@ -459,10 +462,10 @@ function submitDepsFromEnv(env) {
 // ../../packages/engine/src/types.ts
 var ORDER_SCHEMA_VERSION = "dafna-order/0.3-draft";
 
-// ../../packages/engine/templates/wardrobe.v6.json
-var wardrobe_v6_default = {
+// ../../packages/engine/templates/wardrobe.v7.json
+var wardrobe_v7_default = {
   templateId: "wardrobe",
-  templateVersion: "0.7.0",
+  templateVersion: "0.8.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -792,6 +795,28 @@ var wardrobe_v6_default = {
       appliesToSection: 4,
       control: "presetCards",
       note: "Interior fill of section 4 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      key: "hingeBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.hingeBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      key: "slideBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.slideBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
     }
   ],
   constants: {
@@ -1107,8 +1132,605 @@ var wardrobe_v6_default = {
   ]
 };
 
+// ../../packages/engine/templates/pedestal.v1.json
+var pedestal_v1_default = {
+  templateId: "pedestal",
+  templateVersion: "0.1.0",
+  productType: "pedestal",
+  generator: "pedestal-v1",
+  units: "mm",
+  parameters: [
+    {
+      key: "width",
+      type: "int",
+      default: 400,
+      min: 300,
+      max: 600,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.width",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [400, 450],
+      note: "Overall width. Standard 400 / 450 (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 300 / 400 / 410 wide), unconfirmed for Dafna."
+    },
+    {
+      key: "height",
+      type: "int",
+      default: 600,
+      min: 450,
+      max: 760,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.height",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [600],
+      note: "Overall height incl. castors / plinth. \u2248 600 fits under a 740 mm desk (EN 527-1) with a 22\u201325 mm top (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 597)."
+    },
+    {
+      key: "depth",
+      type: "int",
+      default: 500,
+      min: 400,
+      max: 650,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.depth",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [500, 600],
+      note: "Overall depth incl. fronts. 500 (desk depth 600\u2013700) / 600 (desk depth 800); unconfirmed."
+    },
+    {
+      key: "layout",
+      type: "enum",
+      default: "drawers3",
+      options: ["drawers3", "drawers2_file", "door_shelf"],
+      labelKey: "param.layout",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "3 equal drawers; 2 small drawers + 1 A4 hanging-file drawer (box >= 330 \xD7 240, FILE_DRAWER_TOO_SMALL below); a door with one shelf."
+    },
+    {
+      key: "base",
+      type: "enum",
+      default: "castors",
+      options: ["castors", "plinth"],
+      labelKey: "param.pedestalBase",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Mobile (castors) or standing on a plinth strip (sides to the floor)."
+    },
+    {
+      key: "corpusMaterial",
+      type: "enum",
+      default: "ldsp_white_16",
+      options: [
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      labelKey: "param.corpusMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp"],
+      note: "Carcass board (LDSP), catalog 1.1.0."
+    },
+    {
+      key: "doorMaterial",
+      type: "enum",
+      default: "same_as_corpus",
+      options: [
+        "same_as_corpus",
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16",
+        "lmdf_egger_h1367_st40_16",
+        "lmdf_egger_h1385_st40_16",
+        "lmdf_egger_h1344_st32_16_7",
+        "lmdf_egger_h3325_st28_16_7"
+      ],
+      labelKey: "param.frontMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp", "mdf"],
+      note: "Drawer fronts / door. 'same_as_corpus' follows the carcass decor."
+    },
+    {
+      key: "slideBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.slideBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      key: "hingeBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.hingeBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    }
+  ],
+  constants: {
+    backMaterial: {
+      value: "hdf_white_3",
+      unconfirmed: true,
+      note: "HDF back and drawer bottoms (as the wardrobe)."
+    },
+    castorHeightMm: {
+      value: 50,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Castor height incl. mounting plate (purchased part; unconfirmed)."
+    },
+    castorSizeMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Castor footprint drawn in 3D (visual only)."
+    },
+    castorMaterial: {
+      value: "metal_black",
+      unconfirmed: true,
+      note: "Castor finish (visual / BOM)."
+    },
+    plinthHeightMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Plinth strip height when standing (unconfirmed)."
+    },
+    frontGapMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Gap between the carcass front edge and the fronts (as the wardrobe doors)."
+    },
+    frontSideGapMm: {
+      value: 1.5,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Gap between a front and the outer side edge."
+    },
+    frontEdgeGapMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Gap below the lowest front and under the top."
+    },
+    drawerGapMm: {
+      value: 3,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Gap between drawer fronts (as the wardrobe)."
+    },
+    fileFrontHeightMm: {
+      value: 300,
+      unit: "mm",
+      unconfirmed: true,
+      note: "A4 hanging-file drawer front: box 260 high >= 240 (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): file drawer \u2248 330 \xD7 440 \xD7 240)."
+    },
+    fileDrawerMinBoxWidthMm: {
+      value: 330,
+      unit: "mm",
+      unconfirmed: false,
+      note: "A4 hanging-file frame needs >= 330 mm inside the box (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet))."
+    },
+    fileDrawerMinBoxHeightMm: {
+      value: 240,
+      unit: "mm",
+      unconfirmed: false,
+      note: "A4 hanging files need >= 240 mm box height (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet))."
+    },
+    underDeskMaxHeightMm: {
+      value: 700,
+      unit: "mm",
+      unconfirmed: true,
+      note: "An under-desk pedestal must stay below the desk top underside (740 \u2212 top \u2212 clearance); PEDESTAL_TOO_HIGH above."
+    },
+    drawerSlideClearanceMm: {
+      value: 13,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Side clearance per side for ball-bearing / roller slides (as the wardrobe)."
+    },
+    drawerBoxHeightReductionMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Box height = front height \u2212 40 (as the wardrobe)."
+    },
+    drawerBoxLiftMm: {
+      value: 20,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Box bottom above the front bottom edge."
+    },
+    drawerBackClearanceMm: {
+      value: 20,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Space behind the drawer box."
+    },
+    drawerSlideMinMm: {
+      value: 250,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Shortest slide."
+    },
+    drawerSlideMaxMm: {
+      value: 550,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Longest slide."
+    },
+    drawerSlideStepMm: {
+      value: 50,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Slide length step."
+    },
+    edgeBandId: {
+      value: "abs_0_8_placeholder",
+      unconfirmed: true,
+      note: "Edge band placeholder (as the wardrobe)."
+    },
+    edgeBandThicknessMm: {
+      value: 0.8,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Edge band thickness placeholder."
+    },
+    smallFrontMinHeightMm: {
+      value: 90,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Smallest drawer front (pens, stationery) in the 2 + file layout; the file drawer shrinks only below this."
+    }
+  },
+  constructionRules: [
+    {
+      id: "pedestal-carcass",
+      unconfirmed: true,
+      note: "Top over the sides; bottom between the sides on the base; HDF back overlay; castors under the bottom corners, or sides to the floor with a plinth strip between them."
+    },
+    {
+      id: "pedestal-fronts",
+      unconfirmed: true,
+      note: "Fronts overlay the sides (full overlay), equal 3 mm gaps; drawer boxes on side slides."
+    }
+  ]
+};
+
+// ../../packages/engine/templates/desk.v1.json
+var desk_v1_default = {
+  templateId: "desk",
+  templateVersion: "0.1.0",
+  productType: "desk",
+  generator: "desk-v1",
+  units: "mm",
+  parameters: [
+    {
+      key: "width",
+      type: "int",
+      default: 1200,
+      min: 800,
+      max: 2e3,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.width",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [1e3, 1200, 1400, 1600, 1800],
+      note: "Work-top width. Writing desk work surface >= 800 \xD7 500 (GOST 13025.3-85); standard sizes unconfirmed."
+    },
+    {
+      key: "depth",
+      type: "int",
+      default: 700,
+      min: 500,
+      max: 900,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.depth",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [600, 700, 800],
+      note: "Work-top depth (>= 500, GOST 13025.3-85); 600 / 700 / 800 unconfirmed."
+    },
+    {
+      key: "height",
+      type: "int",
+      default: 740,
+      min: 650,
+      max: 1250,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.height",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      customerValues: [740, 1100],
+      note: "Work-top height. EN 527-1: fixed-height desks 740 \xB1 20 (DESK_HEIGHT_NOT_ERGONOMIC outside, so customers can pick 1100 only with the lift frame). Lift frame: 740 sitting / 1100 standing shown to the customer (standing height unconfirmed; the frame adjusts continuously on site)."
+    },
+    {
+      key: "legs",
+      type: "enum",
+      default: "ldsp",
+      options: ["ldsp", "metal_lift"],
+      labelKey: "param.legs",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "Two desk types (Dafna, D-8): a board-made desk (LDSP side legs + modesty panel), or a desk on an electric height-adjustable steel frame (lift). No fixed metal legs."
+    },
+    {
+      key: "topMaterial",
+      type: "enum",
+      default: "ldsp_white_22",
+      options: [
+        "ldsp_white_22",
+        "ldsp_oak_sonoma_light_22",
+        "egger_h3700_st10_25",
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      labelKey: "param.topMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp"],
+      note: "Work top: Dafna table-top boards 22 / 25 mm, or a 16 / 18 mm decor."
+    },
+    {
+      key: "corpusMaterial",
+      type: "enum",
+      default: "ldsp_white_16",
+      options: [
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      labelKey: "param.legMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp"],
+      note: "LDSP legs and modesty panel (legs = ldsp)."
+    },
+    {
+      key: "frameColor",
+      type: "enum",
+      default: "metal_black",
+      options: ["metal_black", "metal_white"],
+      labelKey: "param.frameColor",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: true,
+      control: "swatch",
+      materialKinds: ["metal"],
+      note: "Steel frame finish (legs = metal / metal_lift)."
+    }
+  ],
+  constants: {
+    fixedHeightMinMm: {
+      value: 720,
+      unit: "mm",
+      unconfirmed: false,
+      note: "EN 527-1:2011: fixed-height desks 740 \xB1 20 mm."
+    },
+    fixedHeightMaxMm: {
+      value: 760,
+      unit: "mm",
+      unconfirmed: false,
+      note: "EN 527-1:2011: fixed-height desks 740 \xB1 20 mm."
+    },
+    minWorkWidthMm: {
+      value: 800,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.3-85: writing desk work surface at least 800 \xD7 500 mm."
+    },
+    minWorkDepthMm: {
+      value: 500,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.3-85: writing desk work surface at least 800 \xD7 500 mm."
+    },
+    legDepthInsetMm: {
+      value: 25,
+      unit: "mm",
+      unconfirmed: true,
+      note: "LDSP leg panel set back from the front and back edges of the top."
+    },
+    modestyHeightMm: {
+      value: 350,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Modesty panel height under the top (leaves knee room)."
+    },
+    modestyBackInsetMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Modesty panel distance from the back edge."
+    },
+    frameColumnMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Steel column section (visual; purchased frame)."
+    },
+    liftColumnMm: {
+      value: 80,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Lift-frame telescopic column section (visual; purchased frame)."
+    },
+    frameFootHeightMm: {
+      value: 30,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Foot bar height (visual)."
+    },
+    frameFootInsetMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Foot bar inset from the front / back edges."
+    },
+    frameArmHeightMm: {
+      value: 25,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Top arm under the work top (visual)."
+    },
+    frameEndInsetMm: {
+      value: 100,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Frame column centre from the work-top ends."
+    },
+    frameBeamMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Cross beam section (visual)."
+    },
+    edgeBandId: {
+      value: "abs_0_8_placeholder",
+      unconfirmed: true,
+      note: "Edge band placeholder (as the wardrobe)."
+    },
+    edgeBandThicknessMm: {
+      value: 0.8,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Edge band thickness placeholder."
+    }
+  },
+  constructionRules: [
+    {
+      id: "desk-ldsp-legs",
+      unconfirmed: true,
+      note: "Work top on two LDSP side legs (full top width, flush ends) with a modesty panel between them at the back."
+    },
+    {
+      id: "desk-metal-frame",
+      unconfirmed: true,
+      note: "Lift desk: purchased electric height-adjustable steel frame: per side a foot bar, a telescopic column and a top arm; one cross beam. Drawn as boxes, not cut from board."
+    }
+  ]
+};
+
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v6_default;
+var wardrobeTemplate = wardrobe_v7_default;
+var pedestalTemplate = pedestal_v1_default;
+var deskTemplate = desk_v1_default;
+var PRODUCT_TEMPLATES = {
+  wardrobe: wardrobeTemplate,
+  pedestal: pedestalTemplate,
+  desk: deskTemplate
+};
 function getParamDef(template, key) {
   return template.parameters.find((p) => p.key === key);
 }
@@ -1562,10 +2184,436 @@ var materials_v1_default = {
   ]
 };
 
+// ../../packages/engine/catalog/materials.v1_1.json
+var materials_v1_1_default = {
+  catalogVersion: "1.1.0",
+  materials: [
+    {
+      id: "ldsp_white_16",
+      kind: "ldsp",
+      decorName: "decor.whiteShagreen",
+      thicknessMm: 16,
+      colorHex: "#f4f4f1",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "ldsp_white_moisture_16",
+      kind: "ldsp",
+      decorName: "decor.whiteMoisture",
+      thicknessMm: 16,
+      colorHex: "#f6f6f4",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_w1000_st9_18",
+      kind: "ldsp",
+      decorName: "decor.whitePremium",
+      code: "EGGER W1000 ST9",
+      thicknessMm: 18,
+      colorHex: "#f6f6f2",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u104_st9_16",
+      kind: "ldsp",
+      decorName: "decor.alabasterWhite",
+      code: "EGGER U104 ST9",
+      thicknessMm: 16,
+      colorHex: "#ebe6d3",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u702_st9_16",
+      kind: "ldsp",
+      decorName: "decor.cashmereGrey",
+      code: "EGGER U702 ST9",
+      thicknessMm: 16,
+      colorHex: "#ddd3c4",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u707_st9_16",
+      kind: "ldsp",
+      decorName: "decor.silkGrey",
+      code: "EGGER U707 ST9",
+      thicknessMm: 16,
+      colorHex: "#dcdcd7",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u727_st9_16",
+      kind: "ldsp",
+      decorName: "decor.stoneGrey",
+      code: "EGGER U727 ST9",
+      thicknessMm: 16,
+      colorHex: "#a69d91",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u788_st9_16",
+      kind: "ldsp",
+      decorName: "decor.arcticGrey",
+      code: "EGGER U788 ST9",
+      thicknessMm: 16,
+      colorHex: "#9b9c9d",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_f765_st20_16",
+      kind: "ldsp",
+      decorName: "decor.silverMatt",
+      code: "EGGER F765 ST20",
+      thicknessMm: 16,
+      colorHex: "#a7a9aa",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "ldsp_aluminium_16",
+      kind: "ldsp",
+      decorName: "decor.aluminium",
+      thicknessMm: 16,
+      colorHex: "#c0c4c9",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u963_st9_16",
+      kind: "ldsp",
+      decorName: "decor.anthraciteGrey",
+      code: "EGGER U963 ST9",
+      thicknessMm: 16,
+      colorHex: "#3b3c3e",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u502_st9_16",
+      kind: "ldsp",
+      decorName: "decor.smokyBlue",
+      code: "EGGER U502 ST9",
+      thicknessMm: 16,
+      colorHex: "#566f87",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u665_st9_16",
+      kind: "ldsp",
+      decorName: "decor.stoneGreen",
+      code: "EGGER U665 ST9",
+      thicknessMm: 16,
+      colorHex: "#4e5d58",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_u335_st9_16",
+      kind: "ldsp",
+      decorName: "decor.redBrown",
+      code: "EGGER U335 ST9",
+      thicknessMm: 16,
+      colorHex: "#8a4a47",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "ldsp_red_16",
+      kind: "ldsp",
+      decorName: "decor.red",
+      thicknessMm: 16,
+      colorHex: "#e8211f",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h3860_st9_16",
+      kind: "ldsp",
+      decorName: "decor.mapleChampagne",
+      code: "EGGER H3860 ST9",
+      thicknessMm: 16,
+      colorHex: "#e4d6c4",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h3730_st10_16",
+      kind: "ldsp",
+      decorName: "decor.hickoryNatural",
+      code: "EGGER H3730 ST10",
+      thicknessMm: 16,
+      colorHex: "#c69661",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "ldsp_oak_wotan_16",
+      kind: "ldsp",
+      decorName: "decor.oakWotan",
+      thicknessMm: 16,
+      colorHex: "#b7874f",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h3710_st12_16",
+      kind: "ldsp",
+      decorName: "decor.walnutCarini",
+      code: "EGGER H3710 ST12",
+      thicknessMm: 16,
+      colorHex: "#7a5b44",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h3133_st12_16",
+      kind: "ldsp",
+      decorName: "decor.oakDavosTruffle",
+      code: "EGGER H3133 ST12",
+      thicknessMm: 16,
+      colorHex: "#7d6453",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h2033_st10_16",
+      kind: "ldsp",
+      decorName: "decor.oakHantonDark",
+      code: "EGGER H2033 ST10",
+      thicknessMm: 16,
+      colorHex: "#6c4a33",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h1199_st12_16",
+      kind: "ldsp",
+      decorName: "decor.oakThermo",
+      code: "EGGER H1199 ST12",
+      thicknessMm: 16,
+      colorHex: "#3b2d27",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "lmdf_egger_h1367_st40_16",
+      kind: "mdf",
+      decorName: "decor.oakCasellaLight",
+      code: "EGGER H1367 ST40",
+      thicknessMm: 16,
+      colorHex: "#d3ae83",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet. LMDF: doors only."
+    },
+    {
+      id: "lmdf_egger_h1385_st40_16",
+      kind: "mdf",
+      decorName: "decor.oakCasellaNatural",
+      code: "EGGER H1385 ST40",
+      thicknessMm: 16,
+      colorHex: "#c49a6b",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet. LMDF: doors only."
+    },
+    {
+      id: "lmdf_egger_h1344_st32_16_7",
+      kind: "mdf",
+      decorName: "decor.oakShermanCognac",
+      code: "EGGER H1344 ST32",
+      thicknessMm: 16.7,
+      colorHex: "#8c5a34",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet. LMDF: doors only."
+    },
+    {
+      id: "lmdf_egger_h3325_st28_16_7",
+      kind: "mdf",
+      decorName: "decor.oakGladstoneTobacco",
+      code: "EGGER H3325 ST28",
+      thicknessMm: 16.7,
+      colorHex: "#5c4b3f",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet. LMDF: doors only."
+    },
+    {
+      id: "ldsp_white_22",
+      kind: "ldsp",
+      decorName: "decor.white22",
+      thicknessMm: 22,
+      colorHex: "#f4f4f1",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list board (2026-11), table tops. Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "ldsp_oak_sonoma_light_22",
+      kind: "ldsp",
+      decorName: "decor.oakSonomaLight",
+      thicknessMm: 22,
+      colorHex: "#d3b690",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list board (2026-11), table tops. Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "egger_h3700_st10_25",
+      kind: "ldsp",
+      decorName: "decor.walnutPacific",
+      code: "EGGER H3700 ST10",
+      thicknessMm: 25,
+      colorHex: "#8a6243",
+      group: "wood",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Dafna price-list board (2026-11), table tops. Colour sampled from the catalog swatch; no texture yet."
+    },
+    {
+      id: "metal_black",
+      kind: "metal",
+      decorName: "decor.metalBlack",
+      thicknessMm: 2,
+      colorHex: "#26272a",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Powder-coated steel frame (desk legs). Purchased part, not cut from board. Finish unconfirmed."
+    },
+    {
+      id: "metal_white",
+      kind: "metal",
+      decorName: "decor.metalWhite",
+      thicknessMm: 2,
+      colorHex: "#ececea",
+      group: "plain",
+      textureUrl: null,
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Powder-coated steel frame (desk legs). Purchased part, not cut from board. Finish unconfirmed."
+    },
+    {
+      id: "hdf_white_3",
+      kind: "hdf",
+      decorName: "decor.white",
+      thicknessMm: 3,
+      colorHex: "#f3f2ee",
+      textureUrl: null,
+      customerVisible: false,
+      unconfirmed: true,
+      note: "Assumed back panel material (HDF 3 mm, white). Unchanged from catalog 0.1.0."
+    }
+  ]
+};
+
 // ../../packages/engine/src/catalog.ts
 var materialsV0 = materials_v0_default;
 var materialsV1 = materials_v1_default;
+var materialsV1_1 = materials_v1_1_default;
 var currentCatalog = materialsV1;
+var allMaterials = materialsV1_1;
+var before = (a, b) => {
+  const x = a.split(".").map(Number);
+  const y = b.split(".").map(Number);
+  for (let i = 0; i < 3; i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) < (y[i] ?? 0);
+  return false;
+};
+function catalogForTemplate(template) {
+  if (template.templateId === "wardrobe") {
+    return before(template.templateVersion, "0.6.0") ? materialsV0 : materialsV1;
+  }
+  return materialsV1_1;
+}
 function getMaterial(catalog, id) {
   return typeof id === "string" ? catalog.materials.find((m) => m.id === id) : void 0;
 }
@@ -1650,6 +2698,15 @@ function resolveParams(template, input) {
   return { params, issues };
 }
 
+// ../../packages/engine/src/registry.ts
+var REGISTRY = /* @__PURE__ */ new Map();
+function registerGenerator(id, generator) {
+  REGISTRY.set(id, generator);
+}
+function generatorFor(id) {
+  return REGISTRY.get(id);
+}
+
 // ../../packages/engine/src/doors.ts
 function doorKindForLeaf(singleLeafWidthMm, maxSingleLeafWidthMm) {
   return singleLeafWidthMm <= maxSingleLeafWidthMm ? "single" : "double";
@@ -1679,13 +2736,13 @@ function roundLeaves(nominal, total, step) {
 }
 function planDoors(input) {
   const { widthMm: W, t, innerWidths, gapEdge, gapBetween } = input;
-  const n = innerWidths.length;
+  const n3 = innerWidths.length;
   const left = [];
   const right = [];
   let xStart = t;
   innerWidths.forEach((inner, i) => {
     left.push(i === 0 ? 0 : xStart - t / 2);
-    right.push(i === n - 1 ? W : xStart + inner + t / 2);
+    right.push(i === n3 - 1 ? W : xStart + inner + t / 2);
     xStart += inner + t;
   });
   const source = [];
@@ -1702,7 +2759,7 @@ function planDoors(input) {
   });
   const hasDoor = fixed.map((f) => f ? f !== "none" : input.preset !== "none");
   const gapL = (i) => i === 0 || !hasDoor[i - 1] ? gapEdge : gapBetween / 2;
-  const gapR = (i) => i === n - 1 || !hasDoor[i + 1] ? gapEdge : gapBetween / 2;
+  const gapR = (i) => i === n3 - 1 || !hasDoor[i + 1] ? gapEdge : gapBetween / 2;
   const singleLeafWidths = innerWidths.map(
     (_, i) => right[i] - gapR(i) - (left[i] + gapL(i))
   );
@@ -1712,16 +2769,16 @@ function planDoors(input) {
     if (!hasDoor[i]) return "none";
     const kind = input.preset === "all_single" ? "single" : doorKindForLeaf(singleLeafWidths[i], input.maxSingleLeafWidth);
     if (kind === "double") return "double";
-    return hingeSideFor(i, n) === "left" ? "single_left" : "single_right";
+    return hingeSideFor(i, n3) === "left" ? "single_left" : "single_right";
   });
   const leaves = [];
-  for (let i = 0; i < n; ) {
+  for (let i = 0; i < n3; ) {
     if (types[i] === "none") {
       i++;
       continue;
     }
     let j = i;
-    while (j < n && types[j] !== "none") j++;
+    while (j < n3 && types[j] !== "none") j++;
     const startX = left[i] + gapL(i);
     const endX = right[j - 1] - gapR(j - 1);
     const meta = [];
@@ -1729,9 +2786,9 @@ function planDoors(input) {
       const w = singleLeafWidths[k];
       const num = k + 1;
       if (types[k] === "double") {
-        const half2 = (w - gapBetween) / 2;
-        meta.push({ sectionIndex: k, hingeSide: "left", id: `door-${num}-left`, nominal: half2 });
-        meta.push({ sectionIndex: k, hingeSide: "right", id: `door-${num}-right`, nominal: half2 });
+        const half3 = (w - gapBetween) / 2;
+        meta.push({ sectionIndex: k, hingeSide: "left", id: `door-${num}-left`, nominal: half3 });
+        meta.push({ sectionIndex: k, hingeSide: "right", id: `door-${num}-right`, nominal: half3 });
       } else {
         meta.push({
           sectionIndex: k,
@@ -1754,7 +2811,7 @@ function planDoors(input) {
         id: m.id,
         sectionIndex: m.sectionIndex,
         hingeSide: m.hingeSide,
-        hingeMount: hingeMountFor(m.sectionIndex, m.hingeSide, n),
+        hingeMount: hingeMountFor(m.sectionIndex, m.hingeSide, n3),
         xStartMm: x,
         widthMm: w
       });
@@ -1799,7 +2856,7 @@ function planInterior(box, preset, c) {
     return c.ergonomics ? planErgonomic(box, preset, c, c.ergonomics) : planInterior(box, "shelves", c);
   }
   const { t, yBottom, yTop } = box;
-  const n = box.index + 1;
+  const n3 = box.index + 1;
   const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
   const shelves = [];
   const rails = [];
@@ -1817,7 +2874,7 @@ function planInterior(box, preset, c) {
     );
     for (let i = 0; i < c.drawerCount; i++) {
       drawers.push({
-        id: `s${n}-drawer-${i + 1}`,
+        id: `s${n3}-drawer-${i + 1}`,
         frontYMm: yBottom + c.drawerGapMm + i * (c.drawerFrontHeightMm + c.drawerGapMm),
         frontHeightMm: c.drawerFrontHeightMm,
         frontWidthMm: boxW,
@@ -1827,20 +2884,20 @@ function planInterior(box, preset, c) {
       });
     }
     const zone = c.drawerGapMm + c.drawerCount * (c.drawerFrontHeightMm + c.drawerGapMm);
-    addShelf(yBottom + zone, "fixed", `s${n}-shelf-fixed`);
+    addShelf(yBottom + zone, "fixed", `s${n3}-shelf-fixed`);
     floorY = yBottom + zone + t;
   }
   let ceilingY = yTop;
   if (hasTopShelf) {
     const shelfBottom = yTop - c.railTopShelfDropMm - t;
-    addShelf(shelfBottom, "top", `s${n}-shelf-top`);
+    addShelf(shelfBottom, "top", `s${n3}-shelf-top`);
     ceilingY = shelfBottom;
   }
   let clearHangingHeightMm = null;
   if (hasRail) {
     const axisY = ceilingY - c.railAxisDropMm;
     rails.push({
-      id: `s${n}-rail`,
+      id: `s${n3}-rail`,
       axisYMm: axisY,
       lengthMm: box.innerW,
       diameterMm: c.railDiameterMm,
@@ -1850,7 +2907,7 @@ function planInterior(box, preset, c) {
   }
   if (preset === "shelves" || preset === "drawers_shelves") {
     evenShelfBottoms(floorY, ceilingY, t, c.shelfPitchTargetMm).forEach(
-      (y, i) => addShelf(y, "removable", `s${n}-shelf-${i + 1}`)
+      (y, i) => addShelf(y, "removable", `s${n3}-shelf-${i + 1}`)
     );
   }
   shelves.sort((a, b) => a.yMm - b.yMm);
@@ -1864,7 +2921,7 @@ function planInterior(box, preset, c) {
   }
   return { preset, shelves, rails, drawers, clearHangingHeightMm, warnings };
 }
-function drawerStack(box, c, n) {
+function drawerStack(box, c, n3) {
   const { t, yBottom } = box;
   const boxW = box.innerW - 2 * c.drawerSlideClearanceMm;
   const depth = slideLength(
@@ -1874,7 +2931,7 @@ function drawerStack(box, c, n) {
   const drawers = [];
   for (let i = 0; i < c.drawerCount; i++) {
     drawers.push({
-      id: `s${n}-drawer-${i + 1}`,
+      id: `s${n3}-drawer-${i + 1}`,
       frontYMm: yBottom + c.drawerGapMm + i * (c.drawerFrontHeightMm + c.drawerGapMm),
       frontHeightMm: c.drawerFrontHeightMm,
       frontWidthMm: boxW,
@@ -1888,7 +2945,7 @@ function drawerStack(box, c, n) {
 }
 function planErgonomic(box, preset, c, e) {
   const { t, yBottom, yTop } = box;
-  const n = box.index + 1;
+  const n3 = box.index + 1;
   const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
   const shelves = [];
   const rails = [];
@@ -1896,14 +2953,14 @@ function planErgonomic(box, preset, c, e) {
   const addShelf = (yMm, kind, id) => shelves.push({ id, yMm: half(yMm), kind, lengthMm: box.innerW, depthMm: shelfDepth });
   let floorY = yBottom;
   if (preset === "short_hang_drawers") {
-    const stack = drawerStack(box, c, n);
+    const stack = drawerStack(box, c, n3);
     drawers = stack.drawers;
-    addShelf(stack.shelfY, "fixed", `s${n}-shelf-fixed`);
+    addShelf(stack.shelfY, "fixed", `s${n3}-shelf-fixed`);
     floorY = stack.floorY;
   }
   const railTop = Math.min(e.railTopMaxMm, yTop - e.railTopToShelfMm);
   rails.push({
-    id: `s${n}-rail`,
+    id: `s${n3}-rail`,
     axisYMm: half(railTop - c.railDiameterMm / 2),
     lengthMm: box.innerW,
     diameterMm: c.railDiameterMm,
@@ -1911,18 +2968,18 @@ function planErgonomic(box, preset, c, e) {
   });
   const dividerY = railTop + e.railTopToShelfMm;
   if (yTop - (dividerY + t) >= e.minShelfGapMm) {
-    addShelf(dividerY, "top", `s${n}-shelf-top`);
+    addShelf(dividerY, "top", `s${n3}-shelf-top`);
     evenShelfBottoms(dividerY + t, yTop, t, c.shelfPitchTargetMm).forEach(
-      (y, i) => addShelf(y, "removable", `s${n}-shelf-antresol-${i + 1}`)
+      (y, i) => addShelf(y, "removable", `s${n3}-shelf-antresol-${i + 1}`)
     );
   }
   let clear = railTop - floorY;
   if (preset === "short_hang") {
     const shelfTop = railTop - e.shortHangClearMm;
     if (shelfTop - t - floorY >= e.minShelfGapMm) {
-      addShelf(shelfTop - t, "fixed", `s${n}-shelf-fixed`);
+      addShelf(shelfTop - t, "fixed", `s${n3}-shelf-fixed`);
       evenShelfBottoms(floorY, shelfTop - t, t, c.shelfPitchTargetMm).forEach(
-        (y, i) => addShelf(y, "removable", `s${n}-shelf-${i + 1}`)
+        (y, i) => addShelf(y, "removable", `s${n3}-shelf-${i + 1}`)
       );
       clear = railTop - shelfTop;
     }
@@ -1954,22 +3011,22 @@ var ROT_HORIZONTAL = [0, 0, 0];
 var ROT_VERTICAL_YZ = [0, 0, 90];
 var ROT_VERTICAL_XY = [90, 0, 0];
 var SAME_AS_CORPUS = "same_as_corpus";
-function distributeEvenly(total, n) {
-  const base = Math.floor(total / n);
-  const remainder = total - base * n;
-  return Array.from({ length: n }, (_, i) => i < remainder ? base + 1 : base);
+function distributeEvenly(total, n3) {
+  const base = Math.floor(total / n3);
+  const remainder = total - base * n3;
+  return Array.from({ length: n3 }, (_, i) => i < remainder ? base + 1 : base);
 }
-function innerTotal(widthMm, t, n) {
-  return widthMm - (n + 1) * t;
+function innerTotal(widthMm, t, n3) {
+  return widthMm - (n3 + 1) * t;
 }
-function maxSectionInnerWidth(widthMm, t, n) {
-  return Math.ceil(innerTotal(widthMm, t, n) / n);
+function maxSectionInnerWidth(widthMm, t, n3) {
+  return Math.ceil(innerTotal(widthMm, t, n3) / n3);
 }
 function autoSectionCount(template, widthMm, t, acceptable = () => true) {
   const maxSpan = getNumberConstant(template, "maxShelfSpanMm");
   const counts = (getParamDef(template, "sections")?.options ?? []).filter((o) => typeof o === "number").sort((a, b) => a - b);
-  for (const n of counts) {
-    if (maxSectionInnerWidth(widthMm, t, n) <= maxSpan && acceptable(n)) return n;
+  for (const n3 of counts) {
+    if (maxSectionInnerWidth(widthMm, t, n3) <= maxSpan && acceptable(n3)) return n3;
   }
   return counts[counts.length - 1] ?? 1;
 }
@@ -1993,26 +3050,26 @@ function doorPlanValid(plan, maxLeaf) {
   return plan.leaves.every((l) => plan.types[l.sectionIndex] === "double" || l.widthMm <= maxLeaf);
 }
 function interiorConstants(template) {
-  const n = (name) => getNumberConstant(template, name);
+  const n3 = (name) => getNumberConstant(template, name);
   return {
-    shelfPitchTargetMm: n("shelfPitchTargetMm"),
-    shelfFrontSetbackMm: n("shelfFrontSetbackMm"),
-    railTopShelfDropMm: n("railTopShelfDropMm"),
-    railAxisDropMm: n("railAxisDropMm"),
-    railDiameterMm: n("railDiameterMm"),
-    drawerFrontHeightMm: n("drawerFrontHeightMm"),
-    drawerCount: n("drawerCountPerSection"),
-    drawerGapMm: n("drawerGapMm"),
-    drawerFrontSetbackMm: n("drawerFrontSetbackMm"),
-    drawerSlideClearanceMm: n("drawerSlideClearanceMm"),
-    drawerBoxHeightReductionMm: n("drawerBoxHeightReductionMm"),
-    drawerBackClearanceMm: n("drawerBackClearanceMm"),
-    drawerSlideMinMm: n("drawerSlideMinMm"),
-    drawerSlideMaxMm: n("drawerSlideMaxMm"),
-    drawerSlideStepMm: n("drawerSlideStepMm"),
-    railMinDepthMm: n("railMinDepthMm"),
-    railMinHangingHeightMm: n("railMinHangingHeightMm"),
-    drawerMaxFrontWidthMm: n("drawerMaxFrontWidthMm"),
+    shelfPitchTargetMm: n3("shelfPitchTargetMm"),
+    shelfFrontSetbackMm: n3("shelfFrontSetbackMm"),
+    railTopShelfDropMm: n3("railTopShelfDropMm"),
+    railAxisDropMm: n3("railAxisDropMm"),
+    railDiameterMm: n3("railDiameterMm"),
+    drawerFrontHeightMm: n3("drawerFrontHeightMm"),
+    drawerCount: n3("drawerCountPerSection"),
+    drawerGapMm: n3("drawerGapMm"),
+    drawerFrontSetbackMm: n3("drawerFrontSetbackMm"),
+    drawerSlideClearanceMm: n3("drawerSlideClearanceMm"),
+    drawerBoxHeightReductionMm: n3("drawerBoxHeightReductionMm"),
+    drawerBackClearanceMm: n3("drawerBackClearanceMm"),
+    drawerSlideMinMm: n3("drawerSlideMinMm"),
+    drawerSlideMaxMm: n3("drawerSlideMaxMm"),
+    drawerSlideStepMm: n3("drawerSlideStepMm"),
+    railMinDepthMm: n3("railMinDepthMm"),
+    railMinHangingHeightMm: n3("railMinHangingHeightMm"),
+    drawerMaxFrontWidthMm: n3("drawerMaxFrontWidthMm"),
     ...ergonomicConstants(template)
   };
 }
@@ -2020,15 +3077,15 @@ function ergonomicConstants(template) {
   const has = (name) => template.constants[name] !== void 0;
   const out = {};
   if (has("railTopMaxMm")) {
-    const n = (name) => getNumberConstant(template, name);
+    const n3 = (name) => getNumberConstant(template, name);
     out.ergonomics = {
-      railTopMaxMm: n("railTopMaxMm"),
-      railTopToShelfMm: n("railTopToShelfMm"),
-      longHangMinMm: n("longHangMinMm"),
-      shortHangMinMm: n("shortHangMinMm"),
-      shortHangClearMm: n("shortHangClearMm"),
-      drawerTopMaxMm: n("drawerTopMaxMm"),
-      minShelfGapMm: n("minShelfGapMm")
+      railTopMaxMm: n3("railTopMaxMm"),
+      railTopToShelfMm: n3("railTopToShelfMm"),
+      longHangMinMm: n3("longHangMinMm"),
+      shortHangMinMm: n3("shortHangMinMm"),
+      shortHangClearMm: n3("shortHangClearMm"),
+      drawerTopMaxMm: n3("drawerTopMaxMm"),
+      minShelfGapMm: n3("minShelfGapMm")
     };
   }
   if (has("autoPresetDouble")) {
@@ -2056,13 +3113,13 @@ function computeLayout(template, params, catalog = currentCatalog) {
   const hasBack = params.backPanel === "hdf_overlay";
   const backThicknessMm = hasBack ? backMaterial.thicknessMm : 0;
   const maxSingleLeafWidthMm = getNumberConstant(template, "maxSingleLeafWidthMm");
-  const innerFor = (n) => distributeEvenly(innerTotal(widthMm, t, n), n);
+  const innerFor = (n3) => distributeEvenly(innerTotal(widthMm, t, n3), n3);
   const sectionCount = params.sections === "auto" ? autoSectionCount(
     template,
     widthMm,
     t,
-    (n) => params.doors === "none" || doorPlanValid(
-      doorPlanFor(template, params, widthMm, t, innerFor(n)),
+    (n3) => params.doors === "none" || doorPlanValid(
+      doorPlanFor(template, params, widthMm, t, innerFor(n3)),
       maxSingleLeafWidthMm
     )
   ) : Number(params.sections);
@@ -2241,7 +3298,10 @@ function checkTemplate(template) {
   }
   return null;
 }
-function validate(params, template = wardrobeTemplate, catalog = currentCatalog) {
+function validate(params, template = wardrobeTemplate, catalogIn) {
+  const catalog = catalogIn ?? catalogForTemplate(template);
+  const other = template.generator !== WARDROBE_GENERATOR ? generatorFor(template.generator) : void 0;
+  if (other) return other.validate(params, template, catalog);
   const templateIssue = checkTemplate(template);
   if (templateIssue) return [templateIssue];
   const resolved = resolveParams(template, params);
@@ -2537,7 +3597,10 @@ function buildDimensions(layout) {
     plinthHeightMm: layout.plinthHeightMm
   };
 }
-function generate(template, params, catalog = currentCatalog) {
+function generate(template, params, catalogIn) {
+  const catalog = catalogIn ?? catalogForTemplate(template);
+  const other = template.generator !== WARDROBE_GENERATOR ? generatorFor(template.generator) : void 0;
+  if (other) return other.generate(template, params, catalog);
   const issues = validate(params, template, catalog);
   if (issues.some((i) => i.severity === "error")) {
     return { panels: [], rails: [], sections: [], issues, dimensions: null };
@@ -2554,10 +3617,589 @@ function generate(template, params, catalog = currentCatalog) {
   };
 }
 
+// ../../packages/engine/src/parts.ts
+var ROT_FLAT = [0, 0, 0];
+var ROT_SIDE = [0, 0, 90];
+var ROT_FRONT = [90, 0, 0];
+var NO_BAND2 = { bandId: null, thicknessMm: null };
+function part(p) {
+  const b = { ...p.band };
+  const edges = p.banding === "all" ? { front: { ...b }, back: { ...b }, left: { ...b }, right: { ...b } } : p.banding === "front" ? { front: { ...b }, back: { ...NO_BAND2 }, left: { ...NO_BAND2 }, right: { ...NO_BAND2 } } : {
+    front: { ...NO_BAND2 },
+    back: { ...NO_BAND2 },
+    left: { ...NO_BAND2 },
+    right: { ...NO_BAND2 }
+  };
+  return {
+    id: p.id,
+    role: p.role,
+    lengthMm: p.lengthMm,
+    widthMm: p.widthMm,
+    thicknessMm: p.thicknessMm,
+    material: p.material,
+    position: p.position,
+    rotation: p.rotation,
+    edges,
+    grainDirection: p.grain ? "length" : null,
+    operations: [],
+    ...p.extra
+  };
+}
+function metalBox(id, material, size, centre) {
+  return part({
+    id,
+    role: "frame",
+    lengthMm: size[0],
+    thicknessMm: size[1],
+    widthMm: size[2],
+    material,
+    position: centre,
+    rotation: ROT_FLAT,
+    banding: "none",
+    band: NO_BAND2,
+    grain: false
+  });
+}
+var half2 = (v) => Math.round(v * 2) / 2;
+
+// ../../packages/engine/src/desk.ts
+var DESK_GENERATOR = "desk-v1";
+function n(template, name) {
+  return getNumberConstant(template, name);
+}
+function materialIssues2(template, p, catalog) {
+  const issues = [];
+  for (const def of template.parameters) {
+    if (!def.materialKinds) continue;
+    const m = getMaterial(catalog, p[def.key]);
+    if (!m || !def.materialKinds.includes(m.kind)) {
+      issues.push(
+        issue("MATERIAL_UNKNOWN", "error", def.key, { material: String(p[def.key]) })
+      );
+    }
+  }
+  return issues;
+}
+function build(template, p, catalog) {
+  const W = Number(p.width);
+  const D = Number(p.depth);
+  const H = Number(p.height);
+  const legs = p.legs ?? "ldsp";
+  const top = String(p.topMaterial);
+  const corpus = String(p.corpusMaterial);
+  const frame = String(p.frameColor);
+  const tt = getMaterial(catalog, top)?.thicknessMm ?? 22;
+  const t = getMaterial(catalog, corpus)?.thicknessMm ?? 16;
+  const band = {
+    bandId: getStringConstant(template, "edgeBandId"),
+    thicknessMm: n(template, "edgeBandThicknessMm")
+  };
+  const under = H - tt;
+  const panels = [
+    part({
+      id: "worktop",
+      role: "worktop",
+      lengthMm: W,
+      widthMm: D,
+      thicknessMm: tt,
+      material: top,
+      position: [W / 2, H - tt / 2, D / 2],
+      rotation: ROT_FLAT,
+      banding: "all",
+      band,
+      grain: true
+    })
+  ];
+  if (legs === "ldsp") {
+    const inset = n(template, "legDepthInsetMm");
+    const legD = D - 2 * inset;
+    for (const [id, x] of [
+      ["leg-left", t / 2],
+      ["leg-right", W - t / 2]
+    ]) {
+      panels.push(
+        part({
+          id,
+          role: "leg",
+          lengthMm: under,
+          widthMm: legD,
+          thicknessMm: t,
+          material: corpus,
+          position: [x, under / 2, D / 2],
+          rotation: ROT_SIDE,
+          banding: "front",
+          band,
+          grain: true
+        })
+      );
+    }
+    const mh = n(template, "modestyHeightMm");
+    const mz = n(template, "modestyBackInsetMm");
+    panels.push(
+      part({
+        id: "modesty",
+        role: "modesty",
+        lengthMm: W - 2 * t,
+        widthMm: mh,
+        thicknessMm: t,
+        material: corpus,
+        position: [W / 2, under - mh / 2, mz + t / 2],
+        rotation: ROT_FRONT,
+        banding: "front",
+        band,
+        grain: true
+      })
+    );
+  } else {
+    const lift = legs === "metal_lift";
+    const col = lift ? n(template, "liftColumnMm") : n(template, "frameColumnMm");
+    const foot = n(template, "frameFootHeightMm");
+    const arm = n(template, "frameArmHeightMm");
+    const endInset = n(template, "frameEndInsetMm");
+    const footD = D - 2 * n(template, "frameFootInsetMm");
+    for (const [side, x] of [
+      ["left", endInset],
+      ["right", W - endInset]
+    ]) {
+      panels.push(
+        metalBox(`frame-foot-${side}`, frame, [col, foot, footD], [x, foot / 2, D / 2]),
+        metalBox(
+          `frame-column-${side}`,
+          frame,
+          [col, under - foot - arm, col],
+          [x, foot + (under - foot - arm) / 2, D / 2]
+        ),
+        metalBox(`frame-arm-${side}`, frame, [col, arm, footD], [x, under - arm / 2, D / 2])
+      );
+    }
+    const beam = n(template, "frameBeamMm");
+    panels.push(
+      metalBox(
+        "frame-beam",
+        frame,
+        [W - 2 * endInset - col, beam, beam],
+        [W / 2, under - arm - beam / 2, D / 2]
+      )
+    );
+  }
+  const dimensions = {
+    widthMm: W,
+    heightMm: H,
+    depthMm: D,
+    carcassHeightMm: under,
+    carcassDepthMm: D,
+    backThicknessMm: 0,
+    doorThicknessMm: 0,
+    doorGapFrontMm: 0,
+    plinthHeightMm: 0
+  };
+  return { panels, dimensions, legs, under };
+}
+function validateDesk(params, template, catalog) {
+  const resolved = resolveParams(template, params);
+  if (resolved.issues.some((i) => i.severity === "error")) return resolved.issues;
+  const mat = materialIssues2(template, resolved.params, catalog);
+  if (mat.length > 0) return [...resolved.issues, ...mat];
+  const issues = [...resolved.issues];
+  const p = resolved.params;
+  const fixedMin = n(template, "fixedHeightMinMm");
+  const fixedMax = n(template, "fixedHeightMaxMm");
+  const H = Number(p.height);
+  if (p.legs !== "metal_lift" && (H < fixedMin || H > fixedMax)) {
+    issues.push(
+      issue("DESK_HEIGHT_NOT_ERGONOMIC", "warning", "height", {
+        heightMm: H,
+        minMm: fixedMin,
+        maxMm: fixedMax
+      })
+    );
+  }
+  if (Number(p.width) < n(template, "minWorkWidthMm") || Number(p.depth) < n(template, "minWorkDepthMm")) {
+    issues.push(
+      issue("DESK_TOO_SMALL", "warning", "width", {
+        widthMm: Number(p.width),
+        depthMm: Number(p.depth)
+      })
+    );
+  }
+  return issues;
+}
+function generateDesk(template, params, catalog) {
+  const issues = validateDesk(params, template, catalog);
+  if (issues.some((i) => i.severity === "error")) {
+    return { panels: [], rails: [], sections: [], issues, dimensions: null };
+  }
+  const { params: p } = resolveParams(template, params);
+  const { panels, dimensions } = build(template, p, catalog);
+  return { panels, rails: [], sections: [], issues, dimensions };
+}
+registerGenerator(DESK_GENERATOR, { validate: validateDesk, generate: generateDesk });
+
+// ../../packages/engine/src/pedestal.ts
+var PEDESTAL_GENERATOR = "pedestal-v1";
+var SAME = "same_as_corpus";
+function n2(template, name) {
+  return getNumberConstant(template, name);
+}
+function materialIssues3(template, p, catalog) {
+  const issues = [];
+  for (const def of template.parameters) {
+    if (!def.materialKinds) continue;
+    const v = p[def.key];
+    if (v === SAME) continue;
+    const m = getMaterial(catalog, v);
+    if (!m || !def.materialKinds.includes(m.kind)) {
+      issues.push(issue("MATERIAL_UNKNOWN", "error", def.key, { material: String(v) }));
+    }
+  }
+  return issues;
+}
+function layoutOf(template, p, catalog) {
+  const corpus = String(p.corpusMaterial);
+  const front = p.doorMaterial === SAME ? corpus : String(p.doorMaterial);
+  const back = getStringConstant(template, "backMaterial");
+  const t = getMaterial(catalog, corpus)?.thicknessMm ?? 16;
+  const frontT = getMaterial(catalog, front)?.thicknessMm ?? t;
+  const backT = getMaterial(catalog, back)?.thicknessMm ?? 3;
+  const base = p.base === "plinth" ? "plinth" : "castors";
+  const baseH = base === "castors" ? n2(template, "castorHeightMm") : n2(template, "plinthHeightMm");
+  const D = Number(p.depth);
+  return {
+    W: Number(p.width),
+    H: Number(p.height),
+    D,
+    t,
+    frontT,
+    backT,
+    baseH,
+    base,
+    carcassDepth: D - backT - frontT - n2(template, "frontGapMm"),
+    corpus,
+    front,
+    back,
+    frontKind: getMaterial(catalog, front)?.kind ?? "ldsp",
+    layout: p.layout ?? "drawers3"
+  };
+}
+function frontPlan(template, L) {
+  const gap = n2(template, "drawerGapMm");
+  const edge = n2(template, "frontEdgeGapMm");
+  const y0 = L.baseH + edge;
+  const y1 = L.H - L.t - edge;
+  const zone = y1 - y0;
+  if (L.layout === "door_shelf") return [{ y: y0, h: zone }];
+  if (L.layout === "drawers2_file") {
+    const smallMin = n2(template, "smallFrontMinHeightMm");
+    const small = Math.max(smallMin, (zone - n2(template, "fileFrontHeightMm") - 2 * gap) / 2);
+    const file = zone - 2 * small - 2 * gap;
+    return [
+      { y: y0, h: half2(file) },
+      { y: half2(y0 + file + gap), h: half2(small) },
+      { y: half2(y0 + file + small + 2 * gap), h: half2(small) }
+    ];
+  }
+  const h = (zone - 2 * gap) / 3;
+  return [0, 1, 2].map((i) => ({ y: half2(y0 + i * (h + gap)), h: half2(h) }));
+}
+function slide(template, depthAvailable) {
+  const step = n2(template, "drawerSlideStepMm");
+  const fit = Math.floor(depthAvailable / step) * step;
+  return Math.max(n2(template, "drawerSlideMinMm"), Math.min(n2(template, "drawerSlideMaxMm"), fit));
+}
+function build2(template, L) {
+  const band = {
+    bandId: getStringConstant(template, "edgeBandId"),
+    thicknessMm: n2(template, "edgeBandThicknessMm")
+  };
+  const zBack = L.backT;
+  const zFront = zBack + L.carcassDepth;
+  const zMid = zBack + L.carcassDepth / 2;
+  const innerW = L.W - 2 * L.t;
+  const sideY0 = L.base === "plinth" ? 0 : L.baseH;
+  const sideH = L.H - L.t - sideY0;
+  const board = (x) => part({ ...x, band, grain: true });
+  const panels = [
+    board({
+      id: "side-left",
+      role: "side",
+      lengthMm: sideH,
+      widthMm: L.carcassDepth,
+      thicknessMm: L.t,
+      material: L.corpus,
+      position: [L.t / 2, sideY0 + sideH / 2, zMid],
+      rotation: ROT_SIDE,
+      banding: "front"
+    }),
+    board({
+      id: "side-right",
+      role: "side",
+      lengthMm: sideH,
+      widthMm: L.carcassDepth,
+      thicknessMm: L.t,
+      material: L.corpus,
+      position: [L.W - L.t / 2, sideY0 + sideH / 2, zMid],
+      rotation: ROT_SIDE,
+      banding: "front"
+    }),
+    board({
+      id: "bottom",
+      role: "bottom",
+      lengthMm: innerW,
+      widthMm: L.carcassDepth,
+      thicknessMm: L.t,
+      material: L.corpus,
+      position: [L.W / 2, L.baseH + L.t / 2, zMid],
+      rotation: ROT_FLAT,
+      banding: "front"
+    }),
+    board({
+      id: "top",
+      role: "top",
+      lengthMm: L.W,
+      widthMm: L.carcassDepth,
+      thicknessMm: L.t,
+      material: L.corpus,
+      position: [L.W / 2, L.H - L.t / 2, zMid],
+      rotation: ROT_FLAT,
+      banding: "all"
+    }),
+    part({
+      id: "back",
+      role: "back",
+      lengthMm: L.W,
+      widthMm: L.H - sideY0,
+      thicknessMm: L.backT,
+      material: L.back,
+      position: [L.W / 2, sideY0 + (L.H - sideY0) / 2, L.backT / 2],
+      rotation: ROT_FRONT,
+      banding: "none",
+      band,
+      grain: false
+    })
+  ];
+  if (L.base === "plinth") {
+    panels.push(
+      board({
+        id: "plinth-front",
+        role: "plinth",
+        lengthMm: innerW,
+        widthMm: L.baseH,
+        thicknessMm: L.t,
+        material: L.corpus,
+        position: [L.W / 2, L.baseH / 2, zFront - L.t / 2],
+        rotation: ROT_FRONT,
+        banding: "front"
+      })
+    );
+  } else {
+    const c = n2(template, "castorSizeMm");
+    const inset = c / 2 + L.t;
+    for (const [i, [x, z]] of [
+      [inset, zBack + inset],
+      [L.W - inset, zBack + inset],
+      [inset, zFront - inset],
+      [L.W - inset, zFront - inset]
+    ].entries()) {
+      panels.push(
+        metalBox(
+          `castor-${i + 1}`,
+          getStringConstant(template, "castorMaterial"),
+          [c, L.baseH, c],
+          [x, L.baseH / 2, z]
+        )
+      );
+    }
+  }
+  const edgeGap = n2(template, "frontSideGapMm");
+  const frontW = L.W - 2 * edgeGap;
+  const zFrontFace = zFront + n2(template, "frontGapMm") + L.frontT / 2;
+  const fronts = frontPlan(template, L);
+  const drawers = [];
+  const clearance = n2(template, "drawerSlideClearanceMm");
+  const boxW = innerW - 2 * clearance;
+  const depth = slide(template, L.carcassDepth - n2(template, "drawerBackClearanceMm"));
+  if (L.layout === "door_shelf") {
+    const f = fronts[0];
+    panels.push(
+      part({
+        id: "door-1",
+        role: "door",
+        lengthMm: frontW,
+        widthMm: f.h,
+        thicknessMm: L.frontT,
+        material: L.front,
+        position: [L.W / 2, f.y + f.h / 2, zFrontFace],
+        rotation: ROT_FRONT,
+        banding: "all",
+        band,
+        grain: true,
+        extra: { sectionIndex: 0, hingeSide: "left", hingeMount: "full_overlay" }
+      }),
+      board({
+        id: "s1-shelf-1",
+        role: "shelf",
+        lengthMm: innerW,
+        widthMm: L.carcassDepth - 4,
+        thicknessMm: L.t,
+        material: L.corpus,
+        position: [L.W / 2, half2((L.baseH + L.t + L.H - L.t) / 2), zMid - 2],
+        rotation: ROT_FLAT,
+        banding: "front"
+      })
+    );
+  } else {
+    fronts.forEach((f, i) => {
+      const id = `s1-drawer-${i + 1}`;
+      const boxH = f.h - n2(template, "drawerBoxHeightReductionMm");
+      drawers.push({
+        id,
+        frontYMm: f.y,
+        frontHeightMm: f.h,
+        frontWidthMm: frontW,
+        boxWidthMm: boxW,
+        boxDepthMm: depth,
+        boxHeightMm: boxH
+      });
+      const boxY = f.y + n2(template, "drawerBoxLiftMm") + boxH / 2;
+      const zBox = zFront - depth / 2;
+      panels.push(
+        part({
+          id: `${id}-front`,
+          role: "drawer_front",
+          lengthMm: frontW,
+          widthMm: f.h,
+          thicknessMm: L.frontT,
+          material: L.front,
+          position: [L.W / 2, f.y + f.h / 2, zFrontFace],
+          rotation: ROT_FRONT,
+          banding: "all",
+          band,
+          grain: true
+        }),
+        board({
+          id: `${id}-side-left`,
+          role: "drawer_side",
+          lengthMm: boxH,
+          widthMm: depth,
+          thicknessMm: L.t,
+          material: L.corpus,
+          position: [L.t + clearance + L.t / 2, boxY, zBox],
+          rotation: ROT_SIDE,
+          banding: "front"
+        }),
+        board({
+          id: `${id}-side-right`,
+          role: "drawer_side",
+          lengthMm: boxH,
+          widthMm: depth,
+          thicknessMm: L.t,
+          material: L.corpus,
+          position: [L.t + clearance + boxW - L.t / 2, boxY, zBox],
+          rotation: ROT_SIDE,
+          banding: "front"
+        }),
+        board({
+          id: `${id}-back`,
+          role: "drawer_back",
+          lengthMm: boxW - 2 * L.t,
+          widthMm: boxH,
+          thicknessMm: L.t,
+          material: L.corpus,
+          position: [L.W / 2, boxY, zFront - depth + L.t / 2],
+          rotation: ROT_FRONT,
+          banding: "none"
+        }),
+        part({
+          id: `${id}-bottom`,
+          role: "drawer_bottom",
+          lengthMm: boxW,
+          widthMm: depth,
+          thicknessMm: L.backT,
+          material: L.back,
+          position: [L.W / 2, boxY - boxH / 2 - L.backT / 2, zBox],
+          rotation: ROT_FLAT,
+          banding: "none",
+          band,
+          grain: false
+        })
+      );
+    });
+  }
+  const section = {
+    index: 0,
+    innerWidthMm: innerW,
+    innerHeightMm: L.H - L.t - (L.baseH + L.t),
+    innerDepthMm: L.carcassDepth,
+    xStartMm: L.t,
+    doorType: L.layout === "door_shelf" ? "single_left" : "none",
+    preset: L.layout === "door_shelf" ? "shelves" : "drawers_shelves",
+    presetSource: "chosen",
+    shelves: [],
+    rails: [],
+    drawers,
+    clearHangingHeightMm: null
+  };
+  const dimensions = {
+    widthMm: L.W,
+    heightMm: L.H,
+    depthMm: L.D,
+    carcassHeightMm: sideH,
+    carcassDepthMm: L.carcassDepth,
+    backThicknessMm: L.backT,
+    doorThicknessMm: L.frontT,
+    doorGapFrontMm: n2(template, "frontGapMm"),
+    plinthHeightMm: L.baseH
+  };
+  return { panels, section, dimensions, drawers };
+}
+function validatePedestal(params, template, catalog) {
+  const resolved = resolveParams(template, params);
+  if (resolved.issues.some((i) => i.severity === "error")) return resolved.issues;
+  const mat = materialIssues3(template, resolved.params, catalog);
+  if (mat.length > 0) return [...resolved.issues, ...mat];
+  const L = layoutOf(template, resolved.params, catalog);
+  const issues = [...resolved.issues];
+  const { drawers } = build2(template, L);
+  if (L.layout === "drawers2_file") {
+    const file = drawers[0];
+    const minW = n2(template, "fileDrawerMinBoxWidthMm");
+    const minH = n2(template, "fileDrawerMinBoxHeightMm");
+    if (file && (file.boxWidthMm - 2 * L.t < minW || file.boxHeightMm < minH)) {
+      issues.push(
+        issue("FILE_DRAWER_TOO_SMALL", "warning", "layout", {
+          boxWidthMm: file.boxWidthMm - 2 * L.t,
+          boxHeightMm: file.boxHeightMm,
+          minWidthMm: minW,
+          minHeightMm: minH
+        })
+      );
+    }
+  }
+  const maxUnder = n2(template, "underDeskMaxHeightMm");
+  if (L.H > maxUnder) {
+    issues.push(
+      issue("PEDESTAL_TOO_HIGH", "warning", "height", { heightMm: L.H, maxMm: maxUnder })
+    );
+  }
+  return issues;
+}
+function generatePedestal(template, params, catalog) {
+  const issues = validatePedestal(params, template, catalog);
+  if (issues.some((i) => i.severity === "error")) {
+    return { panels: [], rails: [], sections: [], issues, dimensions: null };
+  }
+  const { params: p } = resolveParams(template, params);
+  const L = layoutOf(template, p, catalog);
+  const { panels, section, dimensions } = build2(template, L);
+  return { panels, rails: [], sections: [section], issues, dimensions };
+}
+registerGenerator(PEDESTAL_GENERATOR, { validate: validatePedestal, generate: generatePedestal });
+
 // ../../packages/engine/src/regenerate.ts
 var CATALOG_ARCHIVE = {
   [materialsV0.catalogVersion]: materialsV0,
-  [materialsV1.catalogVersion]: materialsV1
+  [materialsV1.catalogVersion]: materialsV1,
+  [materialsV1_1.catalogVersion]: materialsV1_1
 };
 var TEMPLATE_CATALOG = {
   "0.1.0": materialsV0.catalogVersion,
@@ -2566,7 +4208,8 @@ var TEMPLATE_CATALOG = {
   "0.4.0": materialsV0.catalogVersion,
   "0.5.0": materialsV0.catalogVersion,
   "0.6.0": materialsV1.catalogVersion,
-  "0.7.0": materialsV1.catalogVersion
+  "0.7.0": materialsV1.catalogVersion,
+  "0.8.0": materialsV1.catalogVersion
 };
 
 // src/lead/phone.ts
@@ -2627,6 +4270,7 @@ var ru = {
   "step.color": "\u0426\u0432\u0435\u0442",
   "step.interior": "\u0412\u043D\u0443\u0442\u0440\u0438",
   "step.doors": "\u0414\u0432\u0435\u0440\u0438",
+  "step.hardware": "\u041C\u0435\u0445\u0430\u043D\u0438\u0437\u043C\u044B",
   "step.review": "\u041F\u0440\u043E\u0441\u043C\u043E\u0442\u0440",
   "step.comingSoon": "\u0421\u043A\u043E\u0440\u043E",
   "start.title": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0448\u043A\u0430\u0444",
@@ -2878,7 +4522,100 @@ var ru = {
   "creason.RAIL_HEIGHT_SHORT": "\u041F\u0440\u0438 \u0442\u0430\u043A\u043E\u0439 \u0432\u044B\u0441\u043E\u0442\u0435 \u0434\u043B\u0438\u043D\u043D\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430 \u043D\u0435 \u043F\u043E\u043C\u0435\u0441\u0442\u0438\u0442\u0441\u044F",
   "creason.DRAWER_SECTION_TOO_WIDE": "\u041F\u0440\u0438 \u0442\u0430\u043A\u043E\u0439 \u0448\u0438\u0440\u0438\u043D\u0435 \u044F\u0449\u0438\u043A\u0438 \u0431\u0443\u0434\u0443\u0442 \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u0448\u0438\u0440\u043E\u043A\u0438\u043C\u0438",
   "creason.DOOR_TOO_WIDE": "\u041F\u0440\u0438 \u0442\u0430\u043A\u043E\u0439 \u0448\u0438\u0440\u0438\u043D\u0435 \u0434\u0432\u0435\u0440\u044C \u0431\u0443\u0434\u0435\u0442 \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u0448\u0438\u0440\u043E\u043A\u043E\u0439",
-  "creason.default": "\u041D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u043F\u0440\u0438 \u044D\u0442\u043E\u043C \u0440\u0430\u0437\u043C\u0435\u0440\u0435"
+  "creason.default": "\u041D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u043F\u0440\u0438 \u044D\u0442\u043E\u043C \u0440\u0430\u0437\u043C\u0435\u0440\u0435",
+  // D-9: hardware + price
+  "hw.title": "\u041C\u0435\u0445\u0430\u043D\u0438\u0437\u043C\u044B",
+  "hw.hint": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0431\u0440\u0435\u043D\u0434 \u043F\u0435\u0442\u0435\u043B\u044C \u0438 \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0445.",
+  "hw.brand.strax": "Strax",
+  "hw.brand.hettich": "Hettich",
+  "hw.hint.hingeBrand.strax": "\u0421\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u0435 \u043F\u0435\u0442\u043B\u0438",
+  "hw.hint.hingeBrand.hettich": "\u0421 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C (Sensys)",
+  "hw.hint.slideBrand.strax": "\u0428\u0430\u0440\u0438\u043A\u043E\u0432\u044B\u0435 \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435, \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442",
+  "hw.hint.slideBrand.hettich": "\u0421\u043A\u0440\u044B\u0442\u044B\u0435, \u0441 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C (Quadro)",
+  "param.hingeBrand": "\u041F\u0435\u0442\u043B\u0438 \u0434\u0432\u0435\u0440\u0435\u0439",
+  "param.slideBrand": "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435 \u044F\u0449\u0438\u043A\u043E\u0432",
+  "price.total": "\u0426\u0435\u043D\u0430",
+  "price.currency": "\u0441\u0443\u043C",
+  "price.demo": "\u0442\u0435\u0441\u0442\u043E\u0432\u0430\u044F \u0446\u0435\u043D\u0430",
+  "price.breakdown": "\u0420\u0430\u0441\u0447\u0451\u0442 \u0446\u0435\u043D\u044B",
+  "price.labor": "\u0420\u0430\u0431\u043E\u0442\u0430",
+  "price.markup": "\u041D\u0430\u0446\u0435\u043D\u043A\u0430",
+  "price.missing": "\u041D\u0435\u0442 \u0446\u0435\u043D\u044B",
+  // D-8: office pedestal + desk
+  "c.heightSit": "\u0440\u0430\u0431\u043E\u0442\u0430 \u0441\u0438\u0434\u044F",
+  "c.heightStand": "\u0440\u0430\u0431\u043E\u0442\u0430 \u0441\u0442\u043E\u044F",
+  "step.size.title.wardrobe": "\u0413\u0434\u0435 \u0431\u0443\u0434\u0435\u0442 \u0441\u0442\u043E\u044F\u0442\u044C \u0448\u043A\u0430\u0444?",
+  "step.size.hint.wardrobe": "\u0418\u0437\u043C\u0435\u0440\u044C\u0442\u0435 \u0448\u0438\u0440\u0438\u043D\u0443 \u0441\u0442\u0435\u043D\u044B",
+  "step.size.title.pedestal": "\u0420\u0430\u0437\u043C\u0435\u0440 \u0442\u0443\u043C\u0431\u044B",
+  "step.size.hint.pedestal": "\u0421\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043F\u043E\u0434 \u0441\u0442\u043E\u043B",
+  "step.size.title.desk": "\u0420\u0430\u0437\u043C\u0435\u0440 \u0441\u0442\u043E\u043B\u0430",
+  "step.size.hint.desk": "\u0412\u044B\u0441\u043E\u0442\u0430 74 \u0441\u043C: \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u0439 \u0440\u0430\u0431\u043E\u0447\u0438\u0439 \u0441\u0442\u043E\u043B (EN 527-1)",
+  "product.wardrobe": "\u0428\u043A\u0430\u0444",
+  "product.pedestal": "\u041E\u0444\u0438\u0441\u043D\u0430\u044F \u0442\u0443\u043C\u0431\u0430",
+  "product.desk": "\u0421\u0442\u043E\u043B",
+  "start.product": "\u0418\u0437\u0434\u0435\u043B\u0438\u0435",
+  "start.title.wardrobe": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0448\u043A\u0430\u0444",
+  "start.title.pedestal": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u0443\u043C\u0431\u0443",
+  "start.title.desk": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0441\u0442\u043E\u043B",
+  "model.pedDrawers": "3 \u044F\u0449\u0438\u043A\u0430",
+  "model.pedFile": "\u0421 \u043F\u0430\u043F\u043A\u0430\u043C\u0438",
+  "model.pedDoor": "\u0421 \u0434\u0432\u0435\u0440\u0446\u0435\u0439",
+  "model.deskLdsp": "\u041A\u043B\u0430\u0441\u0441\u0438\u0447\u0435\u0441\u043A\u0438\u0439",
+  "model.deskLift": "\u0421 \u043F\u043E\u0434\u044A\u0451\u043C\u043D\u044B\u043C \u043C\u0435\u0445\u0430\u043D\u0438\u0437\u043C\u043E\u043C",
+  "step.interior.pedestal": "\u042F\u0449\u0438\u043A\u0438",
+  "step.interior.desk": "\u041E\u043F\u043E\u0440\u044B",
+  "step.interior.title.pedestal": "\u0427\u0442\u043E \u0432\u043D\u0443\u0442\u0440\u0438?",
+  "step.interior.hint.pedestal": "\u042F\u0449\u0438\u043A\u0438 \u0438\u043B\u0438 \u0434\u0432\u0435\u0440\u0446\u0430 + \u043F\u043E\u043B\u043A\u0430. \u0414\u043B\u044F \u043F\u0430\u043F\u043E\u043A A4 \u043D\u0443\u0436\u043D\u0430 \u0448\u0438\u0440\u0438\u043D\u0430 45 \u0441\u043C.",
+  "step.interior.title.desk": "\u041A\u0430\u043A\u0438\u0435 \u043E\u043F\u043E\u0440\u044B?",
+  "step.interior.hint.desk": "\u0421\u0442\u043E\u043B \u043D\u0430 \u043A\u0430\u0440\u043A\u0430\u0441\u0435 \u0438\u0437 \u041B\u0414\u0421\u041F \u0438\u043B\u0438 \u0441\u0442\u043E\u043B \u0441 \u043F\u043E\u0434\u044A\u0451\u043C\u043D\u044B\u043C \u043C\u0435\u0445\u0430\u043D\u0438\u0437\u043C\u043E\u043C.",
+  "step.color.title.wardrobe": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0446\u0432\u0435\u0442",
+  "step.color.hint.wardrobe": "\u0426\u0432\u0435\u0442 \u0448\u043A\u0430\u0444\u0430 \u0438 \u0434\u0432\u0435\u0440\u0435\u0439.",
+  "step.color.title.pedestal": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0446\u0432\u0435\u0442",
+  "step.color.hint.pedestal": "\u0426\u0432\u0435\u0442 \u0442\u0443\u043C\u0431\u044B \u0438 \u0444\u0430\u0441\u0430\u0434\u043E\u0432.",
+  "step.color.title.desk": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0446\u0432\u0435\u0442",
+  "step.color.hint.desk": "\u0426\u0432\u0435\u0442 \u0441\u0442\u043E\u043B\u0435\u0448\u043D\u0438\u0446\u044B \u0438 \u043E\u043F\u043E\u0440.",
+  "c.opt.layout.drawers3": "3 \u044F\u0449\u0438\u043A\u0430",
+  "c.hint.layout.drawers3": "\u041A\u0430\u043D\u0446\u0435\u043B\u044F\u0440\u0438\u044F, \u043C\u0435\u043B\u043E\u0447\u0438",
+  "c.opt.layout.drawers2_file": "2 \u044F\u0449\u0438\u043A\u0430 + \u043F\u0430\u043F\u043A\u0438",
+  "c.hint.layout.drawers2_file": "\u0412\u043D\u0438\u0437\u0443 \u043F\u043E\u0434\u0432\u0435\u0441\u043D\u044B\u0435 \u043F\u0430\u043F\u043A\u0438 A4",
+  "c.opt.layout.door_shelf": "\u0414\u0432\u0435\u0440\u0446\u0430 + \u043F\u043E\u043B\u043A\u0430",
+  "c.hint.layout.door_shelf": "\u041A\u043D\u0438\u0433\u0438, \u043F\u0430\u043F\u043A\u0438, \u0441\u0443\u043C\u043A\u0430",
+  "c.opt.legs.ldsp": "\u041A\u0430\u0440\u043A\u0430\u0441 \u0438\u0437 \u041B\u0414\u0421\u041F",
+  "c.hint.legs.ldsp": "\u0411\u043E\u043A\u043E\u0432\u0438\u043D\u044B \u0438 \u0446\u0430\u0440\u0433\u0430, \u0431\u0435\u0437 \u043C\u0435\u0442\u0430\u043B\u043B\u0430",
+  "c.opt.legs.metal_lift": "\u041F\u043E\u0434\u044A\u0451\u043C\u043D\u044B\u0439 \u043C\u0435\u0445\u0430\u043D\u0438\u0437\u043C",
+  "c.hint.legs.metal_lift": "\u042D\u043B\u0435\u043A\u0442\u0440\u043E\u043A\u0430\u0440\u043A\u0430\u0441: 74 \u0441\u043C \u0441\u0438\u0434\u044F \u2194 110 \u0441\u043C \u0441\u0442\u043E\u044F",
+  "option.layout.drawers3": "3 \u044F\u0449\u0438\u043A\u0430",
+  "option.layout.drawers2_file": "2 \u044F\u0449\u0438\u043A\u0430 + \u043F\u0430\u043F\u043A\u0438 A4",
+  "option.layout.door_shelf": "\u0414\u0432\u0435\u0440\u0446\u0430 + \u043F\u043E\u043B\u043A\u0430",
+  "option.pedestalBase.castors": "\u041D\u0430 \u043A\u043E\u043B\u0451\u0441\u0430\u0445",
+  "option.pedestalBase.plinth": "\u041D\u0430 \u0446\u043E\u043A\u043E\u043B\u0435",
+  "option.legs.ldsp": "\u041A\u0430\u0440\u043A\u0430\u0441 \u0438\u0437 \u041B\u0414\u0421\u041F",
+  "option.legs.metal_lift": "\u041F\u043E\u0434\u044A\u0451\u043C\u043D\u044B\u0439 \u044D\u043B\u0435\u043A\u0442\u0440\u043E\u043A\u0430\u0440\u043A\u0430\u0441",
+  "param.layout": "\u041D\u0430\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u0435",
+  "param.pedestalBase": "\u041E\u0441\u043D\u043E\u0432\u0430\u043D\u0438\u0435",
+  "param.frontMaterial": "\u0424\u0430\u0441\u0430\u0434\u044B",
+  "param.legs": "\u041E\u043F\u043E\u0440\u044B",
+  "param.topMaterial": "\u0421\u0442\u043E\u043B\u0435\u0448\u043D\u0438\u0446\u0430",
+  "param.legMaterial": "\u0426\u0432\u0435\u0442 \u043E\u043F\u043E\u0440",
+  "param.frameColor": "\u0426\u0432\u0435\u0442 \u043A\u0430\u0440\u043A\u0430\u0441\u0430",
+  "c.castors": "\u041D\u0430 \u043A\u043E\u043B\u0451\u0441\u0430\u0445 (\u043F\u0435\u0440\u0435\u0434\u0432\u0438\u0433\u0430\u0435\u0442\u0441\u044F)",
+  "c.frontsOther": "\u0424\u0430\u0441\u0430\u0434\u044B \u0434\u0440\u0443\u0433\u043E\u0433\u043E \u0446\u0432\u0435\u0442\u0430",
+  "present.front": "\u0424\u0430\u0441\u0430\u0434",
+  "present.top": "\u0421\u0442\u043E\u043B\u0435\u0448\u043D\u0438\u0446\u0430",
+  "present.legs": "\u041E\u043F\u043E\u0440\u044B",
+  "creason.FILE_DRAWER_TOO_SMALL": "\u041F\u0440\u0438 \u044D\u0442\u043E\u0439 \u0448\u0438\u0440\u0438\u043D\u0435 \u043F\u0430\u043F\u043A\u0430 A4 \u043D\u0435 \u043F\u043E\u043C\u0435\u0449\u0430\u0435\u0442\u0441\u044F: \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 45 \u0441\u043C",
+  "creason.PEDESTAL_TOO_HIGH": "\u041D\u0435 \u043F\u043E\u043C\u0435\u0449\u0430\u0435\u0442\u0441\u044F \u043F\u043E\u0434 \u0441\u0442\u043E\u043B",
+  "creason.DESK_HEIGHT_NOT_ERGONOMIC": "\u0422\u043E\u043B\u044C\u043A\u043E \u0441 \u043F\u043E\u0434\u044A\u0451\u043C\u043D\u044B\u043C \u043A\u0430\u0440\u043A\u0430\u0441\u043E\u043C",
+  "creason.DESK_TOO_SMALL": "\u0421\u0442\u043E\u043B \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u043C\u0430\u043B\u0435\u043D\u044C\u043A\u0438\u0439",
+  "issue.FILE_DRAWER_TOO_SMALL": "\u042F\u0449\u0438\u043A \u0434\u043B\u044F \u043F\u0430\u043F\u043E\u043A A4 \u043C\u0430\u043B: \u043A\u043E\u0440\u043E\u0431 {boxWidthMm} \xD7 {boxHeightMm} \u043C\u043C, \u043D\u0443\u0436\u043D\u043E \u2265 {minWidthMm} \xD7 {minHeightMm} \u043C\u043C.",
+  "issue.PEDESTAL_TOO_HIGH": "\u0422\u0443\u043C\u0431\u0430 \u0432\u044B\u0441\u043E\u0442\u043E\u0439 {heightMm} \u043C\u043C \u043D\u0435 \u043F\u043E\u043C\u0435\u0449\u0430\u0435\u0442\u0441\u044F \u043F\u043E\u0434 \u0441\u0442\u043E\u043B (\u2264 {maxMm} \u043C\u043C).",
+  "issue.DESK_HEIGHT_NOT_ERGONOMIC": "\u0412\u044B\u0441\u043E\u0442\u0430 \u0441\u0442\u043E\u043B\u0430 {heightMm} \u043C\u043C: \u043F\u043E EN 527-1 {minMm}\u2013{maxMm} \u043C\u043C (\u0438\u043B\u0438 \u043F\u043E\u0434\u044A\u0451\u043C\u043D\u044B\u0439 \u043A\u0430\u0440\u043A\u0430\u0441).",
+  "issue.DESK_TOO_SMALL": "\u0420\u0430\u0431\u043E\u0447\u0430\u044F \u043F\u043E\u0432\u0435\u0440\u0445\u043D\u043E\u0441\u0442\u044C {widthMm} \xD7 {depthMm} \u043C\u043C: \u043F\u043E \u0413\u041E\u0421\u0422 13025.3-85 \u043D\u0435 \u043C\u0435\u043D\u0435\u0435 800 \xD7 500 \u043C\u043C.",
+  "decor.white22": "\u0411\u0435\u043B\u044B\u0439 22 \u043C\u043C",
+  "decor.oakSonomaLight": "\u0414\u0443\u0431 \u0441\u043E\u043D\u043E\u043C\u0430 \u0441\u0432\u0435\u0442\u043B\u044B\u0439",
+  "decor.walnutPacific": "\u041E\u0440\u0435\u0445 \u041F\u0430\u0446\u0438\u0444\u0438\u043A \u043D\u0430\u0442\u0443\u0440\u0430\u043B\u044C\u043D\u044B\u0439",
+  "decor.metalBlack": "\u041C\u0435\u0442\u0430\u043B\u043B \u0447\u0451\u0440\u043D\u044B\u0439",
+  "decor.metalWhite": "\u041C\u0435\u0442\u0430\u043B\u043B \u0431\u0435\u043B\u044B\u0439"
 };
 
 // src/i18n/uz.ts
@@ -2894,6 +4631,7 @@ var uz = {
   "step.color": "Rang",
   "step.interior": "Ichki",
   "step.doors": "Eshiklar",
+  "step.hardware": "Mexanizmlar",
   "step.review": "Ko'rib chiqish",
   "step.comingSoon": "Tez orada",
   "start.title": "Shkafingizni tanlang",
@@ -3146,7 +4884,100 @@ var uz = {
   "creason.RAIL_HEIGHT_SHORT": "Bu balandlikda uzun kiyim sig'maydi",
   "creason.DRAWER_SECTION_TOO_WIDE": "Bu kenglikda tortmalar juda keng bo'lib qoladi",
   "creason.DOOR_TOO_WIDE": "Bu kenglikda eshik juda keng bo'lib qoladi",
-  "creason.default": "Bu o'lchamda mumkin emas"
+  "creason.default": "Bu o'lchamda mumkin emas",
+  // D-9: hardware + price
+  "hw.title": "Mexanizmlar",
+  "hw.hint": "Petlya va tortma mexanizmlarining brendini tanlang.",
+  "hw.brand.strax": "Strax",
+  "hw.brand.hettich": "Hettich",
+  "hw.hint.hingeBrand.strax": "Standart petlyalar",
+  "hw.hint.hingeBrand.hettich": "Yumshoq yopiladi (Sensys)",
+  "hw.hint.slideBrand.strax": "Sharikli yo'naltiruvchilar, standart",
+  "hw.hint.slideBrand.hettich": "Yashirin, yumshoq yopiladi (Quadro)",
+  "param.hingeBrand": "Eshik petlyalari",
+  "param.slideBrand": "Tortma yo'naltiruvchilari",
+  "price.total": "Narx",
+  "price.currency": "so'm",
+  "price.demo": "sinov narxi",
+  "price.breakdown": "Narx hisobi",
+  "price.labor": "Ish haqi",
+  "price.markup": "Ustama",
+  "price.missing": "Narxi yo'q",
+  // D-8: office pedestal + desk
+  "c.heightSit": "o'tirib ishlash",
+  "c.heightStand": "turib ishlash",
+  "step.size.title.wardrobe": "Shkaf qayerga turadi?",
+  "step.size.hint.wardrobe": "Devor kengligini o'lchang",
+  "step.size.title.pedestal": "Tumba o'lchami",
+  "step.size.hint.pedestal": "Stol ostiga sig'adigan standart o'lchamlar",
+  "step.size.title.desk": "Stol o'lchami",
+  "step.size.hint.desk": "Balandligi 74 sm: standart ish stoli (EN 527-1)",
+  "product.wardrobe": "Shkaf",
+  "product.pedestal": "Ofis tumbasi",
+  "product.desk": "Stol",
+  "start.product": "Mahsulot",
+  "start.title.wardrobe": "Shkafingizni tanlang",
+  "start.title.pedestal": "Tumbani tanlang",
+  "start.title.desk": "Stolni tanlang",
+  "model.pedDrawers": "3 tortmali",
+  "model.pedFile": "Papka bilan",
+  "model.pedDoor": "Eshikli",
+  "model.deskLdsp": "Klassik",
+  "model.deskLift": "Ko'tarma mexanizmli",
+  "step.interior.pedestal": "Tortmalar",
+  "step.interior.desk": "Oyoqlar",
+  "step.interior.title.pedestal": "Ichida nima bo'ladi?",
+  "step.interior.hint.pedestal": "Tortmalar yoki eshik + javon. A4 papka uchun 45 sm kenglik kerak.",
+  "step.interior.title.desk": "Qanday oyoqlar?",
+  "step.interior.hint.desk": "LDSP karkasli stol yoki ko'tarma mexanizmli stol.",
+  "step.color.title.wardrobe": "Rangni tanlang",
+  "step.color.hint.wardrobe": "Shkaf va eshiklar uchun rang tanlang.",
+  "step.color.title.pedestal": "Rangni tanlang",
+  "step.color.hint.pedestal": "Tumba va old panellar uchun rang tanlang.",
+  "step.color.title.desk": "Rangni tanlang",
+  "step.color.hint.desk": "Stoleshnitsa va oyoqlar uchun rang tanlang.",
+  "c.opt.layout.drawers3": "3 ta tortma",
+  "c.hint.layout.drawers3": "Kanselyariya, mayda narsalar",
+  "c.opt.layout.drawers2_file": "2 tortma + papka",
+  "c.hint.layout.drawers2_file": "Pastda A4 osma papkalar",
+  "c.opt.layout.door_shelf": "Eshik + javon",
+  "c.hint.layout.door_shelf": "Kitob, papka, sumka",
+  "c.opt.legs.ldsp": "LDSP karkasli",
+  "c.hint.legs.ldsp": "Yon devorlar va orqa panel, metall yo'q",
+  "c.opt.legs.metal_lift": "Ko'tarma mexanizmli",
+  "c.hint.legs.metal_lift": "Elektr karkas: 74 sm o'tirib \u2194 110 sm turib",
+  "option.layout.drawers3": "3 ta tortma",
+  "option.layout.drawers2_file": "2 tortma + A4 papka",
+  "option.layout.door_shelf": "Eshik + javon",
+  "option.pedestalBase.castors": "G'ildirakli",
+  "option.pedestalBase.plinth": "Plintusda",
+  "option.legs.ldsp": "LDSP karkas",
+  "option.legs.metal_lift": "Ko'tarma mexanizmli karkas",
+  "param.layout": "Ichki tuzilish",
+  "param.pedestalBase": "Asos",
+  "param.frontMaterial": "Old panellar",
+  "param.legs": "Oyoqlar",
+  "param.topMaterial": "Stoleshnitsa",
+  "param.legMaterial": "Oyoq rangi",
+  "param.frameColor": "Karkas rangi",
+  "c.castors": "G'ildirakli (joyidan suriladi)",
+  "c.frontsOther": "Old panellar boshqa rangda",
+  "present.front": "Old panel",
+  "present.top": "Stoleshnitsa",
+  "present.legs": "Oyoq",
+  "creason.FILE_DRAWER_TOO_SMALL": "Bu kenglikda A4 papka sig'maydi: 45 sm tanlang",
+  "creason.PEDESTAL_TOO_HIGH": "Stol ostiga sig'maydi",
+  "creason.DESK_HEIGHT_NOT_ERGONOMIC": "Faqat ko'tariladigan karkasda",
+  "creason.DESK_TOO_SMALL": "Stol juda kichik",
+  "issue.FILE_DRAWER_TOO_SMALL": "A4 papka tortmasi kichik: quti {boxWidthMm} \xD7 {boxHeightMm} mm, kerak \u2265 {minWidthMm} \xD7 {minHeightMm} mm.",
+  "issue.PEDESTAL_TOO_HIGH": "Tumba balandligi {heightMm} mm stol ostiga sig'maydi (\u2264 {maxMm} mm).",
+  "issue.DESK_HEIGHT_NOT_ERGONOMIC": "Stol balandligi {heightMm} mm: EN 527-1 bo'yicha {minMm}\u2013{maxMm} mm (yoki ko'tariladigan karkas).",
+  "issue.DESK_TOO_SMALL": "Ish yuzasi {widthMm} \xD7 {depthMm} mm: GOST 13025.3-85 bo'yicha kamida 800 \xD7 500 mm.",
+  "decor.white22": "\u0411\u0435\u043B\u044B\u0439 22 \u043C\u043C",
+  "decor.oakSonomaLight": "\u0414\u0443\u0431 \u0441\u043E\u043D\u043E\u043C\u0430 \u0441\u0432\u0435\u0442\u043B\u044B\u0439",
+  "decor.walnutPacific": "\u041E\u0440\u0435\u0445 \u041F\u0430\u0446\u0438\u0444\u0438\u043A \u043D\u0430\u0442\u0443\u0440\u0430\u043B\u044C\u043D\u044B\u0439",
+  "decor.metalBlack": "\u041C\u0435\u0442\u0430\u043B\u043B \u0447\u0451\u0440\u043D\u044B\u0439",
+  "decor.metalWhite": "\u041C\u0435\u0442\u0430\u043B\u043B \u0431\u0435\u043B\u044B\u0439"
 };
 
 // src/i18n/translate.ts
@@ -3163,7 +4994,7 @@ function translate(lang, key, values) {
 
 // src/lead/summary.ts
 var cm = (mm) => Math.round(mm / 10);
-function summarizeResult(params, result, lang) {
+function summarizeResult(params, result, lang, template = wardrobeTemplate) {
   const t = (key, values) => translate(lang, key, values);
   const label = (key, value) => {
     const k = `option.${key}.${value}`;
@@ -3171,29 +5002,61 @@ function summarizeResult(params, result, lang) {
     return s === k ? value : s;
   };
   const decor = (id) => {
-    const m = id ? getMaterial(currentCatalog, id) : void 0;
+    const m = id ? getMaterial(allMaterials, id) : void 0;
     return m ? t(m.decorName) : id ?? "";
   };
-  const { params: p } = resolveParams(wardrobeTemplate, params);
+  const code = (id) => id && getMaterial(allMaterials, id)?.code || null;
+  const { params: p } = resolveParams(template, params);
   const w = Number(p.width);
   const h = Number(p.height);
   const d = Number(p.depth);
-  const corpusId = result.panels.find((x) => x.role === "side")?.material;
-  const doorId = result.panels.find((x) => x.role === "door")?.material;
-  const parts = result.sections.map((s) => `${s.index + 1}) ${label("interior", s.preset)}`);
-  const doors = result.sections.map((s) => `${s.index + 1}) ${label("doorSection", s.doorType)}`);
+  const product = template.templateId;
+  const role = (r) => result.panels.find((x) => x.role === r)?.material;
+  let mainId;
+  let secondId;
+  let mainLabel = t("present.corpus");
+  let secondLabel = t("present.door");
+  let sections;
+  let doors;
+  if (product === "desk") {
+    mainId = role("worktop");
+    secondId = role("leg") ?? role("frame");
+    mainLabel = t("present.top");
+    secondLabel = t("present.legs");
+    sections = label("legs", String(p.legs));
+    doors = "";
+  } else if (product === "pedestal") {
+    mainId = role("side");
+    secondId = role("drawer_front") ?? role("door");
+    secondLabel = t("present.front");
+    sections = label("layout", String(p.layout));
+    doors = label("pedestalBase", String(p.base));
+  } else {
+    mainId = role("side");
+    secondId = role("door");
+    const parts = result.sections.map((s) => `${s.index + 1}) ${label("interior", s.preset)}`);
+    sections = `${t("c.parts", { count: result.sections.length })}: ${parts.join("; ")}`;
+    doors = result.sections.map((s) => `${s.index + 1}) ${label("doorSection", s.doorType)}`).join("; ");
+  }
+  const main = decor(mainId);
+  const second = secondId ? decor(secondId) : null;
   return {
+    product,
+    productName: t(`product.${product}`),
     widthMm: w,
     heightMm: h,
     depthMm: d,
     sizeMm: `${w} \xD7 ${h} \xD7 ${d}`,
     sizeCm: `${cm(w)} \xD7 ${cm(h)} \xD7 ${cm(d)} ${t("unit.cm")}`,
-    corpus: decor(corpusId),
-    door: doorId ? decor(doorId) : null,
-    corpusCode: corpusId && getMaterial(currentCatalog, corpusId)?.code || null,
-    doorCode: doorId && getMaterial(currentCatalog, doorId)?.code || null,
-    sections: `${t("c.parts", { count: result.sections.length })}: ${parts.join("; ")}`,
-    doors: doors.join("; ")
+    corpus: main,
+    door: second,
+    corpusCode: code(mainId),
+    doorCode: code(secondId),
+    colorsLine: [`${mainLabel}: ${main}`, ...second ? [`${secondLabel}: ${second}`] : []].join(
+      " \xB7 "
+    ),
+    sections,
+    doors
   };
 }
 
@@ -3202,7 +5065,13 @@ var CUSTOMER_BLOCKING_WARNINGS = [
   "SHELF_SPAN",
   "RAIL_DEPTH_SHORT",
   "RAIL_HEIGHT_SHORT",
-  "DRAWER_SECTION_TOO_WIDE"
+  "DRAWER_SECTION_TOO_WIDE",
+  // D-7 / D-8
+  "DRAWER_TOO_HIGH",
+  "FILE_DRAWER_TOO_SMALL",
+  "PEDESTAL_TOO_HIGH",
+  "DESK_HEIGHT_NOT_ERGONOMIC",
+  "DESK_TOO_SMALL"
 ];
 function isCustomerBlocking(issue2) {
   return issue2.severity === "error" || CUSTOMER_BLOCKING_WARNINGS.includes(issue2.code);
@@ -3258,6 +5127,8 @@ async function handleSubmit(req, deps2) {
     bad.push("idempotencyKey");
   }
   if (b.lang !== "uz" && b.lang !== "ru") bad.push("lang");
+  const template = PRODUCT_TEMPLATES[typeof b.product === "string" ? b.product : "wardrobe"];
+  if (!template) bad.push("product");
   if (b.kioskId !== void 0 && (typeof b.kioskId !== "string" || !KIOSK_RE.test(b.kioskId))) {
     bad.push("kioskId");
   }
@@ -3282,12 +5153,13 @@ async function handleSubmit(req, deps2) {
     return fail(422, "invalid_contact", { fields: Object.keys(contactErrors) });
   }
   const contact = cleanContact(contactIn);
-  const resolved = resolveParams(wardrobeTemplate, b.params);
-  const result = generate(wardrobeTemplate, b.params);
+  const tpl = template;
+  const resolved = resolveParams(tpl, b.params);
+  const result = generate(tpl, b.params);
   const blocking = [...resolved.issues, ...result.issues].filter(
     (i) => isCustomerBlocking(i) || i.code === "UNKNOWN_PARAM"
   );
-  const nonStandard = wardrobeTemplate.parameters.filter(
+  const nonStandard = tpl.parameters.filter(
     (d) => d.customerValues && !d.customerValues.includes(Number(resolved.params[d.key]))
   );
   if (blocking.length > 0 || nonStandard.length > 0 || !result.dimensions) {
@@ -3310,7 +5182,7 @@ async function handleSubmit(req, deps2) {
   }
   if (existing) return json(200, { id: existing.id, status: "submitted" });
   const now = deps2.now();
-  const summary = summarizeResult(resolved.params, result, "uz");
+  const summary = summarizeResult(resolved.params, result, "uz", tpl);
   let lead;
   let stored;
   try {
@@ -3337,10 +5209,12 @@ async function handleSubmit(req, deps2) {
       managerNote: "",
       paramsJson: JSON.stringify(resolved.params),
       schemaVersion: ORDER_SCHEMA_VERSION,
-      templateVersion: wardrobeTemplate.templateVersion,
+      templateVersion: tpl.templateVersion,
       engineVersion: deps2.engineVersion,
       idempotencyKey: key,
-      telegramAttempts: 0
+      telegramAttempts: 0,
+      product: summary.productName,
+      templateId: tpl.templateId
     };
     stored = await deps2.store.append(lead);
   } catch (e) {

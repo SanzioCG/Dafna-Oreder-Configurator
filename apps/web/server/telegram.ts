@@ -11,16 +11,25 @@ export function telegramText(lead: LeadRecord): string {
   const name = [lead.firstName, lead.lastName].filter(Boolean).join(' ');
   const [w, h, d] = lead.sizeMm.split(' × ').map((x) => Math.round(Number(x) / 10));
   const sizeCm = [w, h, d].every((x) => Number.isFinite(x)) ? `${w} × ${h} × ${d} sm` : '';
+  const [main, second] =
+    lead.templateId === 'desk'
+      ? ['Stoleshnitsa', 'Oyoq']
+      : lead.templateId === 'pedestal'
+        ? ['Korpus', 'Old panel']
+        : ['Korpus', 'Eshik'];
   const colors =
-    `Korpus: ${lead.corpus}` + (lead.door && lead.door !== '—' ? ` · Eshik: ${lead.door}` : '');
+    `${main}: ${lead.corpus}` +
+    (lead.door && lead.door !== '—' ? ` · ${second}: ${lead.door}` : '');
   return [
-    `🆕 <b>Yangi ariza ${escapeHtml(lead.id)}</b>`,
+    `🆕 <b>Yangi ariza ${escapeHtml(lead.id)}</b>${lead.product ? ` · ${escapeHtml(lead.product)}` : ''}`,
     `👤 ${escapeHtml(name)}`,
     `📞 ${escapeHtml(lead.phone)}`,
     `📐 ${escapeHtml(sizeCm)} (${escapeHtml(lead.sizeMm)} mm)`,
     `🎨 ${escapeHtml(colors)}`,
     `🗄 ${escapeHtml(lead.sections)}`,
-    `🚪 Eshiklar: ${escapeHtml(lead.doors)}`,
+    ...(lead.doors
+      ? [`🚪 ${lead.templateId === 'pedestal' ? 'Asos' : 'Eshiklar'}: ${escapeHtml(lead.doors)}`]
+      : []),
     `📍 Kiosk: ${escapeHtml(lead.kiosk || '—')} · Til: ${escapeHtml(lead.lang)}`,
     `Holat: <b>${escapeHtml(lead.status)}</b>`,
   ].join('\n');

@@ -1,6 +1,12 @@
-import { validate, type ParamDef, type ParamValue, type Params } from '@dafna/engine';
+import {
+  validate,
+  type ParamDef,
+  type ParamValue,
+  type Params,
+  type Template,
+} from '@dafna/engine';
 import type { Mode } from '../mode';
-import { CATALOG, TEMPLATE, isCustomerBlocking } from '../state/useConfigurator';
+import { TEMPLATE, isCustomerBlocking, repairCustomerParams } from '../state/useConfigurator';
 
 /**
  * Customer mode: an enum option that would produce an engine error or a blocking warning
@@ -12,10 +18,12 @@ export function blockingIssue(
   option: ParamValue,
   params: Params,
   mode: Mode,
+  template: Template = TEMPLATE,
 ): string | null {
   if (mode === 'staff') return null;
-  const issue = validate({ ...params, [def.key]: option }, TEMPLATE, CATALOG).find(
-    isCustomerBlocking,
-  );
+  // what the customer would get: the option plus the automatic resets it causes (toast);
+  // only an option that is still blocked after those resets is disabled
+  const trial = repairCustomerParams({ ...params, [def.key]: option }, template, [def.key]).params;
+  const issue = validate(trial, template).find(isCustomerBlocking);
   return issue?.code ?? null;
 }

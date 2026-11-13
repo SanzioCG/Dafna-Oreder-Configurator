@@ -1,0 +1,1315 @@
+{
+  "templateVersion": "0.8.0",
+  "params": {
+    "width": 2000,
+    "height": 2100,
+    "depth": 600,
+    "sections": "auto",
+    "corpusMaterial": "ldsp_white_16",
+    "doorMaterial": "same_as_corpus",
+    "backPanel": "hdf_overlay",
+    "base": "plinth",
+    "plinthHeight": 100,
+    "plinthRecess": 0,
+    "doors": "auto",
+    "doorSection1": "preset",
+    "doorSection2": "preset",
+    "doorSection3": "preset",
+    "doorSection4": "preset",
+    "interior1": "short_hang_drawers",
+    "interior2": "auto",
+    "interior3": "auto",
+    "interior4": "auto",
+    "hingeBrand": "hettich",
+    "slideBrand": "hettich"
+  },
+  "expected": {
+    "schemaVersion": "dafna-order/0.3-draft",
+    "productType": "wardrobe",
+    "templateVersion": "0.8.0",
+    "catalogVersion": "1.0.0",
+    "params": {
+      "width": 2000,
+      "height": 2100,
+      "depth": 600,
+      "sections": "auto",
+      "corpusMaterial": "ldsp_white_16",
+      "doorMaterial": "same_as_corpus",
+      "backPanel": "hdf_overlay",
+      "base": "plinth",
+      "plinthHeight": 100,
+      "plinthRecess": 0,
+      "doors": "auto",
+      "doorSection1": "preset",
+      "doorSection2": "preset",
+      "doorSection3": "preset",
+      "doorSection4": "preset",
+      "interior1": "short_hang_drawers",
+      "interior2": "auto",
+      "interior3": "auto",
+      "interior4": "auto",
+      "hingeBrand": "hettich",
+      "slideBrand": "hettich"
+    },
+    "materials": {
+      "corpus": {
+        "id": "ldsp_white_16",
+        "kind": "ldsp",
+        "decorName": "decor.whiteShagreen",
+        "thicknessMm": 16,
+        "colorHex": "#f4f4f1",
+        "group": "plain",
+        "textureUrl": null,
+        "customerVisible": true,
+        "unconfirmed": true,
+        "note": "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+      },
+      "doors": {
+        "id": "ldsp_white_16",
+        "kind": "ldsp",
+        "decorName": "decor.whiteShagreen",
+        "thicknessMm": 16,
+        "colorHex": "#f4f4f1",
+        "group": "plain",
+        "textureUrl": null,
+        "customerVisible": true,
+        "unconfirmed": true,
+        "note": "Dafna price-list decor (2026-11). Colour sampled from the catalog swatch; no texture yet."
+      },
+      "back": {
+        "id": "hdf_white_3",
+        "kind": "hdf",
+        "decorName": "decor.white",
+        "thicknessMm": 3,
+        "colorHex": "#f3f2ee",
+        "textureUrl": null,
+        "customerVisible": false,
+        "unconfirmed": true,
+        "note": "Assumed back panel material (HDF 3 mm, white). Unchanged from catalog 0.1.0."
+      }
+    },
+    "doors": [
+      {
+        "sectionIndex": 0,
+        "type": "double",
+        "leaves": ["door-1-left", "door-1-right"]
+      },
+      {
+        "sectionIndex": 1,
+        "type": "double",
+        "leaves": ["door-2-left", "door-2-right"]
+      },
+      {
+        "sectionIndex": 2,
+        "type": "double",
+        "leaves": ["door-3-left", "door-3-right"]
+      }
+    ],
+    "interior": [
+      {
+        "sectionIndex": 0,
+        "preset": "short_hang_drawers",
+        "presetSource": "chosen",
+        "shelves": [
+          {
+            "id": "s1-shelf-fixed",
+            "yMm": 465,
+            "kind": "fixed",
+            "lengthMm": 646,
+            "depthMm": 575
+          }
+        ],
+        "rails": [
+          {
+            "id": "s1-rail",
+            "axisYMm": 1887.5,
+            "lengthMm": 646,
+            "diameterMm": 25,
+            "zMm": 292.5
+          }
+        ],
+        "drawers": [
+          {
+            "id": "s1-drawer-1",
+            "frontYMm": 119,
+            "frontHeightMm": 170,
+            "frontWidthMm": 620,
+            "boxWidthMm": 620,
+            "boxDepthMm": 500,
+            "boxHeightMm": 130
+          },
+          {
+            "id": "s1-drawer-2",
+            "frontYMm": 292,
+            "frontHeightMm": 170,
+            "frontWidthMm": 620,
+            "boxWidthMm": 620,
+            "boxDepthMm": 500,
+            "boxHeightMm": 130
+          }
+        ],
+        "clearHangingHeightMm": 1419
+      },
+      {
+        "sectionIndex": 1,
+        "preset": "short_hang",
+        "presetSource": "auto",
+        "shelves": [
+          {
+            "id": "s2-shelf-1",
+            "yMm": 492,
+            "kind": "removable",
+            "lengthMm": 645,
+            "depthMm": 575
+          },
+          {
+            "id": "s2-shelf-fixed",
+            "yMm": 884,
+            "kind": "fixed",
+            "lengthMm": 645,
+            "depthMm": 575
+          }
+        ],
+        "rails": [
+          {
+            "id": "s2-rail",
+            "axisYMm": 1887.5,
+            "lengthMm": 645,
+            "diameterMm": 25,
+            "zMm": 292.5
+          }
+        ],
+        "drawers": [],
+        "clearHangingHeightMm": 1000
+      },
+      {
+        "sectionIndex": 2,
+        "preset": "short_hang",
+        "presetSource": "auto",
+        "shelves": [
+          {
+            "id": "s3-shelf-1",
+            "yMm": 492,
+            "kind": "removable",
+            "lengthMm": 645,
+            "depthMm": 575
+          },
+          {
+            "id": "s3-shelf-fixed",
+            "yMm": 884,
+            "kind": "fixed",
+            "lengthMm": 645,
+            "depthMm": 575
+          }
+        ],
+        "rails": [
+          {
+            "id": "s3-rail",
+            "axisYMm": 1887.5,
+            "lengthMm": 645,
+            "diameterMm": 25,
+            "zMm": 292.5
+          }
+        ],
+        "drawers": [],
+        "clearHangingHeightMm": 1000
+      }
+    ],
+    "dimensions": {
+      "widthMm": 2000,
+      "heightMm": 2100,
+      "depthMm": 600,
+      "carcassHeightMm": 2000,
+      "carcassDepthMm": 579,
+      "backThicknessMm": 3,
+      "doorThicknessMm": 16,
+      "doorGapFrontMm": 2,
+      "plinthHeightMm": 100
+    },
+    "panels": [
+      {
+        "id": "side-left",
+        "role": "side",
+        "lengthMm": 2100,
+        "widthMm": 579,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [8, 1050, 292.5],
+        "rotation": [0, 0, 90],
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "side-right",
+        "role": "side",
+        "lengthMm": 2100,
+        "widthMm": 579,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1992, 1050, 292.5],
+        "rotation": [0, 0, 90],
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "bottom",
+        "role": "bottom",
+        "lengthMm": 1968,
+        "widthMm": 579,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1000, 108, 292.5],
+        "rotation": [0, 0, 0],
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "top",
+        "role": "top",
+        "lengthMm": 1968,
+        "widthMm": 579,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1000, 2092, 292.5],
+        "rotation": [0, 0, 0],
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "partition-1",
+        "role": "partition",
+        "lengthMm": 1968,
+        "widthMm": 579,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [670, 1100, 292.5],
+        "rotation": [0, 0, 90],
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "partition-2",
+        "role": "partition",
+        "lengthMm": 1968,
+        "widthMm": 579,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1331, 1100, 292.5],
+        "rotation": [0, 0, 90],
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "back",
+        "role": "back",
+        "lengthMm": 2000,
+        "widthMm": 2000,
+        "thicknessMm": 3,
+        "material": "hdf_white_3",
+        "position": [1000, 1100, 1.5],
+        "rotation": [90, 0, 0],
+        "edges": {
+          "front": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": null,
+        "operations": []
+      },
+      {
+        "id": "plinth-front",
+        "role": "plinth",
+        "lengthMm": 1968,
+        "widthMm": 100,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1000, 50, 574],
+        "rotation": [90, 0, 0],
+        "edges": {
+          "front": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "plinth-back",
+        "role": "plinth",
+        "lengthMm": 1968,
+        "widthMm": 100,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1000, 50, 11],
+        "rotation": [90, 0, 0],
+        "edges": {
+          "front": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "door-1-left",
+        "role": "door",
+        "lengthMm": 332,
+        "widthMm": 1997,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [167.5, 1100, 592],
+        "rotation": [90, 0, 0],
+        "sectionIndex": 0,
+        "hingeSide": "left",
+        "hingeMount": "full_overlay",
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "left": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "right": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "door-1-right",
+        "role": "door",
+        "lengthMm": 332,
+        "widthMm": 1997,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [502.5, 1100, 592],
+        "rotation": [90, 0, 0],
+        "sectionIndex": 0,
+        "hingeSide": "right",
+        "hingeMount": "half_overlay",
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "left": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "right": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "door-2-left",
+        "role": "door",
+        "lengthMm": 327.5,
+        "widthMm": 1997,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [835.25, 1100, 592],
+        "rotation": [90, 0, 0],
+        "sectionIndex": 1,
+        "hingeSide": "left",
+        "hingeMount": "half_overlay",
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "left": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "right": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "door-2-right",
+        "role": "door",
+        "lengthMm": 327.5,
+        "widthMm": 1997,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1165.75, 1100, 592],
+        "rotation": [90, 0, 0],
+        "sectionIndex": 1,
+        "hingeSide": "right",
+        "hingeMount": "half_overlay",
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "left": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "right": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "door-3-left",
+        "role": "door",
+        "lengthMm": 331.5,
+        "widthMm": 1997,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1498.25, 1100, 592],
+        "rotation": [90, 0, 0],
+        "sectionIndex": 2,
+        "hingeSide": "left",
+        "hingeMount": "half_overlay",
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "left": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "right": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "door-3-right",
+        "role": "door",
+        "lengthMm": 331.5,
+        "widthMm": 1997,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1832.75, 1100, 592],
+        "rotation": [90, 0, 0],
+        "sectionIndex": 2,
+        "hingeSide": "right",
+        "hingeMount": "full_overlay",
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "left": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "right": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s1-drawer-1-front",
+        "role": "drawer_front",
+        "lengthMm": 620,
+        "widthMm": 170,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [339, 204, 570],
+        "rotation": [90, 0, 0],
+        "sectionIndex": 0,
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "left": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "right": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s1-drawer-1-side-left",
+        "role": "drawer_side",
+        "lengthMm": 130,
+        "widthMm": 500,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [37, 204, 312],
+        "rotation": [0, 0, 90],
+        "sectionIndex": 0,
+        "edges": {
+          "front": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s1-drawer-1-side-right",
+        "role": "drawer_side",
+        "lengthMm": 130,
+        "widthMm": 500,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [641, 204, 312],
+        "rotation": [0, 0, 90],
+        "sectionIndex": 0,
+        "edges": {
+          "front": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s1-drawer-1-back",
+        "role": "drawer_back",
+        "lengthMm": 588,
+        "widthMm": 130,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [339, 204, 70],
+        "rotation": [90, 0, 0],
+        "sectionIndex": 0,
+        "edges": {
+          "front": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s1-drawer-1-bottom",
+        "role": "drawer_bottom",
+        "lengthMm": 620,
+        "widthMm": 500,
+        "thicknessMm": 3,
+        "material": "hdf_white_3",
+        "position": [339, 137.5, 312],
+        "rotation": [0, 0, 0],
+        "sectionIndex": 0,
+        "edges": {
+          "front": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": null,
+        "operations": []
+      },
+      {
+        "id": "s1-drawer-2-front",
+        "role": "drawer_front",
+        "lengthMm": 620,
+        "widthMm": 170,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [339, 377, 570],
+        "rotation": [90, 0, 0],
+        "sectionIndex": 0,
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "left": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "right": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s1-drawer-2-side-left",
+        "role": "drawer_side",
+        "lengthMm": 130,
+        "widthMm": 500,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [37, 377, 312],
+        "rotation": [0, 0, 90],
+        "sectionIndex": 0,
+        "edges": {
+          "front": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s1-drawer-2-side-right",
+        "role": "drawer_side",
+        "lengthMm": 130,
+        "widthMm": 500,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [641, 377, 312],
+        "rotation": [0, 0, 90],
+        "sectionIndex": 0,
+        "edges": {
+          "front": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s1-drawer-2-back",
+        "role": "drawer_back",
+        "lengthMm": 588,
+        "widthMm": 130,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [339, 377, 70],
+        "rotation": [90, 0, 0],
+        "sectionIndex": 0,
+        "edges": {
+          "front": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s1-drawer-2-bottom",
+        "role": "drawer_bottom",
+        "lengthMm": 620,
+        "widthMm": 500,
+        "thicknessMm": 3,
+        "material": "hdf_white_3",
+        "position": [339, 310.5, 312],
+        "rotation": [0, 0, 0],
+        "sectionIndex": 0,
+        "edges": {
+          "front": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": null,
+        "operations": []
+      },
+      {
+        "id": "s1-shelf-fixed",
+        "role": "shelf",
+        "lengthMm": 646,
+        "widthMm": 575,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [339, 473, 290.5],
+        "rotation": [0, 0, 0],
+        "sectionIndex": 0,
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s2-shelf-1",
+        "role": "shelf",
+        "lengthMm": 645,
+        "widthMm": 575,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1000.5, 500, 290.5],
+        "rotation": [0, 0, 0],
+        "sectionIndex": 1,
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s2-shelf-fixed",
+        "role": "shelf",
+        "lengthMm": 645,
+        "widthMm": 575,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1000.5, 892, 290.5],
+        "rotation": [0, 0, 0],
+        "sectionIndex": 1,
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s3-shelf-1",
+        "role": "shelf",
+        "lengthMm": 645,
+        "widthMm": 575,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1661.5, 500, 290.5],
+        "rotation": [0, 0, 0],
+        "sectionIndex": 2,
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      },
+      {
+        "id": "s3-shelf-fixed",
+        "role": "shelf",
+        "lengthMm": 645,
+        "widthMm": 575,
+        "thicknessMm": 16,
+        "material": "ldsp_white_16",
+        "position": [1661.5, 892, 290.5],
+        "rotation": [0, 0, 0],
+        "sectionIndex": 2,
+        "edges": {
+          "front": {
+            "bandId": "abs_0_8_placeholder",
+            "thicknessMm": 0.8
+          },
+          "back": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "left": {
+            "bandId": null,
+            "thicknessMm": null
+          },
+          "right": {
+            "bandId": null,
+            "thicknessMm": null
+          }
+        },
+        "grainDirection": "length",
+        "operations": []
+      }
+    ],
+    "rails": [
+      {
+        "id": "s1-rail",
+        "sectionIndex": 0,
+        "lengthMm": 646,
+        "diameterMm": 25,
+        "position": [339, 1887.5, 292.5]
+      },
+      {
+        "id": "s2-rail",
+        "sectionIndex": 1,
+        "lengthMm": 645,
+        "diameterMm": 25,
+        "position": [1000.5, 1887.5, 292.5]
+      },
+      {
+        "id": "s3-rail",
+        "sectionIndex": 2,
+        "lengthMm": 645,
+        "diameterMm": 25,
+        "position": [1661.5, 1887.5, 292.5]
+      }
+    ],
+    "sections": [
+      {
+        "index": 0,
+        "innerWidthMm": 646,
+        "innerHeightMm": 1968,
+        "innerDepthMm": 579,
+        "xStartMm": 16,
+        "doorType": "double",
+        "preset": "short_hang_drawers",
+        "presetSource": "chosen",
+        "shelves": [
+          {
+            "id": "s1-shelf-fixed",
+            "yMm": 465,
+            "kind": "fixed",
+            "lengthMm": 646,
+            "depthMm": 575
+          }
+        ],
+        "rails": [
+          {
+            "id": "s1-rail",
+            "axisYMm": 1887.5,
+            "lengthMm": 646,
+            "diameterMm": 25,
+            "zMm": 292.5
+          }
+        ],
+        "drawers": [
+          {
+            "id": "s1-drawer-1",
+            "frontYMm": 119,
+            "frontHeightMm": 170,
+            "frontWidthMm": 620,
+            "boxWidthMm": 620,
+            "boxDepthMm": 500,
+            "boxHeightMm": 130
+          },
+          {
+            "id": "s1-drawer-2",
+            "frontYMm": 292,
+            "frontHeightMm": 170,
+            "frontWidthMm": 620,
+            "boxWidthMm": 620,
+            "boxDepthMm": 500,
+            "boxHeightMm": 130
+          }
+        ],
+        "clearHangingHeightMm": 1419
+      },
+      {
+        "index": 1,
+        "innerWidthMm": 645,
+        "innerHeightMm": 1968,
+        "innerDepthMm": 579,
+        "xStartMm": 678,
+        "doorType": "double",
+        "preset": "short_hang",
+        "presetSource": "auto",
+        "shelves": [
+          {
+            "id": "s2-shelf-1",
+            "yMm": 492,
+            "kind": "removable",
+            "lengthMm": 645,
+            "depthMm": 575
+          },
+          {
+            "id": "s2-shelf-fixed",
+            "yMm": 884,
+            "kind": "fixed",
+            "lengthMm": 645,
+            "depthMm": 575
+          }
+        ],
+        "rails": [
+          {
+            "id": "s2-rail",
+            "axisYMm": 1887.5,
+            "lengthMm": 645,
+            "diameterMm": 25,
+            "zMm": 292.5
+          }
+        ],
+        "drawers": [],
+        "clearHangingHeightMm": 1000
+      },
+      {
+        "index": 2,
+        "innerWidthMm": 645,
+        "innerHeightMm": 1968,
+        "innerDepthMm": 579,
+        "xStartMm": 1339,
+        "doorType": "double",
+        "preset": "short_hang",
+        "presetSource": "auto",
+        "shelves": [
+          {
+            "id": "s3-shelf-1",
+            "yMm": 492,
+            "kind": "removable",
+            "lengthMm": 645,
+            "depthMm": 575
+          },
+          {
+            "id": "s3-shelf-fixed",
+            "yMm": 884,
+            "kind": "fixed",
+            "lengthMm": 645,
+            "depthMm": 575
+          }
+        ],
+        "rails": [
+          {
+            "id": "s3-rail",
+            "axisYMm": 1887.5,
+            "lengthMm": 645,
+            "diameterMm": 25,
+            "zMm": 292.5
+          }
+        ],
+        "drawers": [],
+        "clearHangingHeightMm": 1000
+      }
+    ],
+    "issues": [],
+    "generatedAt": "1970-01-01T00:00:00.000Z"
+  }
+}

@@ -1,4 +1,5 @@
-import { getMaterial, currentCatalog } from './catalog.js';
+import { catalogForTemplate, getMaterial, currentCatalog } from './catalog.js';
+import { generatorFor } from './registry.js';
 import { planDoors, type DoorLeaf, type DoorPlan } from './doors.js';
 import {
   resolveInterior,
@@ -425,12 +426,20 @@ function checkTemplate(template: Template): Issue | null {
   return null;
 }
 
-/** Validates untrusted parameters. Never throws; returns issues (errors and warnings). */
+/**
+ * Validates untrusted parameters. Never throws; returns issues (errors and warnings).
+ * D-8: other products (pedestal, desk, …) dispatch to their registered generator; the catalog
+ * defaults to the one the template was released with (catalogForTemplate).
+ */
 export function validate(
   params: unknown,
   template: Template = wardrobeTemplate,
-  catalog: MaterialCatalog = currentCatalog,
+  catalogIn?: MaterialCatalog,
 ): Issue[] {
+  const catalog = catalogIn ?? catalogForTemplate(template);
+  const other =
+    template.generator !== WARDROBE_GENERATOR ? generatorFor(template.generator) : undefined;
+  if (other) return other.validate(params, template, catalog);
   const templateIssue = checkTemplate(template);
   if (templateIssue) return [templateIssue];
   const resolved = resolveParams(template, params);
@@ -766,8 +775,12 @@ function buildDimensions(layout: WardrobeLayout): Dimensions {
 export function generate(
   template: Template,
   params: unknown,
-  catalog: MaterialCatalog = currentCatalog,
+  catalogIn?: MaterialCatalog,
 ): GenerateResult {
+  const catalog = catalogIn ?? catalogForTemplate(template);
+  const other =
+    template.generator !== WARDROBE_GENERATOR ? generatorFor(template.generator) : undefined;
+  if (other) return other.generate(template, params, catalog);
   const issues = validate(params, template, catalog);
   if (issues.some((i) => i.severity === 'error')) {
     return { panels: [], rails: [], sections: [], issues, dimensions: null };

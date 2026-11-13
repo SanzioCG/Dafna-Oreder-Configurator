@@ -25,12 +25,19 @@ var COLUMNS = [
   { key: "templateVersion", header: "templateVersion" },
   { key: "engineVersion", header: "engineVersion" },
   { key: "idempotencyKey", header: "idempotencyKey" },
-  { key: "telegramAttempts", header: "Telegram urinishlar" }
+  { key: "telegramAttempts", header: "Telegram urinishlar" },
+  // D-8 (appended: existing sheets keep their columns)
+  { key: "product", header: "Mahsulot" },
+  { key: "templateId", header: "templateId" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
 var TELEGRAM_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "telegram");
 var FIRST_TECHNICAL_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "idempotencyKey");
+var HIDDEN_COLUMN_RANGES = [
+  [FIRST_TECHNICAL_COLUMN_INDEX, COLUMNS.findIndex((c) => c.key === "telegramAttempts") + 1],
+  [COLUMNS.findIndex((c) => c.key === "templateId"), COLUMNS.length]
+];
 function columnLetter(index) {
   if (index < 0 || index > 25) throw new Error(`column index out of range: ${index}`);
   return String.fromCharCode(65 + index);
@@ -283,18 +290,13 @@ var GoogleSheetsStore = class {
               }
             }
           },
-          {
+          ...HIDDEN_COLUMN_RANGES.map(([startIndex, endIndex]) => ({
             updateDimensionProperties: {
-              range: {
-                sheetId: tab,
-                dimension: "COLUMNS",
-                startIndex: FIRST_TECHNICAL_COLUMN_INDEX,
-                endIndex: COLUMNS.length
-              },
+              range: { sheetId: tab, dimension: "COLUMNS", startIndex, endIndex },
               properties: { hiddenByUser: true },
               fields: "hiddenByUser"
             }
-          }
+          }))
         ]
       }
     });
@@ -308,15 +310,16 @@ function telegramText(lead) {
   const name = [lead.firstName, lead.lastName].filter(Boolean).join(" ");
   const [w, h, d] = lead.sizeMm.split(" \xD7 ").map((x) => Math.round(Number(x) / 10));
   const sizeCm = [w, h, d].every((x) => Number.isFinite(x)) ? `${w} \xD7 ${h} \xD7 ${d} sm` : "";
-  const colors = `Korpus: ${lead.corpus}` + (lead.door && lead.door !== "\u2014" ? ` \xB7 Eshik: ${lead.door}` : "");
+  const [main, second] = lead.templateId === "desk" ? ["Stoleshnitsa", "Oyoq"] : lead.templateId === "pedestal" ? ["Korpus", "Old panel"] : ["Korpus", "Eshik"];
+  const colors = `${main}: ${lead.corpus}` + (lead.door && lead.door !== "\u2014" ? ` \xB7 ${second}: ${lead.door}` : "");
   return [
-    `\u{1F195} <b>Yangi ariza ${escapeHtml(lead.id)}</b>`,
+    `\u{1F195} <b>Yangi ariza ${escapeHtml(lead.id)}</b>${lead.product ? ` \xB7 ${escapeHtml(lead.product)}` : ""}`,
     `\u{1F464} ${escapeHtml(name)}`,
     `\u{1F4DE} ${escapeHtml(lead.phone)}`,
     `\u{1F4D0} ${escapeHtml(sizeCm)} (${escapeHtml(lead.sizeMm)} mm)`,
     `\u{1F3A8} ${escapeHtml(colors)}`,
     `\u{1F5C4} ${escapeHtml(lead.sections)}`,
-    `\u{1F6AA} Eshiklar: ${escapeHtml(lead.doors)}`,
+    ...lead.doors ? [`\u{1F6AA} ${lead.templateId === "pedestal" ? "Asos" : "Eshiklar"}: ${escapeHtml(lead.doors)}`] : [],
     `\u{1F4CD} Kiosk: ${escapeHtml(lead.kiosk || "\u2014")} \xB7 Til: ${escapeHtml(lead.lang)}`,
     `Holat: <b>${escapeHtml(lead.status)}</b>`
   ].join("\n");

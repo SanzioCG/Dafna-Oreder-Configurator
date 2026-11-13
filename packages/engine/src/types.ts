@@ -62,7 +62,7 @@ export interface Template {
   constructionRules: ConstructionRule[];
 }
 
-export type MaterialKind = 'ldsp' | 'hdf' | 'mdf';
+export type MaterialKind = 'ldsp' | 'hdf' | 'mdf' | 'metal';
 
 export interface Material {
   id: string;
@@ -111,7 +111,15 @@ export type PanelRole =
   | 'drawer_front'
   | 'drawer_side'
   | 'drawer_back'
-  | 'drawer_bottom';
+  | 'drawer_bottom'
+  /** D-8 desk: the work top */
+  | 'worktop'
+  /** D-8 desk: LDSP side leg panel */
+  | 'leg'
+  /** D-8 desk: front / modesty panel between the legs */
+  | 'modesty'
+  /** D-8: metal frame member or castor (purchased part, not cut from board) */
+  | 'frame';
 export type DoorType = 'none' | 'single_left' | 'single_right' | 'double';
 export type HingeSide = 'left' | 'right';
 /** full_overlay = hinged on an outer side panel; half_overlay = hinged on a partition. */
@@ -324,7 +332,7 @@ export interface OrderDraftInterior {
 
 export interface OrderDraft {
   schemaVersion: typeof ORDER_SCHEMA_VERSION;
-  productType: 'wardrobe';
+  productType: string;
   templateVersion: string;
   catalogVersion: string;
   params: Params;

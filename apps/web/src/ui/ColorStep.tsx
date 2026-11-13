@@ -1,65 +1,91 @@
 import { SAME_AS_CORPUS, getParamDef } from '@dafna/engine';
 import { useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
-import { TEMPLATE, type Configurator } from '../state/useConfigurator';
+import type { Configurator } from '../state/useConfigurator';
 import { MaterialSwatch } from './MaterialSwatch';
 import { Toggle } from './Toggle';
 
 /**
- * Step 2 "Rang" (yellow card): corpus decor swatches; toggle "Eshiklar boshqa rangda" (OFF by
- * default = doors follow the corpus decor, door swatches hidden; ON = door swatches shown with
- * the current door decor selected). Catalog ids are preserved; staff-only decors (18 mm) and
- * thicknesses are hidden from customers by MaterialSwatch.
+ * Step 2 "Rang" (yellow card), any product (D-8): the template's swatch parameters of this step
+ * in template order.
+ * - doorMaterial (wardrobe doors / pedestal fronts): toggle "… boshqa rangda" (OFF = follows
+ *   the corpus, swatches hidden; ON = swatches with the current decor selected);
+ * - desk: work top always; LDSP leg decor only with LDSP legs; frame colour only with a metal
+ *   frame.
+ * Catalog ids are preserved; staff-only decors and thicknesses are hidden from customers by
+ * MaterialSwatch.
  */
 export function ColorStep({ mode, config }: { mode: Mode; config: Configurator }) {
   const { t } = useI18n();
-  const corpusDef = getParamDef(TEMPLATE, 'corpusMaterial');
-  const doorDef = getParamDef(TEMPLATE, 'doorMaterial');
-  if (!corpusDef || !doorDef) return null;
-  const corpus = config.params.corpusMaterial ?? corpusDef.default;
-  const door = config.params.doorMaterial ?? doorDef.default;
-  const different = door !== SAME_AS_CORPUS;
-  const hasDoors = config.params.doors !== 'none';
-  const doorOptions = (doorDef.options ?? []).filter((o) => o !== SAME_AS_CORPUS);
+  const template = config.template;
+  const defs = template.parameters.filter(
+    (d) => d.uiStep === 'color' && d.control === 'swatch' && d.customerVisible,
+  );
+  const corpus = config.params.corpusMaterial ?? getParamDef(template, 'corpusMaterial')?.default;
+  const legs = config.params.legs;
+
+  const visible = (key: string) => {
+    if (key === 'doorMaterial' && template.templateId === 'wardrobe') {
+      return config.params.doors !== 'none';
+    }
+    if (template.templateId === 'desk') {
+      if (key === 'corpusMaterial') return legs === 'ldsp';
+      if (key === 'frameColor') return legs !== 'ldsp';
+    }
+    return true;
+  };
 
   return (
     <section className="card step-card" data-step="color" data-card="color">
       <div className="card-head">
-        <h2>{t('step.color.title')}</h2>
-        <p className="muted">{t('step.color.hint')}</p>
+        <h2>{t(`step.color.title.${template.templateId}`)}</h2>
+        <p className="muted">{t(`step.color.hint.${template.templateId}`)}</p>
       </div>
-      <div className="param" data-param="corpusMaterial">
-        <span className="param-label">{t('param.corpusMaterial')}</span>
-        <MaterialSwatch
-          options={corpusDef.options ?? []}
-          value={corpus}
-          corpusValue={corpus}
-          mode={mode}
-          label={t('param.corpusMaterial')}
-          onChange={(v) => config.setParam('corpusMaterial', v)}
-        />
-      </div>
-      {hasDoors && (
-        <div className="param" data-param="doorMaterial">
-          <Toggle
-            checked={different}
-            onChange={(on) => config.setParam('doorMaterial', on ? corpus : SAME_AS_CORPUS)}
-            testId="toggle-door-color"
-          >
-            {t('c.doorsOther')}
-          </Toggle>
-          {different && (
-            <MaterialSwatch
-              options={doorOptions}
-              value={door}
-              corpusValue={corpus}
-              mode={mode}
-              label={t('param.doorMaterial')}
-              onChange={(v) => config.setParam('doorMaterial', v)}
-            />
-          )}
-        </div>
-      )}
+      {defs
+        .filter((d) => visible(d.key))
+        .map((def) => {
+          const value = config.params[def.key] ?? def.default;
+          if (def.key === 'doorMaterial') {
+            const different = value !== SAME_AS_CORPUS;
+            const options = (def.options ?? []).filter((o) => o !== SAME_AS_CORPUS);
+            return (
+              <div className="param" data-param="doorMaterial" key={def.key}>
+                <Toggle
+                  checked={different}
+                  onChange={(on) =>
+                    config.setParam('doorMaterial', on ? (corpus ?? '') : SAME_AS_CORPUS)
+                  }
+                  testId="toggle-door-color"
+                >
+                  {t(template.templateId === 'pedestal' ? 'c.frontsOther' : 'c.doorsOther')}
+                </Toggle>
+                {different && (
+                  <MaterialSwatch
+                    options={options}
+                    value={value}
+                    corpusValue={corpus ?? ''}
+                    mode={mode}
+                    label={t(def.labelKey)}
+                    onChange={(v) => config.setParam('doorMaterial', v)}
+                  />
+                )}
+              </div>
+            );
+          }
+          return (
+            <div className="param" data-param={def.key} key={def.key}>
+              <span className="param-label">{t(def.labelKey)}</span>
+              <MaterialSwatch
+                options={def.options ?? []}
+                value={value}
+                corpusValue={value}
+                mode={mode}
+                label={t(def.labelKey)}
+                onChange={(v) => config.setParam(def.key, v)}
+              />
+            </div>
+          );
+        })}
     </section>
   );
 }

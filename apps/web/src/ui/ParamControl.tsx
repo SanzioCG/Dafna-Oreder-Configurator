@@ -5,6 +5,7 @@ import type { Mode } from '../mode';
 import { DimensionControl } from './DimensionControl';
 import { blockingIssue } from './optionAvailability';
 import { SelectionGrid } from './SelectionGrid';
+import { useTemplate } from '../state/templateContext';
 import { MaterialSwatch } from './MaterialSwatch';
 
 interface ParamControlProps {
@@ -30,6 +31,7 @@ export function ParamControl({
   hint,
 }: ParamControlProps) {
   const { t } = useI18n();
+  const template = useTemplate();
   const label = t(def.labelKey, { n: def.appliesToSection });
   const staff = mode === 'staff';
   // Option labels are keyed by the label key, so doorSection1..4 share option.doorSection.*
@@ -107,7 +109,7 @@ export function ParamControl({
           }
           ariaLabel={label}
           disabledReason={(v) => {
-            const code = blockingIssue(def, v, params, mode);
+            const code = blockingIssue(def, v, params, mode, template);
             if (!code) return undefined;
             const reason = t(`reason.${code}`);
             return reason === `reason.${code}` ? t('reason.default') : reason;

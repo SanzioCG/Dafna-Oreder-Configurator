@@ -1,0 +1,114 @@
+{
+  "hardwareVersion": "1.0.0",
+  "items": [
+    {
+      "id": "slide_strax_ball",
+      "kind": "slide",
+      "brand": "Strax",
+      "nameKey": "hw.slide_strax_ball",
+      "softClose": false,
+      "unit": "pair",
+      "unconfirmed": true,
+      "note": "Ball-bearing drawer slides (pair). DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      "id": "slide_hettich_quadro",
+      "kind": "slide",
+      "brand": "Hettich",
+      "nameKey": "hw.slide_hettich_quadro",
+      "softClose": true,
+      "unit": "pair",
+      "unconfirmed": true,
+      "note": "Concealed soft-close drawer runners (pair). DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      "id": "hinge_strax",
+      "kind": "hinge",
+      "brand": "Strax",
+      "nameKey": "hw.hinge_strax",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": true,
+      "note": "Cup hinge 35 mm. DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      "id": "hinge_hettich_sensys",
+      "kind": "hinge",
+      "brand": "Hettich",
+      "nameKey": "hw.hinge_hettich_sensys",
+      "softClose": true,
+      "unit": "pcs",
+      "unconfirmed": true,
+      "note": "Cup hinge with integrated soft close. DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      "id": "castor_standard",
+      "kind": "castor",
+      "brand": "Standard",
+      "nameKey": "hw.castor_standard",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": true,
+      "note": "Office pedestal castor. DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      "id": "lift_frame_2leg",
+      "kind": "lift_frame",
+      "brand": "Standard",
+      "nameKey": "hw.lift_frame_2leg",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": true,
+      "note": "Electric 2-leg sit-stand desk frame. DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      "id": "rail_oval_25",
+      "kind": "rail",
+      "brand": "Standard",
+      "nameKey": "hw.rail_oval_25",
+      "softClose": false,
+      "unit": "m",
+      "unconfirmed": true,
+      "note": "Wardrobe hanging rail (per metre). DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      "id": "rail_holder",
+      "kind": "rail_holder",
+      "brand": "Standard",
+      "nameKey": "hw.rail_holder",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": true,
+      "note": "Rail end holder (2 per rail). DEMO value until Dafna sends its hardware list (D-9)."
+    }
+  ],
+  "brands": {
+    "slide": {
+      "strax": "slide_strax_ball",
+      "hettich": "slide_hettich_quadro"
+    },
+    "hinge": {
+      "strax": "hinge_strax",
+      "hettich": "hinge_hettich_sensys"
+    }
+  },
+  "hingeRule": [
+    {
+      "maxDoorHeightMm": 900,
+      "count": 2
+    },
+    {
+      "maxDoorHeightMm": 1600,
+      "count": 3
+    },
+    {
+      "maxDoorHeightMm": 2000,
+      "count": 4
+    },
+    {
+      "maxDoorHeightMm": 2600,
+      "count": 5
+    }
+  ],
+  "hingeRuleNote": "Hinges per leaf by height (fitting makers' usual table: <=900: 2, <=1600: 3, <=2000: 4, <=2600: 5). Door weight is not yet taken into account (D-9, unconfirmed)."
+}

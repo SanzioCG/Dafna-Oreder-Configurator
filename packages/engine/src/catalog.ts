@@ -1,6 +1,7 @@
 import materialsV0Json from '../catalog/materials.v0.json' with { type: 'json' };
 import materialsV1Json from '../catalog/materials.v1.json' with { type: 'json' };
-import type { Material, MaterialCatalog } from './types.js';
+import materialsV11Json from '../catalog/materials.v1_1.json' with { type: 'json' };
+import type { Material, MaterialCatalog, Template } from './types.js';
 
 /** Material catalog 0.1.0: placeholder decors (templates up to 0.5.0). Archived, never edited. */
 export const materialsV0: MaterialCatalog = materialsV0Json as MaterialCatalog;
@@ -12,8 +13,37 @@ export const materialsV0: MaterialCatalog = materialsV0Json as MaterialCatalog;
  */
 export const materialsV1: MaterialCatalog = materialsV1Json as MaterialCatalog;
 
-/** The catalog of the current template (wardrobe 0.6.0). */
+/**
+ * Material catalog 1.1.0 (D-8) = every 1.0.0 entry unchanged + Dafna table-top boards (22 / 25 mm)
+ * + metal frame finishes (desk legs, pedestal castors). Used by the pedestal and desk templates;
+ * the wardrobe stays on 1.0.0 so its applications regenerate unchanged.
+ */
+export const materialsV1_1: MaterialCatalog = materialsV11Json as MaterialCatalog;
+
+/** The wardrobe's current catalog (wardrobe 0.6.0 / 0.7.0). */
 export const currentCatalog: MaterialCatalog = materialsV1;
+
+/** Every material known to any current product (the UI looks decors up here). */
+export const allMaterials: MaterialCatalog = materialsV1_1;
+
+const before = (a: string, b: string) => {
+  const x = a.split('.').map(Number);
+  const y = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) < (y[i] ?? 0);
+  return false;
+};
+
+/**
+ * The catalog a template was released with (its material ids live there). Archived: never edit
+ * an entry, add one for every new template. Wardrobe: <0.6.0 -> 0.1.0, >=0.6.0 -> 1.0.0;
+ * pedestal / desk 0.1.0 -> 1.1.0.
+ */
+export function catalogForTemplate(template: Template): MaterialCatalog {
+  if (template.templateId === 'wardrobe') {
+    return before(template.templateVersion, '0.6.0') ? materialsV0 : materialsV1;
+  }
+  return materialsV1_1;
+}
 
 /**
  * Catalog 0.1.0 placeholder -> nearest catalog 1.0.0 decor, for migrating drafts made before

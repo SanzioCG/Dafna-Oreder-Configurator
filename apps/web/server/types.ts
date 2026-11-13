@@ -47,6 +47,10 @@ export interface LeadRecord {
   engineVersion: string;
   idempotencyKey: string;
   telegramAttempts: number;
+  /** D-8: product name for the manager ("Shkaf", "Ofis tumbasi", "Stol"); '' = Shkaf (pre-D-8) */
+  product: string;
+  /** D-8: templateId ('wardrobe' | 'pedestal' | 'desk'); with templateVersion it regenerates */
+  templateId: string;
 }
 
 export interface StoredLead extends LeadRecord {

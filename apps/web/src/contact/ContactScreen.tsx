@@ -25,6 +25,8 @@ type TextField = 'firstName' | 'lastName' | 'phone';
 const FIELD_ORDER: ContactField[] = ['firstName', 'lastName', 'phone', 'consent'];
 
 export interface ContactScreenProps {
+  /** D-8: the product being ordered (templateId) */
+  product?: string;
   params: Params;
   kioskId?: string;
   onBack: () => void;
@@ -50,6 +52,7 @@ const failKey = (code: SubmitErrorCode) =>
  * Typing happens on the on-screen keyboard; the OS keyboard is suppressed (inputMode="none").
  */
 export function ContactScreen({
+  product = 'wardrobe',
   params,
   kioskId,
   onBack,
@@ -151,6 +154,7 @@ export function ContactScreen({
     }
     const outcome = await submit({
       idempotencyKey: keyRef.current,
+      product,
       params,
       contact: cleanContact(contact),
       lang,

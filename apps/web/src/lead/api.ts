@@ -6,6 +6,8 @@ import type { ContactInput } from './contact';
 export interface SubmitRequest {
   /** generated once per application attempt; a retry reuses it (same key -> same ID) */
   idempotencyKey: string;
+  /** D-8: 'wardrobe' (default, older kiosks send nothing) | 'pedestal' | 'desk' */
+  product?: string;
   params: Params;
   contact: ContactInput;
   lang: Lang;
