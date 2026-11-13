@@ -1785,3 +1785,36 @@ p {
     animation: none;
   }
 }
+
+/* ---------- D-9 price (staff until the real price list) ---------- */
+
+.price-tag {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--fs-lg);
+}
+
+.price-tag strong {
+  font-size: var(--fs-xl);
+}
+
+.price-demo {
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--accent-peach);
+  color: var(--ink);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+}
+
+.price-breakdown table {
+  width: 100%;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.price-breakdown td:last-child {
+  text-align: right;
+}

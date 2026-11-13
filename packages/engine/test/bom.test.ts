@@ -1,0 +1,121 @@
+import { describe, expect, it } from 'vitest';
+import {
+  catalogForTemplate,
+  computeBom,
+  computePrice,
+  defaultParams,
+  deskTemplate,
+  generate,
+  hingeCount,
+  pedestalTemplate,
+  priceListDemo,
+  wardrobeTemplate,
+  type Params,
+  type Template,
+} from '../src/index.js';
+
+const bomOf = (t: Template, p: Params) => computeBom(t, p, generate(t, p));
+const hw = (bom: ReturnType<typeof bomOf>, id: string) =>
+  bom.find((l) => l.kind === 'hardware' && l.ref === id)?.qty ?? 0;
+
+describe('D-9 BOM', () => {
+  it('hinges per leaf by height (<=900: 2, <=1600: 3, <=2000: 4, <=2600: 5)', () => {
+    expect([600, 900, 901, 1600, 2000, 2001, 2400].map((h) => hingeCount(h))).toEqual([
+      2, 2, 3, 3, 4, 5, 5,
+    ]);
+  });
+
+  it('wardrobe: boards in m², edge metres, hinges per leaf, rail + holders; brand from params', () => {
+    const p = { ...defaultParams(wardrobeTemplate), interior1: 'short_hang_drawers' };
+    const r = generate(wardrobeTemplate, p);
+    const bom = computeBom(wardrobeTemplate, p, r);
+    const leaves = r.panels.filter((x) => x.role === 'door');
+    const hinges = leaves.reduce((n, d) => n + hingeCount(d.widthMm), 0);
+    expect(hw(bom, 'hinge_strax')).toBe(hinges);
+    expect(hinges).toBeGreaterThanOrEqual(2 * leaves.length);
+    expect(hw(bom, 'slide_strax_ball')).toBe(2); // 2 drawers in section 1
+    expect(hw(bom, 'rail_holder')).toBe(2 * r.rails.length);
+    expect(hw(bom, 'rail_oval_25')).toBeCloseTo(r.rails.reduce((m, x) => m + x.lengthMm, 0) / 1000);
+    const corpus = bom.find((l) => l.kind === 'board' && l.ref === 'ldsp_white_16')!;
+    expect(corpus.qty).toBeGreaterThan(5);
+    expect(bom.find((l) => l.kind === 'edge')?.qty).toBeGreaterThan(10);
+    const hettich = bomOf(wardrobeTemplate, { ...p, hingeBrand: 'hettich', slideBrand: 'hettich' });
+    expect(hw(hettich, 'hinge_hettich_sensys')).toBe(hinges);
+    expect(hw(hettich, 'slide_hettich_quadro')).toBe(2);
+    expect(hw(hettich, 'hinge_strax')).toBe(0);
+  });
+
+  it('pedestal: a pair of slides per drawer, 4 castors (metal, not board)', () => {
+    const bom = bomOf(pedestalTemplate, defaultParams(pedestalTemplate));
+    expect(hw(bom, 'slide_strax_ball')).toBe(3);
+    expect(hw(bom, 'castor_standard')).toBe(4);
+    expect(bom.some((l) => l.kind === 'board' && l.ref.startsWith('metal'))).toBe(false);
+    const door = bomOf(pedestalTemplate, {
+      ...defaultParams(pedestalTemplate),
+      layout: 'door_shelf',
+    });
+    expect(hw(door, 'hinge_strax')).toBe(2);
+    expect(hw(door, 'slide_strax_ball')).toBe(0);
+  });
+
+  it('desk: the lift frame is one purchased item; the LDSP desk has none', () => {
+    const lift = bomOf(deskTemplate, { ...defaultParams(deskTemplate), legs: 'metal_lift' });
+    expect(hw(lift, 'lift_frame_2leg')).toBe(1);
+    expect(lift.filter((l) => l.kind === 'board').map((l) => l.ref)).toEqual(['ldsp_white_22']);
+    const ldsp = bomOf(deskTemplate, defaultParams(deskTemplate));
+    expect(hw(ldsp, 'lift_frame_2leg')).toBe(0);
+  });
+});
+
+describe('D-9 price (DEMO price list)', () => {
+  const price = (t: Template, p: Params) =>
+    computePrice(computeBom(t, p, generate(t, p)), catalogForTemplate(t));
+
+  it('sums boards (with waste), edges, hardware, labour, markup; rounds; flags demo', () => {
+    const r = price(wardrobeTemplate, defaultParams(wardrobeTemplate));
+    expect(r.demo).toBe(true);
+    expect(r.currency).toBe('UZS');
+    expect(r.missing).toEqual([]);
+    expect(r.subtotal).toBe(r.boards + r.edges + r.hardware + r.labor);
+    expect(r.markup).toBe(Math.round((r.subtotal * priceListDemo.markupPct) / 100));
+    expect(r.total % priceListDemo.roundTo).toBe(0);
+    expect(Math.abs(r.total - (r.subtotal + r.markup))).toBeLessThanOrEqual(
+      priceListDemo.roundTo / 2,
+    );
+    const board = r.lines.find((l) => l.ref === 'ldsp_white_16')!;
+    expect(board.cost).toBe(Math.round(board.qty * priceListDemo.wasteFactor * board.unitPrice));
+  });
+
+  it('Hettich costs more than Strax; a wider wardrobe costs more', () => {
+    const base = defaultParams(wardrobeTemplate);
+    const strax = price(wardrobeTemplate, base).total;
+    expect(price(wardrobeTemplate, { ...base, hingeBrand: 'hettich' }).total).toBeGreaterThan(
+      strax,
+    );
+    expect(price(wardrobeTemplate, { ...base, width: 2400 }).total).toBeGreaterThan(strax);
+  });
+
+  it('every product prices without missing items; table tops use the thickness price', () => {
+    for (const [t, p] of [
+      [
+        pedestalTemplate,
+        { ...defaultParams(pedestalTemplate), layout: 'drawers2_file', width: 450 },
+      ],
+      [
+        deskTemplate,
+        { ...defaultParams(deskTemplate), legs: 'metal_lift', topMaterial: 'egger_h3700_st10_25' },
+      ],
+    ] as const) {
+      const r = price(t, p);
+      expect(r.missing, t.templateId).toEqual([]);
+      expect(r.total, t.templateId).toBeGreaterThan(0);
+    }
+    const desk = price(deskTemplate, {
+      ...defaultParams(deskTemplate),
+      topMaterial: 'egger_h3700_st10_25',
+    });
+    expect(desk.lines.find((l) => l.ref === 'egger_h3700_st10_25')?.unitPrice).toBe(
+      priceListDemo.boardPerM2ByThickness['25'],
+    );
+  });
+});

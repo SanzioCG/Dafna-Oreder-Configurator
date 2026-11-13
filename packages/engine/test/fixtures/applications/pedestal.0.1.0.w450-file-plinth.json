@@ -8,7 +8,9 @@
     "layout": "drawers2_file",
     "base": "plinth",
     "corpusMaterial": "egger_u963_st9_16",
-    "doorMaterial": "lmdf_egger_h1367_st40_16"
+    "doorMaterial": "lmdf_egger_h1367_st40_16",
+    "slideBrand": "strax",
+    "hingeBrand": "strax"
   },
   "expected": {
     "schemaVersion": "dafna-order/0.3-draft",
@@ -22,7 +24,9 @@
       "layout": "drawers2_file",
       "base": "plinth",
       "corpusMaterial": "egger_u963_st9_16",
-      "doorMaterial": "lmdf_egger_h1367_st40_16"
+      "doorMaterial": "lmdf_egger_h1367_st40_16",
+      "slideBrand": "strax",
+      "hingeBrand": "strax"
     },
     "materials": {
       "corpus": {

@@ -462,10 +462,10 @@ function submitDepsFromEnv(env) {
 // ../../packages/engine/src/types.ts
 var ORDER_SCHEMA_VERSION = "dafna-order/0.3-draft";
 
-// ../../packages/engine/templates/wardrobe.v6.json
-var wardrobe_v6_default = {
+// ../../packages/engine/templates/wardrobe.v7.json
+var wardrobe_v7_default = {
   templateId: "wardrobe",
-  templateVersion: "0.7.0",
+  templateVersion: "0.8.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -795,6 +795,28 @@ var wardrobe_v6_default = {
       appliesToSection: 4,
       control: "presetCards",
       note: "Interior fill of section 4 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      key: "hingeBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.hingeBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      key: "slideBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.slideBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
     }
   ],
   constants: {
@@ -1261,6 +1283,28 @@ var pedestal_v1_default = {
       control: "swatch",
       materialKinds: ["ldsp", "mdf"],
       note: "Drawer fronts / door. 'same_as_corpus' follows the carcass decor."
+    },
+    {
+      key: "slideBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.slideBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      key: "hingeBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.hingeBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
     }
   ],
   constants: {
@@ -1679,7 +1723,7 @@ var desk_v1_default = {
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v6_default;
+var wardrobeTemplate = wardrobe_v7_default;
 var pedestalTemplate = pedestal_v1_default;
 var deskTemplate = desk_v1_default;
 var PRODUCT_TEMPLATES = {
@@ -4164,7 +4208,8 @@ var TEMPLATE_CATALOG = {
   "0.4.0": materialsV0.catalogVersion,
   "0.5.0": materialsV0.catalogVersion,
   "0.6.0": materialsV1.catalogVersion,
-  "0.7.0": materialsV1.catalogVersion
+  "0.7.0": materialsV1.catalogVersion,
+  "0.8.0": materialsV1.catalogVersion
 };
 
 // src/lead/phone.ts
@@ -4477,6 +4522,24 @@ var ru = {
   "creason.DRAWER_SECTION_TOO_WIDE": "\u041F\u0440\u0438 \u0442\u0430\u043A\u043E\u0439 \u0448\u0438\u0440\u0438\u043D\u0435 \u044F\u0449\u0438\u043A\u0438 \u0431\u0443\u0434\u0443\u0442 \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u0448\u0438\u0440\u043E\u043A\u0438\u043C\u0438",
   "creason.DOOR_TOO_WIDE": "\u041F\u0440\u0438 \u0442\u0430\u043A\u043E\u0439 \u0448\u0438\u0440\u0438\u043D\u0435 \u0434\u0432\u0435\u0440\u044C \u0431\u0443\u0434\u0435\u0442 \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u0448\u0438\u0440\u043E\u043A\u043E\u0439",
   "creason.default": "\u041D\u0435\u0434\u043E\u0441\u0442\u0443\u043F\u043D\u043E \u043F\u0440\u0438 \u044D\u0442\u043E\u043C \u0440\u0430\u0437\u043C\u0435\u0440\u0435",
+  // D-9: hardware + price
+  "hw.title": "\u041C\u0435\u0445\u0430\u043D\u0438\u0437\u043C\u044B",
+  "hw.hint": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0431\u0440\u0435\u043D\u0434 \u043F\u0435\u0442\u0435\u043B\u044C \u0438 \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0445.",
+  "hw.brand.strax": "Strax",
+  "hw.brand.hettich": "Hettich",
+  "hw.hint.hingeBrand.strax": "\u0421\u0442\u0430\u043D\u0434\u0430\u0440\u0442\u043D\u044B\u0435 \u043F\u0435\u0442\u043B\u0438",
+  "hw.hint.hingeBrand.hettich": "\u0421 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C (Sensys)",
+  "hw.hint.slideBrand.strax": "\u0428\u0430\u0440\u0438\u043A\u043E\u0432\u044B\u0435 \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435, \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442",
+  "hw.hint.slideBrand.hettich": "\u0421\u043A\u0440\u044B\u0442\u044B\u0435, \u0441 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C (Quadro)",
+  "param.hingeBrand": "\u041F\u0435\u0442\u043B\u0438 \u0434\u0432\u0435\u0440\u0435\u0439",
+  "param.slideBrand": "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435 \u044F\u0449\u0438\u043A\u043E\u0432",
+  "price.total": "\u0426\u0435\u043D\u0430",
+  "price.currency": "\u0441\u0443\u043C",
+  "price.demo": "\u0442\u0435\u0441\u0442\u043E\u0432\u0430\u044F \u0446\u0435\u043D\u0430",
+  "price.breakdown": "\u0420\u0430\u0441\u0447\u0451\u0442 \u0446\u0435\u043D\u044B",
+  "price.labor": "\u0420\u0430\u0431\u043E\u0442\u0430",
+  "price.markup": "\u041D\u0430\u0446\u0435\u043D\u043A\u0430",
+  "price.missing": "\u041D\u0435\u0442 \u0446\u0435\u043D\u044B",
   // D-8: office pedestal + desk
   "c.heightSit": "\u0440\u0430\u0431\u043E\u0442\u0430 \u0441\u0438\u0434\u044F",
   "c.heightStand": "\u0440\u0430\u0431\u043E\u0442\u0430 \u0441\u0442\u043E\u044F",
@@ -4820,6 +4883,24 @@ var uz = {
   "creason.DRAWER_SECTION_TOO_WIDE": "Bu kenglikda tortmalar juda keng bo'lib qoladi",
   "creason.DOOR_TOO_WIDE": "Bu kenglikda eshik juda keng bo'lib qoladi",
   "creason.default": "Bu o'lchamda mumkin emas",
+  // D-9: hardware + price
+  "hw.title": "Mexanizmlar",
+  "hw.hint": "Petlya va tortma mexanizmlarining brendini tanlang.",
+  "hw.brand.strax": "Strax",
+  "hw.brand.hettich": "Hettich",
+  "hw.hint.hingeBrand.strax": "Standart petlyalar",
+  "hw.hint.hingeBrand.hettich": "Yumshoq yopiladi (Sensys)",
+  "hw.hint.slideBrand.strax": "Sharikli yo'naltiruvchilar, standart",
+  "hw.hint.slideBrand.hettich": "Yashirin, yumshoq yopiladi (Quadro)",
+  "param.hingeBrand": "Eshik petlyalari",
+  "param.slideBrand": "Tortma yo'naltiruvchilari",
+  "price.total": "Narx",
+  "price.currency": "so'm",
+  "price.demo": "sinov narxi",
+  "price.breakdown": "Narx hisobi",
+  "price.labor": "Ish haqi",
+  "price.markup": "Ustama",
+  "price.missing": "Narxi yo'q",
   // D-8: office pedestal + desk
   "c.heightSit": "o'tirib ishlash",
   "c.heightStand": "turib ishlash",

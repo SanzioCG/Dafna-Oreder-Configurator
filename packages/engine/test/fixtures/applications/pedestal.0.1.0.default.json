@@ -8,7 +8,9 @@
     "layout": "drawers3",
     "base": "castors",
     "corpusMaterial": "ldsp_white_16",
-    "doorMaterial": "same_as_corpus"
+    "doorMaterial": "same_as_corpus",
+    "slideBrand": "strax",
+    "hingeBrand": "strax"
   },
   "expected": {
     "schemaVersion": "dafna-order/0.3-draft",
@@ -22,7 +24,9 @@
       "layout": "drawers3",
       "base": "castors",
       "corpusMaterial": "ldsp_white_16",
-      "doorMaterial": "same_as_corpus"
+      "doorMaterial": "same_as_corpus",
+      "slideBrand": "strax",
+      "hingeBrand": "strax"
     },
     "materials": {
       "corpus": {

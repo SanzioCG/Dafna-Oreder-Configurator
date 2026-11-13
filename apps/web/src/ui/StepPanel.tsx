@@ -15,6 +15,8 @@ import { ConsultantButton } from './ConsultantButton';
 import { ArrowLeftIcon, ArrowRightIcon, MoonIcon, SunIcon } from './icons';
 import { InteriorStep } from './InteriorStep';
 import { OptionsStep } from './OptionsStep';
+import { HardwareBlock } from './HardwareBlock';
+import { PriceBreakdown, PriceTag } from './PriceTag';
 import { ParamControl } from './ParamControl';
 import { ResetToast } from './ResetToast';
 import { SizeStep } from './SizeStep';
@@ -165,6 +167,7 @@ export function StepPanel({
         </div>
       )}
       <div className="panel-body" hidden={step === 'start'}>
+        <PriceTag mode={mode} config={config} />
         <p className="summary" data-testid="summary">
           <strong>{formatSize(v.widthMm, v.heightMm, v.depthMm, units, unit)}</strong>
           {sectionCount > 0 && config.product === 'wardrobe' && (
@@ -187,6 +190,8 @@ export function StepPanel({
               onSelect={onSelectSection}
             />
           )}
+          {/* D-9: mechanisms after the fill (only those the configuration has) */}
+          {step === 'interior' && <HardwareBlock config={config} />}
         </div>
         {staff && (
           <StaffSettings open={staffOpen} onToggle={() => setStaffOpen((o) => !o)}>
@@ -212,6 +217,7 @@ export function StepPanel({
                 ))}
               </section>
             ))}
+            <PriceBreakdown config={config} />
             <StaffPanel params={config.params} result={config.result} />
           </StaffSettings>
         )}

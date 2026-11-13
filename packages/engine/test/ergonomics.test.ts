@@ -8,11 +8,14 @@ import {
   migrateOrderDraft,
   regenerateApplication,
   validate,
-  wardrobeTemplate as T,
+  wardrobeTemplate,
   type Params,
   type Section,
 } from '../src/index.js';
 import app6Lmdf from './fixtures/applications/0.6.0.w2400-egger-lmdf16_7-doors.json' with { type: 'json' };
+
+/** The GOST rules came with template 0.7.0; 0.8.0 (current) only adds hardware brands. */
+const T = TEMPLATE_ARCHIVE['0.7.0']!;
 
 /**
  * D-7: wardrobe template 0.7.0 — standard customer sizes and storage presets that follow the
@@ -48,8 +51,14 @@ const railTop = (s: Section) =>
   s.rails[0] ? s.rails[0].axisYMm + s.rails[0].diameterMm / 2 : null;
 
 describe('template 0.7.0 (D-7): standard sizes', () => {
-  it('is the current template, same generator, catalog 1.0.0', () => {
+  it('0.7.0, same generator; the current 0.8.0 = 0.7.0 + hardware brands only', () => {
     expect(T.templateVersion).toBe('0.7.0');
+    expect(wardrobeTemplate.templateVersion).toBe('0.8.0');
+    expect(wardrobeTemplate.parameters.map((p) => p.key)).toEqual([
+      ...T.parameters.map((p) => p.key),
+      'hingeBrand',
+      'slideBrand',
+    ]);
     expect(T.generator).toBe(TEMPLATE_ARCHIVE['0.6.0']!.generator);
   });
 
@@ -197,7 +206,7 @@ describe('older drafts -> template 0.7.0', () => {
     if (!r.ok) throw new Error(r.code);
     const { draft, issues } = migrateOrderDraft(r.draft);
     if (!draft) throw new Error('no draft');
-    expect(draft.templateVersion).toBe('0.7.0');
+    expect(draft.templateVersion).toBe('0.8.0');
     expect(draft.params.interior1).toBe('short_hang'); // was rail_shelf
     expect(draft.params.interior4).toBe('short_hang_drawers'); // was rail_drawers
     expect(

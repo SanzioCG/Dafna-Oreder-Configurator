@@ -1,0 +1,31 @@
+{
+  "priceListVersion": "demo-2026-11",
+  "currency": "UZS",
+  "demo": true,
+  "note": "DEMO prices for testing the calculation only (D-9). Never show to customers; Dafna will send the real price list and calculation rules.",
+  "boardPerM2": {
+    "ldsp": 95000,
+    "mdf": 210000,
+    "hdf": 30000
+  },
+  "boardPerM2ByThickness": {
+    "22": 140000,
+    "25": 155000
+  },
+  "boardPerM2ById": {},
+  "edgePerM": 3500,
+  "hardware": {
+    "slide_strax_ball": 45000,
+    "slide_hettich_quadro": 180000,
+    "hinge_strax": 12000,
+    "hinge_hettich_sensys": 55000,
+    "castor_standard": 20000,
+    "lift_frame_2leg": 2400000,
+    "rail_oval_25": 30000,
+    "rail_holder": 8000
+  },
+  "laborPerM2": 35000,
+  "wasteFactor": 1.15,
+  "markupPct": 25,
+  "roundTo": 1000
+}

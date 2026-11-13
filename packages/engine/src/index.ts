@@ -87,3 +87,17 @@ export {
 export { PEDESTAL_GENERATOR } from './pedestal.js';
 export { DESK_GENERATOR } from './desk.js';
 export { registerGenerator, generatorFor, type ProductGenerator } from './registry.js';
+export {
+  boardPrice,
+  computeBom,
+  computePrice,
+  hardwareV1,
+  hingeCount,
+  priceListDemo,
+  type BomLine,
+  type HardwareCatalog,
+  type HardwareItem,
+  type PriceList,
+  type PriceResult,
+  type PricedLine,
+} from './bom.js';

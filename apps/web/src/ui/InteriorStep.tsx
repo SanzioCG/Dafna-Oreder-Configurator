@@ -60,7 +60,7 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
     if (value === 'auto') return sections[sel]?.preset ?? 'shelves';
     const r = generate(config.template, { ...config.params, [def.key]: 'auto' });
     return r.sections[sel]?.preset ?? 'shelves';
-  }, [def, value, sections, sel, config.params]);
+  }, [def, value, sections, sel, config.params, config.template]);
 
   if (!def || count === 0) return null;
 

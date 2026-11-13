@@ -148,6 +148,28 @@
       "control": "swatch",
       "materialKinds": ["ldsp", "mdf"],
       "note": "Drawer fronts / door. 'same_as_corpus' follows the carcass decor."
+    },
+    {
+      "key": "slideBrand",
+      "type": "enum",
+      "default": "strax",
+      "options": ["strax", "hettich"],
+      "labelKey": "param.slideBrand",
+      "uiStep": "hardware",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      "key": "hingeBrand",
+      "type": "enum",
+      "default": "strax",
+      "options": ["strax", "hettich"],
+      "labelKey": "param.hingeBrand",
+      "uiStep": "hardware",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
     }
   ],
   "constants": {

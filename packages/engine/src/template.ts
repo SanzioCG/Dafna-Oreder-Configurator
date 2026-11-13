@@ -1,4 +1,4 @@
-import wardrobeV6Json from '../templates/wardrobe.v6.json' with { type: 'json' };
+import wardrobeV7Json from '../templates/wardrobe.v7.json' with { type: 'json' };
 import pedestalV1Json from '../templates/pedestal.v1.json' with { type: 'json' };
 import deskV1Json from '../templates/desk.v1.json' with { type: 'json' };
 import type {
@@ -11,11 +11,12 @@ import type {
 } from './types.js';
 
 /**
- * The current wardrobe (shkaf) template: v6 (templateVersion 0.7.0, D-7: standard customer sizes
- * and GOST 13025.1-85 storage presets; catalog 1.0.0, same generator). Older templates (v0 D-0 …
- * v5 D-6) are archived (regenerate.ts); older order drafts are migrated with migrateOrderDraft().
+ * The current wardrobe (shkaf) template: v7 (templateVersion 0.8.0, D-9: + hardware brands
+ * hingeBrand / slideBrand for the BOM and price; otherwise = v6 / 0.7.0: standard customer sizes,
+ * GOST 13025.1-85 storage presets, catalog 1.0.0, same generator). Older templates are archived
+ * (regenerate.ts); older order drafts are migrated with migrateOrderDraft().
  */
-export const wardrobeTemplate: Template = wardrobeV6Json as Template;
+export const wardrobeTemplate: Template = wardrobeV7Json as Template;
 
 /** D-8: office pedestal (ofis tumbasi), template 0.1.0 (pedestal.ts, ADR-014). */
 export const pedestalTemplate: Template = pedestalV1Json as Template;
