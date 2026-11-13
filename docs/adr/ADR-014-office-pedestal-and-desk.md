@@ -67,13 +67,14 @@ pedestals certified to BS EN 14073-2/-3 (e.g. the Flexiform pedestal datasheet):
     thin metal drawer sides. The customer UI disables the option at 400 mm and explains why.
 - **Desk template 0.1.0 (`desk-v1`).**
   - Work top: Dafna table-top boards (22 / 25 mm) or a 16 / 18 mm decor.
-  - Legs, one of three:
-    - `ldsp`: two LDSP side legs and a modesty panel;
-    - `metal`: a purchased steel T-frame;
-    - `metal_lift`: a purchased electric height-adjustable frame.
+  - **Two desk types** (Dafna decision, D-8): there are no fixed metal legs.
+    - `ldsp`: a board-made desk, two LDSP side legs and a modesty panel;
+    - `metal_lift`: a purchased electric height-adjustable (lift) frame.
   - The frame parts are role `frame`: bought parts, not cut from board, with no edges and no
     grain.
-  - Standard sizes: width 1000–1800 mm, depth 600 / 700 / 800 mm, height **740 mm**.
+  - Standard sizes: width 1000–1800 mm, depth 600 / 700 / 800 mm.
+  - Height: **740 mm** sitting; the lift desk also offers **1100 mm** standing (unconfirmed;
+    the frame adjusts continuously on site). A fixed desk cannot take 1100.
   - The width / depth minimum is the GOST 800 × 500.
   - Warnings:
 

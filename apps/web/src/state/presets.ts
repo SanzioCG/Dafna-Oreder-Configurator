@@ -79,13 +79,6 @@ export const READY_MODELS: ReadyModel[] = [
     fill: 'var(--step-size)',
   },
   {
-    id: 'desk-metal',
-    product: 'desk',
-    nameKey: 'model.deskMetal',
-    params: { legs: 'metal', width: 1400 },
-    fill: 'var(--step-color)',
-  },
-  {
     id: 'desk-lift',
     product: 'desk',
     nameKey: 'model.deskLift',

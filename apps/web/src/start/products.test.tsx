@@ -46,7 +46,7 @@ describe('D-8 start screen: Shkaf / Ofis tumbasi / Stol', () => {
     expect(screen.getByRole('heading', { name: uz['start.title.pedestal'] })).toBeTruthy();
     expect(document.querySelectorAll('.model-card')).toHaveLength(3);
     pickProduct('desk');
-    expect(document.querySelectorAll('.model-card')).toHaveLength(3);
+    expect(document.querySelectorAll('.model-card')).toHaveLength(2);
   });
 });
 
@@ -94,10 +94,11 @@ describe('D-8 office pedestal', () => {
 });
 
 describe('D-8 desk', () => {
-  it('legs decide the colour step: metal -> frame colour, LDSP -> leg decor', () => {
+  it('two desks: lift -> frame colour, LDSP carcass -> leg decor', () => {
     render(<App />);
     pickProduct('desk');
-    pickModel('model.deskMetal');
+    expect(document.querySelectorAll('.model-card')).toHaveLength(2);
+    pickModel('model.deskLift');
     expect(stub().dataset.height).toBe('740');
     expect(stub().dataset.roles).toContain('frame');
     fireEvent.click(tab(uz['step.color']));

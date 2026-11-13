@@ -114,7 +114,14 @@ describe('D-8 desk (stol)', () => {
     expect(getMaterial(catalogForTemplate(DESK), 'egger_h3700_st10_25')?.thicknessMm).toBe(25);
   });
 
-  for (const legs of ['ldsp', 'metal', 'metal_lift']) {
+  it('two desk types only: LDSP carcass or the lift frame (no fixed metal legs)', () => {
+    expect(DESK.parameters.find((p) => p.key === 'legs')?.options).toEqual(['ldsp', 'metal_lift']);
+    expect(validate({ ...defaultParams(DESK), legs: 'metal' }, DESK).map((i) => i.code)).toEqual([
+      'INVALID_OPTION',
+    ]);
+  });
+
+  for (const legs of ['ldsp', 'metal_lift']) {
     for (const width of [1000, 1400, 1800]) {
       it(`${legs} / ${width}: work top at 740, legs under it, nothing outside the top`, () => {
         const r = generate(DESK, { ...defaultParams(DESK), legs, width });

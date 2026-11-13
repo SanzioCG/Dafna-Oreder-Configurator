@@ -54,12 +54,12 @@
       "key": "legs",
       "type": "enum",
       "default": "ldsp",
-      "options": ["ldsp", "metal", "metal_lift"],
+      "options": ["ldsp", "metal_lift"],
       "labelKey": "param.legs",
       "uiStep": "interior",
       "customerVisible": true,
       "unconfirmed": false,
-      "note": "LDSP side legs + modesty panel (Dafna-made); purchased steel T-frame; purchased electric height-adjustable frame."
+      "note": "Two desk types (Dafna, D-8): a board-made desk (LDSP side legs + modesty panel), or a desk on an electric height-adjustable steel frame (lift). No fixed metal legs."
     },
     {
       "key": "topMaterial",
@@ -256,7 +256,7 @@
     {
       "id": "desk-metal-frame",
       "unconfirmed": true,
-      "note": "Purchased steel frame: per side a foot bar, a column and a top arm; one cross beam. Drawn as boxes, not cut from board."
+      "note": "Lift desk: purchased electric height-adjustable steel frame: per side a foot bar, a telescopic column and a top arm; one cross beam. Drawn as boxes, not cut from board."
     }
   ]
 }

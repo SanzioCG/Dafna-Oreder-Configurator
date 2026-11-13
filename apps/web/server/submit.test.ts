@@ -225,7 +225,7 @@ describe('POST /api/submit', () => {
         product: 'desk',
         params: {
           ...defaultParams(deskTemplate),
-          legs: 'metal',
+          legs: 'metal_lift',
           topMaterial: 'egger_h3700_st10_25',
         },
       }),
@@ -240,7 +240,7 @@ describe('POST /api/submit', () => {
     ]);
     expect(d.corpus).toBe('Орех Пацифик натуральный (EGGER H3700 ST10)');
     expect(d.door).toBe('Металл чёрный');
-    expect(d.sections).toBe('Metall oyoqlar');
+    expect(d.sections).toBe("Ko'tarma mexanizmli karkas");
     const ped = await send(
       body({
         idempotencyKey: 'ped-0123456789abcdefg',
