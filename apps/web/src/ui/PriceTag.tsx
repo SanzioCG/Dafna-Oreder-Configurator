@@ -1,15 +1,50 @@
 import { catalogForTemplate, computeBom, computePrice, type PriceResult } from '@dafna/engine';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import type { Configurator } from '../state/useConfigurator';
 
 /**
- * D-9: customers see the price only once Dafna's real price list replaces the DEMO one
- * (never a demo number in front of a customer). Staff always see it, marked "sinov narxi".
+ * D-9: in production customers see the price only once Dafna's real price list replaces the
+ * DEMO one (never a demo number in front of a real customer). Staff always see it, marked
+ * "sinov narxi"; a dev build (local testing) shows the demo price on customer screens too.
  */
-export function priceVisible(mode: Mode, price: PriceResult): boolean {
-  return mode === 'staff' || !price.demo;
+export function priceVisible(
+  mode: Mode,
+  price: PriceResult,
+  dev: boolean = import.meta.env.DEV,
+): boolean {
+  return mode === 'staff' || !price.demo || dev;
+}
+
+const reducedMotion = () =>
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+
+/** The shown number runs to the new price (ease-out, ~0.6 s); reduced motion: jumps. */
+export function useCountUp(target: number, ms = 600): number {
+  const [shown, setShown] = useState(target);
+  const from = useRef(target);
+  useEffect(() => {
+    const start = from.current;
+    if (start === target || reducedMotion() || typeof requestAnimationFrame === 'undefined') {
+      from.current = target;
+      setShown(target);
+      return;
+    }
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const k = Math.min(1, (now - t0) / ms);
+      const v = start + (target - start) * (1 - (1 - k) ** 3);
+      from.current = v;
+      setShown(v);
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+  return shown;
 }
 
 export function usePrice(config: Configurator): PriceResult {
@@ -26,12 +61,27 @@ const money = (v: number) => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))
 export function PriceTag({ mode, config }: { mode: Mode; config: Configurator }) {
   const { t } = useI18n();
   const price = usePrice(config);
+  const shown = useCountUp(price.total);
+  // a short highlight while the number runs: up (more expensive) / down
+  const [dir, setDir] = useState<'up' | 'down' | null>(null);
+  const last = useRef(price.total);
+  useEffect(() => {
+    if (price.total === last.current) return;
+    setDir(price.total > last.current ? 'up' : 'down');
+    last.current = price.total;
+    const id = setTimeout(() => setDir(null), 900);
+    return () => clearTimeout(id);
+  }, [price.total]);
   if (!priceVisible(mode, price) || config.hasErrors) return null;
   return (
-    <p className="price-tag" data-testid="price">
+    <p
+      className={dir ? `price-tag price-${dir}` : 'price-tag'}
+      data-testid="price"
+      data-total={price.total}
+    >
       <span>{t('price.total')}:</span>
       <strong>
-        {money(price.total)} {t('price.currency')}
+        {money(shown)} {t('price.currency')}
       </strong>
       {price.demo && <span className="price-demo">{t('price.demo')}</span>}
     </p>

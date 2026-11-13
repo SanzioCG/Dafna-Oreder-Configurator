@@ -1,5 +1,6 @@
 import { useI18n } from '../i18n/I18n';
 import type { Configurator } from '../state/useConfigurator';
+import { hardwareParams } from '../steps';
 
 /**
  * D-9 "Mexanizmlar": the hardware brand of each mechanism the configuration actually has (door
@@ -8,17 +9,15 @@ import type { Configurator } from '../state/useConfigurator';
  */
 export function HardwareBlock({ config }: { config: Configurator }) {
   const { t } = useI18n();
-  const panels = config.view.result.panels;
-  const present: Record<string, boolean> = {
-    hingeBrand: panels.some((p) => p.role === 'door'),
-    slideBrand: panels.some((p) => p.role === 'drawer_front'),
-  };
-  const defs = config.template.parameters.filter(
-    (d) => d.uiStep === 'hardware' && d.customerVisible && present[d.key],
-  );
+  const defs = hardwareParams(config.template, config.view.result);
   if (defs.length === 0) return null;
   return (
-    <section className="card step-card hardware-card" data-card="hardware" data-testid="hardware">
+    <section
+      className="card step-card hardware-card"
+      data-step="hardware"
+      data-card="hardware"
+      data-testid="hardware"
+    >
       <div className="card-head">
         <h2>{t('hw.title')}</h2>
         <p className="muted">{t('hw.hint')}</p>

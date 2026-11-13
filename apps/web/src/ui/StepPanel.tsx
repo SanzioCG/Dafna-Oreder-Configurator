@@ -1,11 +1,11 @@
 import type { ParamDef } from '@dafna/engine';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LANGS, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import type { ReadyModel } from '../state/presets';
 import type { Configurator } from '../state/useConfigurator';
 import type { ProductId } from '../state/presets';
-import { STEPS, neighbourStep } from '../steps';
+import { neighbourStep, stepsFor } from '../steps';
 import { StartScreen } from '../start/StartScreen';
 import { useTheme } from '../theme/ThemeProvider';
 import { formatSize, unitSystemFor } from '../viewer/dimensions';
@@ -87,10 +87,22 @@ export function StepPanel({
   const { t, lang, setLang } = useI18n();
   const { theme, toggleTheme, logoUrl } = useTheme();
   const staff = mode === 'staff';
-  const prev = neighbourStep(step, -1);
-  const next = neighbourStep(step, 1);
-  const stepDef = STEPS.find((s) => s.key === step);
+  // D-9: "Mexanizmlar" is its own step when the configuration has hinges or slides
+  const steps = stepsFor(config.template, config.view.result);
+  const prev = neighbourStep(step, -1, steps);
+  const next = neighbourStep(step, 1, steps);
+  const stepDef = steps.find((s) => s.key === step);
   const [staffOpen, setStaffOpen] = useState(false);
+  const missingStep = step !== 'start' && !stepDef;
+  useEffect(() => {
+    // the mechanism step disappeared (no doors / drawers any more): back to the fill step
+    if (missingStep) setStep('interior');
+  }, [missingStep, setStep]);
+  // every step starts at the top of the panel: its card is the first thing the customer sees
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    bodyRef.current?.scrollTo?.({ top: 0 });
+  }, [step]);
 
   // staff: template parameters of this step (interior also carries the door overrides)
   const sectionCount = config.view.result.sections.length;
@@ -154,7 +166,7 @@ export function StepPanel({
         </div>
       </header>
 
-      <StepNavigation step={step} onStepChange={setStep} product={config.product} />
+      <StepNavigation step={step} onStepChange={setStep} product={config.product} steps={steps} />
 
       {step === 'start' && (
         <div className="panel-body">
@@ -166,7 +178,7 @@ export function StepPanel({
           />
         </div>
       )}
-      <div className="panel-body" hidden={step === 'start'}>
+      <div className="panel-body" hidden={step === 'start'} ref={bodyRef}>
         <PriceTag mode={mode} config={config} />
         <p className="summary" data-testid="summary">
           <strong>{formatSize(v.widthMm, v.heightMm, v.depthMm, units, unit)}</strong>
@@ -190,8 +202,8 @@ export function StepPanel({
               onSelect={onSelectSection}
             />
           )}
-          {/* D-9: mechanisms after the fill (only those the configuration has) */}
-          {step === 'interior' && <HardwareBlock config={config} />}
+          {/* D-9: its own step (only the mechanisms the configuration has) */}
+          {step === 'hardware' && <HardwareBlock config={config} />}
         </div>
         {staff && (
           <StaffSettings open={staffOpen} onToggle={() => setStaffOpen((o) => !o)}>

@@ -12,6 +12,7 @@ export const uz = {
   'step.color': 'Rang',
   'step.interior': 'Ichki',
   'step.doors': 'Eshiklar',
+  'step.hardware': 'Mexanizmlar',
   'step.review': "Ko'rib chiqish",
   'step.comingSoon': 'Tez orada',
   'start.title': 'Shkafingizni tanlang',

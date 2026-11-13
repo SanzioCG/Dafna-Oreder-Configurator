@@ -526,6 +526,10 @@ p {
   --card-fill: var(--step-interior);
 }
 
+.card[data-step='hardware'] {
+  --card-fill: var(--step-hardware);
+}
+
 .param {
   display: flex;
   flex-direction: column;
@@ -1788,16 +1792,39 @@ p {
 
 /* ---------- D-9 price (staff until the real price list) ---------- */
 
+/* stays at the top of the panel while it scrolls: the customer always sees the price */
 .price-tag {
+  position: sticky;
+  top: calc(-1 * var(--space-3));
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-2);
+  margin: calc(-1 * var(--space-3)) 0 0;
+  padding: var(--space-3) 0 var(--space-2);
+  background: var(--bg);
   font-size: var(--fs-lg);
 }
 
 .price-tag strong {
   font-size: var(--fs-xl);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s;
+}
+
+.price-up strong {
+  color: #1f9d55;
+}
+
+.price-down strong {
+  color: var(--step-review);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .price-tag strong {
+    transition: none;
+  }
 }
 
 .price-demo {

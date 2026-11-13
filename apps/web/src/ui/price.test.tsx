@@ -1,6 +1,8 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { PriceResult } from '@dafna/engine';
 import { uz } from '../i18n/uz';
+import { priceVisible } from './PriceTag';
 import type { SceneProps } from '../viewer/Scene';
 
 vi.mock('../viewer/Scene', () => ({
@@ -17,16 +19,32 @@ afterEach(() => {
 
 const tab = (label: string) =>
   within(screen.getByRole('navigation')).getByRole('button', { name: new RegExp(label) });
-const priceNumber = () =>
-  Number(
-    (screen.getByTestId('price').querySelector('strong')?.textContent ?? '').replace(/\D/g, ''),
-  );
+/** the price the tag runs to (the shown number animates towards it) */
+const priceNumber = () => Number(screen.getByTestId('price').dataset.total);
 
 describe('D-9 price and mechanisms', () => {
-  it('customers never see a DEMO price', () => {
-    render(<App />);
+  it('production customers never see a DEMO price; a dev build shows it, marked', () => {
+    const demo = { demo: true } as PriceResult;
+    expect(priceVisible('customer', demo, false)).toBe(false);
+    expect(priceVisible('customer', { demo: false } as PriceResult, false)).toBe(true);
+    expect(priceVisible('staff', demo, false)).toBe(true);
+    render(<App />); // vitest = dev build
     fireEvent.click(screen.getByRole('button', { name: uz['start.scratch'] }));
-    expect(screen.queryByTestId('price')).toBeNull();
+    expect(screen.getByTestId('price').textContent).toContain(uz['price.demo']);
+  });
+
+  it('"Mexanizmlar" is its own step: Keyingi from the fill lands on it, then review', () => {
+    window.history.replaceState(null, '', '/?mode=staff');
+    render(<App />);
+    fireEvent.click(tab(uz['step.interior']));
+    expect(screen.queryByTestId('hardware')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(uz['nav.next']) }));
+    expect(screen.getByTestId('hardware')).toBeTruthy();
+    expect(
+      within(screen.getByRole('navigation'))
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(expect.arrayContaining([expect.stringContaining(uz['step.hardware'])]));
   });
 
   it('staff see the demo price, marked; Hettich costs more than Strax; breakdown', () => {
@@ -36,7 +54,7 @@ describe('D-9 price and mechanisms', () => {
     expect(tag.textContent).toContain(uz['price.demo']);
     const strax = priceNumber();
     expect(strax).toBeGreaterThan(0);
-    fireEvent.click(tab(uz['step.interior']));
+    fireEvent.click(tab(uz['step.hardware']));
     const hinges = screen.getByRole('radiogroup', { name: uz['param.hingeBrand'] });
     // the default wardrobe has doors but no drawers: only the hinge choice is offered
     expect(screen.queryByRole('radiogroup', { name: uz['param.slideBrand'] })).toBeNull();

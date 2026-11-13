@@ -13,6 +13,7 @@ export const ru: Messages = {
   'step.color': 'Цвет',
   'step.interior': 'Внутри',
   'step.doors': 'Двери',
+  'step.hardware': 'Механизмы',
   'step.review': 'Просмотр',
   'step.comingSoon': 'Скоро',
   'start.title': 'Выберите шкаф',
