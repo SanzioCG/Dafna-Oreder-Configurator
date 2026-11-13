@@ -1894,3 +1894,26 @@ p {
   padding: var(--space-1) var(--space-3);
   font-size: var(--fs-sm);
 }
+
+/* D-10b: a picture of the mechanism on each brand option */
+.mech-photo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.mech-photo svg {
+  width: 3.4rem;
+  height: 3.4rem;
+}
+
+.mech-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

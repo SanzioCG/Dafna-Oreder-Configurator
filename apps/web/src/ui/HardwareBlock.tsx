@@ -1,6 +1,7 @@
 import { useI18n } from '../i18n/I18n';
 import type { Configurator } from '../state/useConfigurator';
 import { hardwareParams } from '../steps';
+import { MechPhoto } from './MechPhoto';
 
 /** hardware param -> the mechanism it drives in the 3D demo */
 const KIND: Record<string, 'hinge' | 'slide'> = { hingeBrand: 'hinge', slideBrand: 'slide' };
@@ -69,6 +70,13 @@ export function HardwareBlock({
                     if (kind) onDemo?.(kind, String(o));
                   }}
                 >
+                  {kind && (
+                    <MechPhoto
+                      kind={kind}
+                      brand={String(o)}
+                      alt={t(`hw.model.${kind}.${String(o)}`)}
+                    />
+                  )}
                   <span className="option-text">
                     <span className="option-title">{t(`hw.brand.${String(o)}`)}</span>
                     <span className="option-hint">{t(`hw.hint.${def.key}.${String(o)}`)}</span>

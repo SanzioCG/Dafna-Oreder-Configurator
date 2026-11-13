@@ -65,6 +65,9 @@ describe('D-9 price and mechanisms', () => {
     expect(legend).toContain('Hettich Sensys');
     expect(legend).toMatch(/\d+ ta/);
     expect(screen.getByTestId('demo-hingeBrand')).toBeTruthy();
+    // D-10b: every brand option carries a picture of its mechanism
+    expect(screen.getByTestId('mech-photo-hinge-strax')).toBeTruthy();
+    expect(screen.getByTestId('mech-photo-hinge-hettich')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: uz['staff.settings'] }));
     expect(screen.getByTestId('price-breakdown').textContent).toContain('hinge_hettich_sensys');
   });
