@@ -17,6 +17,7 @@ import { modelParams } from './state/presets';
 import { ThemeProvider, useTheme } from './theme/ThemeProvider';
 import { StepPanel } from './ui/StepPanel';
 import type { CaptureFn } from './viewer/renderCapture';
+import type { MechanismDemo, MechanismKind } from './viewer/mechanisms';
 import { Viewer } from './viewer/Viewer';
 
 /** prefers-reduced-motion: the reveal shows its final state directly. */
@@ -46,6 +47,10 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
     setSelectionSeq((n) => n + 1);
   };
   const picking = step === 'interior';
+  // D-10: "Ko'rish" (or picking a brand) plays how that mechanism closes in 3D
+  const [mechDemo, setMechDemo] = useState<MechanismDemo | null>(null);
+  const playMechanism = (kind: MechanismKind, brand: string) =>
+    setMechDemo((d) => ({ kind, brand, seq: (d?.seq ?? 0) + 1 }));
 
   // ---- customer flow (state machine, see state/flow.ts) ----
   const [flow, setFlow] = useState<FlowState>('configurator');
@@ -122,6 +127,11 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
           onRevealEvents={onRevealEvents}
           captureRef={captureRef}
           summaryColors={summarizeParams(config.params, lang, config.template).colorsLine}
+          mechanism={{
+            hingeBrand: String(config.params.hingeBrand ?? 'strax'),
+            slideBrand: String(config.params.slideBrand ?? 'strax'),
+            demo: mechDemo,
+          }}
           presentationContent={
             flow === 'ready_to_confirm' ? (
               <div className="present-actions" data-testid="present-actions">
@@ -144,6 +154,7 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
           selectedSection={section}
           onSelectSection={selectSection}
           onCallConsultant={callConsultant}
+          onMechanismDemo={playMechanism}
           onPickModel={(m) => {
             config.switchProduct(m.product, modelParams(m));
             setStep('size');

@@ -30,6 +30,8 @@ import {
 } from './dimensions';
 import type { CameraCommand, CameraRequest } from './cameraCommands';
 import type { CaptureFn } from './renderCapture';
+import { hingeCount } from '@dafna/engine';
+import { DRAWER_SHOW_PULL, MECH_COLOR, type MechanismDemo, type MechanismView } from './mechanisms';
 import { MM, Scene } from './Scene';
 import type { SectionBox } from './SectionPicker';
 
@@ -55,6 +57,8 @@ interface ViewerProps {
   captureRef?: MutableRefObject<CaptureFn | null>;
   /** D-8: "Korpus: … · Eshik: …" / "Stoleshnitsa: … · Oyoq: …" (product summary) */
   summaryColors?: string;
+  /** D-10: chosen mechanism brands and the closing demo to play ("Ko'rish") */
+  mechanism?: { hingeBrand: string; slideBrand: string; demo: MechanismDemo | null };
 }
 
 interface RevealUi {
@@ -133,15 +137,17 @@ export function Viewer({
   presentationContent,
   captureRef,
   summaryColors,
+  mechanism,
 }: ViewerProps) {
   const { t } = useI18n();
   const { theme, logoUrl } = useTheme();
   const presenting = presentation !== null;
   const [resetToken, setResetToken] = useState(0);
   const [doorsOpen, setDoorsOpen] = useState(false);
-  // Interior step: doors open automatically; leaving the step restores the previous state.
+  // Interior and mechanisms steps: doors open automatically; leaving restores the previous state.
   const savedDoors = useRef<boolean | null>(null);
-  const interior = activeStep === 'interior';
+  const hardwareStep = activeStep === 'hardware' && !presenting;
+  const interior = activeStep === 'interior' || hardwareStep;
   useEffect(() => {
     if (interior && savedDoors.current === null) {
       setDoorsOpen((prev) => {
@@ -159,6 +165,21 @@ export function Viewer({
   const tap = useDoubleTap(reframe, pointerDown);
   const { widthMm: W, heightMm: H, depthMm: D } = view;
   const hasDoors = view.result.panels.some((p) => p.role === 'door');
+  const hasDrawers = view.result.panels.some((p) => p.role === 'drawer_front');
+  // D-10: the mechanisms step shows hinges / slides; the legend counts them like the BOM
+  const mech = useMemo<MechanismView>(
+    () => ({
+      show: hardwareStep,
+      hingeBrand: mechanism?.hingeBrand ?? 'strax',
+      slideBrand: mechanism?.slideBrand ?? 'strax',
+      demo: mechanism?.demo ?? null,
+    }),
+    [hardwareStep, mechanism?.hingeBrand, mechanism?.slideBrand, mechanism?.demo],
+  );
+  const hingeTotal = view.result.panels
+    .filter((p) => p.role === 'door')
+    .reduce((n, d) => n + hingeCount(d.widthMm), 0);
+  const slidePairs = view.result.panels.filter((p) => p.role === 'drawer_front').length;
 
   // World space is metres with the product centred on the origin, standing on the floor (y=0).
   const product = useMemo<FrameBox>(
@@ -172,10 +193,11 @@ export function Viewer({
       max: [
         (W / 2 + Math.min(DIMENSION_MARGIN.right, W * 0.25)) * MM,
         (H + Math.min(DIMENSION_MARGIN.top, H * 0.2)) * MM,
-        (D / 2) * MM,
+        // D-10: pulled-out drawers stick out in front on the mechanisms step
+        (D / 2 + (hardwareStep && hasDrawers ? DRAWER_SHOW_PULL * D : 0)) * MM,
       ],
     }),
-    [W, H, D],
+    [W, H, D, hardwareStep, hasDrawers],
   );
 
   const sections = view.result.sections;
@@ -255,7 +277,9 @@ export function Viewer({
   useEffect(() => {
     if (prevStep.current === activeStep) return;
     prevStep.current = activeStep;
-    if (activeStep === 'size' || activeStep === 'color') issue({ kind: 'model' });
+    if (activeStep === 'size' || activeStep === 'color' || activeStep === 'hardware') {
+      issue({ kind: 'model' });
+    }
   }, [activeStep]);
   // a section picked (tab or 3D tap): frame it (interior) or its door(s) (doors step)
   const lastSelectionSeq = useRef(selectionSeq);
@@ -355,6 +379,7 @@ export function Viewer({
         cameraApi={cameraApi}
         cameraLocked={revealUi.running}
         doorOverride={doorOverride}
+        mech={mech}
         turn={turn}
         reveal={
           presenting
@@ -369,6 +394,28 @@ export function Viewer({
         }
       />
       <DimensionSvg dims={dims} registry={dimRegistry} remPx={remPx} />
+      {hardwareStep && (hingeTotal > 0 || slidePairs > 0) && (
+        <ul className="mech-legend" data-testid="mech-legend">
+          {hingeTotal > 0 && (
+            <li>
+              <span className="mech-dot" style={{ background: MECH_COLOR }} />
+              {t('hw.legend.hinge', {
+                brand: t(`hw.model.hinge.${mech.hingeBrand}`),
+                count: hingeTotal,
+              })}
+            </li>
+          )}
+          {slidePairs > 0 && (
+            <li>
+              <span className="mech-dot" style={{ background: MECH_COLOR }} />
+              {t('hw.legend.slide', {
+                brand: t(`hw.model.slide.${mech.slideBrand}`),
+                count: slidePairs,
+              })}
+            </li>
+          )}
+        </ul>
+      )}
 
       {presenting && (
         <>

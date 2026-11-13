@@ -2,12 +2,22 @@ import { useI18n } from '../i18n/I18n';
 import type { Configurator } from '../state/useConfigurator';
 import { hardwareParams } from '../steps';
 
+/** hardware param -> the mechanism it drives in the 3D demo */
+const KIND: Record<string, 'hinge' | 'slide'> = { hingeBrand: 'hinge', slideBrand: 'slide' };
+
 /**
  * D-9 "Mexanizmlar": the hardware brand of each mechanism the configuration actually has (door
  * hinges if there are doors, drawer slides if there are drawers): Strax (standard) or Hettich
  * (soft close). Template params with uiStep 'hardware'; brand names are never translated.
+ * D-10: the 3D view shows the mechanisms; picking a brand (or "Ko'rish") plays how it closes.
  */
-export function HardwareBlock({ config }: { config: Configurator }) {
+export function HardwareBlock({
+  config,
+  onDemo,
+}: {
+  config: Configurator;
+  onDemo?: (kind: 'hinge' | 'slide', brand: string) => void;
+}) {
   const { t } = useI18n();
   const defs = hardwareParams(config.template, config.view.result);
   if (defs.length === 0) return null;
@@ -20,13 +30,26 @@ export function HardwareBlock({ config }: { config: Configurator }) {
     >
       <div className="card-head">
         <h2>{t('hw.title')}</h2>
-        <p className="muted">{t('hw.hint')}</p>
+        <p className="muted">{t('hw.hint3d')}</p>
       </div>
       {defs.map((def) => {
-        const value = config.params[def.key] ?? def.default;
+        const value = String(config.params[def.key] ?? def.default);
+        const kind = KIND[def.key];
         return (
           <div className="param" key={def.key}>
-            <span className="param-label">{t(def.labelKey)}</span>
+            <div className="hw-head">
+              <span className="param-label">{t(def.labelKey)}</span>
+              {kind && onDemo && (
+                <button
+                  type="button"
+                  className="btn btn-secondary hw-demo"
+                  data-testid={`demo-${def.key}`}
+                  onClick={() => onDemo(kind, value)}
+                >
+                  ▶ {t(`hw.demo.${kind}`)}
+                </button>
+              )}
+            </div>
             <div
               className="option-list"
               role="radiogroup"
@@ -38,10 +61,13 @@ export function HardwareBlock({ config }: { config: Configurator }) {
                   key={String(o)}
                   type="button"
                   role="radio"
-                  aria-checked={o === value}
+                  aria-checked={String(o) === value}
                   data-option={String(o)}
-                  className={o === value ? 'option-row active' : 'option-row'}
-                  onClick={() => config.setParam(def.key, o)}
+                  className={String(o) === value ? 'option-row active' : 'option-row'}
+                  onClick={() => {
+                    config.setParam(def.key, o);
+                    if (kind) onDemo?.(kind, String(o));
+                  }}
                 >
                   <span className="option-text">
                     <span className="option-title">{t(`hw.brand.${String(o)}`)}</span>

@@ -16,6 +16,7 @@ import type { RevealDirector, RevealEvent, RevealKind } from '../presentation/re
 import { SectionPicker, type SectionBox } from './SectionPicker';
 import { RenderCapture, type CaptureFn } from './renderCapture';
 import { SoftFloorShadow } from './SoftFloorShadow';
+import type { MechanismView } from './mechanisms';
 import { Wardrobe3D } from './Wardrobe3D';
 
 export const MM = 0.001;
@@ -60,6 +61,8 @@ export interface SceneProps {
   turn?: MutableRefObject<number>;
   /** scripted door progress (reveal), null = follow doorsOpen */
   doorOverride?: MutableRefObject<number | null>;
+  /** D-10: mechanisms step (hinges / slides highlighted, closing demo) */
+  mech?: MechanismView;
   /** presentation reveal driver (null outside the presentation) */
   reveal?: {
     director: RevealDirector;
@@ -98,6 +101,7 @@ export function Scene({
   cameraApi,
   cameraLocked = false,
   doorOverride,
+  mech,
   turn,
   reveal = null,
   capture,
@@ -152,6 +156,7 @@ export function Scene({
             rails={view.result.rails}
             doorsOpen={doorsOpen}
             doorOverride={doorOverride}
+            mech={mech}
           />
           {interactive && (
             <SectionPicker

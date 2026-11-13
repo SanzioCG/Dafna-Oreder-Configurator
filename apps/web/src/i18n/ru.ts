@@ -292,6 +292,16 @@ export const ru: Messages = {
 
   // D-9: hardware + price
   'hw.title': 'Механизмы',
+  'hw.hint3d':
+    'Жёлтым — выбранные механизмы. Нажмите бренд или «Показать закрывание» — увидите в 3D, как закрывается.',
+  'hw.demo.hinge': 'Показать закрывание',
+  'hw.demo.slide': 'Показать закрывание',
+  'hw.legend.hinge': 'Петли: {brand} — {count} шт.',
+  'hw.legend.slide': 'Направляющие: {brand} — {count} пар',
+  'hw.model.hinge.strax': 'Strax',
+  'hw.model.hinge.hettich': 'Hettich Sensys',
+  'hw.model.slide.strax': 'Strax',
+  'hw.model.slide.hettich': 'Hettich Quadro',
   'hw.hint': 'Выберите бренд петель и направляющих.',
   'hw.brand.strax': 'Strax',
   'hw.brand.hettich': 'Hettich',

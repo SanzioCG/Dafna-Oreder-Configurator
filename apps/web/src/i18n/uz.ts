@@ -296,6 +296,16 @@ export const uz = {
 
   // D-9: hardware + price
   'hw.title': 'Mexanizmlar',
+  'hw.hint3d':
+    "Sariq rangda — tanlangan mexanizmlar. Brendni bosing yoki «Yopilishini ko'rish» — 3D'da qanday yopilishini ko'rasiz.",
+  'hw.demo.hinge': "Yopilishini ko'rish",
+  'hw.demo.slide': "Yopilishini ko'rish",
+  'hw.legend.hinge': 'Petlyalar: {brand} — {count} ta',
+  'hw.legend.slide': "Yo'naltiruvchilar: {brand} — {count} juft",
+  'hw.model.hinge.strax': 'Strax',
+  'hw.model.hinge.hettich': 'Hettich Sensys',
+  'hw.model.slide.strax': 'Strax',
+  'hw.model.slide.hettich': 'Hettich Quadro',
   'hw.hint': 'Petlya va tortma mexanizmlarining brendini tanlang.',
   'hw.brand.strax': 'Strax',
   'hw.brand.hettich': 'Hettich',

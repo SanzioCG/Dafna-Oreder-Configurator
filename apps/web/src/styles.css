@@ -1845,3 +1845,52 @@ p {
 .price-breakdown td:last-child {
   text-align: right;
 }
+
+/* ---------- D-10 mechanisms in 3D: legend + demo button ---------- */
+
+.mech-legend {
+  position: absolute;
+  top: calc(var(--space-4) + 2rem);
+  left: var(--space-4);
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--paper);
+  color: var(--ink);
+  list-style: none;
+  font-size: var(--fs-md, 1rem);
+  font-weight: var(--fw-bold);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
+  pointer-events: none;
+}
+
+.mech-legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mech-dot {
+  width: 0.9em;
+  height: 0.9em;
+  border-radius: 50%;
+  flex: none;
+}
+
+.hw-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.hw-demo {
+  min-height: auto;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--fs-sm);
+}

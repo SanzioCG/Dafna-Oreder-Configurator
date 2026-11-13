@@ -64,6 +64,8 @@ interface StepPanelProps {
   /** start screen: a ready-made model was picked / "Noldan boshlash" */
   onPickModel?: (model: ReadyModel) => void;
   onScratch?: (product: ProductId) => void;
+  /** D-10: play a mechanism's closing demo in 3D */
+  onMechanismDemo?: (kind: 'hinge' | 'slide', brand: string) => void;
 }
 
 /**
@@ -83,6 +85,7 @@ export function StepPanel({
   onCallConsultant,
   onPickModel,
   onScratch,
+  onMechanismDemo,
 }: StepPanelProps) {
   const { t, lang, setLang } = useI18n();
   const { theme, toggleTheme, logoUrl } = useTheme();
@@ -203,7 +206,7 @@ export function StepPanel({
             />
           )}
           {/* D-9: its own step (only the mechanisms the configuration has) */}
-          {step === 'hardware' && <HardwareBlock config={config} />}
+          {step === 'hardware' && <HardwareBlock config={config} onDemo={onMechanismDemo} />}
         </div>
         {staff && (
           <StaffSettings open={staffOpen} onToggle={() => setStaffOpen((o) => !o)}>

@@ -60,6 +60,11 @@ describe('D-9 price and mechanisms', () => {
     expect(screen.queryByRole('radiogroup', { name: uz['param.slideBrand'] })).toBeNull();
     fireEvent.click(within(hinges).getByRole('radio', { name: /Hettich/ }));
     expect(priceNumber()).toBeGreaterThan(strax);
+    // D-10: the 3D legend names the chosen hinge and counts them like the bill of materials
+    const legend = screen.getByTestId('mech-legend').textContent ?? '';
+    expect(legend).toContain('Hettich Sensys');
+    expect(legend).toMatch(/\d+ ta/);
+    expect(screen.getByTestId('demo-hingeBrand')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: uz['staff.settings'] }));
     expect(screen.getByTestId('price-breakdown').textContent).toContain('hinge_hettich_sensys');
   });
