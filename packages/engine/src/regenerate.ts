@@ -7,6 +7,7 @@ import wardrobeV5Json from '../templates/wardrobe.v5.json' with { type: 'json' }
 import wardrobeV6Json from '../templates/wardrobe.v6.json' with { type: 'json' };
 import wardrobeV7Json from '../templates/wardrobe.v7.json' with { type: 'json' };
 import wardrobeV8Json from '../templates/wardrobe.v8.json' with { type: 'json' };
+import wardrobeV9Json from '../templates/wardrobe.v9.json' with { type: 'json' };
 import pedestalV1Json from '../templates/pedestal.v1.json' with { type: 'json' };
 import deskV1Json from '../templates/desk.v1.json' with { type: 'json' };
 import { catalogForTemplate, materialsV0, materialsV1, materialsV1_1 } from './catalog.js';
@@ -31,6 +32,7 @@ export const TEMPLATE_ARCHIVE: Readonly<Record<string, Template>> = {
   '0.7.0': wardrobeV6Json as Template,
   '0.8.0': wardrobeV7Json as Template,
   '0.9.0': wardrobeV8Json as Template,
+  '0.10.0': wardrobeV9Json as Template,
 };
 
 /** Material catalogs by catalogVersion (same rule: archived, never edited). */
@@ -65,6 +67,7 @@ export const TEMPLATE_CATALOG: Readonly<Record<string, string>> = {
   '0.7.0': materialsV1.catalogVersion,
   '0.8.0': materialsV1.catalogVersion,
   '0.9.0': materialsV1.catalogVersion,
+  '0.10.0': materialsV1.catalogVersion,
 };
 
 type Generator = (template: Template, params: unknown, catalog: MaterialCatalog) => GenerateResult;

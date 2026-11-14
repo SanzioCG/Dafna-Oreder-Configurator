@@ -1,5 +1,5 @@
 {
-  "hardwareVersion": "1.0.0",
+  "hardwareVersion": "1.1.0",
   "items": [
     {
       "id": "slide_strax_ball",
@@ -110,5 +110,33 @@
       "count": 5
     }
   ],
-  "hingeRuleNote": "Hinges per leaf by height (fitting makers' usual table: <=900: 2, <=1600: 3, <=2000: 4, <=2600: 5). Door weight is not yet taken into account (D-9, unconfirmed)."
+  "hingeRuleNote": "Hinges per leaf by height (fitting makers' usual table: <=900: 2, <=1600: 3, <=2000: 4, <=2600: 5). D-15: the count is the larger of the height rule and the weight rule.",
+  "hingeWeightRule": [
+    {
+      "maxDoorWeightKg": 6,
+      "count": 2
+    },
+    {
+      "maxDoorWeightKg": 12,
+      "count": 3
+    },
+    {
+      "maxDoorWeightKg": 17,
+      "count": 4
+    },
+    {
+      "maxDoorWeightKg": 22,
+      "count": 5
+    }
+  ],
+  "hingeWeightRuleNote": "D-15: hinges by door weight (handles included). Blum: 4-6 kg -> 2 hinges, 6-12 kg -> 3 (blum.com 'Number of hinges'); 17 / 22 kg steps follow the usual maker diagrams; Hettich Sensys: max. 22 kg door weight per hinge family table. A guide only - Dafna to confirm.",
+  "hingeExtraAboveWidthMm": 600,
+  "hingeExtraNote": "Blum: the weight values apply to doors up to 600 mm wide; wider (up to 650 mm) need one more hinge.",
+  "boardDensityKgM3": {
+    "ldsp": 680,
+    "mdf": 760,
+    "hdf": 850,
+    "metal": 7850
+  },
+  "boardDensityNote": "Assumed board densities for the door weight (chipboard ~650-700, MDF ~750-800 kg/m3); unconfirmed until Dafna's supplier data."
 }

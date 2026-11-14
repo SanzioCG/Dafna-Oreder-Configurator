@@ -1,4 +1,4 @@
-import { hingeCount, type Panel, type Rail } from '@dafna/engine';
+import { hingesForDoor, type Panel, type Rail } from '@dafna/engine';
 import { Edges } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, type MutableRefObject, type ReactNode } from 'react';
@@ -168,7 +168,7 @@ function Halo({ radius, position }: { radius: number; position?: [number, number
 function DoorHinges({ panel, sign, brand }: { panel: Panel; sign: number; brand: string }) {
   const h = panel.widthMm;
   const t = panel.thicknessMm;
-  const offsets = hingeOffsets(h, hingeCount(h));
+  const offsets = hingeOffsets(h, hingesForDoor(panel));
   return (
     <>
       {offsets.map((o) => {

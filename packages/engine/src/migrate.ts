@@ -178,6 +178,8 @@ export const MATERIALS_CHANGED_IN = '0.6.0';
 
 /** Template version whose interior presets follow GOST 13025.1-85 (D-7). */
 export const INTERIOR_CHANGED_IN = '0.7.0';
+/** D-15: wide wardrobes became two carcasses in this template version */
+export const CARCASS_SPLIT_IN = '0.10.0';
 
 /** Pre-0.7.0 hanging presets -> the GOST presets of template 0.7.0. */
 export const INTERIOR_MAP_07: Readonly<Record<string, string>> = {
@@ -320,6 +322,14 @@ export function migrateOrderDraft(
   // D-7: template 0.7.0 replaced rail / rail_shelf / rail_drawers by the GOST presets
   const toErgonomic = !templateBefore(template.templateVersion, INTERIOR_CHANGED_IN);
   if (toErgonomic) params = mapInteriorTo07(params, template);
+
+  // D-15: a wardrobe ordered before template 0.10.0 was one carcass; it stays one carcass
+  if (
+    templateBefore(fromTemplate, CARCASS_SPLIT_IN) &&
+    template.parameters.some((p) => p.key === 'carcasses')
+  ) {
+    params = { ...params, carcasses: '1' };
+  }
 
   const kept = preserveDoors(params, doorTypesOf(d), template, catalog);
   params = kept.params;

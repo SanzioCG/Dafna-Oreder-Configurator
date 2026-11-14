@@ -58602,10 +58602,10 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 // ../../packages/engine/src/types.ts
 var ORDER_SCHEMA_VERSION = "dafna-order/0.3-draft";
 
-// ../../packages/engine/templates/wardrobe.v8.json
-var wardrobe_v8_default = {
+// ../../packages/engine/templates/wardrobe.v9.json
+var wardrobe_v9_default = {
   templateId: "wardrobe",
-  templateVersion: "0.9.0",
+  templateVersion: "0.10.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -58976,6 +58976,17 @@ var wardrobe_v8_default = {
       unconfirmed: true,
       customerValues: [600, 800, 1e3],
       note: "D-14: door leaf height of a books_lower section (from the door bottom edge). Only used when a section has the books_lower interior. Customer sizes 60 / 80 / 100 cm, unconfirmed until Dafna confirms."
+    },
+    {
+      key: "carcasses",
+      type: "enum",
+      default: "auto",
+      options: ["auto", "1", "2"],
+      labelKey: "param.carcasses",
+      uiStep: "size",
+      customerVisible: false,
+      unconfirmed: false,
+      note: "D-15: 'auto' = two carcasses from splitCarcassFromWidthMm on; staff may force one ('1') or two ('2'). Two carcasses need at least 2 sections."
     }
   ],
   constants: {
@@ -59207,6 +59218,12 @@ var wardrobe_v8_default = {
       unit: "mm",
       unconfirmed: false,
       note: "GOST 13025.1-85 table 2 (books): clear gap between shelves 180..390 mm; depth 140..440 mm."
+    },
+    splitCarcassFromWidthMm: {
+      value: 1600,
+      unit: "mm",
+      unconfirmed: false,
+      note: "D-15 (founder's decision, 2026-11-14): from this width the wardrobe is made as two carcasses side by side, split at the middle boundary (sections 1+1, 2+1, 2+2): each carcass has its own sides, top, bottom, back and plinth strips. Easier to carry and assemble; ~1 side panel more board."
     }
   },
   constructionRules: [
@@ -59894,7 +59911,7 @@ var desk_v1_default = {
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v8_default;
+var wardrobeTemplate = wardrobe_v9_default;
 var pedestalTemplate = pedestal_v1_default;
 var deskTemplate = desk_v1_default;
 var PRODUCT_TEMPLATES = {
@@ -60885,8 +60902,9 @@ function doorKindForLeaf(singleLeafWidthMm, maxSingleLeafWidthMm) {
 function hingeSideFor(index, count) {
   return index > (count - 1) / 2 ? "right" : "left";
 }
-function hingeMountFor(sectionIndex, side, count) {
-  const outer = side === "left" && sectionIndex === 0 || side === "right" && sectionIndex === count - 1;
+function hingeMountFor(sectionIndex, side, count, splitAfter = null) {
+  const outer = side === "left" && sectionIndex === 0 || side === "right" && sectionIndex === count - 1 || // D-15: a carcass side at the split
+  splitAfter !== null && side === "right" && sectionIndex === splitAfter || splitAfter !== null && side === "left" && sectionIndex === splitAfter + 1;
   return outer ? "full_overlay" : "half_overlay";
 }
 function roundLeaves(nominal, total, step) {
@@ -60908,13 +60926,15 @@ function roundLeaves(nominal, total, step) {
 function planDoors(input) {
   const { widthMm: W, t: t2, innerWidths, gapEdge, gapBetween } = input;
   const n3 = innerWidths.length;
+  const splitAfter = input.splitAfter ?? null;
+  const bt = (i) => i === splitAfter ? 2 * t2 : t2;
   const left = [];
   const right = [];
   let xStart = t2;
   innerWidths.forEach((inner, i) => {
-    left.push(i === 0 ? 0 : xStart - t2 / 2);
-    right.push(i === n3 - 1 ? W : xStart + inner + t2 / 2);
-    xStart += inner + t2;
+    left.push(i === 0 ? 0 : xStart - bt(i - 1) / 2);
+    right.push(i === n3 - 1 ? W : xStart + inner + bt(i) / 2);
+    xStart += inner + bt(i);
   });
   const source = [];
   const fixed = [];
@@ -60982,7 +61002,7 @@ function planDoors(input) {
         id: m.id,
         sectionIndex: m.sectionIndex,
         hingeSide: m.hingeSide,
-        hingeMount: hingeMountFor(m.sectionIndex, m.hingeSide, n3),
+        hingeMount: hingeMountFor(m.sectionIndex, m.hingeSide, n3, splitAfter),
         xStartMm: x,
         widthMm: w
       });
@@ -61233,6 +61253,13 @@ function distributeEvenly(total, n3) {
   const remainder = total - base * n3;
   return Array.from({ length: n3 }, (_, i) => i < remainder ? base + 1 : base);
 }
+function carcassSplit(template, params, widthMm) {
+  if (template.constants.splitCarcassFromWidthMm === void 0) return false;
+  const choice = String(params.carcasses ?? "auto");
+  if (choice === "1") return false;
+  if (choice === "2") return true;
+  return widthMm >= getNumberConstant(template, "splitCarcassFromWidthMm");
+}
 function innerTotal(widthMm, t2, n3) {
   return widthMm - (n3 + 1) * t2;
 }
@@ -61247,11 +61274,12 @@ function autoSectionCount(template, widthMm, t2, acceptable = () => true) {
   }
   return counts[counts.length - 1] ?? 1;
 }
-function doorPlanFor(template, params, widthMm, t2, innerWidths) {
+function doorPlanFor(template, params, widthMm, t2, innerWidths, splitAfter = null) {
   return planDoors({
     widthMm,
     t: t2,
     innerWidths,
+    splitAfter,
     preset: String(params.doors),
     overrides: innerWidths.map((_, i) => {
       const o = params[`doorSection${i + 1}`];
@@ -61334,18 +61362,21 @@ function computeLayout(template, params, catalog = currentCatalog) {
   const hasBack = params.backPanel === "hdf_overlay";
   const backThicknessMm = hasBack ? backMaterial.thicknessMm : 0;
   const maxSingleLeafWidthMm = getNumberConstant(template, "maxSingleLeafWidthMm");
-  const innerFor = (n3) => distributeEvenly(innerTotal(widthMm, t2, n3), n3);
+  const splitWanted = carcassSplit(template, params, widthMm);
+  const splitFor = (n3) => splitWanted && n3 >= 2 ? Math.ceil(n3 / 2) - 1 : null;
+  const innerFor = (n3) => distributeEvenly(innerTotal(widthMm, t2, n3) - (splitFor(n3) !== null ? t2 : 0), n3);
   const sectionCount = params.sections === "auto" ? autoSectionCount(
     template,
     widthMm,
     t2,
     (n3) => params.doors === "none" || doorPlanValid(
-      doorPlanFor(template, params, widthMm, t2, innerFor(n3)),
+      doorPlanFor(template, params, widthMm, t2, innerFor(n3), splitFor(n3)),
       maxSingleLeafWidthMm
     )
   ) : Number(params.sections);
   const sectionInnerWidthsMm = innerFor(sectionCount);
-  const doors = doorPlanFor(template, params, widthMm, t2, sectionInnerWidthsMm);
+  const splitAfter = splitFor(sectionCount);
+  const doors = doorPlanFor(template, params, widthMm, t2, sectionInnerWidthsMm, splitAfter);
   const hasDoors = doors.types.some((d) => d !== "none");
   const doorThicknessMm = hasDoors ? doorMaterial.thicknessMm : 0;
   const doorGapFrontMm = hasDoors ? getNumberConstant(template, "doorGapFrontMm") : 0;
@@ -61370,7 +61401,7 @@ function computeLayout(template, params, catalog = currentCatalog) {
       innerDepth: carcassDepthMm,
       t: t2
     };
-    xs += innerW + t2;
+    xs += innerW + (index === splitAfter ? 2 * t2 : t2);
     const choice = params[`interior${index + 1}`];
     return resolveInterior(
       box,
@@ -61403,6 +61434,7 @@ function computeLayout(template, params, catalog = currentCatalog) {
     carcassFrontZMm: backThicknessMm + carcassDepthMm,
     sectionCount,
     sectionInnerWidthsMm,
+    splitAfter,
     doorTypes: doors.types,
     doorTypeSource: doors.source,
     doorLeaves: doors.leaves,
@@ -61555,7 +61587,7 @@ function buildSections(layout) {
       drawers: layout.interior[index]?.drawers ?? [],
       clearHangingHeightMm: layout.interior[index]?.clearHangingHeightMm ?? null
     });
-    x += w + t2;
+    x += w + (index === layout.splitAfter ? 2 * t2 : t2);
   });
   return sections;
 }
@@ -61574,49 +61606,54 @@ function buildCarcassAndDoors(layout, sections) {
   const zC = layout.carcassBackZMm;
   const zMid = zC + Dc / 2;
   const corpus = layout.corpusMaterial.id;
-  const panels = [
-    {
-      id: "side-left",
-      role: "side",
-      lengthMm: H,
-      widthMm: Dc,
-      thicknessMm: t2,
-      material: corpus,
-      position: [t2 / 2, H / 2, zMid],
-      rotation: ROT_VERTICAL_YZ
-    },
-    {
-      id: "side-right",
-      role: "side",
-      lengthMm: H,
-      widthMm: Dc,
-      thicknessMm: t2,
-      material: corpus,
-      position: [W - t2 / 2, H / 2, zMid],
-      rotation: ROT_VERTICAL_YZ
-    },
-    {
-      id: "bottom",
-      role: "bottom",
-      lengthMm: W - 2 * t2,
-      widthMm: Dc,
-      thicknessMm: t2,
-      material: corpus,
-      position: [W / 2, ph + t2 / 2, zMid],
-      rotation: ROT_HORIZONTAL
-    },
-    {
-      id: "top",
-      role: "top",
-      lengthMm: W - 2 * t2,
-      widthMm: Dc,
-      thicknessMm: t2,
-      material: corpus,
-      position: [W / 2, H - t2 / 2, zMid],
-      rotation: ROT_HORIZONTAL
-    }
+  const split = layout.splitAfter;
+  const splitSection = split === null ? null : sections[split];
+  const xSplit = splitSection ? splitSection.xStartMm + splitSection.innerWidthMm + t2 : null;
+  const carcasses = xSplit === null ? [[0, W]] : [
+    [0, xSplit],
+    [xSplit, W]
   ];
+  const suffix = (i) => carcasses.length > 1 ? `-${i + 1}` : "";
+  const side = (id, x) => ({
+    id,
+    role: "side",
+    lengthMm: H,
+    widthMm: Dc,
+    thicknessMm: t2,
+    material: corpus,
+    position: [x, H / 2, zMid],
+    rotation: ROT_VERTICAL_YZ
+  });
+  const panels = [side("side-left", t2 / 2), side("side-right", W - t2 / 2)];
+  if (xSplit !== null) {
+    panels.push(side("side-split-left", xSplit - t2 / 2), side("side-split-right", xSplit + t2 / 2));
+  }
+  carcasses.forEach(([x0, x1], i) => {
+    panels.push(
+      {
+        id: `bottom${suffix(i)}`,
+        role: "bottom",
+        lengthMm: x1 - x0 - 2 * t2,
+        widthMm: Dc,
+        thicknessMm: t2,
+        material: corpus,
+        position: [(x0 + x1) / 2, ph + t2 / 2, zMid],
+        rotation: ROT_HORIZONTAL
+      },
+      {
+        id: `top${suffix(i)}`,
+        role: "top",
+        lengthMm: x1 - x0 - 2 * t2,
+        widthMm: Dc,
+        thicknessMm: t2,
+        material: corpus,
+        position: [(x0 + x1) / 2, H - t2 / 2, zMid],
+        rotation: ROT_HORIZONTAL
+      }
+    );
+  });
   for (const s of sections.slice(0, -1)) {
+    if (s.index === split) continue;
     panels.push({
       id: `partition-${s.index + 1}`,
       role: "partition",
@@ -61630,40 +61667,44 @@ function buildCarcassAndDoors(layout, sections) {
   }
   if (layout.hasBack) {
     const tb = layout.backThicknessMm;
-    panels.push({
-      id: "back",
-      role: "back",
-      lengthMm: W,
-      widthMm: Hc,
-      thicknessMm: tb,
-      material: layout.backMaterial.id,
-      position: [W / 2, ph + Hc / 2, tb / 2],
-      rotation: ROT_VERTICAL_XY
+    carcasses.forEach(([x0, x1], i) => {
+      panels.push({
+        id: `back${suffix(i)}`,
+        role: "back",
+        lengthMm: x1 - x0,
+        widthMm: Hc,
+        thicknessMm: tb,
+        material: layout.backMaterial.id,
+        position: [(x0 + x1) / 2, ph + Hc / 2, tb / 2],
+        rotation: ROT_VERTICAL_XY
+      });
     });
   }
   if (layout.hasPlinth) {
-    panels.push(
-      {
-        id: "plinth-front",
-        role: "plinth",
-        lengthMm: W - 2 * t2,
-        widthMm: ph,
-        thicknessMm: t2,
-        material: corpus,
-        position: [W / 2, ph / 2, layout.carcassFrontZMm - layout.plinthRecessMm - t2 / 2],
-        rotation: ROT_VERTICAL_XY
-      },
-      {
-        id: "plinth-back",
-        role: "plinth",
-        lengthMm: W - 2 * t2,
-        widthMm: ph,
-        thicknessMm: t2,
-        material: corpus,
-        position: [W / 2, ph / 2, zC + t2 / 2],
-        rotation: ROT_VERTICAL_XY
-      }
-    );
+    carcasses.forEach(([x0, x1], i) => {
+      panels.push(
+        {
+          id: `plinth-front${suffix(i)}`,
+          role: "plinth",
+          lengthMm: x1 - x0 - 2 * t2,
+          widthMm: ph,
+          thicknessMm: t2,
+          material: corpus,
+          position: [(x0 + x1) / 2, ph / 2, layout.carcassFrontZMm - layout.plinthRecessMm - t2 / 2],
+          rotation: ROT_VERTICAL_XY
+        },
+        {
+          id: `plinth-back${suffix(i)}`,
+          role: "plinth",
+          lengthMm: x1 - x0 - 2 * t2,
+          widthMm: ph,
+          thicknessMm: t2,
+          material: corpus,
+          position: [(x0 + x1) / 2, ph / 2, zC + t2 / 2],
+          rotation: ROT_VERTICAL_XY
+        }
+      );
+    });
   }
   const td = layout.doorThicknessMm;
   for (const leaf of layout.doorLeaves) {
@@ -62439,12 +62480,13 @@ var TEMPLATE_CATALOG = {
   "0.6.0": materialsV1.catalogVersion,
   "0.7.0": materialsV1.catalogVersion,
   "0.8.0": materialsV1.catalogVersion,
-  "0.9.0": materialsV1.catalogVersion
+  "0.9.0": materialsV1.catalogVersion,
+  "0.10.0": materialsV1.catalogVersion
 };
 
 // ../../packages/engine/catalog/hardware.v1.json
 var hardware_v1_default = {
-  hardwareVersion: "1.0.0",
+  hardwareVersion: "1.1.0",
   items: [
     {
       id: "slide_strax_ball",
@@ -62555,7 +62597,35 @@ var hardware_v1_default = {
       count: 5
     }
   ],
-  hingeRuleNote: "Hinges per leaf by height (fitting makers' usual table: <=900: 2, <=1600: 3, <=2000: 4, <=2600: 5). Door weight is not yet taken into account (D-9, unconfirmed)."
+  hingeRuleNote: "Hinges per leaf by height (fitting makers' usual table: <=900: 2, <=1600: 3, <=2000: 4, <=2600: 5). D-15: the count is the larger of the height rule and the weight rule.",
+  hingeWeightRule: [
+    {
+      maxDoorWeightKg: 6,
+      count: 2
+    },
+    {
+      maxDoorWeightKg: 12,
+      count: 3
+    },
+    {
+      maxDoorWeightKg: 17,
+      count: 4
+    },
+    {
+      maxDoorWeightKg: 22,
+      count: 5
+    }
+  ],
+  hingeWeightRuleNote: "D-15: hinges by door weight (handles included). Blum: 4-6 kg -> 2 hinges, 6-12 kg -> 3 (blum.com 'Number of hinges'); 17 / 22 kg steps follow the usual maker diagrams; Hettich Sensys: max. 22 kg door weight per hinge family table. A guide only - Dafna to confirm.",
+  hingeExtraAboveWidthMm: 600,
+  hingeExtraNote: "Blum: the weight values apply to doors up to 600 mm wide; wider (up to 650 mm) need one more hinge.",
+  boardDensityKgM3: {
+    ldsp: 680,
+    mdf: 760,
+    hdf: 850,
+    metal: 7850
+  },
+  boardDensityNote: "Assumed board densities for the door weight (chipboard ~650-700, MDF ~750-800 kg/m3); unconfirmed until Dafna's supplier data."
 };
 
 // ../../packages/engine/src/bom.ts
@@ -62564,6 +62634,20 @@ var r3 = (v) => Math.round(v * 1e3) / 1e3;
 function hingeCount(heightMm, hw = hardwareV1) {
   const rule = hw.hingeRule.find((r) => heightMm <= r.maxDoorHeightMm);
   return rule ? rule.count : (hw.hingeRule.at(-1)?.count ?? 2) + 1;
+}
+function doorWeightKg(p, hw = hardwareV1) {
+  const kind = getMaterial(allMaterials, p.material)?.kind ?? "ldsp";
+  const density = hw.boardDensityKgM3?.[kind] ?? 700;
+  return p.lengthMm * p.widthMm * p.thicknessMm * density / 1e9;
+}
+function hingesForDoor(p, hw = hardwareV1) {
+  const byHeight = hingeCount(p.widthMm, hw);
+  const rule = hw.hingeWeightRule;
+  if (!rule || rule.length === 0) return byHeight;
+  const kg = doorWeightKg(p, hw);
+  const byWeight = rule.find((r) => kg <= r.maxDoorWeightKg)?.count ?? (rule.at(-1)?.count ?? 2) + 1;
+  const extra = hw.hingeExtraAboveWidthMm !== void 0 && p.lengthMm > hw.hingeExtraAboveWidthMm ? 1 : 0;
+  return Math.max(byHeight, byWeight) + extra;
 }
 function computeBom(template, params, result, hw = hardwareV1) {
   const boards = /* @__PURE__ */ new Map();
@@ -62582,7 +62666,7 @@ function computeBom(template, params, result, hw = hardwareV1) {
     }
   }
   const brand = (kind, key) => hw.brands[kind]?.[String(params[key] ?? "strax")] ?? hw.brands[kind]?.strax;
-  const hinges = result.panels.filter((p) => p.role === "door").reduce((n3, d) => n3 + hingeCount(d.widthMm, hw), 0);
+  const hinges = result.panels.filter((p) => p.role === "door").reduce((n3, d) => n3 + hingesForDoor(d, hw), 0);
   addHw(brand("hinge", "hingeBrand"), hinges);
   addHw(
     brand("slide", "slideBrand"),
@@ -62729,6 +62813,10 @@ var ru = {
   "option.backPanel.hdf_overlay": "\u0425\u0414\u0424 (\u043D\u0430\u043A\u043B\u0430\u0434\u043D\u0430\u044F)",
   "option.base.plinth": "\u0421 \u0446\u043E\u043A\u043E\u043B\u0435\u043C",
   "option.base.none": "\u0411\u0435\u0437 \u0446\u043E\u043A\u043E\u043B\u044F",
+  "param.carcasses": "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E \u043A\u043E\u0440\u043F\u0443\u0441\u043E\u0432",
+  "option.carcasses.auto": "\u0410\u0432\u0442\u043E (2 \u0448\u0442. \u043E\u0442 160 \u0441\u043C)",
+  "option.carcasses.1": "1 \u043A\u043E\u0440\u043F\u0443\u0441",
+  "option.carcasses.2": "2 \u043A\u043E\u0440\u043F\u0443\u0441\u0430",
   "option.doors.none": "\u0411\u0435\u0437 \u0434\u0432\u0435\u0440\u0435\u0439",
   "option.doors.all_single": "\u041E\u0434\u043D\u043E\u0441\u0442\u0432\u043E\u0440\u0447\u0430\u0442\u044B\u0435",
   "option.doors.auto": "\u0410\u0432\u0442\u043E",
@@ -63120,6 +63208,10 @@ var uz = {
   "option.backPanel.hdf_overlay": "HDF (ustidan)",
   "option.base.plinth": "Tsokol bilan",
   "option.base.none": "Tsokolsiz",
+  "param.carcasses": "Korpuslar soni",
+  "option.carcasses.auto": "Avto (160 sm dan 2 ta)",
+  "option.carcasses.1": "1 ta korpus",
+  "option.carcasses.2": "2 ta korpus",
   "option.doors.none": "Eshiksiz",
   "option.doors.all_single": "Bir tabaqali",
   "option.doors.auto": "Avto",
@@ -63957,7 +64049,7 @@ function drawViews(w, result, area) {
     const handleX = p.hingeSide === "right" ? x0 : x1;
     w.line(hingeX, y0, handleX, (y0 + y1) / 2, MUTED, 0.5, [2, 2]);
     w.line(hingeX, y1, handleX, (y0 + y1) / 2, MUTED, 0.5, [2, 2]);
-    const n3 = hingeCount(p.widthMm);
+    const n3 = hingesForDoor(p);
     const span = y1 - y0 - 200 * k;
     for (let i = 0; i < n3; i++) {
       const yy = y0 + 100 * k + (n3 > 1 ? span * i / (n3 - 1) : span / 2);

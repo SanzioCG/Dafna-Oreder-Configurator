@@ -238,7 +238,13 @@ describe('sections=auto', () => {
 
 describe('SHELF_SPAN warning', () => {
   it('triggers once per section wider than 900 mm', () => {
-    const issues = validate({ ...defaultParams(T), doors: 'none', width: 2400, sections: 2 });
+    const issues = validate({
+      ...defaultParams(T),
+      doors: 'none',
+      width: 2400,
+      sections: 2,
+      carcasses: '1',
+    });
     expect(issues).toEqual([
       {
         code: 'SHELF_SPAN',
@@ -265,10 +271,9 @@ describe('SHELF_SPAN warning', () => {
 
   it('only warns for the sections that exceed (uneven remainder)', () => {
     // 1837 - 3*16 = 1789 -> [895, 894] ok; 1853 - 48 = 1805 -> [903, 902] both warn
-    expect(validate({ ...defaultParams(T), doors: 'none', width: 1837, sections: 2 })).toEqual([]);
-    expect(validate({ ...defaultParams(T), doors: 'none', width: 1853, sections: 2 }).length).toBe(
-      2,
-    );
+    const one = { ...defaultParams(T), doors: 'none', carcasses: '1' };
+    expect(validate({ ...one, width: 1837, sections: 2 })).toEqual([]);
+    expect(validate({ ...one, width: 1853, sections: 2 }).length).toBe(2);
   });
 
   it('is a warning, so geometry is still generated', () => {

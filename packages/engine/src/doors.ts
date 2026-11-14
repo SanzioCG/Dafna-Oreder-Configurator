@@ -46,6 +46,11 @@ export interface DoorPlanInput {
   gapBetween: number;
   maxSingleLeafWidth: number;
   rounding: number;
+  /**
+   * D-15: two carcasses side by side; the boundary after this section (0-based) is two side
+   * panels (2t) instead of one partition. Leaves next to it hinge on a carcass side (full overlay).
+   */
+  splitAfter?: number | null;
 }
 
 export interface DoorPlan {
@@ -68,9 +73,18 @@ export function hingeSideFor(index: number, count: number): HingeSide {
 }
 
 /** Outer side panel -> full overlay; partition -> half overlay. */
-export function hingeMountFor(sectionIndex: number, side: HingeSide, count: number): HingeMount {
+export function hingeMountFor(
+  sectionIndex: number,
+  side: HingeSide,
+  count: number,
+  splitAfter: number | null = null,
+): HingeMount {
   const outer =
-    (side === 'left' && sectionIndex === 0) || (side === 'right' && sectionIndex === count - 1);
+    (side === 'left' && sectionIndex === 0) ||
+    (side === 'right' && sectionIndex === count - 1) ||
+    // D-15: a carcass side at the split
+    (splitAfter !== null && side === 'right' && sectionIndex === splitAfter) ||
+    (splitAfter !== null && side === 'left' && sectionIndex === splitAfter + 1);
   return outer ? 'full_overlay' : 'half_overlay';
 }
 
@@ -97,15 +111,18 @@ export function roundLeaves(nominal: number[], total: number, step: number): num
 export function planDoors(input: DoorPlanInput): DoorPlan {
   const { widthMm: W, t, innerWidths, gapEdge, gapBetween } = input;
   const n = innerWidths.length;
+  const splitAfter = input.splitAfter ?? null;
+  // boundary after section i: one partition (t) or, at a D-15 split, two carcass sides (2t)
+  const bt = (i: number) => (i === splitAfter ? 2 * t : t);
 
-  // coverage of each section (partition centre lines / outer edges)
+  // coverage of each section (boundary centre lines / outer edges)
   const left: number[] = [];
   const right: number[] = [];
   let xStart = t;
   innerWidths.forEach((inner, i) => {
-    left.push(i === 0 ? 0 : xStart - t / 2);
-    right.push(i === n - 1 ? W : xStart + inner + t / 2);
-    xStart += inner + t;
+    left.push(i === 0 ? 0 : xStart - bt(i - 1) / 2);
+    right.push(i === n - 1 ? W : xStart + inner + bt(i) / 2);
+    xStart += inner + bt(i);
   });
 
   // which sections have a door at all
@@ -181,7 +198,7 @@ export function planDoors(input: DoorPlanInput): DoorPlan {
         id: m.id,
         sectionIndex: m.sectionIndex,
         hingeSide: m.hingeSide,
-        hingeMount: hingeMountFor(m.sectionIndex, m.hingeSide, n),
+        hingeMount: hingeMountFor(m.sectionIndex, m.hingeSide, n, splitAfter),
         xStartMm: x,
         widthMm: w,
       });

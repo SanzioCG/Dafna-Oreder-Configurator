@@ -5,7 +5,7 @@ import {
   generate,
   getMaterial,
   hardwareV1,
-  hingeCount,
+  hingesForDoor,
   resolveParams,
   type GenerateResult,
   type Params,
@@ -438,7 +438,7 @@ function drawViews(
     w.line(hingeX, y0, handleX, (y0 + y1) / 2, MUTED, 0.5, [2, 2]);
     w.line(hingeX, y1, handleX, (y0 + y1) / 2, MUTED, 0.5, [2, 2]);
     // hinges on the hinge side: as many as the BOM counts, 100 mm from each end
-    const n = hingeCount(p.widthMm);
+    const n = hingesForDoor(p);
     const span = y1 - y0 - 200 * k;
     for (let i = 0; i < n; i++) {
       const yy = y0 + 100 * k + (n > 1 ? (span * i) / (n - 1) : span / 2);

@@ -95,6 +95,8 @@ export {
   computePrice,
   hardwareV1,
   hingeCount,
+  hingesForDoor,
+  doorWeightKg,
   priceListDemo,
   type BomLine,
   type HardwareCatalog,

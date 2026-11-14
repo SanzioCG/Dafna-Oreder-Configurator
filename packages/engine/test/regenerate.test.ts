@@ -31,6 +31,10 @@ import app8Hettich from './fixtures/applications/0.8.0.w2000-hettich.json' with 
 // D-14 (template 0.9.0): + books_lower (door over the lower part, book / A4 shelves above)
 import app9Default from './fixtures/applications/0.9.0.default.json' with { type: 'json' };
 import app9Books from './fixtures/applications/0.9.0.w1600-books-lower-1000.json' with { type: 'json' };
+// D-15 (template 0.10.0): wide wardrobes = two carcasses; hinges by door weight (BOM only)
+import app10Default from './fixtures/applications/0.10.0.default.json' with { type: 'json' };
+import app10Split from './fixtures/applications/0.10.0.w2400-two-carcasses.json' with { type: 'json' };
+import app10Split3 from './fixtures/applications/0.10.0.w1800-3sections-split.json' with { type: 'json' };
 
 interface ApplicationFixture {
   templateVersion: string;
@@ -51,6 +55,9 @@ const FIXTURES: Record<string, ApplicationFixture> = {
   '0.8.0 w2000 Hettich': app8Hettich as unknown as ApplicationFixture,
   '0.9.0 default': app9Default as unknown as ApplicationFixture,
   '0.9.0 w1600 books_lower 1000': app9Books as unknown as ApplicationFixture,
+  '0.10.0 default': app10Default as unknown as ApplicationFixture,
+  '0.10.0 w2400 two carcasses': app10Split as unknown as ApplicationFixture,
+  '0.10.0 w1800 3 sections split 2+1': app10Split3 as unknown as ApplicationFixture,
 };
 
 describe('reproducibility: stored applications regenerate exactly (ADR-011)', () => {
@@ -105,6 +112,7 @@ describe('template archive', () => {
       '0.7.0',
       '0.8.0',
       '0.9.0',
+      '0.10.0',
     ]);
     // every template version is mapped to the catalog it was released with
     expect(Object.keys(TEMPLATE_CATALOG)).toEqual(Object.keys(TEMPLATE_ARCHIVE));

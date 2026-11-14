@@ -51,14 +51,15 @@ const railTop = (s: Section) =>
   s.rails[0] ? s.rails[0].axisYMm + s.rails[0].diameterMm / 2 : null;
 
 describe('template 0.7.0 (D-7): standard sizes', () => {
-  it('0.7.0, same generator; the current 0.9.0 = 0.7.0 + hardware brands + lower doors', () => {
+  it('0.7.0, same generator; current 0.10.0 = 0.7.0 + brands + lower doors + carcasses', () => {
     expect(T.templateVersion).toBe('0.7.0');
-    expect(wardrobeTemplate.templateVersion).toBe('0.9.0');
+    expect(wardrobeTemplate.templateVersion).toBe('0.10.0');
     expect(wardrobeTemplate.parameters.map((p) => p.key)).toEqual([
       ...T.parameters.map((p) => p.key),
       'hingeBrand',
       'slideBrand',
       'lowerDoorHeight',
+      'carcasses',
     ]);
     expect(T.generator).toBe(TEMPLATE_ARCHIVE['0.6.0']!.generator);
   });
@@ -207,7 +208,7 @@ describe('older drafts -> template 0.7.0', () => {
     if (!r.ok) throw new Error(r.code);
     const { draft, issues } = migrateOrderDraft(r.draft);
     if (!draft) throw new Error('no draft');
-    expect(draft.templateVersion).toBe('0.9.0');
+    expect(draft.templateVersion).toBe('0.10.0');
     expect(draft.params.interior1).toBe('short_hang'); // was rail_shelf
     expect(draft.params.interior4).toBe('short_hang_drawers'); // was rail_drawers
     expect(

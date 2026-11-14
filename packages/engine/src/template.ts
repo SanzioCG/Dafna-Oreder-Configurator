@@ -1,4 +1,4 @@
-import wardrobeV8Json from '../templates/wardrobe.v8.json' with { type: 'json' };
+import wardrobeV9Json from '../templates/wardrobe.v9.json' with { type: 'json' };
 import pedestalV1Json from '../templates/pedestal.v1.json' with { type: 'json' };
 import deskV1Json from '../templates/desk.v1.json' with { type: 'json' };
 import type {
@@ -16,7 +16,7 @@ import type {
  * GOST 13025.1-85 storage presets, catalog 1.0.0, same generator). Older templates are archived
  * (regenerate.ts); older order drafts are migrated with migrateOrderDraft().
  */
-export const wardrobeTemplate: Template = wardrobeV8Json as Template;
+export const wardrobeTemplate: Template = wardrobeV9Json as Template;
 
 /** D-8: office pedestal (ofis tumbasi), template 0.1.0 (pedestal.ts, ADR-014). */
 export const pedestalTemplate: Template = pedestalV1Json as Template;

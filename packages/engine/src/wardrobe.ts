@@ -66,6 +66,11 @@ export interface WardrobeLayout {
   carcassFrontZMm: number;
   sectionCount: number;
   sectionInnerWidthsMm: number[];
+  /**
+   * D-15: two carcasses side by side, split after this section (0-based; the boundary is two
+   * side panels instead of a partition). null = one carcass.
+   */
+  splitAfter: number | null;
   doorTypes: DoorType[];
   /** which doorSectionN override produced each section's door type (null = preset) */
   doorTypeSource: (string | null)[];
@@ -88,6 +93,18 @@ export function distributeEvenly(total: number, n: number): number[] {
   const base = Math.floor(total / n);
   const remainder = total - base * n;
   return Array.from({ length: n }, (_, i) => (i < remainder ? base + 1 : base));
+}
+
+/**
+ * D-15: one or two carcasses. Template 0.10.0+ splits a wardrobe from splitCarcassFromWidthMm
+ * on (founder's decision: 1600 mm); staff may force it with `carcasses` ('1' / '2').
+ */
+function carcassSplit(template: Template, params: Params, widthMm: number): boolean {
+  if (template.constants.splitCarcassFromWidthMm === undefined) return false;
+  const choice = String(params.carcasses ?? 'auto');
+  if (choice === '1') return false;
+  if (choice === '2') return true;
+  return widthMm >= getNumberConstant(template, 'splitCarcassFromWidthMm');
 }
 
 function innerTotal(widthMm: number, t: number, n: number): number {
@@ -126,11 +143,13 @@ function doorPlanFor(
   widthMm: number,
   t: number,
   innerWidths: number[],
+  splitAfter: number | null = null,
 ): DoorPlan {
   return planDoors({
     widthMm,
     t,
     innerWidths,
+    splitAfter,
     preset: String(params.doors),
     overrides: innerWidths.map((_, i) => {
       const o = params[`doorSection${i + 1}`];
@@ -230,7 +249,11 @@ export function computeLayout(
   const hasBack = params.backPanel === 'hdf_overlay';
   const backThicknessMm = hasBack ? backMaterial.thicknessMm : 0;
   const maxSingleLeafWidthMm = getNumberConstant(template, 'maxSingleLeafWidthMm');
-  const innerFor = (n: number) => distributeEvenly(innerTotal(widthMm, t, n), n);
+  // D-15 (template 0.10.0+): wide wardrobes are two carcasses, split at the middle boundary
+  const splitWanted = carcassSplit(template, params, widthMm);
+  const splitFor = (n: number) => (splitWanted && n >= 2 ? Math.ceil(n / 2) - 1 : null);
+  const innerFor = (n: number) =>
+    distributeEvenly(innerTotal(widthMm, t, n) - (splitFor(n) !== null ? t : 0), n);
   const sectionCount =
     params.sections === 'auto'
       ? autoSectionCount(
@@ -240,14 +263,15 @@ export function computeLayout(
           (n) =>
             params.doors === 'none' ||
             doorPlanValid(
-              doorPlanFor(template, params, widthMm, t, innerFor(n)),
+              doorPlanFor(template, params, widthMm, t, innerFor(n), splitFor(n)),
               maxSingleLeafWidthMm,
             ),
         )
       : Number(params.sections);
   const sectionInnerWidthsMm = innerFor(sectionCount);
 
-  const doors = doorPlanFor(template, params, widthMm, t, sectionInnerWidthsMm);
+  const splitAfter = splitFor(sectionCount);
+  const doors = doorPlanFor(template, params, widthMm, t, sectionInnerWidthsMm, splitAfter);
   const hasDoors = doors.types.some((d) => d !== 'none');
   const doorThicknessMm = hasDoors ? doorMaterial.thicknessMm : 0;
   const doorGapFrontMm = hasDoors ? getNumberConstant(template, 'doorGapFrontMm') : 0;
@@ -274,7 +298,7 @@ export function computeLayout(
       innerDepth: carcassDepthMm,
       t,
     };
-    xs += innerW + t;
+    xs += innerW + (index === splitAfter ? 2 * t : t);
     const choice = params[`interior${index + 1}`];
     return resolveInterior(
       box,
@@ -308,6 +332,7 @@ export function computeLayout(
     carcassFrontZMm: backThicknessMm + carcassDepthMm,
     sectionCount,
     sectionInnerWidthsMm,
+    splitAfter,
     doorTypes: doors.types,
     doorTypeSource: doors.source,
     doorLeaves: doors.leaves,
@@ -480,7 +505,7 @@ function buildSections(layout: WardrobeLayout): Section[] {
       drawers: layout.interior[index]?.drawers ?? [],
       clearHangingHeightMm: layout.interior[index]?.clearHangingHeightMm ?? null,
     });
-    x += w + t;
+    x += w + (index === layout.splitAfter ? 2 * t : t);
   });
   return sections;
 }
@@ -507,51 +532,62 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
 
   // ADR-009: side panels run the full height to the floor (with or without plinth); the
   // carcass bottom rests on the plinth strips, which sit between the sides.
-  const panels: BasePanel[] = [
-    {
-      id: 'side-left',
-      role: 'side',
-      lengthMm: H,
-      widthMm: Dc,
-      thicknessMm: t,
-      material: corpus,
-      position: [t / 2, H / 2, zMid],
-      rotation: ROT_VERTICAL_YZ,
-    },
-    {
-      id: 'side-right',
-      role: 'side',
-      lengthMm: H,
-      widthMm: Dc,
-      thicknessMm: t,
-      material: corpus,
-      position: [W - t / 2, H / 2, zMid],
-      rotation: ROT_VERTICAL_YZ,
-    },
-    {
-      id: 'bottom',
-      role: 'bottom',
-      lengthMm: W - 2 * t,
-      widthMm: Dc,
-      thicknessMm: t,
-      material: corpus,
-      position: [W / 2, ph + t / 2, zMid],
-      rotation: ROT_HORIZONTAL,
-    },
-    {
-      id: 'top',
-      role: 'top',
-      lengthMm: W - 2 * t,
-      widthMm: Dc,
-      thicknessMm: t,
-      material: corpus,
-      position: [W / 2, H - t / 2, zMid],
-      rotation: ROT_HORIZONTAL,
-    },
-  ];
+  // D-15: two carcasses -> each has its own sides, top, bottom, back and plinth strips.
+  const split = layout.splitAfter;
+  const splitSection = split === null ? null : sections[split];
+  // outer face of the left carcass's right side
+  const xSplit = splitSection ? splitSection.xStartMm + splitSection.innerWidthMm + t : null;
+  const carcasses: [number, number][] =
+    xSplit === null
+      ? [[0, W]]
+      : [
+          [0, xSplit],
+          [xSplit, W],
+        ];
+  const suffix = (i: number) => (carcasses.length > 1 ? `-${i + 1}` : '');
+  const side = (id: string, x: number): BasePanel => ({
+    id,
+    role: 'side',
+    lengthMm: H,
+    widthMm: Dc,
+    thicknessMm: t,
+    material: corpus,
+    position: [x, H / 2, zMid],
+    rotation: ROT_VERTICAL_YZ,
+  });
 
-  // A partition stands right of every section except the last.
+  const panels: BasePanel[] = [side('side-left', t / 2), side('side-right', W - t / 2)];
+  if (xSplit !== null) {
+    panels.push(side('side-split-left', xSplit - t / 2), side('side-split-right', xSplit + t / 2));
+  }
+  carcasses.forEach(([x0, x1], i) => {
+    panels.push(
+      {
+        id: `bottom${suffix(i)}`,
+        role: 'bottom',
+        lengthMm: x1 - x0 - 2 * t,
+        widthMm: Dc,
+        thicknessMm: t,
+        material: corpus,
+        position: [(x0 + x1) / 2, ph + t / 2, zMid],
+        rotation: ROT_HORIZONTAL,
+      },
+      {
+        id: `top${suffix(i)}`,
+        role: 'top',
+        lengthMm: x1 - x0 - 2 * t,
+        widthMm: Dc,
+        thicknessMm: t,
+        material: corpus,
+        position: [(x0 + x1) / 2, H - t / 2, zMid],
+        rotation: ROT_HORIZONTAL,
+      },
+    );
+  });
+
+  // A partition stands right of every section except the last (and the D-15 split).
   for (const s of sections.slice(0, -1)) {
+    if (s.index === split) continue;
     panels.push({
       id: `partition-${s.index + 1}`,
       role: 'partition',
@@ -566,41 +602,45 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
 
   if (layout.hasBack) {
     const tb = layout.backThicknessMm;
-    panels.push({
-      id: 'back',
-      role: 'back',
-      lengthMm: W,
-      widthMm: Hc,
-      thicknessMm: tb,
-      material: layout.backMaterial.id,
-      position: [W / 2, ph + Hc / 2, tb / 2],
-      rotation: ROT_VERTICAL_XY,
+    carcasses.forEach(([x0, x1], i) => {
+      panels.push({
+        id: `back${suffix(i)}`,
+        role: 'back',
+        lengthMm: x1 - x0,
+        widthMm: Hc,
+        thicknessMm: tb,
+        material: layout.backMaterial.id,
+        position: [(x0 + x1) / 2, ph + Hc / 2, tb / 2],
+        rotation: ROT_VERTICAL_XY,
+      });
     });
   }
 
   if (layout.hasPlinth) {
-    panels.push(
-      {
-        id: 'plinth-front',
-        role: 'plinth',
-        lengthMm: W - 2 * t,
-        widthMm: ph,
-        thicknessMm: t,
-        material: corpus,
-        position: [W / 2, ph / 2, layout.carcassFrontZMm - layout.plinthRecessMm - t / 2],
-        rotation: ROT_VERTICAL_XY,
-      },
-      {
-        id: 'plinth-back',
-        role: 'plinth',
-        lengthMm: W - 2 * t,
-        widthMm: ph,
-        thicknessMm: t,
-        material: corpus,
-        position: [W / 2, ph / 2, zC + t / 2],
-        rotation: ROT_VERTICAL_XY,
-      },
-    );
+    carcasses.forEach(([x0, x1], i) => {
+      panels.push(
+        {
+          id: `plinth-front${suffix(i)}`,
+          role: 'plinth',
+          lengthMm: x1 - x0 - 2 * t,
+          widthMm: ph,
+          thicknessMm: t,
+          material: corpus,
+          position: [(x0 + x1) / 2, ph / 2, layout.carcassFrontZMm - layout.plinthRecessMm - t / 2],
+          rotation: ROT_VERTICAL_XY,
+        },
+        {
+          id: `plinth-back${suffix(i)}`,
+          role: 'plinth',
+          lengthMm: x1 - x0 - 2 * t,
+          widthMm: ph,
+          thicknessMm: t,
+          material: corpus,
+          position: [(x0 + x1) / 2, ph / 2, zC + t / 2],
+          rotation: ROT_VERTICAL_XY,
+        },
+      );
+    });
   }
 
   const td = layout.doorThicknessMm;

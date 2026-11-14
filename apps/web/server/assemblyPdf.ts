@@ -3,7 +3,7 @@ import {
   computeBom,
   getMaterial,
   hardwareV1,
-  hingeCount,
+  hingesForDoor,
   type GenerateResult,
   type Panel,
   type Params,
@@ -628,7 +628,7 @@ export async function buildAssemblyPdf(input: AssemblyPdfInput): Promise<Uint8Ar
     for (const [l, n] of [...counts].sort()) chip(`${l} × ${n}`);
     for (const ref of st.hardware) {
       const q = ref.startsWith('hinge_')
-        ? `${st.panels.filter((p) => p.role === 'door').reduce((n, d) => n + hingeCount(d.widthMm), 0)} ${T('pcs')}`
+        ? `${st.panels.filter((p) => p.role === 'door').reduce((n, d) => n + hingesForDoor(d), 0)} ${T('pcs')}`
         : hwQty(ref);
       if (q) chip(`${HW[lang][ref] ?? ref} · ${q}`, true);
     }

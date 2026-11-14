@@ -1,7 +1,7 @@
 import hardwareV1Json from '../catalog/hardware.v1.json' with { type: 'json' };
 import priceListDemoJson from '../catalog/pricelist.demo.json' with { type: 'json' };
-import { getMaterial } from './catalog.js';
-import type { GenerateResult, MaterialCatalog, Params, Template } from './types.js';
+import { allMaterials, getMaterial } from './catalog.js';
+import type { GenerateResult, MaterialCatalog, Panel, Params, Template } from './types.js';
 
 /**
  * D-9: bill of materials (BOM) and price. Pure functions on engine output:
@@ -29,6 +29,12 @@ export interface HardwareCatalog {
   items: HardwareItem[];
   brands: Record<string, Record<string, string>>;
   hingeRule: { maxDoorHeightMm: number; count: number }[];
+  /** D-15: hinges by door weight (kg); the larger of both rules wins */
+  hingeWeightRule?: { maxDoorWeightKg: number; count: number }[];
+  /** D-15: leaves wider than this get one more hinge */
+  hingeExtraAboveWidthMm?: number;
+  /** D-15: board density by material kind, kg/m3 (door weight) */
+  boardDensityKgM3?: Record<string, number>;
 }
 
 export interface PriceList {
@@ -65,6 +71,29 @@ export function hingeCount(heightMm: number, hw: HardwareCatalog = hardwareV1): 
   return rule ? rule.count : (hw.hingeRule.at(-1)?.count ?? 2) + 1;
 }
 
+/** D-15: weight of a door leaf from its size and board (kg). */
+export function doorWeightKg(p: Panel, hw: HardwareCatalog = hardwareV1): number {
+  const kind = getMaterial(allMaterials, p.material)?.kind ?? 'ldsp';
+  const density = hw.boardDensityKgM3?.[kind] ?? 700;
+  return (p.lengthMm * p.widthMm * p.thicknessMm * density) / 1e9;
+}
+
+/**
+ * D-15: hinges for one door leaf: the larger of the height rule and the weight rule, one more
+ * if the leaf is wider than hingeExtraAboveWidthMm. A front board's height is its panel width.
+ */
+export function hingesForDoor(p: Panel, hw: HardwareCatalog = hardwareV1): number {
+  const byHeight = hingeCount(p.widthMm, hw);
+  const rule = hw.hingeWeightRule;
+  if (!rule || rule.length === 0) return byHeight;
+  const kg = doorWeightKg(p, hw);
+  const byWeight =
+    rule.find((r) => kg <= r.maxDoorWeightKg)?.count ?? (rule.at(-1)?.count ?? 2) + 1;
+  const extra =
+    hw.hingeExtraAboveWidthMm !== undefined && p.lengthMm > hw.hingeExtraAboveWidthMm ? 1 : 0;
+  return Math.max(byHeight, byWeight) + extra;
+}
+
 export function computeBom(
   template: Template,
   params: Params,
@@ -93,7 +122,7 @@ export function computeBom(
   // doors: hinges per leaf (a leaf's height is its panel width: front-plane boards)
   const hinges = result.panels
     .filter((p) => p.role === 'door')
-    .reduce((n, d) => n + hingeCount(d.widthMm, hw), 0);
+    .reduce((n, d) => n + hingesForDoor(d, hw), 0);
   addHw(brand('hinge', 'hingeBrand'), hinges);
   addHw(
     brand('slide', 'slideBrand'),

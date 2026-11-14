@@ -30,7 +30,7 @@ import {
 } from './dimensions';
 import type { CameraCommand, CameraRequest } from './cameraCommands';
 import type { CaptureFn } from './renderCapture';
-import { hingeCount } from '@dafna/engine';
+import { hingesForDoor } from '@dafna/engine';
 import { DRAWER_SHOW_PULL, MECH_COLOR, type MechanismDemo, type MechanismView } from './mechanisms';
 import { MM, Scene } from './Scene';
 import type { SectionBox } from './SectionPicker';
@@ -178,7 +178,7 @@ export function Viewer({
   );
   const hingeTotal = view.result.panels
     .filter((p) => p.role === 'door')
-    .reduce((n, d) => n + hingeCount(d.widthMm), 0);
+    .reduce((n, d) => n + hingesForDoor(d), 0);
   const slidePairs = view.result.panels.filter((p) => p.role === 'drawer_front').length;
 
   // World space is metres with the product centred on the origin, standing on the floor (y=0).
