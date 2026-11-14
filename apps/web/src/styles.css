@@ -1940,3 +1940,76 @@ p {
 .qr-code {
   flex: none;
 }
+
+/* D-13: consultant PIN pad + idle warning */
+.pin-card {
+  max-width: 22rem;
+}
+
+.pin-dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.pin-dot {
+  width: 0.9rem;
+  height: 0.9rem;
+  border: var(--line-in-card);
+  border-radius: 50%;
+}
+
+.pin-dot.on {
+  background: var(--ink);
+}
+
+.pin-error {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--step-review);
+  font-size: var(--fs-sm);
+  text-align: center;
+}
+
+.pin-keys {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+
+.pin-key {
+  min-height: var(--tap-xl);
+  border: var(--line-in-card);
+  border-radius: var(--radius-lg, 16px);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: var(--fs-lg, 1.4rem);
+  font-weight: var(--fw-bold);
+}
+
+.pin-key:disabled {
+  opacity: var(--disabled-opacity);
+}
+
+.pin-key-muted {
+  font-size: var(--fs-md);
+}
+
+.pin-key-ok {
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: var(--fs-md);
+}
+
+.mode-exit {
+  border: 0;
+  cursor: pointer;
+}
+
+.idle-count {
+  margin: 0;
+  font-size: 3.5rem;
+  font-weight: var(--fw-bold);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}

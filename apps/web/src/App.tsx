@@ -19,6 +19,10 @@ import { StepPanel } from './ui/StepPanel';
 import type { CaptureFn } from './viewer/renderCapture';
 import type { MechanismDemo, MechanismKind } from './viewer/mechanisms';
 import { Viewer } from './viewer/Viewer';
+import { STAFF_EXIT_EVENT, STAFF_REQUEST_EVENT, exitStaff } from './state/staffAccess';
+import { CUSTOMER_IDLE_S, STAFF_IDLE_S, useIdle } from './state/useIdle';
+import { IdleWarning } from './ui/IdleWarning';
+import { PinPad } from './ui/PinPad';
 
 /** prefers-reduced-motion: the reveal shows its final state directly. */
 export function prefersReducedMotion(): boolean {
@@ -109,6 +113,13 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
   };
 
   const inPresentation = flow !== 'configurator';
+  // D-13: idle reset. Customers: 2 min (20 s warning), never on the untouched start screen and
+  // not on the submitted screen (it has its own countdown). Staff: 5 min, then back to customer.
+  const idle = useIdle({
+    enabled: flow !== 'submitted' && !(mode === 'customer' && step === 'start'),
+    timeoutS: mode === 'staff' ? STAFF_IDLE_S : CUSTOMER_IDLE_S,
+    onIdle: mode === 'staff' ? exitStaff : onFinish,
+  });
   // Until D-2a: an honest modal (ask a nearby employee or call 1408) + the internal event that
   // D-2a will deliver to staff. Never touches the configuration, never fakes a confirmation.
   const [consultantOpen, setConsultantOpen] = useState(false);
@@ -194,6 +205,9 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
           <ConsultantButton className="present-consultant" onCall={callConsultant} />
         )}
         {consultantOpen && <ConsultantModal onClose={() => setConsultantOpen(false)} />}
+        {idle.secondsLeft !== null && (
+          <IdleWarning secondsLeft={idle.secondsLeft} onStay={idle.stay} />
+        )}
       </div>
     </TemplateContext.Provider>
   );
@@ -204,7 +218,16 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
  * reset: configuration, flow, contact data and language (remount via `key`), theme back to
  * the kiosk default (device choice forgotten).
  */
-function Session({ mode, onEnd }: { mode: Mode; onEnd: () => void }) {
+function Session({
+  mode,
+  onEnd,
+  pin,
+}: {
+  mode: Mode;
+  onEnd: () => void;
+  /** D-13: the PIN pad is open */
+  pin: { onSuccess: () => void; onCancel: () => void } | null;
+}) {
   const { resetTheme } = useTheme();
   return (
     <I18nProvider initial="uz">
@@ -215,17 +238,52 @@ function Session({ mode, onEnd }: { mode: Mode; onEnd: () => void }) {
           onEnd();
         }}
       />
+      {pin && <PinPad onSuccess={pin.onSuccess} onCancel={pin.onCancel} />}
     </I18nProvider>
   );
 }
 
 export function App() {
-  const mode = parseMode(window.location.search);
+  // D-13: staff mode needs the PIN (server-checked); `?mode=staff` asks for it, a dev build
+  // opens staff mode straight away. Entering or leaving staff mode starts a fresh session.
+  const wantsStaff = parseMode(window.location.search) === 'staff';
+  const [mode, setMode] = useState<Mode>(wantsStaff && import.meta.env.DEV ? 'staff' : 'customer');
+  const [pinOpen, setPinOpen] = useState(wantsStaff && !import.meta.env.DEV);
   const [session, setSession] = useState(0);
   useEffect(() => installKioskGuards(), []);
+  useEffect(() => {
+    const ask = () => setPinOpen(true);
+    const leave = () => {
+      setPinOpen(false);
+      setMode('customer');
+      setSession((n) => n + 1);
+    };
+    window.addEventListener(STAFF_REQUEST_EVENT, ask);
+    window.addEventListener(STAFF_EXIT_EVENT, leave);
+    return () => {
+      window.removeEventListener(STAFF_REQUEST_EVENT, ask);
+      window.removeEventListener(STAFF_EXIT_EVENT, leave);
+    };
+  }, []);
   return (
     <ThemeProvider>
-      <Session key={session} mode={mode} onEnd={() => setSession((n) => n + 1)} />
+      <Session
+        key={session}
+        mode={mode}
+        onEnd={() => setSession((n) => n + 1)}
+        pin={
+          pinOpen && mode === 'customer'
+            ? {
+                onSuccess: () => {
+                  setPinOpen(false);
+                  setMode('staff');
+                  setSession((n) => n + 1);
+                },
+                onCancel: () => setPinOpen(false),
+              }
+            : null
+        }
+      />
     </ThemeProvider>
   );
 }

@@ -1,4 +1,5 @@
 import type { ParamDef } from '@dafna/engine';
+import { exitStaff, requestStaff, useLongPress } from '../state/staffAccess';
 import { useEffect, useRef, useState } from 'react';
 import { LANGS, useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
@@ -89,6 +90,7 @@ export function StepPanel({
 }: StepPanelProps) {
   const { t, lang, setLang } = useI18n();
   const { theme, toggleTheme, logoUrl } = useTheme();
+  const logoHold = useLongPress(requestStaff);
   const staff = mode === 'staff';
   // D-9: "Mexanizmlar" is its own step when the configuration has hinges or slides
   const steps = stepsFor(config.template, config.view.result);
@@ -141,10 +143,28 @@ export function StepPanel({
     <aside className="panel" hidden={hidden}>
       <header className="panel-header">
         <div className="brand">
-          <img className="brand-logo" src={logoUrl} alt={t('app.brand')} draggable={false} />
+          {/* D-13: holding the logo for 3 s asks for the consultant PIN */}
+          <img
+            className="brand-logo"
+            src={logoUrl}
+            alt={t('app.brand')}
+            draggable={false}
+            data-testid="brand-logo"
+            {...(staff ? {} : logoHold)}
+          />
           <span className="brand-title">{t('app.title')}</span>
         </div>
-        {staff && <span className="mode-badge">{t('mode.staff')}</span>}
+        {staff && (
+          <button
+            type="button"
+            className="mode-badge mode-exit"
+            onClick={exitStaff}
+            data-testid="staff-exit"
+            aria-label={t('staff.exit')}
+          >
+            {t('mode.staff')} · {t('staff.exitShort')}
+          </button>
+        )}
         {/* theme: kiosk default (Dark); everyone can switch Light / Dark (D-4.1) */}
         <IconButton
           label={t('theme.dark')}

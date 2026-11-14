@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ru } from './i18n/ru';
 import { uz } from './i18n/uz';
@@ -699,5 +699,113 @@ describe('D-4.1 navigation', () => {
     renderApp();
     fireEvent.click(screen.getByRole('button', { name: uz['nav.back'] }));
     expect(screen.getByTestId('start-screen')).toBeTruthy();
+  });
+});
+
+describe('D-13 kiosk safety: idle reset and the consultant PIN', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  const fake = () =>
+    vi.useFakeTimers({
+      toFake: ['setInterval', 'clearInterval', 'setTimeout', 'clearTimeout', 'Date'],
+    });
+  const wait = (s: number) =>
+    act(() => {
+      vi.advanceTimersByTime(s * 1000);
+    });
+
+  it('a customer who walks away: warning, a touch keeps the session, then a full reset', () => {
+    fake();
+    renderApp();
+    wait(99);
+    expect(screen.queryByTestId('idle-warning')).toBeNull();
+    wait(2);
+    expect(screen.getByTestId('idle-warning').textContent).toContain(uz['idle.title']);
+    fireEvent.pointerDown(document.body);
+    wait(1);
+    expect(screen.queryByTestId('idle-warning')).toBeNull();
+    wait(121);
+    // back on the start screen of a fresh session
+    expect(screen.getByRole('button', { name: uz['start.scratch'] })).toBeTruthy();
+    expect(screen.queryByTestId('idle-warning')).toBeNull();
+  });
+
+  it('the untouched start screen never shows the idle warning', () => {
+    fake();
+    render(<App />);
+    wait(300);
+    expect(screen.queryByTestId('idle-warning')).toBeNull();
+  });
+
+  it('holding the logo asks for the PIN; the server decides; staff can leave again', async () => {
+    let good = false;
+    const calls: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: string, init: RequestInit) => {
+        calls.push(String(init.body));
+        return new Response(
+          JSON.stringify(good ? { ok: true } : { error: { code: 'wrong_pin' } }),
+          {
+            status: good ? 200 : 401,
+          },
+        );
+      }),
+    );
+    fake();
+    renderApp();
+    const logo = screen.getByTestId('brand-logo');
+    fireEvent.pointerDown(logo);
+    wait(1);
+    fireEvent.pointerUp(logo); // released early: nothing
+    expect(screen.queryByTestId('pin-pad')).toBeNull();
+    fireEvent.pointerDown(logo);
+    wait(3);
+    const pad = screen.getByTestId('pin-pad');
+    vi.useRealTimers();
+    const enter = (pin: string) => {
+      for (const d of pin) fireEvent.click(within(pad).getByRole('button', { name: d }));
+      fireEvent.click(screen.getByTestId('pin-ok'));
+    };
+    enter('1234');
+    expect(await screen.findByText(uz['pin.error.wrong_pin'])).toBeTruthy();
+    expect(screen.queryByTestId('staff-exit')).toBeNull();
+    good = true;
+    enter('4321');
+    expect(await screen.findByTestId('staff-exit')).toBeTruthy();
+    expect(calls.map((b) => JSON.parse(b).pin)).toEqual(['1234', '4321']);
+    // the PIN is never part of the page
+    expect(document.body.innerHTML).not.toContain('4321');
+    fireEvent.click(screen.getByTestId('staff-exit'));
+    expect(screen.queryByTestId('staff-exit')).toBeNull();
+    expect(screen.getByRole('button', { name: uz['start.scratch'] })).toBeTruthy();
+  });
+
+  it('five wrong PINs lock the pad for a minute', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () => new Response(JSON.stringify({ error: { code: 'wrong_pin' } }), { status: 401 }),
+      ),
+    );
+    const { PinPad } = await import('./ui/PinPad');
+    const { I18nProvider } = await import('./i18n/I18n');
+    render(
+      <I18nProvider initial="uz">
+        <PinPad onSuccess={() => {}} onCancel={() => {}} />
+      </I18nProvider>,
+    );
+    for (let i = 0; i < 5; i++) {
+      for (const d of '1111') fireEvent.click(screen.getByRole('button', { name: d }));
+      fireEvent.click(screen.getByTestId('pin-ok'));
+      await waitFor(() =>
+        expect(screen.getByTestId('pin-error').textContent).toMatch(i < 4 ? /noto'g'ri/ : /60|59/),
+      );
+    }
+    expect(screen.getByTestId('pin-error').textContent).toMatch(/60|59/);
+    expect((screen.getByRole('button', { name: '1' }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

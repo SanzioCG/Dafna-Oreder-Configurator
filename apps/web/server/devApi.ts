@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { handleAssembly } from './assemblyLink';
 import { FakeNotifier, MemoryLeadStore } from './memory';
 import { RateLimiter } from './rateLimit';
+import { handleStaffPin } from './staffPin';
 import { handleSubmit, type SubmitDeps } from './submit';
 
 /**
@@ -26,6 +27,31 @@ export function createDevAssemblyHandler() {
       res.statusCode = response.status;
       response.headers.forEach((v, k) => res.setHeader(k, v));
       res.end(Buffer.from(await response.arrayBuffer()));
+    });
+  };
+}
+
+/**
+ * `vite dev`: POST /api/staff-pin against DEV_STAFF_PIN (default 0000; dev only — production
+ * reads the Vercel env var STAFF_PIN).
+ */
+export function createDevStaffPinHandler() {
+  const limiter = new RateLimiter(100, 60_000);
+  const pin = process.env.DEV_STAFF_PIN ?? '0000';
+  return (req: IncomingMessage, res: ServerResponse) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (c: Buffer) => chunks.push(c));
+    req.on('end', () => {
+      const request = new Request('http://localhost/api/staff-pin', {
+        method: req.method,
+        headers: req.headers as Record<string, string>,
+        body: req.method === 'POST' ? Buffer.concat(chunks) : undefined,
+      });
+      void handleStaffPin(request, { pin, limiter }).then(async (response) => {
+        res.statusCode = response.status;
+        response.headers.forEach((v, k) => res.setHeader(k, v));
+        res.end(await response.text());
+      });
     });
   };
 }

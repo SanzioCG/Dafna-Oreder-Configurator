@@ -3,7 +3,8 @@
   "functions": {
     "api/submit.js": { "maxDuration": 20 },
     "api/retry-telegram.js": { "maxDuration": 60 },
-    "api/assembly.js": { "maxDuration": 20 }
+    "api/assembly.js": { "maxDuration": 20 },
+    "api/staff-pin.js": { "maxDuration": 10 }
   },
   "crons": [{ "path": "/api/retry-telegram", "schedule": "0 4 * * *" }]
 }

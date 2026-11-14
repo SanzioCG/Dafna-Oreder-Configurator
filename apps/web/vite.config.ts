@@ -24,6 +24,18 @@ function devSubmitApi(): Plugin {
         };
         run().catch(next);
       });
+      // D-13: the consultant PIN (DEV_STAFF_PIN, default 0000)
+      let staffPin: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
+      server.middlewares.use('/api/staff-pin', (req, res, next) => {
+        const run = async () => {
+          if (!staffPin) {
+            const mod = await server.ssrLoadModule('/server/devApi.ts');
+            staffPin = (mod as typeof import('./server/devApi')).createDevStaffPinHandler();
+          }
+          staffPin(req, res);
+        };
+        run().catch(next);
+      });
       // D-12: the assembly instructions PDF (same in-memory store as /api/submit)
       let assembly: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
       server.middlewares.use('/api/assembly', (req, res, next) => {
