@@ -62,6 +62,8 @@ export {
 } from './doors.js';
 export {
   INTERIOR_PRESETS,
+  BOOK_GAP_GOST_MIN_MM,
+  bookShelfBottoms,
   defaultPresetFor,
   evenShelfBottoms,
   planInterior,

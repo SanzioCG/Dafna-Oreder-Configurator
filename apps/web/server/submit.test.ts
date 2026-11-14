@@ -196,7 +196,7 @@ describe('POST /api/submit', () => {
     const lead = store.rows[0]!;
     expect(lead.corpus).toBe('Серый камень (EGGER U727 ST9)');
     expect(lead.door).toBe('Дуб Гладстоун табак (EGGER H3325 ST28)');
-    expect(lead.templateVersion).toBe('0.8.0');
+    expect(lead.templateVersion).toBe('0.9.0');
   });
 
   it('a new key -> a new application', async () => {

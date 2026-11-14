@@ -71,6 +71,8 @@ export interface WardrobeLayout {
   doorTypeSource: (string | null)[];
   doorLeaves: DoorLeaf[];
   doorHeightMm: number;
+  /** D-14: leaf height in a books_lower section */
+  lowerDoorHeightMm: number;
   maxShelfSpanMm: number;
   maxSingleLeafWidthMm: number;
   maxDoorHeightMm: number;
@@ -173,7 +175,7 @@ export function interiorConstants(template: Template): InteriorConstants {
 
 type ErgonomicPart = Pick<
   InteriorConstants,
-  'ergonomics' | 'autoPresetSingle' | 'autoPresetDouble'
+  'ergonomics' | 'autoPresetSingle' | 'autoPresetDouble' | 'books'
 >;
 
 /** D-7: GOST functional sizes and 'auto' presets, only in templates that define them (0.7.0+). */
@@ -191,6 +193,10 @@ function ergonomicConstants(template: Template): ErgonomicPart {
       drawerTopMaxMm: n('drawerTopMaxMm'),
       minShelfGapMm: n('minShelfGapMm'),
     };
+  }
+  if (has('bookGapMinMm')) {
+    const n = (name: string) => getNumberConstant(template, name);
+    out.books = { gapMinMm: n('bookGapMinMm'), gapMaxMm: n('bookGapMaxMm') };
   }
   if (has('autoPresetDouble')) {
     out.autoPresetDouble = getStringConstant(template, 'autoPresetDouble') as InteriorPreset;
@@ -250,7 +256,12 @@ export function computeLayout(
   const carcassHeightMm = heightMm - plinthHeightMm;
   const carcassDepthMm = depthMm - backThicknessMm - doorThicknessMm - doorGapFrontMm;
 
-  const ic = interiorConstants(template);
+  // D-14: a books_lower section's door height (parameter) and the door edge gap
+  const ic = {
+    ...interiorConstants(template),
+    lowerDoorHeightMm: Number(params.lowerDoorHeight ?? 800),
+    doorGapEdgeMm,
+  };
   let xs = t;
   const interior = sectionInnerWidthsMm.map((innerW, index) => {
     const box: SectionBox = {
@@ -301,6 +312,7 @@ export function computeLayout(
     doorTypeSource: doors.source,
     doorLeaves: doors.leaves,
     doorHeightMm: carcassHeightMm - 2 * doorGapEdgeMm,
+    lowerDoorHeightMm: ic.lowerDoorHeightMm,
     maxShelfSpanMm: getNumberConstant(template, 'maxShelfSpanMm'),
     maxSingleLeafWidthMm,
     maxDoorHeightMm: getNumberConstant(template, 'maxDoorHeightMm'),
@@ -593,14 +605,18 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
 
   const td = layout.doorThicknessMm;
   for (const leaf of layout.doorLeaves) {
+    // D-14: a books_lower section's leaf covers only the lower part, from the same bottom edge
+    const lower = layout.interior[leaf.sectionIndex]?.preset === 'books_lower';
+    const leafH = lower ? layout.lowerDoorHeightMm : layout.doorHeightMm;
+    const leafY = lower ? ph + layout.doorGapEdgeMm + leafH / 2 : ph + Hc / 2;
     panels.push({
       id: leaf.id,
       role: 'door',
       lengthMm: leaf.widthMm,
-      widthMm: layout.doorHeightMm,
+      widthMm: leafH,
       thicknessMm: td,
       material: layout.doorMaterial.id,
-      position: [leaf.xStartMm + leaf.widthMm / 2, ph + Hc / 2, layout.depthMm - td / 2],
+      position: [leaf.xStartMm + leaf.widthMm / 2, leafY, layout.depthMm - td / 2],
       rotation: ROT_VERTICAL_XY,
       sectionIndex: leaf.sectionIndex,
       hingeSide: leaf.hingeSide,

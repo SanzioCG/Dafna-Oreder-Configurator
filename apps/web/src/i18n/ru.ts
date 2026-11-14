@@ -134,6 +134,7 @@ export const ru: Messages = {
   'option.interior.long_hang': 'Длинная одежда',
   'option.interior.short_hang': 'Короткая одежда + полки',
   'option.interior.short_hang_drawers': 'Короткая одежда + ящики',
+  'option.interior.books_lower': 'Нижние двери + полки для книг и документов',
   'creason.DRAWER_TOO_HIGH': 'Ящик окажется слишком высоко',
   'c.depthHang': 'для одежды на вешалках',
   'c.depthShallow': 'узкое место: полки и ящики',
@@ -294,6 +295,10 @@ export const ru: Messages = {
   'c.opt.long_hang': 'Длинная одежда',
   'c.opt.short_hang': 'Короткая одежда',
   'c.opt.short_hang_drawers': 'Короткая одежда + ящики',
+  'c.opt.books_lower': 'Книги и документы',
+  'c.hint.books_lower':
+    'Внизу закрытое место с дверями, сверху открытые полки (папка А4 помещается)',
+  'param.lowerDoorHeight': 'Высота нижних дверей',
   'c.hint.long_hang': 'Пальто, плащи, платья',
   'c.hint.short_hang': 'Рубашки, пиджаки; внизу полки',
   'c.hint.short_hang_drawers': 'На вешалках, внизу ящики',

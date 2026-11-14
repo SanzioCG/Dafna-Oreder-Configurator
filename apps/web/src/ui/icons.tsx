@@ -99,6 +99,15 @@ const PRESET_PARTS: Record<InteriorPreset, ReactNode[]> = {
   long_hang: [shelf(4.5), rail(6), garment(7.5, true)],
   short_hang: [rail(5), garment(6.5, false), shelf(15), shelf(18.5)],
   short_hang_drawers: [rail(5), garment(6.5, false), drawer(14), drawer(18)],
+  // D-14: open book shelves above, a door over the lower part
+  books_lower: [
+    shelf(6.5),
+    <path key="bk1" d="M6 6.5v-3M8 6.5v-3M10.5 6.5l1.5-3" />,
+    shelf(11),
+    <path key="bk2" d="M6 11v-3M8.5 11v-3M11 11v-3" />,
+    <rect key="door" x="4.5" y="13" width="15" height="7.5" rx="0.5" />,
+    <path key="knob" d="M17 16v1.5" />,
+  ],
 };
 
 /** Interior preset icon; `auto` draws a small "A" badge over the resolved preset. */

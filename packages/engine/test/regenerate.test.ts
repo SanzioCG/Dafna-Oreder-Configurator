@@ -28,6 +28,9 @@ import app7D450 from './fixtures/applications/0.7.0.w800-d450-shelves.json' with
 // D-9 (template 0.8.0): + hardware brands
 import app8Default from './fixtures/applications/0.8.0.default.json' with { type: 'json' };
 import app8Hettich from './fixtures/applications/0.8.0.w2000-hettich.json' with { type: 'json' };
+// D-14 (template 0.9.0): + books_lower (door over the lower part, book / A4 shelves above)
+import app9Default from './fixtures/applications/0.9.0.default.json' with { type: 'json' };
+import app9Books from './fixtures/applications/0.9.0.w1600-books-lower-1000.json' with { type: 'json' };
 
 interface ApplicationFixture {
   templateVersion: string;
@@ -46,6 +49,8 @@ const FIXTURES: Record<string, ApplicationFixture> = {
   '0.7.0 w800 d450 shelves': app7D450 as unknown as ApplicationFixture,
   '0.8.0 default': app8Default as unknown as ApplicationFixture,
   '0.8.0 w2000 Hettich': app8Hettich as unknown as ApplicationFixture,
+  '0.9.0 default': app9Default as unknown as ApplicationFixture,
+  '0.9.0 w1600 books_lower 1000': app9Books as unknown as ApplicationFixture,
 };
 
 describe('reproducibility: stored applications regenerate exactly (ADR-011)', () => {
@@ -99,6 +104,7 @@ describe('template archive', () => {
       '0.6.0',
       '0.7.0',
       '0.8.0',
+      '0.9.0',
     ]);
     // every template version is mapped to the catalog it was released with
     expect(Object.keys(TEMPLATE_CATALOG)).toEqual(Object.keys(TEMPLATE_ARCHIVE));

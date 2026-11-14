@@ -58599,10 +58599,10 @@ var require_fontkit_umd = __commonJS({
 // server/assemblyLink.ts
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
-// ../../packages/engine/templates/wardrobe.v7.json
-var wardrobe_v7_default = {
+// ../../packages/engine/templates/wardrobe.v8.json
+var wardrobe_v8_default = {
   templateId: "wardrobe",
-  templateVersion: "0.8.0",
+  templateVersion: "0.9.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -58860,7 +58860,8 @@ var wardrobe_v7_default = {
         "long_hang",
         "short_hang",
         "drawers_shelves",
-        "short_hang_drawers"
+        "short_hang_drawers",
+        "books_lower"
       ],
       labelKey: "param.interior",
       uiStep: "interior",
@@ -58868,7 +58869,7 @@ var wardrobe_v7_default = {
       unconfirmed: false,
       appliesToSection: 1,
       control: "presetCards",
-      note: "Interior fill of section 1 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections."
+      note: "Interior fill of section 1 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
     },
     {
       key: "interior2",
@@ -58881,7 +58882,8 @@ var wardrobe_v7_default = {
         "long_hang",
         "short_hang",
         "drawers_shelves",
-        "short_hang_drawers"
+        "short_hang_drawers",
+        "books_lower"
       ],
       labelKey: "param.interior",
       uiStep: "interior",
@@ -58889,7 +58891,7 @@ var wardrobe_v7_default = {
       unconfirmed: false,
       appliesToSection: 2,
       control: "presetCards",
-      note: "Interior fill of section 2 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections."
+      note: "Interior fill of section 2 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
     },
     {
       key: "interior3",
@@ -58902,7 +58904,8 @@ var wardrobe_v7_default = {
         "long_hang",
         "short_hang",
         "drawers_shelves",
-        "short_hang_drawers"
+        "short_hang_drawers",
+        "books_lower"
       ],
       labelKey: "param.interior",
       uiStep: "interior",
@@ -58910,7 +58913,7 @@ var wardrobe_v7_default = {
       unconfirmed: false,
       appliesToSection: 3,
       control: "presetCards",
-      note: "Interior fill of section 3 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections."
+      note: "Interior fill of section 3 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
     },
     {
       key: "interior4",
@@ -58923,7 +58926,8 @@ var wardrobe_v7_default = {
         "long_hang",
         "short_hang",
         "drawers_shelves",
-        "short_hang_drawers"
+        "short_hang_drawers",
+        "books_lower"
       ],
       labelKey: "param.interior",
       uiStep: "interior",
@@ -58931,7 +58935,7 @@ var wardrobe_v7_default = {
       unconfirmed: false,
       appliesToSection: 4,
       control: "presetCards",
-      note: "Interior fill of section 4 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections."
+      note: "Interior fill of section 4 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
     },
     {
       key: "hingeBrand",
@@ -58954,6 +58958,21 @@ var wardrobe_v7_default = {
       customerVisible: true,
       unconfirmed: true,
       note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      key: "lowerDoorHeight",
+      type: "int",
+      default: 800,
+      min: 400,
+      max: 1200,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.lowerDoorHeight",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [600, 800, 1e3],
+      note: "D-14: door leaf height of a books_lower section (from the door bottom edge). Only used when a section has the books_lower interior. Customer sizes 60 / 80 / 100 cm, unconfirmed until Dafna confirms."
     }
   ],
   constants: {
@@ -59173,6 +59192,18 @@ var wardrobe_v7_default = {
       value: "shelves",
       unconfirmed: true,
       note: "'auto' fill behind a single door or without a door: shelves (unchanged)."
+    },
+    bookGapMinMm: {
+      value: 330,
+      unit: "mm",
+      unconfirmed: true,
+      note: "D-14: target clear gap of open book / document shelves, so an A4 folder stands upright (A4 = 297 mm, ISO 216; lever-arch files ~320 mm high). Inside the GOST 13025.1-85 table 2 range (180..390 mm)."
+    },
+    bookGapMaxMm: {
+      value: 390,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 table 2 (books): clear gap between shelves 180..390 mm; depth 140..440 mm."
     }
   },
   constructionRules: [
@@ -59860,7 +59891,7 @@ var desk_v1_default = {
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v7_default;
+var wardrobeTemplate = wardrobe_v8_default;
 var pedestalTemplate = pedestal_v1_default;
 var deskTemplate = desk_v1_default;
 var PRODUCT_TEMPLATES = {
@@ -60969,7 +61000,8 @@ var INTERIOR_PRESETS = [
   "rail_drawers",
   "long_hang",
   "short_hang",
-  "short_hang_drawers"
+  "short_hang_drawers",
+  "books_lower"
 ];
 function defaultPresetFor(doorType, c) {
   if (doorType === "double") return c?.autoPresetDouble ?? "rail_shelf";
@@ -60989,6 +61021,9 @@ function slideLength(depthAvailable, c) {
   return Math.max(c.drawerSlideMinMm, Math.min(c.drawerSlideMaxMm, fit));
 }
 function planInterior(box, preset, c) {
+  if (preset === "books_lower") {
+    return c.books ? planBooksLower(box, c, c.books) : planInterior(box, "shelves", c);
+  }
   if (preset === "long_hang" || preset === "short_hang" || preset === "short_hang_drawers") {
     return c.ergonomics ? planErgonomic(box, preset, c, c.ergonomics) : planInterior(box, "shelves", c);
   }
@@ -61133,6 +61168,48 @@ function planErgonomic(box, preset, c, e) {
   }
   return { preset, shelves, rails, drawers, clearHangingHeightMm: clear, warnings };
 }
+function bookShelfBottoms(yFrom, yTo, t2, gapMin, gapMax) {
+  const available = yTo - yFrom;
+  if (available <= 0) return [];
+  let c = Math.max(1, Math.floor((available + t2) / (gapMin + t2)));
+  const gap = (n3) => (available - (n3 - 1) * t2) / n3;
+  if (gap(c) > gapMax && gap(c + 1) >= BOOK_GAP_GOST_MIN_MM) c += 1;
+  const h = gap(c);
+  return Array.from({ length: c - 1 }, (_, i) => half(yFrom + (i + 1) * h + i * t2));
+}
+var BOOK_GAP_GOST_MIN_MM = 180;
+function planBooksLower(box, c, b) {
+  const { t: t2, yBottom, yTop } = box;
+  const n3 = box.index + 1;
+  const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
+  const shelves = [];
+  const addShelf = (yMm, kind, id) => shelves.push({ id, yMm: half(yMm), kind, lengthMm: box.innerW, depthMm: shelfDepth });
+  const gapEdge = c.doorGapEdgeMm ?? 1.5;
+  const doorBottom = yBottom - t2 + gapEdge;
+  const doorTop = doorBottom + (c.lowerDoorHeightMm ?? 800);
+  const dividerTop = doorTop + gapEdge;
+  const warnings = [];
+  if (dividerTop - t2 - yBottom < BOOK_GAP_GOST_MIN_MM || yTop - dividerTop < BOOK_GAP_GOST_MIN_MM) {
+    warnings.push("LOWER_DOOR_HEIGHT");
+  } else {
+    addShelf(dividerTop - t2, "fixed", `s${n3}-shelf-fixed`);
+    evenShelfBottoms(yBottom, dividerTop - t2, t2, c.shelfPitchTargetMm).forEach(
+      (y, i) => addShelf(y, "removable", `s${n3}-shelf-${i + 1}`)
+    );
+    bookShelfBottoms(dividerTop, yTop, t2, b.gapMinMm, b.gapMaxMm).forEach(
+      (y, i) => addShelf(y, "removable", `s${n3}-shelf-book-${i + 1}`)
+    );
+  }
+  shelves.sort((a, z) => a.yMm - z.yMm);
+  return {
+    preset: "books_lower",
+    shelves,
+    rails: [],
+    drawers: [],
+    clearHangingHeightMm: null,
+    warnings
+  };
+}
 function resolveInterior(box, choice, doorType, c) {
   if (choice !== "auto" && INTERIOR_PRESETS.includes(choice)) {
     return { ...planInterior(box, choice, c), source: "chosen" };
@@ -61225,6 +61302,10 @@ function ergonomicConstants(template) {
       minShelfGapMm: n3("minShelfGapMm")
     };
   }
+  if (has("bookGapMinMm")) {
+    const n3 = (name) => getNumberConstant(template, name);
+    out.books = { gapMinMm: n3("bookGapMinMm"), gapMaxMm: n3("bookGapMaxMm") };
+  }
   if (has("autoPresetDouble")) {
     out.autoPresetDouble = getStringConstant(template, "autoPresetDouble");
   }
@@ -61269,7 +61350,11 @@ function computeLayout(template, params, catalog = currentCatalog) {
   const doorGapBetweenMm = getNumberConstant(template, "doorGapBetweenMm");
   const carcassHeightMm = heightMm - plinthHeightMm;
   const carcassDepthMm = depthMm - backThicknessMm - doorThicknessMm - doorGapFrontMm;
-  const ic = interiorConstants(template);
+  const ic = {
+    ...interiorConstants(template),
+    lowerDoorHeightMm: Number(params.lowerDoorHeight ?? 800),
+    doorGapEdgeMm
+  };
   let xs = t2;
   const interior = sectionInnerWidthsMm.map((innerW, index) => {
     const box = {
@@ -61319,6 +61404,7 @@ function computeLayout(template, params, catalog = currentCatalog) {
     doorTypeSource: doors.source,
     doorLeaves: doors.leaves,
     doorHeightMm: carcassHeightMm - 2 * doorGapEdgeMm,
+    lowerDoorHeightMm: ic.lowerDoorHeightMm,
     maxShelfSpanMm: getNumberConstant(template, "maxShelfSpanMm"),
     maxSingleLeafWidthMm,
     maxDoorHeightMm: getNumberConstant(template, "maxDoorHeightMm"),
@@ -61578,14 +61664,17 @@ function buildCarcassAndDoors(layout, sections) {
   }
   const td = layout.doorThicknessMm;
   for (const leaf of layout.doorLeaves) {
+    const lower = layout.interior[leaf.sectionIndex]?.preset === "books_lower";
+    const leafH = lower ? layout.lowerDoorHeightMm : layout.doorHeightMm;
+    const leafY = lower ? ph + layout.doorGapEdgeMm + leafH / 2 : ph + Hc / 2;
     panels.push({
       id: leaf.id,
       role: "door",
       lengthMm: leaf.widthMm,
-      widthMm: layout.doorHeightMm,
+      widthMm: leafH,
       thicknessMm: td,
       material: layout.doorMaterial.id,
-      position: [leaf.xStartMm + leaf.widthMm / 2, ph + Hc / 2, layout.depthMm - td / 2],
+      position: [leaf.xStartMm + leaf.widthMm / 2, leafY, layout.depthMm - td / 2],
       rotation: ROT_VERTICAL_XY,
       sectionIndex: leaf.sectionIndex,
       hingeSide: leaf.hingeSide,
@@ -62346,7 +62435,8 @@ var TEMPLATE_CATALOG = {
   "0.5.0": materialsV0.catalogVersion,
   "0.6.0": materialsV1.catalogVersion,
   "0.7.0": materialsV1.catalogVersion,
-  "0.8.0": materialsV1.catalogVersion
+  "0.8.0": materialsV1.catalogVersion,
+  "0.9.0": materialsV1.catalogVersion
 };
 
 // ../../packages/engine/catalog/hardware.v1.json
@@ -62654,6 +62744,7 @@ var ru = {
   "option.interior.long_hang": "\u0414\u043B\u0438\u043D\u043D\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430",
   "option.interior.short_hang": "\u041A\u043E\u0440\u043E\u0442\u043A\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430 + \u043F\u043E\u043B\u043A\u0438",
   "option.interior.short_hang_drawers": "\u041A\u043E\u0440\u043E\u0442\u043A\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430 + \u044F\u0449\u0438\u043A\u0438",
+  "option.interior.books_lower": "\u041D\u0438\u0436\u043D\u0438\u0435 \u0434\u0432\u0435\u0440\u0438 + \u043F\u043E\u043B\u043A\u0438 \u0434\u043B\u044F \u043A\u043D\u0438\u0433 \u0438 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u043E\u0432",
   "creason.DRAWER_TOO_HIGH": "\u042F\u0449\u0438\u043A \u043E\u043A\u0430\u0436\u0435\u0442\u0441\u044F \u0441\u043B\u0438\u0448\u043A\u043E\u043C \u0432\u044B\u0441\u043E\u043A\u043E",
   "c.depthHang": "\u0434\u043B\u044F \u043E\u0434\u0435\u0436\u0434\u044B \u043D\u0430 \u0432\u0435\u0448\u0430\u043B\u043A\u0430\u0445",
   "c.depthShallow": "\u0443\u0437\u043A\u043E\u0435 \u043C\u0435\u0441\u0442\u043E: \u043F\u043E\u043B\u043A\u0438 \u0438 \u044F\u0449\u0438\u043A\u0438",
@@ -62799,6 +62890,9 @@ var ru = {
   "c.opt.long_hang": "\u0414\u043B\u0438\u043D\u043D\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430",
   "c.opt.short_hang": "\u041A\u043E\u0440\u043E\u0442\u043A\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430",
   "c.opt.short_hang_drawers": "\u041A\u043E\u0440\u043E\u0442\u043A\u0430\u044F \u043E\u0434\u0435\u0436\u0434\u0430 + \u044F\u0449\u0438\u043A\u0438",
+  "c.opt.books_lower": "\u041A\u043D\u0438\u0433\u0438 \u0438 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B",
+  "c.hint.books_lower": "\u0412\u043D\u0438\u0437\u0443 \u0437\u0430\u043A\u0440\u044B\u0442\u043E\u0435 \u043C\u0435\u0441\u0442\u043E \u0441 \u0434\u0432\u0435\u0440\u044F\u043C\u0438, \u0441\u0432\u0435\u0440\u0445\u0443 \u043E\u0442\u043A\u0440\u044B\u0442\u044B\u0435 \u043F\u043E\u043B\u043A\u0438 (\u043F\u0430\u043F\u043A\u0430 \u04104 \u043F\u043E\u043C\u0435\u0449\u0430\u0435\u0442\u0441\u044F)",
+  "param.lowerDoorHeight": "\u0412\u044B\u0441\u043E\u0442\u0430 \u043D\u0438\u0436\u043D\u0438\u0445 \u0434\u0432\u0435\u0440\u0435\u0439",
   "c.hint.long_hang": "\u041F\u0430\u043B\u044C\u0442\u043E, \u043F\u043B\u0430\u0449\u0438, \u043F\u043B\u0430\u0442\u044C\u044F",
   "c.hint.short_hang": "\u0420\u0443\u0431\u0430\u0448\u043A\u0438, \u043F\u0438\u0434\u0436\u0430\u043A\u0438; \u0432\u043D\u0438\u0437\u0443 \u043F\u043E\u043B\u043A\u0438",
   "c.hint.short_hang_drawers": "\u041D\u0430 \u0432\u0435\u0448\u0430\u043B\u043A\u0430\u0445, \u0432\u043D\u0438\u0437\u0443 \u044F\u0449\u0438\u043A\u0438",
@@ -63041,6 +63135,7 @@ var uz = {
   "option.interior.long_hang": "Uzun kiyimlar",
   "option.interior.short_hang": "Kalta kiyimlar + javonlar",
   "option.interior.short_hang_drawers": "Kalta kiyimlar + tortmalar",
+  "option.interior.books_lower": "Pastda eshik + kitob/hujjat javonlari",
   "creason.DRAWER_TOO_HIGH": "Tortma juda baland bo'lib qoladi",
   "c.depthHang": "kiyim ilish uchun",
   "c.depthShallow": "tor joy: javon va tortmalar",
@@ -63187,6 +63282,9 @@ var uz = {
   "c.opt.long_hang": "Uzun kiyimlar",
   "c.opt.short_hang": "Kalta kiyimlar",
   "c.opt.short_hang_drawers": "Kalta kiyim + tortma",
+  "c.opt.books_lower": "Kitob va hujjatlar",
+  "c.hint.books_lower": "Pastda eshikli yopiq joy, tepada ochiq javonlar (A4 papka sig'adi)",
+  "param.lowerDoorHeight": "Pastki eshik balandligi",
   "c.hint.long_hang": "Palto, plash, uzun ko'ylak",
   "c.hint.short_hang": "Ko'ylak, pidjak; pastda javonlar",
   "c.hint.short_hang_drawers": "Ilinadigan kiyim, pastda tortmalar",

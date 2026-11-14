@@ -22,6 +22,7 @@ export const INTERIOR_PRESETS: InteriorPreset[] = [
   'long_hang',
   'short_hang',
   'short_hang_drawers',
+  'books_lower',
 ];
 
 /**
@@ -66,6 +67,16 @@ export interface InteriorConstants {
   drawerMaxFrontWidthMm: number;
   /** D-7 (template 0.7.0+): GOST functional sizes; required by long_hang / short_hang* */
   ergonomics?: Ergonomics;
+  /**
+   * D-14 (template 0.9.0+): book / document shelves. Clear gap between shelves: GOST 13025.1-85
+   * table 2 allows 180..390 mm for books; the open shelves aim at >= bookGapMinMm so an A4
+   * folder (297 mm sheet, ~320 mm lever-arch file) stands upright.
+   */
+  books?: { gapMinMm: number; gapMaxMm: number };
+  /** D-14: door leaf height of a books_lower section (the lowerDoorHeight parameter) */
+  lowerDoorHeightMm?: number;
+  /** D-14: door edge gap (the door of a books_lower section starts this far above the bottom) */
+  doorGapEdgeMm?: number;
   /** D-7: 'auto' presets by door type (template data); absent = the D-1b rule */
   autoPresetSingle?: InteriorPreset;
   autoPresetDouble?: InteriorPreset;
@@ -130,6 +141,9 @@ export function planInterior(
   preset: InteriorPreset,
   c: InteriorConstants,
 ): InteriorPlan {
+  if (preset === 'books_lower') {
+    return c.books ? planBooksLower(box, c, c.books) : planInterior(box, 'shelves', c);
+  }
   if (preset === 'long_hang' || preset === 'short_hang' || preset === 'short_hang_drawers') {
     // the enum only offers these with a template that defines the GOST sizes
     return c.ergonomics
@@ -311,6 +325,74 @@ function planErgonomic(
     warnings.push('DRAWER_SECTION_TOO_WIDE');
   }
   return { preset, shelves, rails, drawers, clearHangingHeightMm: clear, warnings };
+}
+
+/**
+ * Open book / document shelves between yFrom and yTo: as many compartments as fit with a clear
+ * gap of at least gapMin (A4 folders upright); if that leaves gaps above gapMax (GOST
+ * 13025.1-85 table 2: 390 mm), one more compartment, as long as it stays >= 180 mm (GOST min).
+ */
+export function bookShelfBottoms(
+  yFrom: number,
+  yTo: number,
+  t: number,
+  gapMin: number,
+  gapMax: number,
+): number[] {
+  const available = yTo - yFrom;
+  if (available <= 0) return [];
+  let c = Math.max(1, Math.floor((available + t) / (gapMin + t)));
+  const gap = (n: number) => (available - (n - 1) * t) / n;
+  if (gap(c) > gapMax && gap(c + 1) >= BOOK_GAP_GOST_MIN_MM) c += 1;
+  const h = gap(c);
+  return Array.from({ length: c - 1 }, (_, i) => half(yFrom + (i + 1) * h + i * t));
+}
+
+/** GOST 13025.1-85 table 2: clear gap between book shelves 180..390 mm. */
+export const BOOK_GAP_GOST_MIN_MM = 180;
+
+/**
+ * D-14 'books_lower': the section's door covers only its lower part (lowerDoorHeightMm from the
+ * door's bottom edge). A fixed shelf sits at the door top (its top face one edge gap above the
+ * leaf), closed shelves behind the door, open book / A4 folder shelves above it.
+ */
+function planBooksLower(
+  box: SectionBox,
+  c: InteriorConstants,
+  b: { gapMinMm: number; gapMaxMm: number },
+): InteriorPlan {
+  const { t, yBottom, yTop } = box;
+  const n = box.index + 1;
+  const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
+  const shelves: ShelfSummary[] = [];
+  const addShelf = (yMm: number, kind: ShelfSummary['kind'], id: string) =>
+    shelves.push({ id, yMm: half(yMm), kind, lengthMm: box.innerW, depthMm: shelfDepth });
+
+  const gapEdge = c.doorGapEdgeMm ?? 1.5;
+  const doorBottom = yBottom - t + gapEdge; // the leaf starts at the carcass bottom edge
+  const doorTop = doorBottom + (c.lowerDoorHeightMm ?? 800);
+  const dividerTop = doorTop + gapEdge;
+  const warnings: string[] = [];
+  if (dividerTop - t - yBottom < BOOK_GAP_GOST_MIN_MM || yTop - dividerTop < BOOK_GAP_GOST_MIN_MM) {
+    warnings.push('LOWER_DOOR_HEIGHT');
+  } else {
+    addShelf(dividerTop - t, 'fixed', `s${n}-shelf-fixed`);
+    evenShelfBottoms(yBottom, dividerTop - t, t, c.shelfPitchTargetMm).forEach((y, i) =>
+      addShelf(y, 'removable', `s${n}-shelf-${i + 1}`),
+    );
+    bookShelfBottoms(dividerTop, yTop, t, b.gapMinMm, b.gapMaxMm).forEach((y, i) =>
+      addShelf(y, 'removable', `s${n}-shelf-book-${i + 1}`),
+    );
+  }
+  shelves.sort((a, z) => a.yMm - z.yMm);
+  return {
+    preset: 'books_lower',
+    shelves,
+    rails: [],
+    drawers: [],
+    clearHangingHeightMm: null,
+    warnings,
+  };
 }
 
 /**

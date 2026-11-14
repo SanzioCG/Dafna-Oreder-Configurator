@@ -299,6 +299,7 @@ describe('step 3 "Ichki"', () => {
       ['short_hang_drawers', uz['c.opt.short_hang_drawers']],
       ['shelves', uz['c.opt.shelves']],
       ['drawers_shelves', uz['c.opt.drawers_shelves']],
+      ['books_lower', uz['c.opt.books_lower']],
       ['empty', uz['c.opt.empty']],
     ];
     expect(
@@ -313,6 +314,26 @@ describe('step 3 "Ichki"', () => {
     expect(stub().dataset.presets?.split(',')[0]).toBe('long_hang');
     fireEvent.click(option('drawers_shelves'));
     expect(stub().dataset.presets?.split(',')[0]).toBe('drawers_shelves');
+  });
+
+  it('D-14 books_lower: lower doors only, the door height is the customer choice', () => {
+    renderApp();
+    fireEvent.click(tab(uz['step.interior']));
+    expect(screen.queryByTestId('lower-door-height')).toBeNull();
+    fireEvent.click(option('books_lower'));
+    expect(stub().dataset.presets?.split(',')[0]).toBe('books_lower');
+    const chips = within(screen.getByTestId('lower-door-height'));
+    expect(chips.getAllByRole('radio').map((b) => b.textContent)).toEqual([
+      `60 ${uz['unit.cm']}`,
+      `80 ${uz['unit.cm']}`,
+      `100 ${uz['unit.cm']}`,
+    ]);
+    const hundred = () => chips.getByRole('radio', { name: /^100/ });
+    fireEvent.click(hundred());
+    expect(hundred().getAttribute('aria-checked')).toBe('true');
+    // back to a clothes interior: the door height choice goes away
+    fireEvent.click(option('shelves'));
+    expect(screen.queryByTestId('lower-door-height')).toBeNull();
   });
 
   it('part pills and 3D taps select the part; "Barcha qismlarga qo\'llash"', () => {

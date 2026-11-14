@@ -25,6 +25,7 @@ export const INTERIOR_ORDER = [
   'shelves',
   'rail_shelf',
   'drawers_shelves',
+  'books_lower',
   'rail_drawers',
   'empty',
 ] as const;
@@ -96,6 +97,16 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
   const section = sections[sel];
   const options = INTERIOR_ORDER.filter((o) => (def.options ?? []).includes(o));
   const doorsOn = config.params.doors !== 'none';
+  // D-14: the lower door height, shown while any section uses "Kitob va hujjatlar"
+  const lowerDef = getParamDef(config.template, 'lowerDoorHeight');
+  const usesLower = sections.some((s) => s.preset === 'books_lower');
+  const lowerValues = lowerDef
+    ? staff
+      ? [...new Set([...(lowerDef.customerValues ?? []), Number(config.params.lowerDoorHeight)])]
+          .filter((v) => Number.isFinite(v))
+          .sort((a, b) => a - b)
+      : (lowerDef.customerValues ?? [])
+    : [];
 
   return (
     <>
@@ -167,6 +178,19 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
             );
           })}
         </div>
+
+        {lowerDef && usesLower && doorsOn && (
+          <div className="param" data-testid="lower-door-height">
+            <span className="param-label">{t('param.lowerDoorHeight')}</span>
+            <SelectionGrid
+              options={lowerValues}
+              value={Number(config.params.lowerDoorHeight ?? lowerDef.default)}
+              onChange={(v) => config.setParam('lowerDoorHeight', v)}
+              label={(v) => (staff ? `${v} mm` : `${Math.round(v / 10)} ${t('unit.cm')}`)}
+              ariaLabel={t('param.lowerDoorHeight')}
+            />
+          </div>
+        )}
 
         {count > 1 && (
           <Button variant="secondary" wide disabled={allSame} onClick={applyToAll}>

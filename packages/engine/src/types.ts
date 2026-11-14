@@ -184,7 +184,12 @@ export type InteriorPreset =
   /** D-7: short clothes, >= 900 mm below the rail, shelves under the hanging zone */
   | 'short_hang'
   /** D-7: drawers at the bottom, short clothes above */
-  | 'short_hang_drawers';
+  | 'short_hang_drawers'
+  /**
+   * D-14: a door only over the lower part (lowerDoorHeight), closed shelves behind it, a fixed
+   * shelf at the door top, open book / A4 folder shelves above (GOST 13025.1-85 table 2)
+   */
+  | 'books_lower';
 
 export interface ShelfSummary {
   /** panel id */
