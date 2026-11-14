@@ -46,6 +46,8 @@ export interface TelegramConfig {
   forceFail?: boolean;
   /** D-11: the order sheet PDF for the workshop (null = cannot be built) */
   orderPdf?: (lead: LeadRecord) => Promise<Uint8Array | null>;
+  /** D-16: the GibLab .project file (cutting + edge banding; null = cannot be built) */
+  giblab?: (lead: LeadRecord) => Promise<Uint8Array | null>;
 }
 
 export class TelegramNotifier implements Notifier {
@@ -75,6 +77,27 @@ export class TelegramNotifier implements Notifier {
   async notify(lead: LeadRecord, renderPng?: Uint8Array): Promise<void> {
     await this.sendSummary(lead, renderPng);
     await this.sendOrderPdf(lead);
+    await this.sendGiblab(lead);
+  }
+
+  /** D-16: the GibLab file after the order PDF; a bonus too (errors never fail the lead). */
+  private async sendGiblab(lead: LeadRecord): Promise<void> {
+    if (!this.config.giblab) return;
+    try {
+      const file = await this.config.giblab(lead);
+      if (!file) return;
+      const form = new FormData();
+      form.append('chat_id', this.config.chatId);
+      form.append('caption', `🪚 ${lead.id}: GibLab — kesish va kromka`);
+      form.append(
+        'document',
+        new Blob([file as BlobPart], { type: 'application/xml' }),
+        `Dafna-${lead.id}.project`,
+      );
+      await this.call('sendDocument', form);
+    } catch {
+      // the summary is delivered; the file can be rebuilt from the sheet row's params
+    }
   }
 
   /**

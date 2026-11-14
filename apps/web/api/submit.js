@@ -77,15 +77,15 @@ function __extends(d, b) {
   d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 }
 function __rest(s, e) {
-  var t2 = {};
+  var t3 = {};
   for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-    t2[p] = s[p];
+    t3[p] = s[p];
   if (s != null && typeof Object.getOwnPropertySymbols === "function")
     for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
       if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-        t2[p[i]] = s[p[i]];
+        t3[p[i]] = s[p[i]];
     }
-  return t2;
+  return t3;
 }
 function __decorate(decorators, target, key, desc) {
   var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -130,9 +130,9 @@ function __awaiter(thisArg, _arguments, P, generator) {
 }
 function __generator(thisArg, body) {
   var _ = { label: 0, sent: function() {
-    if (t2[0] & 1) throw t2[1];
-    return t2[1];
-  }, trys: [], ops: [] }, f, y, t2, g;
+    if (t3[0] & 1) throw t3[1];
+    return t3[1];
+  }, trys: [], ops: [] }, f, y, t3, g;
   return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() {
     return this;
   }), g;
@@ -144,12 +144,12 @@ function __generator(thisArg, body) {
   function step(op) {
     if (f) throw new TypeError("Generator is already executing.");
     while (_) try {
-      if (f = 1, y && (t2 = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t2 = y["return"]) && t2.call(y), 0) : y.next) && !(t2 = t2.call(y, op[1])).done) return t2;
-      if (y = 0, t2) op = [op[0] & 2, t2.value];
+      if (f = 1, y && (t3 = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t3 = y["return"]) && t3.call(y), 0) : y.next) && !(t3 = t3.call(y, op[1])).done) return t3;
+      if (y = 0, t3) op = [op[0] & 2, t3.value];
       switch (op[0]) {
         case 0:
         case 1:
-          t2 = op;
+          t3 = op;
           break;
         case 4:
           _.label++;
@@ -164,25 +164,25 @@ function __generator(thisArg, body) {
           _.trys.pop();
           continue;
         default:
-          if (!(t2 = _.trys, t2 = t2.length > 0 && t2[t2.length - 1]) && (op[0] === 6 || op[0] === 2)) {
+          if (!(t3 = _.trys, t3 = t3.length > 0 && t3[t3.length - 1]) && (op[0] === 6 || op[0] === 2)) {
             _ = 0;
             continue;
           }
-          if (op[0] === 3 && (!t2 || op[1] > t2[0] && op[1] < t2[3])) {
+          if (op[0] === 3 && (!t3 || op[1] > t3[0] && op[1] < t3[3])) {
             _.label = op[1];
             break;
           }
-          if (op[0] === 6 && _.label < t2[1]) {
-            _.label = t2[1];
-            t2 = op;
+          if (op[0] === 6 && _.label < t3[1]) {
+            _.label = t3[1];
+            t3 = op;
             break;
           }
-          if (t2 && _.label < t2[2]) {
-            _.label = t2[2];
+          if (t3 && _.label < t3[2]) {
+            _.label = t3[2];
             _.ops.push(op);
             break;
           }
-          if (t2[2]) _.ops.pop();
+          if (t3[2]) _.ops.pop();
           _.trys.pop();
           continue;
       }
@@ -191,7 +191,7 @@ function __generator(thisArg, body) {
       op = [6, e];
       y = 0;
     } finally {
-      f = t2 = 0;
+      f = t3 = 0;
     }
     if (op[0] & 5) throw op[1];
     return { value: op[0] ? op[1] : void 0, done: true };
@@ -357,12 +357,12 @@ var init_tslib_es6 = __esm({
       return extendStatics(d, b);
     };
     __assign = function() {
-      __assign = Object.assign || function __assign2(t2) {
+      __assign = Object.assign || function __assign2(t3) {
         for (var s, i = 1, n3 = arguments.length; i < n3; i++) {
           s = arguments[i];
-          for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t2[p] = s[p];
+          for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p)) t3[p] = s[p];
         }
-        return t2;
+        return t3;
       };
       return __assign.apply(this, arguments);
     };
@@ -450,11 +450,11 @@ var require_strings = __commonJS({
     exports.toCodePoint = function(character) {
       return character.codePointAt(0);
     };
-    exports.toHexStringOfMinLength = function(num, minLength) {
-      return exports.padStart(num.toString(16), minLength, "0").toUpperCase();
+    exports.toHexStringOfMinLength = function(num2, minLength) {
+      return exports.padStart(num2.toString(16), minLength, "0").toUpperCase();
     };
-    exports.toHexString = function(num) {
-      return exports.toHexStringOfMinLength(num, 2);
+    exports.toHexString = function(num2) {
+      return exports.toHexStringOfMinLength(num2, 2);
     };
     exports.charFromCode = function(code) {
       return String.fromCharCode(code);
@@ -884,25 +884,25 @@ var require_numbers = __commonJS({
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.bytesFor = exports.sizeInBytes = exports.numberToString = void 0;
-    exports.numberToString = function(num) {
-      var numStr = String(num);
-      if (Math.abs(num) < 1) {
-        var e = parseInt(num.toString().split("e-")[1]);
+    exports.numberToString = function(num2) {
+      var numStr = String(num2);
+      if (Math.abs(num2) < 1) {
+        var e = parseInt(num2.toString().split("e-")[1]);
         if (e) {
-          var negative = num < 0;
+          var negative = num2 < 0;
           if (negative)
-            num *= -1;
-          num *= Math.pow(10, e - 1);
-          numStr = "0." + new Array(e).join("0") + num.toString().substring(2);
+            num2 *= -1;
+          num2 *= Math.pow(10, e - 1);
+          numStr = "0." + new Array(e).join("0") + num2.toString().substring(2);
           if (negative)
             numStr = "-" + numStr;
         }
       } else {
-        var e = parseInt(num.toString().split("+")[1]);
+        var e = parseInt(num2.toString().split("+")[1]);
         if (e > 20) {
           e -= 20;
-          num /= Math.pow(10, e);
-          numStr = num.toString() + new Array(e + 1).join("0");
+          num2 /= Math.pow(10, e);
+          numStr = num2.toString() + new Array(e + 1).join("0");
         }
       }
       return numStr;
@@ -1704,10 +1704,10 @@ var require_crc32 = __commonJS({
     }
     var crcTable = makeTable();
     function crc32(crc, buf, len, pos) {
-      var t2 = crcTable, end = pos + len;
+      var t3 = crcTable, end = pos + len;
       crc ^= -1;
       for (var i = pos; i < end; i++) {
-        crc = crc >>> 8 ^ t2[(crc ^ buf[i]) & 255];
+        crc = crc >>> 8 ^ t3[(crc ^ buf[i]) & 255];
       }
       return crc ^ -1;
     }
@@ -5849,9 +5849,9 @@ var require_errors2 = __commonJS({
         tslib_1.__extends(UnexpectedObjectTypeError2, _super);
         function UnexpectedObjectTypeError2(expected, actual) {
           var _this = this;
-          var name = function(t2) {
+          var name = function(t3) {
             var _a, _b;
-            return (_a = t2 === null || t2 === void 0 ? void 0 : t2.name) !== null && _a !== void 0 ? _a : (_b = t2 === null || t2 === void 0 ? void 0 : t2.constructor) === null || _b === void 0 ? void 0 : _b.name;
+            return (_a = t3 === null || t3 === void 0 ? void 0 : t3.name) !== null && _a !== void 0 ? _a : (_b = t3 === null || t3 === void 0 ? void 0 : t3.constructor) === null || _b === void 0 ? void 0 : _b.name;
           };
           var expectedTypes = Array.isArray(expected) ? expected.map(name) : [name(expected)];
           var msg = "Expected instance of " + expectedTypes.join(" or ") + ", " + ("but got instance of " + (actual ? name(actual) : actual));
@@ -6524,10 +6524,10 @@ var require_PDFArray = __commonJS({
         };
         PDFArray2.prototype.scalePDFNumbers = function(x, y) {
           for (var idx = 0, len = this.size(); idx < len; idx++) {
-            var el = this.lookup(idx);
-            if (el instanceof PDFNumber_1.default) {
+            var el2 = this.lookup(idx);
+            if (el2 instanceof PDFNumber_1.default) {
               var factor = idx % 2 === 0 ? x : y;
-              this.set(idx, PDFNumber_1.default.of(el.asNumber() * factor));
+              this.set(idx, PDFNumber_1.default.of(el2.asNumber() * factor));
             }
           }
         };
@@ -11055,9 +11055,9 @@ var require_UPNG = __commonJS({
         while (vecDot(nimg, i0, e) <= eMq) i0 += 4;
         while (vecDot(nimg, i1, e) > eMq) i1 -= 4;
         if (i0 >= i1) break;
-        var t2 = nimg32[i0 >> 2];
+        var t3 = nimg32[i0 >> 2];
         nimg32[i0 >> 2] = nimg32[i1 >> 2];
-        nimg32[i1 >> 2] = t2;
+        nimg32[i1 >> 2] = t3;
         i0 += 4;
         i1 -= 4;
       }
@@ -11628,13 +11628,13 @@ var require_Ascii85Stream = __commonJS({
               }
               this.eof = true;
             }
-            var t2 = 0;
+            var t3 = 0;
             for (i = 0; i < 5; ++i) {
-              t2 = t2 * 85 + (input[i] - 33);
+              t3 = t3 * 85 + (input[i] - 33);
             }
             for (i = 3; i >= 0; --i) {
-              buffer[bufferLength + i] = t2 & 255;
-              t2 >>= 8;
+              buffer[bufferLength + i] = t3 & 255;
+              t3 >>= 8;
             }
           }
         };
@@ -12576,10 +12576,10 @@ var require_FlateStream = __commonJS({
             for (var val = 0; val < n3; ++val) {
               if (lengths[val] === len) {
                 var code2 = 0;
-                var t2 = code;
+                var t3 = code;
                 for (i = 0; i < len; ++i) {
-                  code2 = code2 << 1 | t2 & 1;
-                  t2 >>= 1;
+                  code2 = code2 << 1 | t3 & 1;
+                  t3 >>= 1;
                 }
                 for (i = code2; i < size; i += skip) {
                   codes[i] = len << 16 | val;
@@ -16257,11 +16257,11 @@ var require_objects2 = __commonJS({
     exports.asPDFName = function(name) {
       return name instanceof core_1.PDFName ? name : core_1.PDFName.of(name);
     };
-    exports.asPDFNumber = function(num) {
-      return num instanceof core_1.PDFNumber ? num : core_1.PDFNumber.of(num);
+    exports.asPDFNumber = function(num2) {
+      return num2 instanceof core_1.PDFNumber ? num2 : core_1.PDFNumber.of(num2);
     };
-    exports.asNumber = function(num) {
-      return num instanceof core_1.PDFNumber ? num.asNumber() : num;
+    exports.asNumber = function(num2) {
+      return num2 instanceof core_1.PDFNumber ? num2.asNumber() : num2;
     };
   }
 });
@@ -16983,13 +16983,13 @@ var require_svgPath = __commonJS({
       var a10 = sinTh * rx;
       var a11 = cosTh * ry;
       var thHalf = 0.5 * (th1 - th0);
-      var t2 = 8 / 3 * Math.sin(thHalf * 0.5) * Math.sin(thHalf * 0.5) / Math.sin(thHalf);
-      var x1 = cx1 + Math.cos(th0) - t2 * Math.sin(th0);
-      var y1 = cy1 + Math.sin(th0) + t2 * Math.cos(th0);
+      var t3 = 8 / 3 * Math.sin(thHalf * 0.5) * Math.sin(thHalf * 0.5) / Math.sin(thHalf);
+      var x1 = cx1 + Math.cos(th0) - t3 * Math.sin(th0);
+      var y1 = cy1 + Math.sin(th0) + t3 * Math.cos(th0);
       var x3 = cx1 + Math.cos(th1);
       var y3 = cy1 + Math.sin(th1);
-      var x2 = x3 + t2 * Math.sin(th1);
-      var y2 = y3 - t2 * Math.cos(th1);
+      var x2 = x3 + t3 * Math.sin(th1);
+      var y2 = y3 - t3 * Math.cos(th1);
       var result = [
         a00 * x1 + a01 * y1,
         a10 * x1 + a11 * y1,
@@ -21394,8 +21394,8 @@ var require_PDFPage = __commonJS({
           var _h = this.setOrEmbedFont(options.font), oldFont = _h.oldFont, newFont = _h.newFont, newFontKey = _h.newFontKey;
           var fontSize = options.size || this.fontSize;
           var wordBreaks = options.wordBreaks || this.doc.defaultWordBreaks;
-          var textWidth = function(t2) {
-            return newFont.widthOfTextAtSize(t2, fontSize);
+          var textWidth = function(t3) {
+            return newFont.widthOfTextAtSize(t3, fontSize);
           };
           var lines = options.maxWidth === void 0 ? utils_1.lineSplit(utils_1.cleanText(text)) : utils_1.breakTextIntoLines(text, wordBreaks, options.maxWidth, textWidth);
           var encodedLines = new Array(lines.length);
@@ -22094,8 +22094,8 @@ var require_fontkit_umd = __commonJS({
         }
         return arr;
       }
-      function tripletToBase64(num) {
-        return lookup[num >> 18 & 63] + lookup[num >> 12 & 63] + lookup[num >> 6 & 63] + lookup[num & 63];
+      function tripletToBase64(num2) {
+        return lookup[num2 >> 18 & 63] + lookup[num2 >> 12 & 63] + lookup[num2 >> 6 & 63] + lookup[num2 & 63];
       }
       function encodeChunk(uint8, start, end) {
         var tmp;
@@ -37577,8 +37577,8 @@ var require_fontkit_umd = __commonJS({
           length: restructure.uint16,
           language: restructure.uint16,
           subHeaderKeys: new restructure.Array(restructure.uint16, 256),
-          subHeaderCount: function subHeaderCount(t3) {
-            return Math.max.apply(Math, t3.subHeaderKeys);
+          subHeaderCount: function subHeaderCount(t4) {
+            return Math.max.apply(Math, t4.subHeaderKeys);
           },
           subHeaders: new restructure.LazyArray(SubHeader, "subHeaderCount"),
           glyphIndexArray: new restructure.LazyArray(restructure.uint16, "subHeaderCount")
@@ -37590,8 +37590,8 @@ var require_fontkit_umd = __commonJS({
           language: restructure.uint16,
           // Language code
           segCountX2: restructure.uint16,
-          segCount: function segCount(t3) {
-            return t3.segCountX2 >> 1;
+          segCount: function segCount(t4) {
+            return t4.segCountX2 >> 1;
           },
           searchRange: restructure.uint16,
           entrySelector: restructure.uint16,
@@ -37602,8 +37602,8 @@ var require_fontkit_umd = __commonJS({
           startCode: new restructure.LazyArray(restructure.uint16, "segCount"),
           idDelta: new restructure.LazyArray(restructure.int16, "segCount"),
           idRangeOffset: new restructure.LazyArray(restructure.uint16, "segCount"),
-          glyphIndexArray: new restructure.LazyArray(restructure.uint16, function(t3) {
-            return (t3.length - t3._currentOffset) / 2;
+          glyphIndexArray: new restructure.LazyArray(restructure.uint16, function(t4) {
+            return (t4.length - t4._currentOffset) / 2;
           })
         },
         6: {
@@ -37732,11 +37732,11 @@ var require_fontkit_umd = __commonJS({
         bearing: restructure.int16
       });
       var hmtx = new restructure.Struct({
-        metrics: new restructure.LazyArray(HmtxEntry, function(t3) {
-          return t3.parent.hhea.numberOfMetrics;
+        metrics: new restructure.LazyArray(HmtxEntry, function(t4) {
+          return t4.parent.hhea.numberOfMetrics;
         }),
-        bearings: new restructure.LazyArray(restructure.int16, function(t3) {
-          return t3.parent.maxp.numGlyphs - t3.parent.hhea.numberOfMetrics;
+        bearings: new restructure.LazyArray(restructure.int16, function(t4) {
+          return t4.parent.maxp.numGlyphs - t4.parent.hhea.numberOfMetrics;
         })
       });
       var maxp = new restructure.Struct({
@@ -38196,8 +38196,8 @@ var require_fontkit_umd = __commonJS({
         languageID: restructure.uint16,
         nameID: restructure.uint16,
         length: restructure.uint16,
-        string: new restructure.Pointer(restructure.uint16, new restructure.String("length", function(t3) {
-          return getEncoding(t3.platformID, t3.encodingID, t3.languageID);
+        string: new restructure.Pointer(restructure.uint16, new restructure.String("length", function(t4) {
+          return getEncoding(t4.platformID, t4.encodingID, t4.languageID);
         }), {
           type: "parent",
           relativeTo: "parent.stringOffset",
@@ -38449,8 +38449,8 @@ var require_fontkit_umd = __commonJS({
         3: {},
         // version 3 has no additional fields
         4: {
-          map: new restructure.Array(restructure.uint32, function(t3) {
-            return t3.parent.maxp.numGlyphs;
+          map: new restructure.Array(restructure.uint32, function(t4) {
+            return t4.parent.maxp.numGlyphs;
           })
         }
       });
@@ -39834,8 +39834,8 @@ var require_fontkit_umd = __commonJS({
           flags: LookupFlags,
           subTableCount: restructure.uint16,
           subTables: new restructure.Array(new restructure.Pointer(restructure.uint16, SubTable), "subTableCount"),
-          markFilteringSet: new restructure.Optional(restructure.uint16, function(t3) {
-            return t3.flags.flags.useMarkFilteringSet;
+          markFilteringSet: new restructure.Optional(restructure.uint16, function(t4) {
+            return t4.flags.flags.useMarkFilteringSet;
           })
         });
         return new restructure.LazyArray(new restructure.Pointer(restructure.uint16, Lookup), restructure.uint16);
@@ -39887,8 +39887,8 @@ var require_fontkit_umd = __commonJS({
       var Rule = new restructure.Struct({
         glyphCount: restructure.uint16,
         lookupCount: restructure.uint16,
-        input: new restructure.Array(restructure.uint16, function(t3) {
-          return t3.glyphCount - 1;
+        input: new restructure.Array(restructure.uint16, function(t4) {
+          return t4.glyphCount - 1;
         }),
         lookupRecords: new restructure.Array(LookupRecord, "lookupCount")
       });
@@ -39896,8 +39896,8 @@ var require_fontkit_umd = __commonJS({
       var ClassRule = new restructure.Struct({
         glyphCount: restructure.uint16,
         lookupCount: restructure.uint16,
-        classes: new restructure.Array(restructure.uint16, function(t3) {
-          return t3.glyphCount - 1;
+        classes: new restructure.Array(restructure.uint16, function(t4) {
+          return t4.glyphCount - 1;
         }),
         lookupRecords: new restructure.Array(LookupRecord, "lookupCount")
       });
@@ -39927,8 +39927,8 @@ var require_fontkit_umd = __commonJS({
         backtrackGlyphCount: restructure.uint16,
         backtrack: new restructure.Array(restructure.uint16, "backtrackGlyphCount"),
         inputGlyphCount: restructure.uint16,
-        input: new restructure.Array(restructure.uint16, function(t3) {
-          return t3.inputGlyphCount - 1;
+        input: new restructure.Array(restructure.uint16, function(t4) {
+          return t4.inputGlyphCount - 1;
         }),
         lookaheadGlyphCount: restructure.uint16,
         lookahead: new restructure.Array(restructure.uint16, "lookaheadGlyphCount"),
@@ -39977,14 +39977,14 @@ var require_fontkit_umd = __commonJS({
         variationRegions: new restructure.Array(new restructure.Array(RegionAxisCoordinates, "axisCount"), "regionCount")
       });
       var DeltaSet = new restructure.Struct({
-        shortDeltas: new restructure.Array(restructure.int16, function(t3) {
-          return t3.parent.shortDeltaCount;
+        shortDeltas: new restructure.Array(restructure.int16, function(t4) {
+          return t4.parent.shortDeltaCount;
         }),
-        regionDeltas: new restructure.Array(restructure.int8, function(t3) {
-          return t3.parent.regionIndexCount - t3.parent.shortDeltaCount;
+        regionDeltas: new restructure.Array(restructure.int8, function(t4) {
+          return t4.parent.regionIndexCount - t4.parent.shortDeltaCount;
         }),
-        deltas: function deltas(t3) {
-          return t3.shortDeltas.concat(t3.regionDeltas);
+        deltas: function deltas(t4) {
+          return t4.shortDeltas.concat(t4.regionDeltas);
         }
       });
       var ItemVariationData = new restructure.Struct({
@@ -40118,18 +40118,18 @@ var require_fontkit_umd = __commonJS({
       })(restructure.Array);
       var CFFCustomCharset = new restructure.VersionedStruct(restructure.uint8, {
         0: {
-          glyphs: new restructure.Array(restructure.uint16, function(t3) {
-            return t3.parent.CharStrings.length - 1;
+          glyphs: new restructure.Array(restructure.uint16, function(t4) {
+            return t4.parent.CharStrings.length - 1;
           })
         },
         1: {
-          ranges: new RangeArray(Range1, function(t3) {
-            return t3.parent.CharStrings.length - 1;
+          ranges: new RangeArray(Range1, function(t4) {
+            return t4.parent.CharStrings.length - 1;
           })
         },
         2: {
-          ranges: new RangeArray(Range2, function(t3) {
-            return t3.parent.CharStrings.length - 1;
+          ranges: new RangeArray(Range2, function(t4) {
+            return t4.parent.CharStrings.length - 1;
           })
         }
       });
@@ -40146,8 +40146,8 @@ var require_fontkit_umd = __commonJS({
       });
       var FDSelect = new restructure.VersionedStruct(restructure.uint8, {
         0: {
-          fds: new restructure.Array(restructure.uint8, function(t3) {
-            return t3.parent.CharStrings.length;
+          fds: new restructure.Array(restructure.uint8, function(t4) {
+            return t4.parent.CharStrings.length;
           })
         },
         3: {
@@ -40493,8 +40493,8 @@ var require_fontkit_umd = __commonJS({
           imageDataOffset: restructure.uint32
         },
         1: {
-          offsetArray: new restructure.Array(restructure.uint32, function(t3) {
-            return t3.parent.lastGlyphIndex - t3.parent.firstGlyphIndex + 1;
+          offsetArray: new restructure.Array(restructure.uint32, function(t4) {
+            return t4.parent.lastGlyphIndex - t4.parent.firstGlyphIndex + 1;
           })
         },
         2: {
@@ -40502,14 +40502,14 @@ var require_fontkit_umd = __commonJS({
           bigMetrics: BigMetrics
         },
         3: {
-          offsetArray: new restructure.Array(restructure.uint16, function(t3) {
-            return t3.parent.lastGlyphIndex - t3.parent.firstGlyphIndex + 1;
+          offsetArray: new restructure.Array(restructure.uint16, function(t4) {
+            return t4.parent.lastGlyphIndex - t4.parent.firstGlyphIndex + 1;
           })
         },
         4: {
           numGlyphs: restructure.uint32,
-          glyphArray: new restructure.Array(CodeOffsetPair, function(t3) {
-            return t3.numGlyphs + 1;
+          glyphArray: new restructure.Array(CodeOffsetPair, function(t4) {
+            return t4.numGlyphs + 1;
           })
         },
         5: {
@@ -40549,8 +40549,8 @@ var require_fontkit_umd = __commonJS({
       var ImageTable = new restructure.Struct({
         ppem: restructure.uint16,
         resolution: restructure.uint16,
-        imageOffsets: new restructure.Array(new restructure.Pointer(restructure.uint32, "void"), function(t3) {
-          return t3.parent.parent.maxp.numGlyphs + 1;
+        imageOffsets: new restructure.Array(new restructure.Pointer(restructure.uint32, "void"), function(t4) {
+          return t4.parent.parent.maxp.numGlyphs + 1;
         })
       });
       var sbix = new restructure.Struct({
@@ -40850,12 +40850,12 @@ var require_fontkit_umd = __commonJS({
         })
       });
       var MarkArray = new restructure.Array(MarkRecord, restructure.uint16);
-      var BaseRecord = new restructure.Array(new restructure.Pointer(restructure.uint16, Anchor), function(t3) {
-        return t3.parent.classCount;
+      var BaseRecord = new restructure.Array(new restructure.Pointer(restructure.uint16, Anchor), function(t4) {
+        return t4.parent.classCount;
       });
       var BaseArray = new restructure.Array(BaseRecord, restructure.uint16);
-      var ComponentRecord = new restructure.Array(new restructure.Pointer(restructure.uint16, Anchor), function(t3) {
-        return t3.parent.parent.classCount;
+      var ComponentRecord = new restructure.Array(new restructure.Pointer(restructure.uint16, Anchor), function(t4) {
+        return t4.parent.parent.classCount;
       });
       var LigatureAttach = new restructure.Array(ComponentRecord, restructure.uint16);
       var LigatureArray = new restructure.Array(new restructure.Pointer(restructure.uint16, LigatureAttach), restructure.uint16);
@@ -40960,8 +40960,8 @@ var require_fontkit_umd = __commonJS({
       var Ligature = new restructure.Struct({
         glyph: restructure.uint16,
         compCount: restructure.uint16,
-        components: new restructure.Array(restructure.uint16, function(t3) {
-          return t3.compCount - 1;
+        components: new restructure.Array(restructure.uint16, function(t4) {
+          return t4.compCount - 1;
         })
       });
       var LigatureSet = new restructure.Array(new restructure.Pointer(restructure.uint16, Ligature), restructure.uint16);
@@ -41093,14 +41093,14 @@ var require_fontkit_umd = __commonJS({
         return VariableSizeNumber2;
       })();
       var MapDataEntry = new restructure.Struct({
-        entry: new VariableSizeNumber(function(t3) {
-          return ((t3.parent.entryFormat & 48) >> 4) + 1;
+        entry: new VariableSizeNumber(function(t4) {
+          return ((t4.parent.entryFormat & 48) >> 4) + 1;
         }),
-        outerIndex: function outerIndex(t3) {
-          return t3.entry >> (t3.parent.entryFormat & 15) + 1;
+        outerIndex: function outerIndex(t4) {
+          return t4.entry >> (t4.parent.entryFormat & 15) + 1;
         },
-        innerIndex: function innerIndex(t3) {
-          return t3.entry & (1 << (t3.parent.entryFormat & 15) + 1) - 1;
+        innerIndex: function innerIndex(t4) {
+          return t4.entry & (1 << (t4.parent.entryFormat & 15) + 1) - 1;
         }
       });
       var DeltaSetIndexMap = new restructure.Struct({
@@ -41159,8 +41159,8 @@ var require_fontkit_umd = __commonJS({
       var DeviceRecord = new restructure.Struct({
         pixelSize: restructure.uint8,
         maximumWidth: restructure.uint8,
-        widths: new restructure.Array(restructure.uint8, function(t3) {
-          return t3.parent.parent.maxp.numGlyphs;
+        widths: new restructure.Array(restructure.uint8, function(t4) {
+          return t4.parent.parent.maxp.numGlyphs;
         })
       });
       var hdmx = new restructure.Struct({
@@ -41178,16 +41178,16 @@ var require_fontkit_umd = __commonJS({
         firstGlyph: restructure.uint16,
         nGlyphs: restructure.uint16,
         offsets: new restructure.Array(restructure.uint16, "nGlyphs"),
-        max: function max(t3) {
-          return t3.offsets.length && Math.max.apply(Math, t3.offsets);
+        max: function max(t4) {
+          return t4.offsets.length && Math.max.apply(Math, t4.offsets);
         }
       });
       var Kern2Array = new restructure.Struct({
-        off: function off2(t3) {
-          return t3._startOffset - t3.parent.parent._startOffset;
+        off: function off2(t4) {
+          return t4._startOffset - t4.parent.parent._startOffset;
         },
-        len: function len2(t3) {
-          return ((t3.parent.leftTable.max - t3.off) / t3.parent.rowWidth + 1) * (t3.parent.rowWidth / 2);
+        len: function len2(t4) {
+          return ((t4.parent.leftTable.max - t4.off) / t4.parent.rowWidth + 1) * (t4.parent.rowWidth / 2);
         },
         values: new restructure.LazyArray(restructure.int16, "len")
       });
@@ -41220,8 +41220,8 @@ var require_fontkit_umd = __commonJS({
           kernValue: new restructure.Array(restructure.int16, "kernValueCount"),
           leftClass: new restructure.Array(restructure.uint8, "glyphCount"),
           rightClass: new restructure.Array(restructure.uint8, "glyphCount"),
-          kernIndex: new restructure.Array(restructure.uint8, function(t3) {
-            return t3.leftClassCount * t3.rightClassCount;
+          kernIndex: new restructure.Array(restructure.uint8, function(t4) {
+            return t4.leftClassCount * t4.rightClassCount;
           })
         }
       });
@@ -41245,8 +41245,8 @@ var require_fontkit_umd = __commonJS({
             // If set to 1 the value in this table replaces the accumulated value
           ]),
           subtable: KernSubtable,
-          padding: new restructure.Reserved(restructure.uint8, function(t3) {
-            return t3.length - t3._currentOffset;
+          padding: new restructure.Reserved(restructure.uint8, function(t4) {
+            return t4.length - t4._currentOffset;
           })
         },
         1: {
@@ -41268,8 +41268,8 @@ var require_fontkit_umd = __commonJS({
           format: restructure.uint8,
           tupleIndex: restructure.uint16,
           subtable: KernSubtable,
-          padding: new restructure.Reserved(restructure.uint8, function(t3) {
-            return t3.length - t3._currentOffset;
+          padding: new restructure.Reserved(restructure.uint8, function(t4) {
+            return t4.length - t4._currentOffset;
           })
         }
       });
@@ -41385,11 +41385,11 @@ var require_fontkit_umd = __commonJS({
         // The top sidebearing of the glyph
       });
       var vmtx = new restructure.Struct({
-        metrics: new restructure.LazyArray(VmtxEntry, function(t3) {
-          return t3.parent.vhea.numberOfMetrics;
+        metrics: new restructure.LazyArray(VmtxEntry, function(t4) {
+          return t4.parent.vhea.numberOfMetrics;
         }),
-        bearings: new restructure.LazyArray(restructure.int16, function(t3) {
-          return t3.parent.maxp.numGlyphs - t3.parent.vhea.numberOfMetrics;
+        bearings: new restructure.LazyArray(restructure.int16, function(t4) {
+          return t4.parent.maxp.numGlyphs - t4.parent.vhea.numberOfMetrics;
         })
       });
       var shortFrac = new restructure.Fixed(16, "BE", 14);
@@ -41484,8 +41484,8 @@ var require_fontkit_umd = __commonJS({
         var LookupSegmentArray = new restructure.Struct({
           lastGlyph: restructure.uint16,
           firstGlyph: restructure.uint16,
-          values: new restructure.Pointer(restructure.uint16, new restructure.Array(ValueType, function(t3) {
-            return t3.lastGlyph - t3.firstGlyph + 1;
+          values: new restructure.Pointer(restructure.uint16, new restructure.Array(ValueType, function(t4) {
+            return t4.lastGlyph - t4.firstGlyph + 1;
           }), {
             type: "parent"
           })
@@ -41501,20 +41501,20 @@ var require_fontkit_umd = __commonJS({
           },
           2: {
             binarySearchHeader: BinarySearchHeader,
-            segments: new restructure.Array(LookupSegmentSingle, function(t3) {
-              return t3.binarySearchHeader.nUnits;
+            segments: new restructure.Array(LookupSegmentSingle, function(t4) {
+              return t4.binarySearchHeader.nUnits;
             })
           },
           4: {
             binarySearchHeader: BinarySearchHeader,
-            segments: new restructure.Array(LookupSegmentArray, function(t3) {
-              return t3.binarySearchHeader.nUnits;
+            segments: new restructure.Array(LookupSegmentArray, function(t4) {
+              return t4.binarySearchHeader.nUnits;
             })
           },
           6: {
             binarySearchHeader: BinarySearchHeader,
-            segments: new restructure.Array(LookupSingle, function(t3) {
-              return t3.binarySearchHeader.nUnits;
+            segments: new restructure.Array(LookupSingle, function(t4) {
+              return t4.binarySearchHeader.nUnits;
             })
           },
           8: {
@@ -41536,8 +41536,8 @@ var require_fontkit_umd = __commonJS({
           flags: restructure.uint16
         }, entryData);
         var Entry = new restructure.Struct(entry);
-        var StateArray = new UnboundedArray(new restructure.Array(restructure.uint16, function(t3) {
-          return t3.nClasses;
+        var StateArray = new UnboundedArray(new restructure.Array(restructure.uint16, function(t4) {
+          return t4.nClasses;
         }));
         var StateHeader = new restructure.Struct({
           nClasses: restructure.uint32,
@@ -41565,14 +41565,14 @@ var require_fontkit_umd = __commonJS({
         var entry = Object.assign({
           newStateOffset: restructure.uint16,
           // convert offset to stateArray index
-          newState: function newState(t3) {
-            return (t3.newStateOffset - (t3.parent.stateArray.base - t3.parent._startOffset)) / t3.parent.nClasses;
+          newState: function newState(t4) {
+            return (t4.newStateOffset - (t4.parent.stateArray.base - t4.parent._startOffset)) / t4.parent.nClasses;
           },
           flags: restructure.uint16
         }, entryData);
         var Entry = new restructure.Struct(entry);
-        var StateArray = new UnboundedArray(new restructure.Array(restructure.uint8, function(t3) {
-          return t3.nClasses;
+        var StateArray = new UnboundedArray(new restructure.Array(restructure.uint8, function(t4) {
+          return t4.nClasses;
         }));
         var StateHeader1 = new restructure.Struct({
           nClasses: restructure.uint16,
@@ -41613,8 +41613,8 @@ var require_fontkit_umd = __commonJS({
       var Setting = new restructure.Struct({
         setting: restructure.uint16,
         nameIndex: restructure.int16,
-        name: function name(t3) {
-          return t3.parent.parent.parent.name.records.fontFeatures[t3.nameIndex];
+        name: function name(t4) {
+          return t4.parent.parent.parent.name.records.fontFeatures[t4.nameIndex];
         }
       });
       var FeatureName = new restructure.Struct({
@@ -41626,8 +41626,8 @@ var require_fontkit_umd = __commonJS({
         featureFlags: new restructure.Bitfield(restructure.uint8, [null, null, null, null, null, null, "hasDefault", "exclusive"]),
         defaultSetting: restructure.uint8,
         nameIndex: restructure.int16,
-        name: function name(t3) {
-          return t3.parent.parent.name.records.fontFeatures[t3.nameIndex];
+        name: function name(t4) {
+          return t4.parent.parent.name.records.fontFeatures[t4.nameIndex];
         }
       });
       var feat = new restructure.Struct({
@@ -41644,21 +41644,21 @@ var require_fontkit_umd = __commonJS({
         maxValue: restructure.fixed32,
         flags: restructure.uint16,
         nameID: restructure.uint16,
-        name: function name(t3) {
-          return t3.parent.parent.name.records.fontFeatures[t3.nameID];
+        name: function name(t4) {
+          return t4.parent.parent.name.records.fontFeatures[t4.nameID];
         }
       });
       var Instance = new restructure.Struct({
         nameID: restructure.uint16,
-        name: function name(t3) {
-          return t3.parent.parent.name.records.fontFeatures[t3.nameID];
+        name: function name(t4) {
+          return t4.parent.parent.name.records.fontFeatures[t4.nameID];
         },
         flags: restructure.uint16,
-        coord: new restructure.Array(restructure.fixed32, function(t3) {
-          return t3.parent.axisCount;
+        coord: new restructure.Array(restructure.fixed32, function(t4) {
+          return t4.parent.axisCount;
         }),
-        postscriptNameID: new restructure.Optional(restructure.uint16, function(t3) {
-          return t3.parent.instanceSize - t3._currentOffset > 0;
+        postscriptNameID: new restructure.Optional(restructure.uint16, function(t4) {
+          return t4.parent.instanceSize - t4._currentOffset > 0;
         })
       });
       var fvar = new restructure.Struct({
@@ -41693,8 +41693,8 @@ var require_fontkit_umd = __commonJS({
         offsets: new restructure.Array(new restructure.Pointer(Offset, "void", {
           relativeTo: "offsetToData",
           allowNull: false
-        }), function(t3) {
-          return t3.glyphCount + 1;
+        }), function(t4) {
+          return t4.glyphCount + 1;
         })
       });
       var ClassTable$1 = new restructure.Struct({
@@ -41751,8 +41751,8 @@ var require_fontkit_umd = __commonJS({
         actionType: restructure.uint16,
         actionLength: restructure.uint32,
         actionData: ActionData,
-        padding: new restructure.Reserved(restructure.uint8, function(t3) {
-          return t3.actionLength - t3._currentOffset;
+        padding: new restructure.Reserved(restructure.uint8, function(t4) {
+          return t4.actionLength - t4._currentOffset;
         })
       });
       var PostcompensationAction = new restructure.Array(Action, restructure.uint32);
@@ -41825,8 +41825,8 @@ var require_fontkit_umd = __commonJS({
         type: restructure.uint8,
         subFeatureFlags: restructure.uint32,
         table: SubtableData,
-        padding: new restructure.Reserved(restructure.uint8, function(t3) {
-          return t3.length - t3._currentOffset;
+        padding: new restructure.Reserved(restructure.uint8, function(t4) {
+          return t4.length - t4._currentOffset;
         })
       });
       var FeatureEntry = new restructure.Struct({
@@ -42465,21 +42465,21 @@ var require_fontkit_umd = __commonJS({
         }
       }
       var offs = new Uint16Array(16);
-      function tinf_build_tree(t3, lengths2, off2, num) {
+      function tinf_build_tree(t4, lengths2, off2, num2) {
         var i2, sum;
         for (i2 = 0; i2 < 16; ++i2) {
-          t3.table[i2] = 0;
+          t4.table[i2] = 0;
         }
-        for (i2 = 0; i2 < num; ++i2) {
-          t3.table[lengths2[off2 + i2]]++;
+        for (i2 = 0; i2 < num2; ++i2) {
+          t4.table[lengths2[off2 + i2]]++;
         }
-        t3.table[0] = 0;
+        t4.table[0] = 0;
         for (sum = 0, i2 = 0; i2 < 16; ++i2) {
           offs[i2] = sum;
-          sum += t3.table[i2];
+          sum += t4.table[i2];
         }
-        for (i2 = 0; i2 < num; ++i2) {
-          if (lengths2[off2 + i2]) t3.trans[offs[lengths2[off2 + i2]]++] = i2;
+        for (i2 = 0; i2 < num2; ++i2) {
+          if (lengths2[off2 + i2]) t4.trans[offs[lengths2[off2 + i2]]++] = i2;
         }
       }
       function tinf_getbit(d) {
@@ -42491,18 +42491,18 @@ var require_fontkit_umd = __commonJS({
         d.tag >>>= 1;
         return bit;
       }
-      function tinf_read_bits(d, num, base) {
-        if (!num) return base;
+      function tinf_read_bits(d, num2, base) {
+        if (!num2) return base;
         while (d.bitcount < 24) {
           d.tag |= d.source[d.sourceIndex++] << d.bitcount;
           d.bitcount += 8;
         }
-        var val = d.tag & 65535 >>> 16 - num;
-        d.tag >>>= num;
-        d.bitcount -= num;
+        var val = d.tag & 65535 >>> 16 - num2;
+        d.tag >>>= num2;
+        d.bitcount -= num2;
         return val + base;
       }
-      function tinf_decode_symbol(d, t3) {
+      function tinf_decode_symbol(d, t4) {
         while (d.bitcount < 24) {
           d.tag |= d.source[d.sourceIndex++] << d.bitcount;
           d.bitcount += 8;
@@ -42513,16 +42513,16 @@ var require_fontkit_umd = __commonJS({
           cur = 2 * cur + (tag2 & 1);
           tag2 >>>= 1;
           ++len2;
-          sum += t3.table[len2];
-          cur -= t3.table[len2];
+          sum += t4.table[len2];
+          cur -= t4.table[len2];
         } while (cur >= 0);
         d.tag = tag2;
         d.bitcount -= len2;
-        return t3.trans[sum + cur];
+        return t4.trans[sum + cur];
       }
       function tinf_decode_trees(d, lt, dt) {
         var hlit, hdist, hclen;
-        var i2, num, length;
+        var i2, num2, length;
         hlit = tinf_read_bits(d, 5, 257);
         hdist = tinf_read_bits(d, 5, 1);
         hclen = tinf_read_bits(d, 4, 4);
@@ -42534,27 +42534,27 @@ var require_fontkit_umd = __commonJS({
           lengths[clcidx[i2]] = clen;
         }
         tinf_build_tree(code_tree, lengths, 0, 19);
-        for (num = 0; num < hlit + hdist; ) {
+        for (num2 = 0; num2 < hlit + hdist; ) {
           var sym = tinf_decode_symbol(d, code_tree);
           switch (sym) {
             case 16:
-              var prev = lengths[num - 1];
+              var prev = lengths[num2 - 1];
               for (length = tinf_read_bits(d, 2, 3); length; --length) {
-                lengths[num++] = prev;
+                lengths[num2++] = prev;
               }
               break;
             case 17:
               for (length = tinf_read_bits(d, 3, 3); length; --length) {
-                lengths[num++] = 0;
+                lengths[num2++] = 0;
               }
               break;
             case 18:
               for (length = tinf_read_bits(d, 7, 11); length; --length) {
-                lengths[num++] = 0;
+                lengths[num2++] = 0;
               }
               break;
             default:
-              lengths[num++] = sym;
+              lengths[num2++] = sym;
               break;
           }
         }
@@ -43467,10 +43467,10 @@ var require_fontkit_umd = __commonJS({
       }
       var crcTable = makeTable();
       function crc32(crc, buf, len2, pos) {
-        var t3 = crcTable, end = pos + len2;
+        var t4 = crcTable, end = pos + len2;
         crc ^= -1;
         for (var i2 = pos; i2 < end; i2++) {
-          crc = crc >>> 8 ^ t3[(crc ^ buf[i2]) & 255];
+          crc = crc >>> 8 ^ t4[(crc ^ buf[i2]) & 255];
         }
         return crc ^ -1;
       }
@@ -46935,26 +46935,26 @@ var require_fontkit_umd = __commonJS({
       };
       var getNumericValue = function getNumericValue2(codePoint) {
         var val = trie.get(codePoint);
-        var num = val & NUMBER_MASK;
-        if (num === 0) {
+        var num2 = val & NUMBER_MASK;
+        if (num2 === 0) {
           return null;
-        } else if (num <= 50) {
-          return num - 1;
-        } else if (num < 480) {
-          var numerator = (num >> 4) - 12;
-          var denominator = (num & 15) + 1;
+        } else if (num2 <= 50) {
+          return num2 - 1;
+        } else if (num2 < 480) {
+          var numerator = (num2 >> 4) - 12;
+          var denominator = (num2 & 15) + 1;
           return numerator / denominator;
-        } else if (num < 768) {
-          val = (num >> 5) - 14;
-          var exp = (num & 31) + 2;
+        } else if (num2 < 768) {
+          val = (num2 >> 5) - 14;
+          var exp = (num2 & 31) + 2;
           while (exp > 0) {
             val *= 10;
             exp--;
           }
           return val;
         } else {
-          val = (num >> 2) - 191;
-          var _exp = (num & 3) + 1;
+          val = (num2 >> 2) - 191;
+          var _exp = (num2 & 3) + 1;
           while (_exp > 0) {
             val *= 60;
             _exp--;
@@ -47447,8 +47447,8 @@ var require_fontkit_umd = __commonJS({
         var tag = UNICODE_SCRIPTS[script];
         if (Array.isArray(tag)) {
           for (var _iterator = _createForOfIteratorHelperLoose$6(tag), _step; !(_step = _iterator()).done; ) {
-            var t2 = _step.value;
-            OPENTYPE_SCRIPTS[t2] = script;
+            var t3 = _step.value;
+            OPENTYPE_SCRIPTS[t3] = script;
           }
         } else {
           OPENTYPE_SCRIPTS[tag] = script;
@@ -49888,11 +49888,11 @@ var require_fontkit_umd = __commonJS({
         var glyph2 = glyphs[i2];
         var code2 = glyph2.codePoints[0];
         var s = code2 - HANGUL_BASE;
-        var t3 = T_BASE + s % T_COUNT;
+        var t4 = T_BASE + s % T_COUNT;
         s = s / T_COUNT | 0;
         var l = L_BASE + s / V_COUNT | 0;
         var v2 = V_BASE + s % V_COUNT;
-        if (!font.hasGlyphForCodePoint(l) || !font.hasGlyphForCodePoint(v2) || t3 !== T_BASE && !font.hasGlyphForCodePoint(t3)) {
+        if (!font.hasGlyphForCodePoint(l) || !font.hasGlyphForCodePoint(v2) || t4 !== T_BASE && !font.hasGlyphForCodePoint(t4)) {
           return i2;
         }
         var ljmo = getGlyph(font, l, glyph2.features);
@@ -49900,8 +49900,8 @@ var require_fontkit_umd = __commonJS({
         var vjmo = getGlyph(font, v2, glyph2.features);
         vjmo.features.vjmo = true;
         var insert = [ljmo, vjmo];
-        if (t3 > T_BASE) {
-          var tjmo = getGlyph(font, t3, glyph2.features);
+        if (t4 > T_BASE) {
+          var tjmo = getGlyph(font, t4, glyph2.features);
           tjmo.features.tjmo = true;
           insert.push(tjmo);
         }
@@ -49933,9 +49933,9 @@ var require_fontkit_umd = __commonJS({
             lv = HANGUL_BASE + ((l - L_BASE) * V_COUNT + (v2 - V_BASE)) * T_COUNT;
           }
         }
-        var t3 = tjmo && tjmo.codePoints[0] || T_BASE;
-        if (lv != null && (t3 === T_BASE || isCombiningT(t3))) {
-          var s = lv + (t3 - T_BASE);
+        var t4 = tjmo && tjmo.codePoints[0] || T_BASE;
+        if (lv != null && (t4 === T_BASE || isCombiningT(t4))) {
+          var s = lv + (t4 - T_BASE);
           if (font.hasGlyphForCodePoint(s)) {
             var del = prevType === V ? 3 : 2;
             glyphs.splice(i2 - del + 1, del, getGlyph(font, s, glyph2.features));
@@ -50536,9 +50536,9 @@ var require_fontkit_umd = __commonJS({
                   }
                 }
                 if (glyphs[_j].shaperInfo.category !== CATEGORIES.H && _j > _i8) {
-                  var t3 = glyphs[_i8];
+                  var t4 = glyphs[_i8];
                   glyphs.splice.apply(glyphs, [_i8, 0].concat(glyphs.splice(_i8 + 1, _j - _i8)));
-                  glyphs[_j] = t3;
+                  glyphs[_j] = t4;
                 }
                 break;
               }
@@ -52075,8 +52075,8 @@ var require_fontkit_umd = __commonJS({
             }
             var bbox = new BBox();
             var cx = 0, cy = 0;
-            var f = function f2(t4) {
-              return Math.pow(1 - t4, 3) * p0[i2] + 3 * Math.pow(1 - t4, 2) * t4 * p1[i2] + 3 * (1 - t4) * Math.pow(t4, 2) * p2[i2] + Math.pow(t4, 3) * p3[i2];
+            var f = function f2(t5) {
+              return Math.pow(1 - t5, 3) * p0[i2] + 3 * Math.pow(1 - t5, 2) * t5 * p1[i2] + 3 * (1 - t5) * Math.pow(t5, 2) * p2[i2] + Math.pow(t5, 3) * p3[i2];
             };
             for (var _iterator3 = _createForOfIteratorHelperLoose$l(this.commands), _step3; !(_step3 = _iterator3()).done; ) {
               var c = _step3.value;
@@ -52112,12 +52112,12 @@ var require_fontkit_umd = __commonJS({
                       if (b === 0) {
                         continue;
                       }
-                      var t3 = -c / b;
-                      if (0 < t3 && t3 < 1) {
+                      var t4 = -c / b;
+                      if (0 < t4 && t4 < 1) {
                         if (i2 === 0) {
-                          bbox.addPoint(f(t3), bbox.maxY);
+                          bbox.addPoint(f(t4), bbox.maxY);
                         } else if (i2 === 1) {
-                          bbox.addPoint(bbox.maxX, f(t3));
+                          bbox.addPoint(bbox.maxX, f(t4));
                         }
                       }
                       continue;
@@ -53083,20 +53083,20 @@ var require_fontkit_umd = __commonJS({
                         var _j = stack.pop();
                         if (_j >= 0) {
                           while (_j > 0) {
-                            var t3 = stack[n3 - 1];
+                            var t4 = stack[n3 - 1];
                             for (var _i2 = n3 - 2; _i2 >= 0; _i2--) {
                               stack[_i2 + 1] = stack[_i2];
                             }
-                            stack[0] = t3;
+                            stack[0] = t4;
                             _j--;
                           }
                         } else {
                           while (_j < 0) {
-                            var t3 = stack[0];
+                            var t4 = stack[0];
                             for (var _i22 = 0; _i22 <= n3; _i22++) {
                               stack[_i22] = stack[_i22 + 1];
                             }
-                            stack[n3 - 1] = t3;
+                            stack[n3 - 1] = t4;
                             _j++;
                           }
                         }
@@ -53205,8 +53205,8 @@ var require_fontkit_umd = __commonJS({
         originX: restructure.uint16,
         originY: restructure.uint16,
         type: new restructure.String(4),
-        data: new restructure.Buffer(function(t3) {
-          return t3.parent.buflen - t3._currentOffset;
+        data: new restructure.Buffer(function(t4) {
+          return t4.parent.buflen - t4._currentOffset;
         })
       });
       var SBIXGlyph = /* @__PURE__ */ (function(_TTFGlyph) {
@@ -54904,21 +54904,21 @@ var require_fontkit_umd = __commonJS({
         }
       }
       var offs$1 = new Uint16Array(16);
-      function tinf_build_tree$1(t3, lengths2, off2, num) {
+      function tinf_build_tree$1(t4, lengths2, off2, num2) {
         var i2, sum;
         for (i2 = 0; i2 < 16; ++i2) {
-          t3.table[i2] = 0;
+          t4.table[i2] = 0;
         }
-        for (i2 = 0; i2 < num; ++i2) {
-          t3.table[lengths2[off2 + i2]]++;
+        for (i2 = 0; i2 < num2; ++i2) {
+          t4.table[lengths2[off2 + i2]]++;
         }
-        t3.table[0] = 0;
+        t4.table[0] = 0;
         for (sum = 0, i2 = 0; i2 < 16; ++i2) {
           offs$1[i2] = sum;
-          sum += t3.table[i2];
+          sum += t4.table[i2];
         }
-        for (i2 = 0; i2 < num; ++i2) {
-          if (lengths2[off2 + i2]) t3.trans[offs$1[lengths2[off2 + i2]]++] = i2;
+        for (i2 = 0; i2 < num2; ++i2) {
+          if (lengths2[off2 + i2]) t4.trans[offs$1[lengths2[off2 + i2]]++] = i2;
         }
       }
       function tinf_getbit$1(d) {
@@ -54930,18 +54930,18 @@ var require_fontkit_umd = __commonJS({
         d.tag >>>= 1;
         return bit;
       }
-      function tinf_read_bits$1(d, num, base) {
-        if (!num) return base;
+      function tinf_read_bits$1(d, num2, base) {
+        if (!num2) return base;
         while (d.bitcount < 24) {
           d.tag |= d.source[d.sourceIndex++] << d.bitcount;
           d.bitcount += 8;
         }
-        var val = d.tag & 65535 >>> 16 - num;
-        d.tag >>>= num;
-        d.bitcount -= num;
+        var val = d.tag & 65535 >>> 16 - num2;
+        d.tag >>>= num2;
+        d.bitcount -= num2;
         return val + base;
       }
-      function tinf_decode_symbol$1(d, t3) {
+      function tinf_decode_symbol$1(d, t4) {
         while (d.bitcount < 24) {
           d.tag |= d.source[d.sourceIndex++] << d.bitcount;
           d.bitcount += 8;
@@ -54952,16 +54952,16 @@ var require_fontkit_umd = __commonJS({
           cur = 2 * cur + (tag2 & 1);
           tag2 >>>= 1;
           ++len2;
-          sum += t3.table[len2];
-          cur -= t3.table[len2];
+          sum += t4.table[len2];
+          cur -= t4.table[len2];
         } while (cur >= 0);
         d.tag = tag2;
         d.bitcount -= len2;
-        return t3.trans[sum + cur];
+        return t4.trans[sum + cur];
       }
       function tinf_decode_trees$1(d, lt, dt) {
         var hlit, hdist, hclen;
-        var i2, num, length;
+        var i2, num2, length;
         hlit = tinf_read_bits$1(d, 5, 257);
         hdist = tinf_read_bits$1(d, 5, 1);
         hclen = tinf_read_bits$1(d, 4, 4);
@@ -54973,27 +54973,27 @@ var require_fontkit_umd = __commonJS({
           lengths$1[clcidx$1[i2]] = clen;
         }
         tinf_build_tree$1(code_tree$1, lengths$1, 0, 19);
-        for (num = 0; num < hlit + hdist; ) {
+        for (num2 = 0; num2 < hlit + hdist; ) {
           var sym = tinf_decode_symbol$1(d, code_tree$1);
           switch (sym) {
             case 16:
-              var prev = lengths$1[num - 1];
+              var prev = lengths$1[num2 - 1];
               for (length = tinf_read_bits$1(d, 2, 3); length; --length) {
-                lengths$1[num++] = prev;
+                lengths$1[num2++] = prev;
               }
               break;
             case 17:
               for (length = tinf_read_bits$1(d, 3, 3); length; --length) {
-                lengths$1[num++] = 0;
+                lengths$1[num2++] = 0;
               }
               break;
             case 18:
               for (length = tinf_read_bits$1(d, 7, 11); length; --length) {
-                lengths$1[num++] = 0;
+                lengths$1[num2++] = 0;
               }
               break;
             default:
-              lengths$1[num++] = sym;
+              lengths$1[num2++] = sym;
               break;
           }
         }
@@ -55268,8 +55268,8 @@ var require_fontkit_umd = __commonJS({
         }
         return arr;
       }
-      function tripletToBase64$1(num) {
-        return lookup$1[num >> 18 & 63] + lookup$1[num >> 12 & 63] + lookup$1[num >> 6 & 63] + lookup$1[num & 63];
+      function tripletToBase64$1(num2) {
+        return lookup$1[num2 >> 18 & 63] + lookup$1[num2 >> 12 & 63] + lookup$1[num2 >> 6 & 63] + lookup$1[num2 & 63];
       }
       function encodeChunk$1(uint8, start, end) {
         var tmp;
@@ -57316,8 +57316,8 @@ var require_fontkit_umd = __commonJS({
       var transformDictionaryWord = function transformDictionaryWord2(dst, idx, word, len2, transform2) {
         var prefix2 = kTransforms[transform2].prefix;
         var suffix = kTransforms[transform2].suffix;
-        var t3 = kTransforms[transform2].transform;
-        var skip = t3 < kOmitFirst1 ? 0 : t3 - (kOmitFirst1 - 1);
+        var t4 = kTransforms[transform2].transform;
+        var skip = t4 < kOmitFirst1 ? 0 : t4 - (kOmitFirst1 - 1);
         var i2 = 0;
         var start_idx = idx;
         var uppercase;
@@ -57330,16 +57330,16 @@ var require_fontkit_umd = __commonJS({
         }
         word += skip;
         len2 -= skip;
-        if (t3 <= kOmitLast9) {
-          len2 -= t3;
+        if (t4 <= kOmitLast9) {
+          len2 -= t4;
         }
         for (i2 = 0; i2 < len2; i2++) {
           dst[idx++] = dictionary.dictionary[word + i2];
         }
         uppercase = idx - len2;
-        if (t3 === kUppercaseFirst) {
+        if (t4 === kUppercaseFirst) {
           ToUpperCase(dst, uppercase);
-        } else if (t3 === kUppercaseAll) {
+        } else if (t4 === kUppercaseAll) {
           while (len2 > 0) {
             var step = ToUpperCase(dst, uppercase);
             uppercase += step;
@@ -58124,22 +58124,22 @@ var require_fontkit_umd = __commonJS({
       var knownTags = ["cmap", "head", "hhea", "hmtx", "maxp", "name", "OS/2", "post", "cvt ", "fpgm", "glyf", "loca", "prep", "CFF ", "VORG", "EBDT", "EBLC", "gasp", "hdmx", "kern", "LTSH", "PCLT", "VDMX", "vhea", "vmtx", "BASE", "GDEF", "GPOS", "GSUB", "EBSC", "JSTF", "MATH", "CBDT", "CBLC", "COLR", "CPAL", "SVG ", "sbix", "acnt", "avar", "bdat", "bloc", "bsln", "cvar", "fdsc", "feat", "fmtx", "fvar", "gvar", "hsty", "just", "lcar", "mort", "morx", "opbd", "prop", "trak", "Zapf", "Silf", "Glat", "Gloc", "Feat", "Sill"];
       var WOFF2DirectoryEntry = new restructure.Struct({
         flags: restructure.uint8,
-        customTag: new restructure.Optional(new restructure.String(4), function(t3) {
-          return (t3.flags & 63) === 63;
+        customTag: new restructure.Optional(new restructure.String(4), function(t4) {
+          return (t4.flags & 63) === 63;
         }),
-        tag: function tag2(t3) {
-          return t3.customTag || knownTags[t3.flags & 63];
+        tag: function tag2(t4) {
+          return t4.customTag || knownTags[t4.flags & 63];
         },
         // || (() => { throw new Error(`Bad tag: ${flags & 0x3f}`); })(); },
         length: Base128,
-        transformVersion: function transformVersion(t3) {
-          return t3.flags >>> 6 & 3;
+        transformVersion: function transformVersion(t4) {
+          return t4.flags >>> 6 & 3;
         },
-        transformed: function transformed(t3) {
-          return t3.tag === "glyf" || t3.tag === "loca" ? t3.transformVersion === 0 : t3.transformVersion !== 0;
+        transformed: function transformed(t4) {
+          return t4.tag === "glyf" || t4.tag === "loca" ? t4.transformVersion === 0 : t4.transformVersion !== 0;
         },
-        transformLength: new restructure.Optional(Base128, function(t3) {
-          return t3.transformed;
+        transformLength: new restructure.Optional(Base128, function(t4) {
+          return t4.transformed;
         })
       });
       var WOFF2Directory = new restructure.Struct({
@@ -58497,16 +58497,16 @@ var require_fontkit_umd = __commonJS({
       var Type = new restructure.Struct({
         name: new restructure.String(4),
         maxTypeIndex: restructure.uint16,
-        refList: new restructure.Pointer(restructure.uint16, new restructure.Array(Ref, function(t3) {
-          return t3.maxTypeIndex + 1;
+        refList: new restructure.Pointer(restructure.uint16, new restructure.Array(Ref, function(t4) {
+          return t4.maxTypeIndex + 1;
         }), {
           type: "parent"
         })
       });
       var TypeList = new restructure.Struct({
         length: restructure.uint16,
-        types: new restructure.Array(Type, function(t3) {
-          return t3.length + 1;
+        types: new restructure.Array(Type, function(t4) {
+          return t4.length + 1;
         })
       });
       var DFontMap = new restructure.Struct({
@@ -60924,13 +60924,13 @@ function roundLeaves(nominal, total, step) {
   return out;
 }
 function planDoors(input) {
-  const { widthMm: W, t: t2, innerWidths, gapEdge, gapBetween } = input;
+  const { widthMm: W, t: t3, innerWidths, gapEdge, gapBetween } = input;
   const n3 = innerWidths.length;
   const splitAfter = input.splitAfter ?? null;
-  const bt = (i) => i === splitAfter ? 2 * t2 : t2;
+  const bt = (i) => i === splitAfter ? 2 * t3 : t3;
   const left = [];
   const right = [];
-  let xStart = t2;
+  let xStart = t3;
   innerWidths.forEach((inner, i) => {
     left.push(i === 0 ? 0 : xStart - bt(i - 1) / 2);
     right.push(i === n3 - 1 ? W : xStart + inner + bt(i) / 2);
@@ -60975,16 +60975,16 @@ function planDoors(input) {
     const meta = [];
     for (let k = i; k < j; k++) {
       const w = singleLeafWidths[k];
-      const num = k + 1;
+      const num2 = k + 1;
       if (types[k] === "double") {
         const half3 = (w - gapBetween) / 2;
-        meta.push({ sectionIndex: k, hingeSide: "left", id: `door-${num}-left`, nominal: half3 });
-        meta.push({ sectionIndex: k, hingeSide: "right", id: `door-${num}-right`, nominal: half3 });
+        meta.push({ sectionIndex: k, hingeSide: "left", id: `door-${num2}-left`, nominal: half3 });
+        meta.push({ sectionIndex: k, hingeSide: "right", id: `door-${num2}-right`, nominal: half3 });
       } else {
         meta.push({
           sectionIndex: k,
           hingeSide: types[k] === "single_left" ? "left" : "right",
-          id: `door-${num}`,
+          id: `door-${num2}`,
           nominal: w
         });
       }
@@ -61031,13 +61031,13 @@ function defaultPresetFor(doorType, c) {
   return c?.autoPresetSingle ?? "shelves";
 }
 var half = (v) => Math.round(v * 2) / 2;
-function evenShelfBottoms(yFrom, yTo, t2, pitch) {
+function evenShelfBottoms(yFrom, yTo, t3, pitch) {
   const available = yTo - yFrom;
   if (available <= 0) return [];
   const c = Math.max(1, Math.round(available / pitch));
   const k = c - 1;
-  const h = (available - k * t2) / c;
-  return Array.from({ length: k }, (_, i) => half(yFrom + (i + 1) * h + i * t2));
+  const h = (available - k * t3) / c;
+  return Array.from({ length: k }, (_, i) => half(yFrom + (i + 1) * h + i * t3));
 }
 function slideLength(depthAvailable, c) {
   const fit = Math.floor(depthAvailable / c.drawerSlideStepMm) * c.drawerSlideStepMm;
@@ -61050,7 +61050,7 @@ function planInterior(box, preset, c) {
   if (preset === "long_hang" || preset === "short_hang" || preset === "short_hang_drawers") {
     return c.ergonomics ? planErgonomic(box, preset, c, c.ergonomics) : planInterior(box, "shelves", c);
   }
-  const { t: t2, yBottom, yTop } = box;
+  const { t: t3, yBottom, yTop } = box;
   const n3 = box.index + 1;
   const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
   const shelves = [];
@@ -61064,7 +61064,7 @@ function planInterior(box, preset, c) {
   if (hasDrawers) {
     const boxW = box.innerW - 2 * c.drawerSlideClearanceMm;
     const depth = slideLength(
-      box.innerDepth - c.drawerFrontSetbackMm - t2 - c.drawerBackClearanceMm,
+      box.innerDepth - c.drawerFrontSetbackMm - t3 - c.drawerBackClearanceMm,
       c
     );
     for (let i = 0; i < c.drawerCount; i++) {
@@ -61080,11 +61080,11 @@ function planInterior(box, preset, c) {
     }
     const zone = c.drawerGapMm + c.drawerCount * (c.drawerFrontHeightMm + c.drawerGapMm);
     addShelf(yBottom + zone, "fixed", `s${n3}-shelf-fixed`);
-    floorY = yBottom + zone + t2;
+    floorY = yBottom + zone + t3;
   }
   let ceilingY = yTop;
   if (hasTopShelf) {
-    const shelfBottom = yTop - c.railTopShelfDropMm - t2;
+    const shelfBottom = yTop - c.railTopShelfDropMm - t3;
     addShelf(shelfBottom, "top", `s${n3}-shelf-top`);
     ceilingY = shelfBottom;
   }
@@ -61101,7 +61101,7 @@ function planInterior(box, preset, c) {
     clearHangingHeightMm = axisY - floorY;
   }
   if (preset === "shelves" || preset === "drawers_shelves") {
-    evenShelfBottoms(floorY, ceilingY, t2, c.shelfPitchTargetMm).forEach(
+    evenShelfBottoms(floorY, ceilingY, t3, c.shelfPitchTargetMm).forEach(
       (y, i) => addShelf(y, "removable", `s${n3}-shelf-${i + 1}`)
     );
   }
@@ -61117,10 +61117,10 @@ function planInterior(box, preset, c) {
   return { preset, shelves, rails, drawers, clearHangingHeightMm, warnings };
 }
 function drawerStack(box, c, n3) {
-  const { t: t2, yBottom } = box;
+  const { t: t3, yBottom } = box;
   const boxW = box.innerW - 2 * c.drawerSlideClearanceMm;
   const depth = slideLength(
-    box.innerDepth - c.drawerFrontSetbackMm - t2 - c.drawerBackClearanceMm,
+    box.innerDepth - c.drawerFrontSetbackMm - t3 - c.drawerBackClearanceMm,
     c
   );
   const drawers = [];
@@ -61136,10 +61136,10 @@ function drawerStack(box, c, n3) {
     });
   }
   const zone = c.drawerGapMm + c.drawerCount * (c.drawerFrontHeightMm + c.drawerGapMm);
-  return { drawers, shelfY: yBottom + zone, floorY: yBottom + zone + t2 };
+  return { drawers, shelfY: yBottom + zone, floorY: yBottom + zone + t3 };
 }
 function planErgonomic(box, preset, c, e) {
-  const { t: t2, yBottom, yTop } = box;
+  const { t: t3, yBottom, yTop } = box;
   const n3 = box.index + 1;
   const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
   const shelves = [];
@@ -61162,18 +61162,18 @@ function planErgonomic(box, preset, c, e) {
     zMm: box.zBack + box.innerDepth / 2
   });
   const dividerY = railTop + e.railTopToShelfMm;
-  if (yTop - (dividerY + t2) >= e.minShelfGapMm) {
+  if (yTop - (dividerY + t3) >= e.minShelfGapMm) {
     addShelf(dividerY, "top", `s${n3}-shelf-top`);
-    evenShelfBottoms(dividerY + t2, yTop, t2, c.shelfPitchTargetMm).forEach(
+    evenShelfBottoms(dividerY + t3, yTop, t3, c.shelfPitchTargetMm).forEach(
       (y, i) => addShelf(y, "removable", `s${n3}-shelf-antresol-${i + 1}`)
     );
   }
   let clear = railTop - floorY;
   if (preset === "short_hang") {
     const shelfTop = railTop - e.shortHangClearMm;
-    if (shelfTop - t2 - floorY >= e.minShelfGapMm) {
-      addShelf(shelfTop - t2, "fixed", `s${n3}-shelf-fixed`);
-      evenShelfBottoms(floorY, shelfTop - t2, t2, c.shelfPitchTargetMm).forEach(
+    if (shelfTop - t3 - floorY >= e.minShelfGapMm) {
+      addShelf(shelfTop - t3, "fixed", `s${n3}-shelf-fixed`);
+      evenShelfBottoms(floorY, shelfTop - t3, t3, c.shelfPitchTargetMm).forEach(
         (y, i) => addShelf(y, "removable", `s${n3}-shelf-${i + 1}`)
       );
       clear = railTop - shelfTop;
@@ -61191,35 +61191,35 @@ function planErgonomic(box, preset, c, e) {
   }
   return { preset, shelves, rails, drawers, clearHangingHeightMm: clear, warnings };
 }
-function bookShelfBottoms(yFrom, yTo, t2, gapMin, gapMax) {
+function bookShelfBottoms(yFrom, yTo, t3, gapMin, gapMax) {
   const available = yTo - yFrom;
   if (available <= 0) return [];
-  let c = Math.max(1, Math.floor((available + t2) / (gapMin + t2)));
-  const gap = (n3) => (available - (n3 - 1) * t2) / n3;
+  let c = Math.max(1, Math.floor((available + t3) / (gapMin + t3)));
+  const gap = (n3) => (available - (n3 - 1) * t3) / n3;
   if (gap(c) > gapMax && gap(c + 1) >= BOOK_GAP_GOST_MIN_MM) c += 1;
   const h = gap(c);
-  return Array.from({ length: c - 1 }, (_, i) => half(yFrom + (i + 1) * h + i * t2));
+  return Array.from({ length: c - 1 }, (_, i) => half(yFrom + (i + 1) * h + i * t3));
 }
 var BOOK_GAP_GOST_MIN_MM = 180;
 function planBooksLower(box, c, b) {
-  const { t: t2, yBottom, yTop } = box;
+  const { t: t3, yBottom, yTop } = box;
   const n3 = box.index + 1;
   const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
   const shelves = [];
   const addShelf = (yMm, kind, id) => shelves.push({ id, yMm: half(yMm), kind, lengthMm: box.innerW, depthMm: shelfDepth });
   const gapEdge = c.doorGapEdgeMm ?? 1.5;
-  const doorBottom = yBottom - t2 + gapEdge;
+  const doorBottom = yBottom - t3 + gapEdge;
   const doorTop = doorBottom + (c.lowerDoorHeightMm ?? 800);
   const dividerTop = doorTop + gapEdge;
   const warnings = [];
-  if (dividerTop - t2 - yBottom < BOOK_GAP_GOST_MIN_MM || yTop - dividerTop < BOOK_GAP_GOST_MIN_MM) {
+  if (dividerTop - t3 - yBottom < BOOK_GAP_GOST_MIN_MM || yTop - dividerTop < BOOK_GAP_GOST_MIN_MM) {
     warnings.push("LOWER_DOOR_HEIGHT");
   } else {
-    addShelf(dividerTop - t2, "fixed", `s${n3}-shelf-fixed`);
-    evenShelfBottoms(yBottom, dividerTop - t2, t2, c.shelfPitchTargetMm).forEach(
+    addShelf(dividerTop - t3, "fixed", `s${n3}-shelf-fixed`);
+    evenShelfBottoms(yBottom, dividerTop - t3, t3, c.shelfPitchTargetMm).forEach(
       (y, i) => addShelf(y, "removable", `s${n3}-shelf-${i + 1}`)
     );
-    bookShelfBottoms(dividerTop, yTop, t2, b.gapMinMm, b.gapMaxMm).forEach(
+    bookShelfBottoms(dividerTop, yTop, t3, b.gapMinMm, b.gapMaxMm).forEach(
       (y, i) => addShelf(y, "removable", `s${n3}-shelf-book-${i + 1}`)
     );
   }
@@ -61260,24 +61260,24 @@ function carcassSplit(template, params, widthMm) {
   if (choice === "2") return true;
   return widthMm >= getNumberConstant(template, "splitCarcassFromWidthMm");
 }
-function innerTotal(widthMm, t2, n3) {
-  return widthMm - (n3 + 1) * t2;
+function innerTotal(widthMm, t3, n3) {
+  return widthMm - (n3 + 1) * t3;
 }
-function maxSectionInnerWidth(widthMm, t2, n3) {
-  return Math.ceil(innerTotal(widthMm, t2, n3) / n3);
+function maxSectionInnerWidth(widthMm, t3, n3) {
+  return Math.ceil(innerTotal(widthMm, t3, n3) / n3);
 }
-function autoSectionCount(template, widthMm, t2, acceptable = () => true) {
+function autoSectionCount(template, widthMm, t3, acceptable = () => true) {
   const maxSpan = getNumberConstant(template, "maxShelfSpanMm");
   const counts = (getParamDef(template, "sections")?.options ?? []).filter((o) => typeof o === "number").sort((a, b) => a - b);
   for (const n3 of counts) {
-    if (maxSectionInnerWidth(widthMm, t2, n3) <= maxSpan && acceptable(n3)) return n3;
+    if (maxSectionInnerWidth(widthMm, t3, n3) <= maxSpan && acceptable(n3)) return n3;
   }
   return counts[counts.length - 1] ?? 1;
 }
-function doorPlanFor(template, params, widthMm, t2, innerWidths, splitAfter = null) {
+function doorPlanFor(template, params, widthMm, t3, innerWidths, splitAfter = null) {
   return planDoors({
     widthMm,
-    t: t2,
+    t: t3,
     innerWidths,
     splitAfter,
     preset: String(params.doors),
@@ -61355,7 +61355,7 @@ function computeLayout(template, params, catalog = currentCatalog) {
   const widthMm = Number(params.width);
   const heightMm = Number(params.height);
   const depthMm = Number(params.depth);
-  const t2 = corpusMaterial.thicknessMm;
+  const t3 = corpusMaterial.thicknessMm;
   const hasPlinth = params.base === "plinth";
   const plinthHeightMm = hasPlinth ? Number(params.plinthHeight) : 0;
   const plinthRecessMm = hasPlinth ? Number(params.plinthRecess) : 0;
@@ -61364,19 +61364,19 @@ function computeLayout(template, params, catalog = currentCatalog) {
   const maxSingleLeafWidthMm = getNumberConstant(template, "maxSingleLeafWidthMm");
   const splitWanted = carcassSplit(template, params, widthMm);
   const splitFor = (n3) => splitWanted && n3 >= 2 ? Math.ceil(n3 / 2) - 1 : null;
-  const innerFor = (n3) => distributeEvenly(innerTotal(widthMm, t2, n3) - (splitFor(n3) !== null ? t2 : 0), n3);
+  const innerFor = (n3) => distributeEvenly(innerTotal(widthMm, t3, n3) - (splitFor(n3) !== null ? t3 : 0), n3);
   const sectionCount = params.sections === "auto" ? autoSectionCount(
     template,
     widthMm,
-    t2,
+    t3,
     (n3) => params.doors === "none" || doorPlanValid(
-      doorPlanFor(template, params, widthMm, t2, innerFor(n3), splitFor(n3)),
+      doorPlanFor(template, params, widthMm, t3, innerFor(n3), splitFor(n3)),
       maxSingleLeafWidthMm
     )
   ) : Number(params.sections);
   const sectionInnerWidthsMm = innerFor(sectionCount);
   const splitAfter = splitFor(sectionCount);
-  const doors = doorPlanFor(template, params, widthMm, t2, sectionInnerWidthsMm, splitAfter);
+  const doors = doorPlanFor(template, params, widthMm, t3, sectionInnerWidthsMm, splitAfter);
   const hasDoors = doors.types.some((d) => d !== "none");
   const doorThicknessMm = hasDoors ? doorMaterial.thicknessMm : 0;
   const doorGapFrontMm = hasDoors ? getNumberConstant(template, "doorGapFrontMm") : 0;
@@ -61389,19 +61389,19 @@ function computeLayout(template, params, catalog = currentCatalog) {
     lowerDoorHeightMm: Number(params.lowerDoorHeight ?? 800),
     doorGapEdgeMm
   };
-  let xs = t2;
+  let xs = t3;
   const interior = sectionInnerWidthsMm.map((innerW, index) => {
     const box = {
       index,
       xStart: xs,
       innerW,
-      yBottom: plinthHeightMm + t2,
-      yTop: heightMm - t2,
+      yBottom: plinthHeightMm + t3,
+      yTop: heightMm - t3,
       zBack: backThicknessMm,
       innerDepth: carcassDepthMm,
-      t: t2
+      t: t3
     };
-    xs += innerW + (index === splitAfter ? 2 * t2 : t2);
+    xs += innerW + (index === splitAfter ? 2 * t3 : t3);
     const choice = params[`interior${index + 1}`];
     return resolveInterior(
       box,
@@ -61417,7 +61417,7 @@ function computeLayout(template, params, catalog = currentCatalog) {
     corpusMaterial,
     doorMaterial,
     backMaterial,
-    panelThicknessMm: t2,
+    panelThicknessMm: t3,
     hasPlinth,
     plinthHeightMm,
     plinthRecessMm,
@@ -61569,14 +61569,14 @@ function validate(params, template = wardrobeTemplate, catalogIn) {
   return [...resolved.issues, ...layoutIssues(computeLayout(template, resolved.params, catalog))];
 }
 function buildSections(layout) {
-  const t2 = layout.panelThicknessMm;
+  const t3 = layout.panelThicknessMm;
   const sections = [];
-  let x = t2;
+  let x = t3;
   layout.sectionInnerWidthsMm.forEach((w, index) => {
     sections.push({
       index,
       innerWidthMm: w,
-      innerHeightMm: layout.carcassHeightMm - 2 * t2,
+      innerHeightMm: layout.carcassHeightMm - 2 * t3,
       innerDepthMm: layout.carcassDepthMm,
       xStartMm: x,
       doorType: layout.doorTypes[index] ?? "none",
@@ -61587,7 +61587,7 @@ function buildSections(layout) {
       drawers: layout.interior[index]?.drawers ?? [],
       clearHangingHeightMm: layout.interior[index]?.clearHangingHeightMm ?? null
     });
-    x += w + (index === layout.splitAfter ? 2 * t2 : t2);
+    x += w + (index === layout.splitAfter ? 2 * t3 : t3);
   });
   return sections;
 }
@@ -61597,7 +61597,7 @@ function buildPanels(layout, sections) {
   );
 }
 function buildCarcassAndDoors(layout, sections) {
-  const t2 = layout.panelThicknessMm;
+  const t3 = layout.panelThicknessMm;
   const W = layout.widthMm;
   const H = layout.heightMm;
   const ph = layout.plinthHeightMm;
@@ -61608,7 +61608,7 @@ function buildCarcassAndDoors(layout, sections) {
   const corpus = layout.corpusMaterial.id;
   const split = layout.splitAfter;
   const splitSection = split === null ? null : sections[split];
-  const xSplit = splitSection ? splitSection.xStartMm + splitSection.innerWidthMm + t2 : null;
+  const xSplit = splitSection ? splitSection.xStartMm + splitSection.innerWidthMm + t3 : null;
   const carcasses = xSplit === null ? [[0, W]] : [
     [0, xSplit],
     [xSplit, W]
@@ -61619,35 +61619,35 @@ function buildCarcassAndDoors(layout, sections) {
     role: "side",
     lengthMm: H,
     widthMm: Dc,
-    thicknessMm: t2,
+    thicknessMm: t3,
     material: corpus,
     position: [x, H / 2, zMid],
     rotation: ROT_VERTICAL_YZ
   });
-  const panels = [side("side-left", t2 / 2), side("side-right", W - t2 / 2)];
+  const panels = [side("side-left", t3 / 2), side("side-right", W - t3 / 2)];
   if (xSplit !== null) {
-    panels.push(side("side-split-left", xSplit - t2 / 2), side("side-split-right", xSplit + t2 / 2));
+    panels.push(side("side-split-left", xSplit - t3 / 2), side("side-split-right", xSplit + t3 / 2));
   }
   carcasses.forEach(([x0, x1], i) => {
     panels.push(
       {
         id: `bottom${suffix(i)}`,
         role: "bottom",
-        lengthMm: x1 - x0 - 2 * t2,
+        lengthMm: x1 - x0 - 2 * t3,
         widthMm: Dc,
-        thicknessMm: t2,
+        thicknessMm: t3,
         material: corpus,
-        position: [(x0 + x1) / 2, ph + t2 / 2, zMid],
+        position: [(x0 + x1) / 2, ph + t3 / 2, zMid],
         rotation: ROT_HORIZONTAL
       },
       {
         id: `top${suffix(i)}`,
         role: "top",
-        lengthMm: x1 - x0 - 2 * t2,
+        lengthMm: x1 - x0 - 2 * t3,
         widthMm: Dc,
-        thicknessMm: t2,
+        thicknessMm: t3,
         material: corpus,
-        position: [(x0 + x1) / 2, H - t2 / 2, zMid],
+        position: [(x0 + x1) / 2, H - t3 / 2, zMid],
         rotation: ROT_HORIZONTAL
       }
     );
@@ -61657,11 +61657,11 @@ function buildCarcassAndDoors(layout, sections) {
     panels.push({
       id: `partition-${s.index + 1}`,
       role: "partition",
-      lengthMm: Hc - 2 * t2,
+      lengthMm: Hc - 2 * t3,
       widthMm: Dc,
-      thicknessMm: t2,
+      thicknessMm: t3,
       material: corpus,
-      position: [s.xStartMm + s.innerWidthMm + t2 / 2, ph + Hc / 2, zMid],
+      position: [s.xStartMm + s.innerWidthMm + t3 / 2, ph + Hc / 2, zMid],
       rotation: ROT_VERTICAL_YZ
     });
   }
@@ -61686,21 +61686,21 @@ function buildCarcassAndDoors(layout, sections) {
         {
           id: `plinth-front${suffix(i)}`,
           role: "plinth",
-          lengthMm: x1 - x0 - 2 * t2,
+          lengthMm: x1 - x0 - 2 * t3,
           widthMm: ph,
-          thicknessMm: t2,
+          thicknessMm: t3,
           material: corpus,
-          position: [(x0 + x1) / 2, ph / 2, layout.carcassFrontZMm - layout.plinthRecessMm - t2 / 2],
+          position: [(x0 + x1) / 2, ph / 2, layout.carcassFrontZMm - layout.plinthRecessMm - t3 / 2],
           rotation: ROT_VERTICAL_XY
         },
         {
           id: `plinth-back${suffix(i)}`,
           role: "plinth",
-          lengthMm: x1 - x0 - 2 * t2,
+          lengthMm: x1 - x0 - 2 * t3,
           widthMm: ph,
-          thicknessMm: t2,
+          thicknessMm: t3,
           material: corpus,
-          position: [(x0 + x1) / 2, ph / 2, zC + t2 / 2],
+          position: [(x0 + x1) / 2, ph / 2, zC + t3 / 2],
           rotation: ROT_VERTICAL_XY
         }
       );
@@ -61728,7 +61728,7 @@ function buildCarcassAndDoors(layout, sections) {
   return panels;
 }
 function buildInterior(layout, sections) {
-  const t2 = layout.panelThicknessMm;
+  const t3 = layout.panelThicknessMm;
   const zBack = layout.carcassBackZMm;
   const zFront = layout.carcassFrontZMm;
   const corpus = layout.corpusMaterial.id;
@@ -61740,7 +61740,7 @@ function buildInterior(layout, sections) {
     const xMid = s.xStartMm + s.innerWidthMm / 2;
     for (const d of plan.drawers) {
       const frontFaceZ = zFront - layoutDrawerSetback(layout);
-      const boxBackZ = frontFaceZ - t2 - d.boxDepthMm;
+      const boxBackZ = frontFaceZ - t3 - d.boxDepthMm;
       const boxBottomY = d.frontYMm + (d.frontHeightMm - d.boxHeightMm) / 2;
       const boxLeft = xMid - d.boxWidthMm / 2;
       const extra = { sectionIndex: s.index };
@@ -61750,9 +61750,9 @@ function buildInterior(layout, sections) {
           role: "drawer_front",
           lengthMm: d.frontWidthMm,
           widthMm: d.frontHeightMm,
-          thicknessMm: t2,
+          thicknessMm: t3,
           material: corpus,
-          position: [xMid, d.frontYMm + d.frontHeightMm / 2, frontFaceZ - t2 / 2],
+          position: [xMid, d.frontYMm + d.frontHeightMm / 2, frontFaceZ - t3 / 2],
           rotation: ROT_VERTICAL_XY,
           ...extra
         },
@@ -61761,9 +61761,9 @@ function buildInterior(layout, sections) {
           role: "drawer_side",
           lengthMm: d.boxHeightMm,
           widthMm: d.boxDepthMm,
-          thicknessMm: t2,
+          thicknessMm: t3,
           material: corpus,
-          position: [boxLeft + t2 / 2, boxBottomY + d.boxHeightMm / 2, boxBackZ + d.boxDepthMm / 2],
+          position: [boxLeft + t3 / 2, boxBottomY + d.boxHeightMm / 2, boxBackZ + d.boxDepthMm / 2],
           rotation: ROT_VERTICAL_YZ,
           ...extra
         },
@@ -61772,10 +61772,10 @@ function buildInterior(layout, sections) {
           role: "drawer_side",
           lengthMm: d.boxHeightMm,
           widthMm: d.boxDepthMm,
-          thicknessMm: t2,
+          thicknessMm: t3,
           material: corpus,
           position: [
-            boxLeft + d.boxWidthMm - t2 / 2,
+            boxLeft + d.boxWidthMm - t3 / 2,
             boxBottomY + d.boxHeightMm / 2,
             boxBackZ + d.boxDepthMm / 2
           ],
@@ -61785,11 +61785,11 @@ function buildInterior(layout, sections) {
         {
           id: `${d.id}-back`,
           role: "drawer_back",
-          lengthMm: d.boxWidthMm - 2 * t2,
+          lengthMm: d.boxWidthMm - 2 * t3,
           widthMm: d.boxHeightMm,
-          thicknessMm: t2,
+          thicknessMm: t3,
           material: corpus,
-          position: [xMid, boxBottomY + d.boxHeightMm / 2, boxBackZ + t2 / 2],
+          position: [xMid, boxBottomY + d.boxHeightMm / 2, boxBackZ + t3 / 2],
           rotation: ROT_VERTICAL_XY,
           ...extra
         },
@@ -61812,9 +61812,9 @@ function buildInterior(layout, sections) {
         role: "shelf",
         lengthMm: sh.lengthMm,
         widthMm: sh.depthMm,
-        thicknessMm: t2,
+        thicknessMm: t3,
         material: corpus,
-        position: [xMid, sh.yMm + t2 / 2, zBack + sh.depthMm / 2],
+        position: [xMid, sh.yMm + t3 / 2, zBack + sh.depthMm / 2],
         rotation: ROT_HORIZONTAL,
         sectionIndex: s.index
       });
@@ -61959,7 +61959,7 @@ function build(template, p, catalog) {
   const corpus = String(p.corpusMaterial);
   const frame = String(p.frameColor);
   const tt = getMaterial(catalog, top)?.thicknessMm ?? 22;
-  const t2 = getMaterial(catalog, corpus)?.thicknessMm ?? 16;
+  const t3 = getMaterial(catalog, corpus)?.thicknessMm ?? 16;
   const band = {
     bandId: getStringConstant(template, "edgeBandId"),
     thicknessMm: n(template, "edgeBandThicknessMm")
@@ -61984,8 +61984,8 @@ function build(template, p, catalog) {
     const inset = n(template, "legDepthInsetMm");
     const legD = D - 2 * inset;
     for (const [id, x] of [
-      ["leg-left", t2 / 2],
-      ["leg-right", W - t2 / 2]
+      ["leg-left", t3 / 2],
+      ["leg-right", W - t3 / 2]
     ]) {
       panels.push(
         part({
@@ -61993,7 +61993,7 @@ function build(template, p, catalog) {
           role: "leg",
           lengthMm: under,
           widthMm: legD,
-          thicknessMm: t2,
+          thicknessMm: t3,
           material: corpus,
           position: [x, under / 2, D / 2],
           rotation: ROT_SIDE,
@@ -62009,11 +62009,11 @@ function build(template, p, catalog) {
       part({
         id: "modesty",
         role: "modesty",
-        lengthMm: W - 2 * t2,
+        lengthMm: W - 2 * t3,
         widthMm: mh,
-        thicknessMm: t2,
+        thicknessMm: t3,
         material: corpus,
-        position: [W / 2, under - mh / 2, mz + t2 / 2],
+        position: [W / 2, under - mh / 2, mz + t3 / 2],
         rotation: ROT_FRONT,
         banding: "front",
         band,
@@ -62128,8 +62128,8 @@ function layoutOf(template, p, catalog) {
   const corpus = String(p.corpusMaterial);
   const front = p.doorMaterial === SAME ? corpus : String(p.doorMaterial);
   const back = getStringConstant(template, "backMaterial");
-  const t2 = getMaterial(catalog, corpus)?.thicknessMm ?? 16;
-  const frontT = getMaterial(catalog, front)?.thicknessMm ?? t2;
+  const t3 = getMaterial(catalog, corpus)?.thicknessMm ?? 16;
+  const frontT = getMaterial(catalog, front)?.thicknessMm ?? t3;
   const backT = getMaterial(catalog, back)?.thicknessMm ?? 3;
   const base = p.base === "plinth" ? "plinth" : "castors";
   const baseH = base === "castors" ? n2(template, "castorHeightMm") : n2(template, "plinthHeightMm");
@@ -62138,7 +62138,7 @@ function layoutOf(template, p, catalog) {
     W: Number(p.width),
     H: Number(p.height),
     D,
-    t: t2,
+    t: t3,
     frontT,
     backT,
     baseH,
@@ -63514,15 +63514,15 @@ var import_pdf_lib2 = __toESM(require_cjs(), 1);
 // src/lead/summary.ts
 var cm = (mm) => Math.round(mm / 10);
 function summarizeResult(params, result, lang, template = wardrobeTemplate) {
-  const t2 = (key, values) => translate(lang, key, values);
+  const t3 = (key, values) => translate(lang, key, values);
   const label = (key, value) => {
     const k = `option.${key}.${value}`;
-    const s = t2(k);
+    const s = t3(k);
     return s === k ? value : s;
   };
   const decor = (id) => {
     const m = id ? getMaterial(allMaterials, id) : void 0;
-    return m ? t2(m.decorName) : id ?? "";
+    return m ? t3(m.decorName) : id ?? "";
   };
   const code = (id) => id && getMaterial(allMaterials, id)?.code || null;
   const { params: p } = resolveParams(template, params);
@@ -63533,40 +63533,40 @@ function summarizeResult(params, result, lang, template = wardrobeTemplate) {
   const role = (r) => result.panels.find((x) => x.role === r)?.material;
   let mainId;
   let secondId;
-  let mainLabel = t2("present.corpus");
-  let secondLabel = t2("present.door");
+  let mainLabel = t3("present.corpus");
+  let secondLabel = t3("present.door");
   let sections;
   let doors;
   if (product === "desk") {
     mainId = role("worktop");
     secondId = role("leg") ?? role("frame");
-    mainLabel = t2("present.top");
-    secondLabel = t2("present.legs");
+    mainLabel = t3("present.top");
+    secondLabel = t3("present.legs");
     sections = label("legs", String(p.legs));
     doors = "";
   } else if (product === "pedestal") {
     mainId = role("side");
     secondId = role("drawer_front") ?? role("door");
-    secondLabel = t2("present.front");
+    secondLabel = t3("present.front");
     sections = label("layout", String(p.layout));
     doors = label("pedestalBase", String(p.base));
   } else {
     mainId = role("side");
     secondId = role("door");
     const parts = result.sections.map((s) => `${s.index + 1}) ${label("interior", s.preset)}`);
-    sections = `${t2("c.parts", { count: result.sections.length })}: ${parts.join("; ")}`;
+    sections = `${t3("c.parts", { count: result.sections.length })}: ${parts.join("; ")}`;
     doors = result.sections.map((s) => `${s.index + 1}) ${label("doorSection", s.doorType)}`).join("; ");
   }
   const main = decor(mainId);
   const second = secondId ? decor(secondId) : null;
   return {
     product,
-    productName: t2(`product.${product}`),
+    productName: t3(`product.${product}`),
     widthMm: w,
     heightMm: h,
     depthMm: d,
     sizeMm: `${w} \xD7 ${h} \xD7 ${d}`,
-    sizeCm: `${cm(w)} \xD7 ${cm(h)} \xD7 ${cm(d)} ${t2("unit.cm")}`,
+    sizeCm: `${cm(w)} \xD7 ${cm(h)} \xD7 ${cm(d)} ${t3("unit.cm")}`,
     corpus: main,
     door: second,
     corpusCode: code(mainId),
@@ -64102,6 +64102,333 @@ function assemblyPath(id, secret) {
   return `${ASSEMBLY_PATH}?id=${encodeURIComponent(id)}&t=${assemblyToken(id, secret)}`;
 }
 
+// server/giblab.ts
+import { createHash as createHash2 } from "node:crypto";
+var VERSION = "21052101";
+var CUTTING_TOOL = [
+  ["swSawthick", "4.4"],
+  ["swSawthickDiv", "-1"],
+  ["swPackageHeight", "40"],
+  ["swMaxturns", "6"],
+  ["swComplexBand", "true"],
+  ["swTrimIncludeSaw", "false"],
+  ["swSort", "3"],
+  ["swSortInBand", "3"],
+  ["swMinSizeBand", "0"],
+  ["swMaxSizeBand", "0"],
+  ["swMinPruning", "0"],
+  ["swMaxLengthBand", "0"]
+];
+var EDGELINE_TOOL = [
+  ["elRestSide", "0"],
+  ["elMinSize", "0"],
+  ["elWidthPreJoint", "0"],
+  ["elCost", "0"]
+];
+var CUTTING = [
+  ["cTrimL", "5"],
+  ["cTrimW", "5"],
+  ["cAllowanceWorkpiece", "0"],
+  ["cMinDimDetail", "45"],
+  ["cMaxPartsOnPattern", "0"],
+  ["printable", "true"],
+  ["startNewPage", "true"],
+  ["cPrefLargePacket", "false"],
+  ["cCombiningParts", "false"],
+  ["cGroupParts", "0"],
+  ["cCostByItem", "true"],
+  ["cCostByItemRound", "11"]
+];
+var CUTTING_TAIL = [
+  ["cCostType", "0"],
+  ["cCostCut", "0"],
+  ["cFillRep", "0.9"],
+  ["cCPF", "0.9"],
+  ["cMinDimRegWaste1", "1000"],
+  ["cMinDimRegWaste2", "1000"],
+  ["cBusinessWaste", "0.5"],
+  ["cTrimWaste", "true"],
+  ["cSaveDrawCut", "false"],
+  ["csDirectCut", "0"],
+  ["csTexture", "true"],
+  ["cSizeMode", "0"]
+];
+var EDGELINE = [
+  ["elWastePRC", "0"],
+  ["elCalcMat", "true"],
+  ["elSymbol", "A"],
+  ["elColor", "#000000"],
+  ["elLineMark", "0"],
+  ["elRoundMat", "20"],
+  ["elRoundLength", "20"],
+  ["elMinDimDetail", "0"]
+];
+var COSTS = [
+  ["costMaterial", "0"],
+  ["costOperation", "0"],
+  ["costTotal", "0"]
+];
+var STOCK_COUNT = "1000";
+function sheetSize(materialId) {
+  const m = getMaterial(allMaterials, materialId);
+  if (!m || m.kind !== "ldsp" || m.code) return [2800, 2070];
+  return [2750, 1830];
+}
+function bandWidth(boardMm) {
+  return [22, 28, 35, 42].find((w) => w >= boardMm + 4) ?? Math.ceil(boardMm + 6);
+}
+function num(v) {
+  return String(Math.round(v * 100) / 100);
+}
+var esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+var el = (tag, attrs, children = "") => {
+  const a = attrs.map(([k, v]) => ` ${k}="${esc(v)}"`).join("");
+  return children ? `<${tag}${a}>${children}</${tag}>` : `<${tag}${a} />`;
+};
+var t2 = (key) => translate("uz", key);
+function decorName2(id) {
+  const m = getMaterial(allMaterials, id);
+  if (!m) return id;
+  return m.code ? `${m.code} ${t2(m.decorName)}` : t2(m.decorName);
+}
+var EDGE_ORDER = ["elb", "ell", "elr", "elt"];
+var PLAIN = {
+  left: "ell",
+  right: "elr",
+  back: "elt",
+  front: "elb"
+};
+var TURNED = {
+  back: "ell",
+  front: "elr",
+  left: "elb",
+  right: "elt"
+};
+function grainAcross(p) {
+  if (p.grainDirection === null) return false;
+  return p.grainDirection === "width" || p.role === "door";
+}
+function giblabParts(result) {
+  const rows = cutList(result);
+  const rowOf = /* @__PURE__ */ new Map();
+  rows.forEach((r, i) => r.panelIds.forEach((id) => rowOf.set(id, i)));
+  const parts = /* @__PURE__ */ new Map();
+  const bands = /* @__PURE__ */ new Map();
+  for (const p of result.panels) {
+    const row = rowOf.get(p.id);
+    if (row === void 0) continue;
+    if (getMaterial(allMaterials, p.material)?.kind === "metal") continue;
+    const turned = grainAcross(p);
+    const map = turned ? TURNED : PLAIN;
+    const edges = {};
+    const bandMm = /* @__PURE__ */ new Map();
+    for (const side of ["front", "back", "left", "right"]) {
+      const e = p.edges[side];
+      if (!e.bandId) continue;
+      const key = `${e.bandId}|${e.thicknessMm ?? ""}|${p.material}|${p.thicknessMm}`;
+      if (!bands.has(key)) {
+        const thick = e.thicknessMm ? `${num(e.thicknessMm)} mm` : e.bandId;
+        bands.set(key, {
+          key,
+          name: `Kromka ${thick}, ${decorName2(p.material)}`,
+          w: bandWidth(p.thicknessMm),
+          metres: 0
+        });
+      }
+      edges[map[side]] = key;
+      const along = side === "front" || side === "back" ? p.lengthMm : p.widthMm;
+      bandMm.set(key, (bandMm.get(key) ?? 0) + along);
+    }
+    const l = turned ? p.widthMm : p.lengthMm;
+    const w = turned ? p.lengthMm : p.widthMm;
+    const txt = p.grainDirection !== null;
+    const partKey = [row, l, w, txt, p.material, ...EDGE_ORDER.map((e) => edges[e] ?? "")].join(
+      "|"
+    );
+    const part2 = parts.get(partKey);
+    if (part2) part2.count += 1;
+    else
+      parts.set(partKey, {
+        name: `${row + 1}. ${rows[row].name}`,
+        l,
+        w,
+        txt,
+        count: 1,
+        material: p.material,
+        edges,
+        bandMm
+      });
+  }
+  for (const part2 of parts.values())
+    for (const [key, mm] of part2.bandMm) bands.get(key).metres += mm * part2.count / 1e3;
+  return { parts: [...parts.values()], bands: [...bands.values()] };
+}
+function millis(createdAt) {
+  const ms = Date.parse(`${createdAt.replace(" ", "T")}+05:00`);
+  return String(Number.isFinite(ms) ? ms : 0);
+}
+function projectUuid(id) {
+  const h = createHash2("sha256").update(`dafna-giblab:${id}`).digest("hex");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-a${h.slice(17, 20)}-${h.slice(20, 32)}`;
+}
+function buildGiblab({ id, createdAt, result }) {
+  const { parts, bands } = giblabParts(result);
+  const materials = [...new Set(parts.map((p) => p.material))];
+  let goodId = 1;
+  const productId = goodId++;
+  const cuttingToolId = goodId++;
+  const edgelineToolIds = bands.map(() => goodId++);
+  const sheetIds = materials.map(() => goodId++);
+  const bandIds = bands.map(() => goodId++);
+  let partId = 1;
+  const stockIds = materials.map(() => partId++);
+  for (const p of parts) p.id = partId++;
+  let opId = 1;
+  const csIds = materials.map(() => opId++);
+  const elIds = bands.map(() => opId++);
+  const elOf = new Map(bands.map((b, i) => [b.key, i]));
+  const partXml = (p) => {
+    const attrs = [
+      ["l", num(p.l)],
+      ["w", num(p.w)],
+      ["dl", num(p.l)],
+      ["dw", num(p.w)],
+      ["jl", num(p.l)],
+      ["jw", num(p.w)],
+      ["cl", num(p.l)],
+      ["cw", num(p.w)],
+      ["minusCount", "0"],
+      ["count", String(p.count)],
+      ["usedCount", String(p.count)],
+      ["txt", String(p.txt)],
+      ["name", p.name],
+      ["id", String(p.id)]
+    ];
+    for (const e of EDGE_ORDER) {
+      const key = p.edges[e];
+      if (!key) continue;
+      const i = elOf.get(key);
+      attrs.push([e, `@operation#${elIds[i]}`], [`${e}Mat`, bands[i].name]);
+    }
+    return el("part", attrs);
+  };
+  const goods = [
+    el(
+      "good",
+      [
+        ["typeId", "product"],
+        ["count", "1"],
+        ["id", String(productId)],
+        ["name", id],
+        ["costMaterial", "0"],
+        ["costOperation", "0"],
+        ["cost", "0"]
+      ],
+      parts.map(partXml).join("")
+    ),
+    el("good", [["typeId", "tool.cutting"], ...CUTTING_TOOL, ["id", String(cuttingToolId)]]),
+    ...edgelineToolIds.map(
+      (gid) => el("good", [["typeId", "tool.edgeline"], ...EDGELINE_TOOL, ["id", String(gid)]])
+    ),
+    ...materials.map((mid, i) => {
+      const [l, w] = sheetSize(mid);
+      const thick = getMaterial(allMaterials, mid)?.thicknessMm ?? 16;
+      return el(
+        "good",
+        [
+          ["typeId", "sheet"],
+          ["t", num(thick)],
+          ["w", num(w)],
+          ["l", num(l)],
+          ["name", `${decorName2(mid)}, ${num(thick)} mm`],
+          ["cost", "0"],
+          ["id", String(sheetIds[i])]
+        ],
+        el("part", [
+          ["l", num(l)],
+          ["w", num(w)],
+          ["count", STOCK_COUNT],
+          ["id", String(stockIds[i])]
+        ])
+      );
+    }),
+    ...bands.map(
+      (b, i) => el("good", [
+        ["typeId", "band"],
+        ["w", num(b.w)],
+        ["t", "0"],
+        ["name", b.name],
+        ["count", num(b.metres)],
+        ["cost", "0"],
+        ["id", String(bandIds[i])]
+      ])
+    )
+  ];
+  const operations = [
+    ...materials.map((mid, i) => {
+      const [l, w] = sheetSize(mid);
+      const thick = getMaterial(allMaterials, mid)?.thicknessMm ?? 16;
+      const own = parts.filter((p) => p.material === mid);
+      return el(
+        "operation",
+        [
+          ...CUTTING,
+          ["w", num(w)],
+          ["l", num(l)],
+          ["t", num(thick)],
+          ...CUTTING_TAIL,
+          ["tool1", String(cuttingToolId)],
+          ["typeId", "CS"],
+          ...COSTS,
+          ["id", String(csIds[i])]
+        ],
+        el("material", [["id", String(sheetIds[i])]]) + own.map((p) => el("part", [["id", String(p.id)]])).join("") + el("part", [["id", String(stockIds[i])]])
+      );
+    }),
+    ...bands.map((b, i) => {
+      const own = parts.filter((p) => Object.values(p.edges).includes(b.key));
+      return el(
+        "operation",
+        [
+          ...EDGELINE,
+          ["elLength", num(b.metres)],
+          ["tool1", String(edgelineToolIds[i])],
+          ["typeId", "EL"],
+          ...COSTS,
+          ["printable", "true"],
+          ["startNewPage", "true"],
+          ["id", String(elIds[i])]
+        ],
+        el("material", [
+          ["id", String(bandIds[i])],
+          ["count", num(b.metres)]
+        ]) + own.map((p) => el("part", [["id", String(p.id)]])).join("")
+      );
+    })
+  ];
+  const date = millis(createdAt);
+  return '<?xml version="1.0" encoding="UTF-8"?>' + el(
+    "project",
+    [
+      ["project.uuid", projectUuid(id)],
+      ["version", VERSION],
+      ["costOperation", "0"],
+      ["costMaterial", "0"],
+      ["cost", "0"],
+      ["date", date],
+      ["orderDate", date]
+    ],
+    goods.join("") + operations.join("")
+  );
+}
+function giblabForLead(lead) {
+  const input = orderPdfInput(lead);
+  if (!input) return null;
+  return new TextEncoder().encode(
+    buildGiblab({ id: lead.id, createdAt: lead.createdAt, result: input.result })
+  );
+}
+
 // server/rateLimit.ts
 var RateLimiter = class {
   constructor(limit, windowMs, now = Date.now) {
@@ -64115,20 +64442,20 @@ var RateLimiter = class {
   hits = /* @__PURE__ */ new Map();
   /** Records a hit; false when `key` is over the limit (the hit is then not counted). */
   take(key) {
-    const t2 = this.now();
-    const recent = (this.hits.get(key) ?? []).filter((x) => t2 - x < this.windowMs);
+    const t3 = this.now();
+    const recent = (this.hits.get(key) ?? []).filter((x) => t3 - x < this.windowMs);
     if (recent.length >= this.limit) {
       this.hits.set(key, recent);
       return false;
     }
-    recent.push(t2);
+    recent.push(t3);
     this.hits.set(key, recent);
-    if (this.hits.size > 5e3) this.prune(t2);
+    if (this.hits.size > 5e3) this.prune(t3);
     return true;
   }
-  prune(t2) {
+  prune(t3) {
     for (const [k, v] of this.hits) {
-      if (v.every((x) => t2 - x >= this.windowMs)) this.hits.delete(k);
+      if (v.every((x) => t3 - x >= this.windowMs)) this.hits.delete(k);
     }
   }
 };
@@ -64198,7 +64525,7 @@ function rowToLead(row) {
 }
 
 // server/ids.ts
-import { createHash as createHash2 } from "node:crypto";
+import { createHash as createHash3 } from "node:crypto";
 var ID_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
 var TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1e3;
 function tashkent(now) {
@@ -64206,8 +64533,8 @@ function tashkent(now) {
 }
 var pad = (n3) => String(n3).padStart(2, "0");
 function tashkentTimestamp(now) {
-  const t2 = tashkent(now);
-  return `${t2.getUTCFullYear()}-${pad(t2.getUTCMonth() + 1)}-${pad(t2.getUTCDate())} ${pad(t2.getUTCHours())}:${pad(t2.getUTCMinutes())}:${pad(t2.getUTCSeconds())}`;
+  const t3 = tashkent(now);
+  return `${t3.getUTCFullYear()}-${pad(t3.getUTCMonth() + 1)}-${pad(t3.getUTCDate())} ${pad(t3.getUTCHours())}:${pad(t3.getUTCMinutes())}:${pad(t3.getUTCSeconds())}`;
 }
 function parseTashkentTimestamp(s) {
   const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(s);
@@ -64216,9 +64543,9 @@ function parseTashkentTimestamp(s) {
   return new Date(Date.UTC(y, mo - 1, d, h, mi, se) - TASHKENT_OFFSET_MS);
 }
 function makeApplicationId(idempotencyKey, now, salt = 0) {
-  const t2 = tashkent(now);
-  const date = `${pad(t2.getUTCFullYear() % 100)}${pad(t2.getUTCMonth() + 1)}${pad(t2.getUTCDate())}`;
-  const hash = createHash2("sha256").update(`${idempotencyKey}:${salt}`).digest();
+  const t3 = tashkent(now);
+  const date = `${pad(t3.getUTCFullYear() % 100)}${pad(t3.getUTCMonth() + 1)}${pad(t3.getUTCDate())}`;
+  const hash = createHash3("sha256").update(`${idempotencyKey}:${salt}`).digest();
   let suffix = "";
   for (let i = 0; i < 4; i++) suffix += ID_ALPHABET[hash[i] % ID_ALPHABET.length];
   return `DFN-${date}-${suffix}`;
@@ -64735,6 +65062,25 @@ var TelegramNotifier = class {
   async notify(lead, renderPng) {
     await this.sendSummary(lead, renderPng);
     await this.sendOrderPdf(lead);
+    await this.sendGiblab(lead);
+  }
+  /** D-16: the GibLab file after the order PDF; a bonus too (errors never fail the lead). */
+  async sendGiblab(lead) {
+    if (!this.config.giblab) return;
+    try {
+      const file = await this.config.giblab(lead);
+      if (!file) return;
+      const form = new FormData();
+      form.append("chat_id", this.config.chatId);
+      form.append("caption", `\u{1FA9A} ${lead.id}: GibLab \u2014 kesish va kromka`);
+      form.append(
+        "document",
+        new Blob([file], { type: "application/xml" }),
+        `Dafna-${lead.id}.project`
+      );
+      await this.call("sendDocument", form);
+    } catch {
+    }
   }
   /**
    * D-11: the order sheet as a document after the summary. A bonus like the photo: when it
@@ -64816,7 +65162,8 @@ function notifierFromEnv(env) {
     orderPdf: async (lead) => {
       const input = orderPdfInput(lead);
       return input ? buildOrderPdf(input) : null;
-    }
+    },
+    giblab: async (lead) => giblabForLead(lead)
   });
 }
 var IP_LIMIT = { limit: 20, windowMs: 10 * 60 * 1e3 };

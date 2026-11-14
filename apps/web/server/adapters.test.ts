@@ -138,6 +138,33 @@ describe('Telegram notifier', () => {
     await expect(broken.notify(LEAD)).resolves.toBeUndefined();
   });
 
+  it('D-16: the GibLab file follows the PDF as a .project document; a failure never fails it', async () => {
+    const f = fakeFetch(() => ({ json: { ok: true } }));
+    const n = new TelegramNotifier({
+      token: 'T',
+      chatId: '1',
+      fetch: f.impl,
+      orderPdf: async () => new Uint8Array([0x25]),
+      giblab: async () => new TextEncoder().encode('<?xml version="1.0"?><project />'),
+    });
+    await n.notify(LEAD);
+    expect(f.calls.map((c) => c.url.split('/').pop())).toEqual([
+      'sendMessage',
+      'sendDocument',
+      'sendDocument',
+    ]);
+    const doc = (f.calls[2]!.body as FormData).get('document') as File;
+    expect(doc.name).toBe('Dafna-DFN-261105-K7QM.project');
+
+    const broken = new TelegramNotifier({
+      token: 'T',
+      chatId: '1',
+      fetch: fakeFetch(() => ({ json: { ok: true } })).impl,
+      giblab: () => Promise.reject(new Error('engine')),
+    });
+    await expect(broken.notify(LEAD)).resolves.toBeUndefined();
+  });
+
   it('forceFail (preview-only failure simulation) never calls Telegram', async () => {
     const f = fakeFetch(() => ({ json: { ok: true } }));
     const n = new TelegramNotifier({ token: 'T', chatId: '1', fetch: f.impl, forceFail: true });

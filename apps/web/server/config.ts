@@ -1,4 +1,5 @@
 import { linkSecretFrom } from './assemblyLink';
+import { giblabForLead } from './giblab';
 import { buildOrderPdf, orderPdfInput } from './orderPdf';
 import { RateLimiter } from './rateLimit';
 import { GoogleSheetsStore, parseServiceAccount } from './sheets';
@@ -50,6 +51,7 @@ export function notifierFromEnv(env: Env): TelegramNotifier {
       const input = orderPdfInput(lead);
       return input ? buildOrderPdf(input) : null;
     },
+    giblab: async (lead) => giblabForLead(lead),
   });
 }
 
