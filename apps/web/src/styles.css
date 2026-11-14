@@ -345,8 +345,18 @@ p {
   display: block;
   height: 2.5rem;
   width: auto;
-  pointer-events: none;
+  /* D-13: the logo takes a long press (consultant PIN); never dragged, selected or zoomed */
   -webkit-user-drag: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  transition: opacity 0.3s ease;
+}
+
+/* held down: fades while the 3 s run, so the consultant knows the press counts */
+.brand-logo.holding {
+  opacity: 0.45;
+  transition: opacity 3s linear;
 }
 
 .brand-title {

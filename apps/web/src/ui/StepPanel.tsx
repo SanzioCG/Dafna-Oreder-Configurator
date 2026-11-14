@@ -145,12 +145,12 @@ export function StepPanel({
         <div className="brand">
           {/* D-13: holding the logo for 3 s asks for the consultant PIN */}
           <img
-            className="brand-logo"
+            className={logoHold.holding ? 'brand-logo holding' : 'brand-logo'}
             src={logoUrl}
             alt={t('app.brand')}
             draggable={false}
             data-testid="brand-logo"
-            {...(staff ? {} : logoHold)}
+            {...(staff ? {} : logoHold.handlers)}
           />
           <span className="brand-title">{t('app.title')}</span>
         </div>

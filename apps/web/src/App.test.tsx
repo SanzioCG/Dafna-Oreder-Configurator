@@ -784,6 +784,12 @@ describe('D-13 kiosk safety: idle reset and the consultant PIN', () => {
     expect(screen.getByRole('button', { name: uz['start.scratch'] })).toBeTruthy();
   });
 
+  it('the logo really takes a press (no pointer-events: none on it)', async () => {
+    const css = (await import('./styles.css?raw')).default;
+    const rule = /\.brand-logo\s*\{([^}]*)\}/.exec(css)![1]!;
+    expect(rule).not.toMatch(/pointer-events:\s*none/);
+  });
+
   it('five wrong PINs lock the pad for a minute', async () => {
     vi.stubGlobal(
       'fetch',

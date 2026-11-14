@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 
 /**
  * D-13: staff mode behind a PIN. A long press on the logo asks for the PIN (customers never see
@@ -45,20 +45,29 @@ export const exitStaff = () => window.dispatchEvent(new Event(STAFF_EXIT_EVENT))
 /** Pointer handlers firing `onLongPress` after `ms` of holding (released early = nothing). */
 export function useLongPress(onLongPress: () => void, ms = LONG_PRESS_MS) {
   const timer = useRef<number | null>(null);
+  const [holding, setHolding] = useState(false);
   const cancel = () => {
     if (timer.current !== null) window.clearTimeout(timer.current);
     timer.current = null;
+    setHolding(false);
   };
   return {
-    onPointerDown: () => {
-      cancel();
-      timer.current = window.setTimeout(() => {
-        timer.current = null;
-        onLongPress();
-      }, ms);
+    /** true while the press is held (the logo fades as feedback) */
+    holding,
+    handlers: {
+      onPointerDown: (e: { preventDefault: () => void }) => {
+        e.preventDefault(); // no text selection / image drag on a mouse or touchpad
+        cancel();
+        setHolding(true);
+        timer.current = window.setTimeout(() => {
+          timer.current = null;
+          setHolding(false);
+          onLongPress();
+        }, ms);
+      },
+      onPointerUp: cancel,
+      onPointerLeave: cancel,
+      onPointerCancel: cancel,
     },
-    onPointerUp: cancel,
-    onPointerLeave: cancel,
-    onPointerCancel: cancel,
   };
 }
