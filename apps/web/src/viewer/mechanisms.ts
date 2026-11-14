@@ -103,3 +103,47 @@ export function demoProgress(brand: string, t: number): number | null {
   if (t < 2.2) return easeInOut(clamp01((t - 1.5) / 0.7));
   return null;
 }
+
+/**
+ * Which drawers sit behind which door: a door covers a drawer when their boxes overlap across
+ * the front (X) and in height (Y). Such a drawer may only come out once its doors are open, and
+ * those doors may only close once it is back in (no board ever passes through another).
+ */
+export function doorCoverage(panels: Panel[]): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  const groups = drawerGroups(panels);
+  const boxes = [...groups].map(([id, parts]) => {
+    const bs = parts.map(panelBox);
+    return {
+      id,
+      min: [0, 1].map((k) => Math.min(...bs.map((b) => b.min[k]!))),
+      max: [0, 1].map((k) => Math.max(...bs.map((b) => b.max[k]!))),
+    };
+  });
+  for (const door of panels.filter((p) => p.role === 'door')) {
+    const d = panelBox(door);
+    const eps = 1;
+    out.set(
+      door.id,
+      boxes
+        .filter((b) =>
+          [0, 1].every((k) => d.min[k]! < b.max[k]! - eps && b.min[k]! < d.max[k]! - eps),
+        )
+        .map((b) => b.id),
+    );
+  }
+  return out;
+}
+
+/** Shared animation state of one product: door progress (0..1) and drawer offset (mm). */
+export interface MotionState {
+  door: Map<string, number>;
+  drawer: Map<string, number>;
+  /** the hinge demo is waiting / playing: drawers behind doors stay in */
+  holdDrawers: boolean;
+}
+
+/** a door counts as open for a drawer from this progress on */
+export const DOOR_CLEAR = 0.98;
+/** a drawer counts as in (doors may close) below this offset, mm */
+export const DRAWER_IN_MM = 1;

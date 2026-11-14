@@ -6,13 +6,17 @@ import { MeshBasicMaterial, MeshStandardMaterial, type Group, type Mesh } from '
 import { edgeColorFor, materialFor } from './materials';
 import { DOOR_OPEN_DEG, openAngles } from './doorSwing';
 import {
+  DOOR_CLEAR,
+  DRAWER_IN_MM,
   DRAWER_SHOW_PULL,
   MECH_COLOR,
   demoProgress,
+  doorCoverage,
   drawerGroups,
   hingeOffsets,
   panelBox,
   type MechanismView,
+  type MotionState,
 } from './mechanisms';
 
 const DEG = Math.PI / 180;
@@ -50,6 +54,8 @@ function DoorLeaf({
   override,
   demo,
   children,
+  motion,
+  covers,
 }: {
   panel: Panel;
   open: boolean;
@@ -60,6 +66,10 @@ function DoorLeaf({
   demo?: MutableRefObject<number | null>;
   /** D-10: hinge glyphs (pivot-local coordinates) */
   children?: ReactNode;
+  /** shared door / drawer state: the leaf stays open while a drawer behind it is out */
+  motion?: MotionState;
+  /** drawers behind this leaf */
+  covers?: string[];
 }) {
   const pivot = useRef<Group>(null);
   const progress = useRef(open ? 1 : 0);
@@ -70,22 +80,26 @@ function DoorLeaf({
   const frontZ = z + panel.thicknessMm / 2;
 
   useFrame((_, dt) => {
-    const forced = override?.current ?? demo?.current ?? null;
-    const target = open ? 1 : 0;
+    // a drawer behind this leaf is still out: the leaf may not close through it
+    const blocked = (covers ?? []).some((id) => (motion?.drawer.get(id) ?? 0) > DRAWER_IN_MM);
+    let forced = override?.current ?? demo?.current ?? null;
+    if (forced !== null && blocked) forced = Math.max(forced, progress.current);
+    const target = open || blocked ? 1 : 0;
     const p = progress.current;
     if (forced !== null) {
       // the reveal drives the leaf (already eased); keep progress in sync for the hand-back
       progress.current = forced;
       if (pivot.current) pivot.current.rotation.y = sign * angleDeg * DEG * forced;
-      return;
+    } else {
+      if (p !== target) {
+        const step = Math.min(dt, 0.1) / DOOR_ANIM_SECONDS;
+        progress.current = target > p ? Math.min(1, p + step) : Math.max(0, p - step);
+      }
+      if (pivot.current) {
+        pivot.current.rotation.y = sign * angleDeg * DEG * easeInOut(progress.current);
+      }
     }
-    if (p !== target) {
-      const step = Math.min(dt, 0.1) / DOOR_ANIM_SECONDS;
-      progress.current = target > p ? Math.min(1, p + step) : Math.max(0, p - step);
-    }
-    if (pivot.current) {
-      pivot.current.rotation.y = sign * angleDeg * DEG * easeInOut(progress.current);
-    }
+    motion?.door.set(panel.id, progress.current);
   });
 
   return (
@@ -238,13 +252,20 @@ function Bars({ bars, material }: { bars: SlideBar[]; material: MeshStandardMate
 
 /** A drawer that slides out along +Z (hardware step / closing demo). */
 function Drawer({
+  id,
   parts,
   mech,
   demo,
+  motion,
+  doors,
 }: {
+  id: string;
   parts: Panel[];
   mech?: MechanismView;
   demo: MutableRefObject<number | null>;
+  motion: MotionState;
+  /** doors in front of this drawer: it waits until they are open */
+  doors: string[];
 }) {
   const group = useRef<Group>(null);
   const offset = useRef(0);
@@ -259,14 +280,20 @@ function Drawer({
   );
   useFrame((_, dt) => {
     const forced = demo.current;
-    if (forced !== null) offset.current = pull * forced;
+    // behind doors: out only once every door in front of it is open (and not during the
+    // hinge demo, which closes those doors)
+    const clear =
+      doors.length === 0 ||
+      (!motion.holdDrawers && doors.every((d) => (motion.door.get(d) ?? 0) >= DOOR_CLEAR));
+    if (forced !== null && clear) offset.current = pull * forced;
     else {
-      const target = show ? pull : 0;
+      const target = show && clear ? pull : 0;
       const step = (Math.min(dt, 0.1) / DOOR_ANIM_SECONDS) * pull;
       const d = target - offset.current;
       offset.current += Math.abs(d) <= step ? d : Math.sign(d) * step;
     }
     if (group.current) group.current.position.z = offset.current;
+    motion.drawer.set(id, offset.current);
   });
   return (
     <>
@@ -290,10 +317,12 @@ function DemoDriver({
   mech,
   doorDemo,
   drawerDemo,
+  motion,
 }: {
   mech?: MechanismView;
   doorDemo: MutableRefObject<number | null>;
   drawerDemo: MutableRefObject<number | null>;
+  motion: MotionState;
 }) {
   const start = useRef<number | null>(null);
   const demo = mech?.show ? mech.demo : null;
@@ -301,13 +330,20 @@ function DemoDriver({
     start.current = null;
     doorDemo.current = null;
     drawerDemo.current = null;
-  }, [demo, doorDemo, drawerDemo]);
+    // the hinge demo closes the doors: the drawers behind them go in first
+    motion.holdDrawers = demo?.kind === 'hinge';
+  }, [demo, doorDemo, drawerDemo, motion]);
   useFrame(({ clock }) => {
     if (!demo) return;
-    if (start.current === null) start.current = clock.elapsedTime;
+    if (start.current === null) {
+      if (demo.kind === 'hinge' && [...motion.drawer.values()].some((v) => v > DRAWER_IN_MM))
+        return; // wait until every drawer is back in
+      start.current = clock.elapsedTime;
+    }
     const p = demoProgress(demo.brand, clock.elapsedTime - start.current);
     const target = demo.kind === 'hinge' ? doorDemo : drawerDemo;
     target.current = p;
+    if (p === null) motion.holdDrawers = false; // finished: the drawers may come out again
   });
   return null;
 }
@@ -333,11 +369,28 @@ export function Wardrobe3D({
   const doorDemo = useRef<number | null>(null);
   const drawerDemo = useRef<number | null>(null);
   const show = mech?.show ?? false;
+  // doors open before the drawers behind them come out; drawers go in before doors close
+  const coverage = useMemo(() => doorCoverage(panels), [panels]);
+  const doorsOf = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const [door, list] of coverage)
+      for (const d of list) m.set(d, [...(m.get(d) ?? []), door]);
+    return m;
+  }, [coverage]);
+  const motion = useRef<MotionState>({ door: new Map(), drawer: new Map(), holdDrawers: false });
   return (
     <>
-      <DemoDriver mech={mech} doorDemo={doorDemo} drawerDemo={drawerDemo} />
+      <DemoDriver mech={mech} doorDemo={doorDemo} drawerDemo={drawerDemo} motion={motion.current} />
       {[...drawers].map(([id, parts]) => (
-        <Drawer key={id} parts={parts} mech={mech} demo={drawerDemo} />
+        <Drawer
+          key={id}
+          id={id}
+          parts={parts}
+          mech={mech}
+          demo={drawerDemo}
+          motion={motion.current}
+          doors={doorsOf.get(id) ?? []}
+        />
       ))}
       {rails.map((r) => (
         <RailMesh key={`${r.id}:${r.lengthMm}:${r.position.join(',')}`} rail={r} />
@@ -354,6 +407,8 @@ export function Wardrobe3D({
             angleDeg={angles.get(p.id) ?? DOOR_OPEN_DEG}
             override={doorOverride}
             demo={doorDemo}
+            motion={motion.current}
+            covers={coverage.get(p.id) ?? []}
           >
             {show && (
               <DoorHinges

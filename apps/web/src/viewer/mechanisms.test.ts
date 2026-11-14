@@ -58,3 +58,29 @@ describe('D-10 mechanisms in 3D', () => {
     expect(b.max[2] - b.min[2]).toBeCloseTo(door.thicknessMm);
   });
 });
+
+describe('D-13 doors and drawers never pass through each other', () => {
+  it('a wardrobe with inner drawers: the doors in front of them cover them', async () => {
+    const { doorCoverage } = await import('./mechanisms');
+    const { resolveParams } = await import('@dafna/engine');
+    const params = resolveParams(wardrobeTemplate, {
+      ...defaultParams(wardrobeTemplate),
+      interior1: 'drawers_shelves',
+    }).params;
+    const r = generate(wardrobeTemplate, params);
+    const drawers = drawerGroups(r.panels);
+    const cov = doorCoverage(r.panels);
+    const covered = new Set([...cov.values()].flat());
+    expect(drawers.size).toBeGreaterThan(0);
+    // every inner drawer is behind at least one door
+    for (const id of drawers.keys()) expect(covered.has(id)).toBe(true);
+    // a door never covers a drawer of another section's height band it does not overlap
+    for (const [, list] of cov) for (const id of list) expect(drawers.has(id)).toBe(true);
+  });
+
+  it('a pedestal: its drawers have their own fronts, no door covers them', async () => {
+    const { doorCoverage } = await import('./mechanisms');
+    const r = generate(pedestalTemplate, defaultParams(pedestalTemplate));
+    expect([...doorCoverage(r.panels).values()].flat()).toEqual([]);
+  });
+});
