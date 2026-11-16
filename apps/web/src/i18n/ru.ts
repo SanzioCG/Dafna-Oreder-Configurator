@@ -269,6 +269,7 @@ export const ru: Messages = {
     'Дверь секции {sectionNumber} изменена по новому правилу: {from} → {to}',
   'issue.MIGRATION_CONSTRUCTION_CHANGED':
     'Конструкция цоколя обновлена (шаблон {from} → {to}): боковины до пола, планки цоколя между боковинами.',
+  'issue.MIGRATION_SIZE_LOWERED': 'Размер {from} мм больше не выпускается: изменён на {to} мм',
   'issue.MIGRATION_THICKNESS_UNAVAILABLE': 'В каталоге нет плиты {panelThickness} мм',
   'issue.UNSUPPORTED_SCHEMA': 'Неподдерживаемая схема заказа: {schemaVersion}',
   'c.widthChips': 'Быстрый выбор',

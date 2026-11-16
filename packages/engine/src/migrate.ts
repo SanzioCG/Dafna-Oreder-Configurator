@@ -335,6 +335,18 @@ export function migrateOrderDraft(
   params = kept.params;
   issues.push(...kept.issues);
 
+  // D-17: a size the current template no longer offers (e.g. a 2400 mm wardrobe, now <= 2200)
+  // is lowered to the template maximum — never silently
+  for (const def of template.parameters) {
+    const v = params[def.key];
+    if (def.type === 'int' && typeof v === 'number' && def.max !== undefined && v > def.max) {
+      params = { ...params, [def.key]: def.max };
+      issues.push(
+        makeIssue('MIGRATION_SIZE_LOWERED', 'warning', def.key, { from: v, to: def.max }),
+      );
+    }
+  }
+
   const result = generate(template, params, catalog);
   const errors = result.issues.filter((i) => i.severity === 'error');
   if (errors.length > 0) return { draft: null, issues: [...issues, ...errors] };

@@ -8,8 +8,11 @@ import wardrobeV6Json from '../templates/wardrobe.v6.json' with { type: 'json' }
 import wardrobeV7Json from '../templates/wardrobe.v7.json' with { type: 'json' };
 import wardrobeV8Json from '../templates/wardrobe.v8.json' with { type: 'json' };
 import wardrobeV9Json from '../templates/wardrobe.v9.json' with { type: 'json' };
+import wardrobeV10Json from '../templates/wardrobe.v10.json' with { type: 'json' };
 import pedestalV1Json from '../templates/pedestal.v1.json' with { type: 'json' };
+import pedestalV2Json from '../templates/pedestal.v2.json' with { type: 'json' };
 import deskV1Json from '../templates/desk.v1.json' with { type: 'json' };
+import deskV2Json from '../templates/desk.v2.json' with { type: 'json' };
 import { catalogForTemplate, materialsV0, materialsV1, materialsV1_1 } from './catalog.js';
 // D-8: the pedestal and desk generators register themselves on import
 import './desk.js';
@@ -33,6 +36,7 @@ export const TEMPLATE_ARCHIVE: Readonly<Record<string, Template>> = {
   '0.8.0': wardrobeV7Json as Template,
   '0.9.0': wardrobeV8Json as Template,
   '0.10.0': wardrobeV9Json as Template,
+  '0.11.0': wardrobeV10Json as Template,
 };
 
 /** Material catalogs by catalogVersion (same rule: archived, never edited). */
@@ -48,8 +52,8 @@ export const CATALOG_ARCHIVE: Readonly<Record<string, MaterialCatalog>> = {
  */
 export const PRODUCT_ARCHIVE: Readonly<Record<string, Readonly<Record<string, Template>>>> = {
   wardrobe: TEMPLATE_ARCHIVE,
-  pedestal: { '0.1.0': pedestalV1Json as Template },
-  desk: { '0.1.0': deskV1Json as Template },
+  pedestal: { '0.1.0': pedestalV1Json as Template, '0.2.0': pedestalV2Json as Template },
+  desk: { '0.1.0': deskV1Json as Template, '0.2.0': deskV2Json as Template },
 };
 
 /**
@@ -68,6 +72,7 @@ export const TEMPLATE_CATALOG: Readonly<Record<string, string>> = {
   '0.8.0': materialsV1.catalogVersion,
   '0.9.0': materialsV1.catalogVersion,
   '0.10.0': materialsV1.catalogVersion,
+  '0.11.0': materialsV1.catalogVersion,
 };
 
 type Generator = (template: Template, params: unknown, catalog: MaterialCatalog) => GenerateResult;

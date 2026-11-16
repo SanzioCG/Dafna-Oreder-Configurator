@@ -273,6 +273,8 @@ export const uz = {
     "{sectionNumber}-bo'lim eshigi yangi qoida bo'yicha o'zgardi: {from} → {to}",
   'issue.MIGRATION_CONSTRUCTION_CHANGED':
     'Tsokol konstruksiyasi yangilandi (shablon {from} → {to}): yon devorlar polgacha, tsokol taxtalari yon devorlar orasida.',
+  'issue.MIGRATION_SIZE_LOWERED':
+    "{from} mm o'lcham endi ishlab chiqarilmaydi: {to} mm ga o'zgartirildi",
   'issue.MIGRATION_THICKNESS_UNAVAILABLE': "Katalogda {panelThickness} mm plita yo'q",
   'issue.UNSUPPORTED_SCHEMA': "Qo'llab-quvvatlanmaydigan buyurtma sxemasi: {schemaVersion}",
   'c.widthChips': 'Tez tanlash',

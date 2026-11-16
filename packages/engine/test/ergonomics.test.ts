@@ -51,9 +51,9 @@ const railTop = (s: Section) =>
   s.rails[0] ? s.rails[0].axisYMm + s.rails[0].diameterMm / 2 : null;
 
 describe('template 0.7.0 (D-7): standard sizes', () => {
-  it('0.7.0, same generator; current 0.10.0 = 0.7.0 + brands + lower doors + carcasses', () => {
+  it('0.7.0, same generator; current 0.11.0 = 0.7.0 + brands + lower doors + carcasses (height <= 2200)', () => {
     expect(T.templateVersion).toBe('0.7.0');
-    expect(wardrobeTemplate.templateVersion).toBe('0.10.0');
+    expect(wardrobeTemplate.templateVersion).toBe('0.11.0');
     expect(wardrobeTemplate.parameters.map((p) => p.key)).toEqual([
       ...T.parameters.map((p) => p.key),
       'hingeBrand',
@@ -208,7 +208,9 @@ describe('older drafts -> template 0.7.0', () => {
     if (!r.ok) throw new Error(r.code);
     const { draft, issues } = migrateOrderDraft(r.draft);
     if (!draft) throw new Error('no draft');
-    expect(draft.templateVersion).toBe('0.10.0');
+    expect(draft.templateVersion).toBe('0.11.0');
+    expect(draft.params.height).toBe(2200); // D-17: 2400 is lowered to the new maximum
+    expect(issues.map((i) => i.code)).toContain('MIGRATION_SIZE_LOWERED');
     expect(draft.params.interior1).toBe('short_hang'); // was rail_shelf
     expect(draft.params.interior4).toBe('short_hang_drawers'); // was rail_drawers
     expect(
@@ -219,9 +221,11 @@ describe('older drafts -> template 0.7.0', () => {
       [1, 'rail_shelf', 'short_hang'],
       [4, 'rail_drawers', 'short_hang_drawers'],
     ]);
-    // the outer geometry (carcass, doors) does not change
+    // the outer geometry (carcass, doors) does not change, apart from the lowered height
+    const lowered = regenerateApplication({ ...app6Lmdf.params, height: 2200 }, '0.6.0');
+    if (!lowered.ok) throw new Error(lowered.code);
     const outer = (d: typeof draft) =>
       d.panels.filter((p) => p.role !== 'shelf').map((p) => [p.id, p.lengthMm, p.widthMm]);
-    expect(outer(draft)).toEqual(outer(r.draft));
+    expect(outer(draft)).toEqual(outer(lowered.draft));
   });
 });

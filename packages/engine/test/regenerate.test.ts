@@ -35,6 +35,9 @@ import app9Books from './fixtures/applications/0.9.0.w1600-books-lower-1000.json
 import app10Default from './fixtures/applications/0.10.0.default.json' with { type: 'json' };
 import app10Split from './fixtures/applications/0.10.0.w2400-two-carcasses.json' with { type: 'json' };
 import app10Split3 from './fixtures/applications/0.10.0.w1800-3sections-split.json' with { type: 'json' };
+// D-17 (template 0.11.0): wardrobe height up to 2200 (customer 2000 / 2100 / 2200)
+import app11Default from './fixtures/applications/0.11.0.default.json' with { type: 'json' };
+import app11Books from './fixtures/applications/0.11.0.w2400-h2200-books-lower.json' with { type: 'json' };
 
 interface ApplicationFixture {
   templateVersion: string;
@@ -58,6 +61,8 @@ const FIXTURES: Record<string, ApplicationFixture> = {
   '0.10.0 default': app10Default as unknown as ApplicationFixture,
   '0.10.0 w2400 two carcasses': app10Split as unknown as ApplicationFixture,
   '0.10.0 w1800 3 sections split 2+1': app10Split3 as unknown as ApplicationFixture,
+  '0.11.0 default': app11Default as unknown as ApplicationFixture,
+  '0.11.0 w2400 h2200 books_lower': app11Books as unknown as ApplicationFixture,
 };
 
 describe('reproducibility: stored applications regenerate exactly (ADR-011)', () => {
@@ -113,6 +118,7 @@ describe('template archive', () => {
       '0.8.0',
       '0.9.0',
       '0.10.0',
+      '0.11.0',
     ]);
     // every template version is mapped to the catalog it was released with
     expect(Object.keys(TEMPLATE_CATALOG)).toEqual(Object.keys(TEMPLATE_ARCHIVE));

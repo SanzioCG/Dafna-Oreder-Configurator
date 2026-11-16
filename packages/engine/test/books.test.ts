@@ -21,7 +21,7 @@ const books = (over: Params = {}) =>
 
 describe('D-14 books_lower: lower doors, book and document shelves above', () => {
   it('every customer size: the leaves stop at the chosen height; a fixed shelf at their top', () => {
-    for (const height of [2100, 2400])
+    for (const height of [2000, 2100, 2200])
       for (const depth of [450, 600])
         for (const lower of [600, 800, 1000]) {
           const p = books({ height, depth, lowerDoorHeight: lower });

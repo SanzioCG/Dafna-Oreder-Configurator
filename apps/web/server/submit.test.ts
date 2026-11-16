@@ -196,7 +196,7 @@ describe('POST /api/submit', () => {
     const lead = store.rows[0]!;
     expect(lead.corpus).toBe('Серый камень (EGGER U727 ST9)');
     expect(lead.door).toBe('Дуб Гладстоун табак (EGGER H3325 ST28)');
-    expect(lead.templateVersion).toBe('0.10.0');
+    expect(lead.templateVersion).toBe('0.11.0');
   });
 
   it('a new key -> a new application', async () => {
@@ -251,8 +251,8 @@ describe('POST /api/submit', () => {
     expect([d.product, d.templateId, d.templateVersion, d.sizeMm]).toEqual([
       'Stol',
       'desk',
-      '0.1.0',
-      '1200 × 740 × 700',
+      '0.2.0',
+      '1500 × 750 × 700',
     ]);
     expect(d.corpus).toBe('Орех Пацифик натуральный (EGGER H3700 ST10)');
     expect(d.door).toBe('Металл чёрный');
@@ -270,7 +270,7 @@ describe('POST /api/submit', () => {
       '3 ta tortma',
       "G'ildirakli",
     ]);
-    // the A4 file drawer at 400 mm is blocked for customers
+    // D-17: Dafna's 430 mm pedestal takes the A4 file drawer (it was blocked at 400 mm)
     const file = await send(
       body({
         idempotencyKey: 'ped-file-0123456789ab',
@@ -278,7 +278,7 @@ describe('POST /api/submit', () => {
         params: { ...defaultParams(pedestalTemplate), layout: 'drawers2_file' },
       }),
     );
-    expect(file.json.error.issues).toEqual(['FILE_DRAWER_TOO_SMALL']);
+    expect(file.status).toBe(200);
     expect((await send(body({ product: 'sofa' }))).json.error.fields).toEqual(['product']);
     expect(notifier.sent[0]!.lead.product).toBe('Stol');
   });
@@ -289,7 +289,7 @@ describe('POST /api/submit', () => {
     expect(odd.json.error.issues).toEqual(['NON_STANDARD_SIZE']);
     const ok = await send(
       body({
-        params: { ...defaultParams(wardrobeTemplate), width: 2400, height: 2400, depth: 450 },
+        params: { ...defaultParams(wardrobeTemplate), width: 2400, height: 2200, depth: 450 },
       }),
     );
     expect(ok.status).toBe(200);

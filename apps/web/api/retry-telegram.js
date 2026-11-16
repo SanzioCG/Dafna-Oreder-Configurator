@@ -58596,10 +58596,10 @@ var require_fontkit_umd = __commonJS({
   }
 });
 
-// ../../packages/engine/templates/wardrobe.v9.json
-var wardrobe_v9_default = {
+// ../../packages/engine/templates/wardrobe.v10.json
+var wardrobe_v10_default = {
   templateId: "wardrobe",
-  templateVersion: "0.10.0",
+  templateVersion: "0.11.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -58624,15 +58624,15 @@ var wardrobe_v9_default = {
       type: "int",
       default: 2100,
       min: 1200,
-      max: 2600,
+      max: 2200,
       step: 10,
       unit: "mm",
       labelKey: "param.height",
       uiStep: "size",
       customerVisible: true,
       unconfirmed: false,
-      note: "Overall product height from the floor, plinth included. Customers choose only customerValues. Standard sizes (D-7): industry-common wardrobe sizes, unconfirmed until Dafna confirms its range.",
-      customerValues: [2100, 2400]
+      note: "Overall product height from the floor, plinth included. Customers choose only customerValues. Standard sizes (D-7): industry-common wardrobe sizes, unconfirmed until Dafna confirms its range. D-17 (founder, 2026-11-16): Dafna's maximum wardrobe height is 2200 mm; customer heights 2000 / 2100 / 2200.",
+      customerValues: [2e3, 2100, 2200]
     },
     {
       key: "depth",
@@ -59314,10 +59314,10 @@ var wardrobe_v9_default = {
   ]
 };
 
-// ../../packages/engine/templates/pedestal.v1.json
-var pedestal_v1_default = {
+// ../../packages/engine/templates/pedestal.v2.json
+var pedestal_v2_default = {
   templateId: "pedestal",
-  templateVersion: "0.1.0",
+  templateVersion: "0.2.0",
   productType: "pedestal",
   generator: "pedestal-v1",
   units: "mm",
@@ -59325,7 +59325,7 @@ var pedestal_v1_default = {
     {
       key: "width",
       type: "int",
-      default: 400,
+      default: 430,
       min: 300,
       max: 600,
       step: 10,
@@ -59334,13 +59334,13 @@ var pedestal_v1_default = {
       uiStep: "size",
       customerVisible: true,
       unconfirmed: true,
-      customerValues: [400, 450],
-      note: "Overall width. Standard 400 / 450 (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 300 / 400 / 410 wide), unconfirmed for Dafna."
+      customerValues: [430],
+      note: "Overall width. Standard 400 / 450 (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 300 / 400 / 410 wide), unconfirmed for Dafna. D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16)."
     },
     {
       key: "height",
       type: "int",
-      default: 600,
+      default: 550,
       min: 450,
       max: 760,
       step: 10,
@@ -59349,13 +59349,13 @@ var pedestal_v1_default = {
       uiStep: "size",
       customerVisible: true,
       unconfirmed: true,
-      customerValues: [600],
-      note: "Overall height incl. castors / plinth. \u2248 600 fits under a 740 mm desk (EN 527-1) with a 22\u201325 mm top (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 597)."
+      customerValues: [550],
+      note: "Overall height incl. castors / plinth. \u2248 600 fits under a 740 mm desk (EN 527-1) with a 22\u201325 mm top (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 597). D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16)."
     },
     {
       key: "depth",
       type: "int",
-      default: 500,
+      default: 550,
       min: 400,
       max: 650,
       step: 10,
@@ -59364,8 +59364,8 @@ var pedestal_v1_default = {
       uiStep: "size",
       customerVisible: true,
       unconfirmed: true,
-      customerValues: [500, 600],
-      note: "Overall depth incl. fronts. 500 (desk depth 600\u2013700) / 600 (desk depth 800); unconfirmed."
+      customerValues: [550],
+      note: "Overall depth incl. fronts. 500 (desk depth 600\u2013700) / 600 (desk depth 800); unconfirmed. D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16)."
     },
     {
       key: "layout",
@@ -59640,10 +59640,10 @@ var pedestal_v1_default = {
   ]
 };
 
-// ../../packages/engine/templates/desk.v1.json
-var desk_v1_default = {
+// ../../packages/engine/templates/desk.v2.json
+var desk_v2_default = {
   templateId: "desk",
-  templateVersion: "0.1.0",
+  templateVersion: "0.2.0",
   productType: "desk",
   generator: "desk-v1",
   units: "mm",
@@ -59651,7 +59651,7 @@ var desk_v1_default = {
     {
       key: "width",
       type: "int",
-      default: 1200,
+      default: 1500,
       min: 800,
       max: 2e3,
       step: 10,
@@ -59660,8 +59660,8 @@ var desk_v1_default = {
       uiStep: "size",
       customerVisible: true,
       unconfirmed: true,
-      customerValues: [1e3, 1200, 1400, 1600, 1800],
-      note: "Work-top width. Writing desk work surface >= 800 \xD7 500 (GOST 13025.3-85); standard sizes unconfirmed."
+      customerValues: [1100, 1500, 1700],
+      note: "Work-top width. Writing desk work surface >= 800 \xD7 500 (GOST 13025.3-85); standard sizes unconfirmed. D-17: Dafna's own desk sizes (founder's drawings, 2026-11-16): 1100 x 600, 1500 x 700, 1700 x 700, height 750."
     },
     {
       key: "depth",
@@ -59675,13 +59675,13 @@ var desk_v1_default = {
       uiStep: "size",
       customerVisible: true,
       unconfirmed: true,
-      customerValues: [600, 700, 800],
-      note: "Work-top depth (>= 500, GOST 13025.3-85); 600 / 700 / 800 unconfirmed."
+      customerValues: [600, 700],
+      note: "Work-top depth (>= 500, GOST 13025.3-85); 600 / 700 / 800 unconfirmed. D-17: Dafna's own desk sizes (founder's drawings, 2026-11-16): 1100 x 600, 1500 x 700, 1700 x 700, height 750."
     },
     {
       key: "height",
       type: "int",
-      default: 740,
+      default: 750,
       min: 650,
       max: 1250,
       step: 10,
@@ -59690,8 +59690,8 @@ var desk_v1_default = {
       uiStep: "size",
       customerVisible: true,
       unconfirmed: false,
-      customerValues: [740, 1100],
-      note: "Work-top height. EN 527-1: fixed-height desks 740 \xB1 20 (DESK_HEIGHT_NOT_ERGONOMIC outside, so customers can pick 1100 only with the lift frame). Lift frame: 740 sitting / 1100 standing shown to the customer (standing height unconfirmed; the frame adjusts continuously on site)."
+      customerValues: [750, 1100],
+      note: "Work-top height. EN 527-1: fixed-height desks 740 \xB1 20 (DESK_HEIGHT_NOT_ERGONOMIC outside, so customers can pick 1100 only with the lift frame). Lift frame: 740 sitting / 1100 standing shown to the customer (standing height unconfirmed; the frame adjusts continuously on site). D-17: Dafna's own desk sizes (founder's drawings, 2026-11-16): 1100 x 600, 1500 x 700, 1700 x 700, height 750."
     },
     {
       key: "legs",
@@ -59905,9 +59905,9 @@ var desk_v1_default = {
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v9_default;
-var pedestalTemplate = pedestal_v1_default;
-var deskTemplate = desk_v1_default;
+var wardrobeTemplate = wardrobe_v10_default;
+var pedestalTemplate = pedestal_v2_default;
+var deskTemplate = desk_v2_default;
 var PRODUCT_TEMPLATES = {
   wardrobe: wardrobeTemplate,
   pedestal: pedestalTemplate,
@@ -62475,7 +62475,8 @@ var TEMPLATE_CATALOG = {
   "0.7.0": materialsV1.catalogVersion,
   "0.8.0": materialsV1.catalogVersion,
   "0.9.0": materialsV1.catalogVersion,
-  "0.10.0": materialsV1.catalogVersion
+  "0.10.0": materialsV1.catalogVersion,
+  "0.11.0": materialsV1.catalogVersion
 };
 
 // ../../packages/engine/catalog/hardware.v1.json
@@ -62945,6 +62946,7 @@ var ru = {
   "issue.DRAWER_SECTION_TOO_WIDE": "\u0421\u0435\u043A\u0446\u0438\u044F {sectionNumber}: \u0444\u0430\u0441\u0430\u0434 \u044F\u0449\u0438\u043A\u0430 {frontWidthMm} \u043C\u043C \u0448\u0438\u0440\u0435 {maxMm} \u043C\u043C",
   "issue.MIGRATION_DOORS_CHANGED": "\u0414\u0432\u0435\u0440\u044C \u0441\u0435\u043A\u0446\u0438\u0438 {sectionNumber} \u0438\u0437\u043C\u0435\u043D\u0435\u043D\u0430 \u043F\u043E \u043D\u043E\u0432\u043E\u043C\u0443 \u043F\u0440\u0430\u0432\u0438\u043B\u0443: {from} \u2192 {to}",
   "issue.MIGRATION_CONSTRUCTION_CHANGED": "\u041A\u043E\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F \u0446\u043E\u043A\u043E\u043B\u044F \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0430 (\u0448\u0430\u0431\u043B\u043E\u043D {from} \u2192 {to}): \u0431\u043E\u043A\u043E\u0432\u0438\u043D\u044B \u0434\u043E \u043F\u043E\u043B\u0430, \u043F\u043B\u0430\u043D\u043A\u0438 \u0446\u043E\u043A\u043E\u043B\u044F \u043C\u0435\u0436\u0434\u0443 \u0431\u043E\u043A\u043E\u0432\u0438\u043D\u0430\u043C\u0438.",
+  "issue.MIGRATION_SIZE_LOWERED": "\u0420\u0430\u0437\u043C\u0435\u0440 {from} \u043C\u043C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u0432\u044B\u043F\u0443\u0441\u043A\u0430\u0435\u0442\u0441\u044F: \u0438\u0437\u043C\u0435\u043D\u0451\u043D \u043D\u0430 {to} \u043C\u043C",
   "issue.MIGRATION_THICKNESS_UNAVAILABLE": "\u0412 \u043A\u0430\u0442\u0430\u043B\u043E\u0433\u0435 \u043D\u0435\u0442 \u043F\u043B\u0438\u0442\u044B {panelThickness} \u043C\u043C",
   "issue.UNSUPPORTED_SCHEMA": "\u041D\u0435\u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u043C\u0430\u044F \u0441\u0445\u0435\u043C\u0430 \u0437\u0430\u043A\u0430\u0437\u0430: {schemaVersion}",
   "c.widthChips": "\u0411\u044B\u0441\u0442\u0440\u044B\u0439 \u0432\u044B\u0431\u043E\u0440",
@@ -63341,6 +63343,7 @@ var uz = {
   "issue.DRAWER_SECTION_TOO_WIDE": "{sectionNumber}-bo'lim: tortma oldi {frontWidthMm} mm \u2014 {maxMm} mm dan keng",
   "issue.MIGRATION_DOORS_CHANGED": "{sectionNumber}-bo'lim eshigi yangi qoida bo'yicha o'zgardi: {from} \u2192 {to}",
   "issue.MIGRATION_CONSTRUCTION_CHANGED": "Tsokol konstruksiyasi yangilandi (shablon {from} \u2192 {to}): yon devorlar polgacha, tsokol taxtalari yon devorlar orasida.",
+  "issue.MIGRATION_SIZE_LOWERED": "{from} mm o'lcham endi ishlab chiqarilmaydi: {to} mm ga o'zgartirildi",
   "issue.MIGRATION_THICKNESS_UNAVAILABLE": "Katalogda {panelThickness} mm plita yo'q",
   "issue.UNSUPPORTED_SCHEMA": "Qo'llab-quvvatlanmaydigan buyurtma sxemasi: {schemaVersion}",
   "c.widthChips": "Tez tanlash",

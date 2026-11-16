@@ -51,12 +51,14 @@ describe('D-8 start screen: Shkaf / Ofis tumbasi / Stol', () => {
 });
 
 describe('D-8 office pedestal', () => {
-  it('model -> steps Joy / Rang / Tortmalar; drawers, castors; A4 file drawer needs 45 sm', () => {
+  it('model -> steps Joy / Rang / Tortmalar; drawers, castors; Dafna size 43 sm takes A4 files', () => {
     render(<App />);
     pickProduct('pedestal');
     pickModel('model.pedDrawers');
     expect(tab(uz['step.interior.pedestal'])).toBeTruthy();
-    expect(stub().dataset.width).toBe('400');
+    // D-17: Dafna's pedestal is 430 × 550 × 550
+    expect(stub().dataset.width).toBe('430');
+    expect(stub().dataset.height).toBe('550');
     expect(stub().dataset.roles).toContain('drawer_front');
     expect(stub().dataset.roles).toContain('frame'); // castors
     // standard widths only
@@ -65,16 +67,7 @@ describe('D-8 office pedestal', () => {
       within(width)
         .getAllByRole('radio')
         .map((r) => r.textContent),
-    ).toEqual(['40 sm', '45 sm']);
-    fireEvent.click(tab(uz['step.interior.pedestal']));
-    expect(option('drawers2_file').disabled).toBe(true);
-    expect(option('drawers2_file').textContent).toContain(uz['creason.FILE_DRAWER_TOO_SMALL']);
-    fireEvent.click(tab(uz['step.size']));
-    fireEvent.click(
-      within(screen.getByRole('radiogroup', { name: uz['param.width'] })).getByRole('radio', {
-        name: '45 sm',
-      }),
-    );
+    ).toEqual(['43 sm']);
     fireEvent.click(tab(uz['step.interior.pedestal']));
     expect(option('drawers2_file').disabled).toBe(false);
     fireEvent.click(option('door_shelf'));
@@ -99,7 +92,7 @@ describe('D-8 desk', () => {
     pickProduct('desk');
     expect(document.querySelectorAll('.model-card')).toHaveLength(2);
     pickModel('model.deskLift');
-    expect(stub().dataset.height).toBe('740');
+    expect(stub().dataset.height).toBe('750');
     expect(stub().dataset.roles).toContain('frame');
     fireEvent.click(tab(uz['step.color']));
     expect(screen.getByRole('radiogroup', { name: uz['param.topMaterial'] })).toBeTruthy();
@@ -119,26 +112,26 @@ describe('D-8 desk', () => {
     pickModel('model.deskLdsp');
     fireEvent.click(tab(uz['step.review']));
     expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '120 × 74 × 70 sm · Stoleshnitsa: Белый 22 мм · Oyoq: Белый шагрень',
+      '150 × 75 × 70 sm · Stoleshnitsa: Белый 22 мм · Oyoq: Белый шагрень',
     );
   });
 
-  it('lift frame: 74 sm sitting / 110 sm standing; fixed legs keep 74 sm', () => {
+  it('lift frame: 75 sm sitting / 110 sm standing; fixed legs keep 75 sm', () => {
     render(<App />);
     pickProduct('desk');
     pickModel('model.deskLift');
     const height = () => screen.getByRole('radiogroup', { name: uz['param.height'] });
     const chip = (label: string) =>
       within(height()).getByRole('radio', { name: new RegExp(`^${label}`) }) as HTMLButtonElement;
-    expect(chip('74 sm').textContent).toContain(uz['c.heightSit']);
+    expect(chip('75 sm').textContent).toContain(uz['c.heightSit']);
     expect(chip('110 sm').textContent).toContain(uz['c.heightStand']);
     expect(chip('110 sm').disabled).toBe(false);
     fireEvent.click(chip('110 sm'));
     expect(stub().dataset.height).toBe('1100');
-    // switching to fixed legs brings the desk back to 74 sm, and 110 sm is not offered
+    // switching to fixed legs brings the desk back to 75 sm, and 110 sm is not offered
     fireEvent.click(tab(uz['step.interior.desk']));
     fireEvent.click(option('ldsp'));
-    expect(stub().dataset.height).toBe('740');
+    expect(stub().dataset.height).toBe('750');
     fireEvent.click(tab(uz['step.size']));
     expect(chip('110 sm').disabled).toBe(true);
     expect(chip('110 sm').textContent).toContain(uz['creason.DESK_HEIGHT_NOT_ERGONOMIC']);

@@ -61,7 +61,7 @@ export const READY_MODELS: ReadyModel[] = [
     id: 'ped-file',
     product: 'pedestal',
     nameKey: 'model.pedFile',
-    params: { layout: 'drawers2_file', width: 450 },
+    params: { layout: 'drawers2_file' },
     fill: 'var(--step-color)',
   },
   {
@@ -82,7 +82,7 @@ export const READY_MODELS: ReadyModel[] = [
     id: 'desk-lift',
     product: 'desk',
     nameKey: 'model.deskLift',
-    params: { legs: 'metal_lift', width: 1600, depth: 800 },
+    params: { legs: 'metal_lift', width: 1700 },
     fill: 'var(--step-interior)',
   },
 ];

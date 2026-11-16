@@ -117,7 +117,7 @@ describe('D-15 two carcasses from 1600 mm', () => {
     const old = regenerateApplication(p, '0.9.0');
     if (!old.ok) throw new Error(old.code);
     const { draft } = migrateOrderDraft({ ...old.draft, schemaVersion: old.draft.schemaVersion });
-    expect(draft?.templateVersion).toBe('0.10.0');
+    expect(draft?.templateVersion).toBe(wardrobeTemplate.templateVersion);
     expect(draft?.params.carcasses).toBe('1');
     expect(draft?.panels.filter((x) => x.role === 'side')).toHaveLength(2);
   });

@@ -16,6 +16,9 @@ import pedDefault from './fixtures/applications/pedestal.0.1.0.default.json' wit
 import pedFile from './fixtures/applications/pedestal.0.1.0.w450-file-plinth.json' with { type: 'json' };
 import deskLdsp from './fixtures/applications/desk.0.1.0.default-ldsp.json' with { type: 'json' };
 import deskLift from './fixtures/applications/desk.0.1.0.w1600-lift.json' with { type: 'json' };
+// D-17: Dafna's own sizes (templates 0.2.0)
+import ped2Default from './fixtures/applications/pedestal.0.2.0.default.json' with { type: 'json' };
+import desk2 from './fixtures/applications/desk.0.2.0.w1700-d700.json' with { type: 'json' };
 
 /** world-space bounding box of a panel (product mm) */
 function bbox(p: Panel) {
@@ -31,21 +34,24 @@ function bbox(p: Panel) {
 }
 
 describe('D-8 office pedestal (ofis tumbasi)', () => {
-  it('template 0.1.0, catalog 1.1.0, standard sizes', () => {
+  it('template 0.2.0, catalog 1.1.0, Dafna sizes 430 × 550 × 550 (D-17)', () => {
     expect([PED.templateId, PED.templateVersion, PED.productType]).toEqual([
       'pedestal',
-      '0.1.0',
+      '0.2.0',
       'pedestal',
     ]);
     expect(catalogForTemplate(PED).catalogVersion).toBe('1.1.0');
-    expect(PED.parameters.find((p) => p.key === 'height')?.customerValues).toEqual([600]);
+    expect(PED.parameters.find((p) => p.key === 'height')?.customerValues).toEqual([550]);
+    expect(PED.parameters.find((p) => p.key === 'width')?.customerValues).toEqual([430]);
+    expect(PED.parameters.find((p) => p.key === 'depth')?.customerValues).toEqual([550]);
   });
 
   for (const layout of ['drawers3', 'drawers2_file', 'door_shelf']) {
     for (const base of ['castors', 'plinth']) {
-      for (const width of [400, 450]) {
-        it(`${layout} / ${base} / ${width}: valid, inside its overall box, fits under a 740 desk`, () => {
+      for (const width of [400, 430, 450]) {
+        it(`${layout} / ${base} / ${width}: valid, inside its overall box, fits under a 750 desk`, () => {
           const p = { ...defaultParams(PED), layout, base, width };
+          const [H, D] = [Number(defaultParams(PED).height), Number(defaultParams(PED).depth)];
           const r = generate(PED, p);
           // 16 mm LDSP drawer sides: an A4 hanging-file box needs the 450 pedestal
           expect(r.issues.map((i) => i.code)).toEqual(
@@ -57,10 +63,10 @@ describe('D-8 office pedestal (ofis tumbasi)', () => {
             expect(b.min[0], panel.id).toBeGreaterThanOrEqual(-0.01);
             expect(b.max[0], panel.id).toBeLessThanOrEqual(W + 0.01);
             expect(b.min[1], panel.id).toBeGreaterThanOrEqual(-0.01);
-            expect(b.max[1], panel.id).toBeLessThanOrEqual(600 + 0.01);
-            expect(b.max[2], panel.id).toBeLessThanOrEqual(500 + 0.01);
+            expect(b.max[1], panel.id).toBeLessThanOrEqual(H + 0.01);
+            expect(b.max[2], panel.id).toBeLessThanOrEqual(D + 0.01);
           }
-          // under a 740 desk with a 25 mm top there are 715 mm: the pedestal is 600
+          // under a 750 desk with a 25 mm top there are 725 mm: the pedestal is 550
           expect(r.dimensions?.heightMm).toBeLessThanOrEqual(700);
           const drawers = r.sections[0]!.drawers;
           if (layout === 'door_shelf') {
@@ -108,9 +114,13 @@ describe('D-8 office pedestal (ofis tumbasi)', () => {
 });
 
 describe('D-8 desk (stol)', () => {
-  it('template 0.1.0, catalog 1.1.0, EN 527-1 height', () => {
+  it('template 0.2.0, catalog 1.1.0, Dafna sizes, height 750 (EN 527-1: 740 ± 20)', () => {
     expect([DESK.templateId, DESK.productType]).toEqual(['desk', 'desk']);
-    expect(DESK.parameters.find((p) => p.key === 'height')?.default).toBe(740);
+    expect(DESK.parameters.find((p) => p.key === 'height')?.default).toBe(750);
+    expect(DESK.parameters.find((p) => p.key === 'width')?.customerValues).toEqual([
+      1100, 1500, 1700,
+    ]);
+    expect(DESK.parameters.find((p) => p.key === 'depth')?.customerValues).toEqual([600, 700]);
     expect(getMaterial(catalogForTemplate(DESK), 'egger_h3700_st10_25')?.thicknessMm).toBe(25);
   });
 
@@ -122,17 +132,17 @@ describe('D-8 desk (stol)', () => {
   });
 
   for (const legs of ['ldsp', 'metal_lift']) {
-    for (const width of [1000, 1400, 1800]) {
-      it(`${legs} / ${width}: work top at 740, legs under it, nothing outside the top`, () => {
+    for (const width of [1100, 1500, 1700]) {
+      it(`${legs} / ${width}: work top at 750, legs under it, nothing outside the top`, () => {
         const r = generate(DESK, { ...defaultParams(DESK), legs, width });
         expect(r.issues).toEqual([]);
         const top = r.panels.find((p) => p.role === 'worktop')!;
-        expect(bbox(top).max[1]).toBeCloseTo(740);
+        expect(bbox(top).max[1]).toBeCloseTo(750);
         for (const p of r.panels) {
           const b = bbox(p);
           expect(b.min[0], p.id).toBeGreaterThanOrEqual(-0.01);
           expect(b.max[0], p.id).toBeLessThanOrEqual(width + 0.01);
-          expect(b.max[1], p.id).toBeLessThanOrEqual(740 + 0.01);
+          expect(b.max[1], p.id).toBeLessThanOrEqual(750 + 0.01);
           expect(b.min[1], p.id).toBeGreaterThanOrEqual(-0.01);
         }
         if (legs === 'ldsp') {
@@ -173,7 +183,7 @@ describe('D-8 desk (stol)', () => {
     const draft = toOrderDraft(defaultParams(DESK), r, { template: DESK, now: () => new Date(0) });
     expect([draft.productType, draft.templateVersion, draft.catalogVersion]).toEqual([
       'desk',
-      '0.1.0',
+      '0.2.0',
       '1.1.0',
     ]);
   });
@@ -185,6 +195,8 @@ describe('D-8 reproducibility per product', () => {
     'pedestal 450 file plinth': ['pedestal', pedFile],
     'desk default ldsp': ['desk', deskLdsp],
     'desk 1600 lift': ['desk', deskLift],
+    'pedestal 0.2.0 default 430 × 550 × 550': ['pedestal', ped2Default],
+    'desk 0.2.0 1700 × 700': ['desk', desk2],
   } as const;
   for (const [name, [templateId, fx]] of Object.entries(FIXTURES)) {
     it(`${name}: regenerated draft deep-equals the stored one`, () => {

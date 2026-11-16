@@ -185,16 +185,16 @@ describe('step 1 "Joy" (D-7: standard sizes only)', () => {
     expect(stub().dataset.width).toBe('2000');
   });
 
-  it('height 210 / 240 sm; depth 60 sm (hanging clothes) / 45 sm (shelves, drawers)', () => {
+  it('height 200 / 210 / 220 sm (D-17: Dafna max 220); depth 60 sm (hanging clothes) / 45 sm (shelves, drawers)', () => {
     renderApp();
     const height = screen.getByRole('radiogroup', { name: uz['param.height'] });
     expect(
       within(height)
         .getAllByRole('radio')
         .map((r) => r.textContent),
-    ).toEqual(['210 sm', '240 sm']);
-    fireEvent.click(within(height).getByRole('radio', { name: '240 sm' }));
-    expect(stub().dataset.height).toBe('2400');
+    ).toEqual(['200 sm', '210 sm', '220 sm']);
+    fireEvent.click(within(height).getByRole('radio', { name: '220 sm' }));
+    expect(stub().dataset.height).toBe('2200');
     const depth = screen.getByRole('radiogroup', { name: uz['param.depth'] });
     const [d45, d60] = within(depth).getAllByRole('radio');
     expect(d45?.textContent).toBe(`45 sm${uz['c.depthShallow']}`);

@@ -1,0 +1,324 @@
+{
+  "templateId": "pedestal",
+  "templateVersion": "0.2.0",
+  "productType": "pedestal",
+  "generator": "pedestal-v1",
+  "units": "mm",
+  "parameters": [
+    {
+      "key": "width",
+      "type": "int",
+      "default": 430,
+      "min": 300,
+      "max": 600,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.width",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "customerValues": [430],
+      "note": "Overall width. Standard 400 / 450 (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 300 / 400 / 410 wide), unconfirmed for Dafna. D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16)."
+    },
+    {
+      "key": "height",
+      "type": "int",
+      "default": 550,
+      "min": 450,
+      "max": 760,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.height",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "customerValues": [550],
+      "note": "Overall height incl. castors / plinth. ≈ 600 fits under a 740 mm desk (EN 527-1) with a 22–25 mm top (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 597). D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16)."
+    },
+    {
+      "key": "depth",
+      "type": "int",
+      "default": 550,
+      "min": 400,
+      "max": 650,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.depth",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "customerValues": [550],
+      "note": "Overall depth incl. fronts. 500 (desk depth 600–700) / 600 (desk depth 800); unconfirmed. D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16)."
+    },
+    {
+      "key": "layout",
+      "type": "enum",
+      "default": "drawers3",
+      "options": ["drawers3", "drawers2_file", "door_shelf"],
+      "labelKey": "param.layout",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "3 equal drawers; 2 small drawers + 1 A4 hanging-file drawer (box >= 330 × 240, FILE_DRAWER_TOO_SMALL below); a door with one shelf."
+    },
+    {
+      "key": "base",
+      "type": "enum",
+      "default": "castors",
+      "options": ["castors", "plinth"],
+      "labelKey": "param.pedestalBase",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Mobile (castors) or standing on a plinth strip (sides to the floor)."
+    },
+    {
+      "key": "corpusMaterial",
+      "type": "enum",
+      "default": "ldsp_white_16",
+      "options": [
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      "labelKey": "param.corpusMaterial",
+      "uiStep": "color",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "control": "swatch",
+      "materialKinds": ["ldsp"],
+      "note": "Carcass board (LDSP), catalog 1.1.0."
+    },
+    {
+      "key": "doorMaterial",
+      "type": "enum",
+      "default": "same_as_corpus",
+      "options": [
+        "same_as_corpus",
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16",
+        "lmdf_egger_h1367_st40_16",
+        "lmdf_egger_h1385_st40_16",
+        "lmdf_egger_h1344_st32_16_7",
+        "lmdf_egger_h3325_st28_16_7"
+      ],
+      "labelKey": "param.frontMaterial",
+      "uiStep": "color",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "control": "swatch",
+      "materialKinds": ["ldsp", "mdf"],
+      "note": "Drawer fronts / door. 'same_as_corpus' follows the carcass decor."
+    },
+    {
+      "key": "slideBrand",
+      "type": "enum",
+      "default": "strax",
+      "options": ["strax", "hettich"],
+      "labelKey": "param.slideBrand",
+      "uiStep": "hardware",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      "key": "hingeBrand",
+      "type": "enum",
+      "default": "strax",
+      "options": ["strax", "hettich"],
+      "labelKey": "param.hingeBrand",
+      "uiStep": "hardware",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    }
+  ],
+  "constants": {
+    "backMaterial": {
+      "value": "hdf_white_3",
+      "unconfirmed": true,
+      "note": "HDF back and drawer bottoms (as the wardrobe)."
+    },
+    "castorHeightMm": {
+      "value": 50,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Castor height incl. mounting plate (purchased part; unconfirmed)."
+    },
+    "castorSizeMm": {
+      "value": 40,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Castor footprint drawn in 3D (visual only)."
+    },
+    "castorMaterial": {
+      "value": "metal_black",
+      "unconfirmed": true,
+      "note": "Castor finish (visual / BOM)."
+    },
+    "plinthHeightMm": {
+      "value": 60,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Plinth strip height when standing (unconfirmed)."
+    },
+    "frontGapMm": {
+      "value": 2,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Gap between the carcass front edge and the fronts (as the wardrobe doors)."
+    },
+    "frontSideGapMm": {
+      "value": 1.5,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Gap between a front and the outer side edge."
+    },
+    "frontEdgeGapMm": {
+      "value": 2,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Gap below the lowest front and under the top."
+    },
+    "drawerGapMm": {
+      "value": 3,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Gap between drawer fronts (as the wardrobe)."
+    },
+    "fileFrontHeightMm": {
+      "value": 300,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "A4 hanging-file drawer front: box 260 high >= 240 (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): file drawer ≈ 330 × 440 × 240)."
+    },
+    "fileDrawerMinBoxWidthMm": {
+      "value": 330,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "A4 hanging-file frame needs >= 330 mm inside the box (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet))."
+    },
+    "fileDrawerMinBoxHeightMm": {
+      "value": 240,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "A4 hanging files need >= 240 mm box height (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet))."
+    },
+    "underDeskMaxHeightMm": {
+      "value": 700,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "An under-desk pedestal must stay below the desk top underside (740 − top − clearance); PEDESTAL_TOO_HIGH above."
+    },
+    "drawerSlideClearanceMm": {
+      "value": 13,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Side clearance per side for ball-bearing / roller slides (as the wardrobe)."
+    },
+    "drawerBoxHeightReductionMm": {
+      "value": 40,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Box height = front height − 40 (as the wardrobe)."
+    },
+    "drawerBoxLiftMm": {
+      "value": 20,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Box bottom above the front bottom edge."
+    },
+    "drawerBackClearanceMm": {
+      "value": 20,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Space behind the drawer box."
+    },
+    "drawerSlideMinMm": {
+      "value": 250,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Shortest slide."
+    },
+    "drawerSlideMaxMm": {
+      "value": 550,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Longest slide."
+    },
+    "drawerSlideStepMm": {
+      "value": 50,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Slide length step."
+    },
+    "edgeBandId": {
+      "value": "abs_0_8_placeholder",
+      "unconfirmed": true,
+      "note": "Edge band placeholder (as the wardrobe)."
+    },
+    "edgeBandThicknessMm": {
+      "value": 0.8,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Edge band thickness placeholder."
+    },
+    "smallFrontMinHeightMm": {
+      "value": 90,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Smallest drawer front (pens, stationery) in the 2 + file layout; the file drawer shrinks only below this."
+    }
+  },
+  "constructionRules": [
+    {
+      "id": "pedestal-carcass",
+      "unconfirmed": true,
+      "note": "Top over the sides; bottom between the sides on the base; HDF back overlay; castors under the bottom corners, or sides to the floor with a plinth strip between them."
+    },
+    {
+      "id": "pedestal-fronts",
+      "unconfirmed": true,
+      "note": "Fronts overlay the sides (full overlay), equal 3 mm gaps; drawer boxes on side slides."
+    }
+  ]
+}
