@@ -5,16 +5,18 @@ import type { Mode } from '../mode';
 import type { Configurator } from '../state/useConfigurator';
 
 /**
- * D-9: in production customers see the price only once Dafna's real price list replaces the
- * DEMO one (never a demo number in front of a real customer). Staff always see it, marked
- * "sinov narxi"; a dev build (local testing) shows the demo price on customer screens too.
+ * D-9: staff always see the price; a real (non-demo) price is shown to everyone.
+ * D-18 (founder, 2026-11-17): the DEMO price is shown to customers too, marked "sinov narxi",
+ * so Dafna's management can review the pricing on the live site. A deployment hides it again
+ * with the build-time env `VITE_HIDE_DEMO_PRICE=1` (e.g. a kiosk in a shop before Dafna's real
+ * price list is in).
  */
 export function priceVisible(
   mode: Mode,
   price: PriceResult,
-  dev: boolean = import.meta.env.DEV,
+  showDemo: boolean = import.meta.env.VITE_HIDE_DEMO_PRICE !== '1',
 ): boolean {
-  return mode === 'staff' || !price.demo || dev;
+  return mode === 'staff' || !price.demo || showDemo;
 }
 
 const reducedMotion = () =>

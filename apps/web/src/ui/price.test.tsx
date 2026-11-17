@@ -23,12 +23,14 @@ const tab = (label: string) =>
 const priceNumber = () => Number(screen.getByTestId('price').dataset.total);
 
 describe('D-9 price and mechanisms', () => {
-  it('production customers never see a DEMO price; a dev build shows it, marked', () => {
+  it('D-18: customers see the DEMO price, marked; VITE_HIDE_DEMO_PRICE=1 hides it', () => {
     const demo = { demo: true } as PriceResult;
+    // showDemo = false: a deployment built with VITE_HIDE_DEMO_PRICE=1
     expect(priceVisible('customer', demo, false)).toBe(false);
     expect(priceVisible('customer', { demo: false } as PriceResult, false)).toBe(true);
     expect(priceVisible('staff', demo, false)).toBe(true);
-    render(<App />); // vitest = dev build
+    expect(priceVisible('customer', demo, true)).toBe(true);
+    render(<App />); // no VITE_HIDE_DEMO_PRICE: the demo price is shown
     fireEvent.click(screen.getByRole('button', { name: uz['start.scratch'] }));
     expect(screen.getByTestId('price').textContent).toContain(uz['price.demo']);
   });
