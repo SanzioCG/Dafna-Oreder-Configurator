@@ -209,7 +209,7 @@ export function parsePriceList(
         : [];
       if (!x || !name || !okBasis || !money(x.price) || (x.basis === 'pct' && x.price! > 100))
         return { ok: false, field: `services.${i}` };
-      const id = typeof x.id === 'string' && /^s_[a-z0-9]{1,12}$/.test(x.id) ? x.id : `s_${i + 1}`;
+      const id = typeof x.id === 'string' && /^s_[a-z0-9_]{1,20}$/.test(x.id) ? x.id : `s_${i + 1}`;
       services.push({ id, name, basis: x.basis!, products, price: Math.round(x.price!) });
     }
     // ids unique (a new row may reuse a free number)

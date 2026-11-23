@@ -61682,7 +61682,7 @@ function toMaterial(m) {
     textureUrl: null,
     customerVisible: m.visible,
     unconfirmed: false,
-    note: "D-20: added on the admin page"
+    note: m.note ? `D-20 (admin): ${m.note}` : "D-20: added on the admin page"
   };
 }
 function applyCatalogExtension(ext) {
@@ -62457,8 +62457,18 @@ function mergeCatalog(saved, incoming) {
     const visible = x?.visible !== false;
     if (!name || !HEX.test(colorHex)) return { ok: false, field: `materials.${i}` };
     const old = typeof x?.id === "string" ? materials.find((m) => m.id === x.id) : void 0;
+    const brand = text(x?.brand, 40) || void 0;
+    const note = text(x?.note, 200) || void 0;
     if (old) {
-      Object.assign(old, { name, code, colorHex: colorHex.toLowerCase(), group, visible });
+      Object.assign(old, {
+        name,
+        code,
+        colorHex: colorHex.toLowerCase(),
+        group,
+        visible,
+        brand,
+        note
+      });
       continue;
     }
     const kind = x?.kind === "mdf" ? "mdf" : x?.kind === "ldsp" ? "ldsp" : null;
@@ -62475,7 +62485,11 @@ function mergeCatalog(saved, incoming) {
       colorHex: colorHex.toLowerCase(),
       group,
       usage,
-      visible
+      visible,
+      brand,
+      grain: x?.grain === true,
+      moistureResistant: x?.moistureResistant === true,
+      note
     });
   }
   const hardware = saved.hardware.map((h) => ({ ...h }));
@@ -62487,8 +62501,9 @@ function mergeCatalog(saved, incoming) {
     const visible = x?.visible !== false;
     if (!brand || !model) return { ok: false, field: `hardware.${i}` };
     const old = typeof x?.id === "string" ? hardware.find((h) => h.id === x.id) : void 0;
+    const note = text(x?.note, 200) || void 0;
     if (old) {
-      Object.assign(old, { brand, model, softClose, visible });
+      Object.assign(old, { brand, model, softClose, visible, note });
       continue;
     }
     const kind = x?.kind === "hinge" || x?.kind === "slide" ? x.kind : null;
@@ -62497,7 +62512,7 @@ function mergeCatalog(saved, incoming) {
     for (let n3 = 2; hardware.some((h) => h.kind === kind && h.brandKey === brandKey); n3++)
       brandKey = `x_${slug(`${brand}_${model}`)}_${n3}`;
     while (hardware.some((h) => h.id === `x_h${nextH}`)) nextH++;
-    hardware.push({ id: `x_h${nextH++}`, kind, brandKey, brand, model, softClose, visible });
+    hardware.push({ id: `x_h${nextH++}`, kind, brandKey, brand, model, softClose, visible, note });
   }
   return { ok: true, ext: { materials, hardware } };
 }
@@ -62512,7 +62527,11 @@ var CATALOG_HEADER = [
   "Rang",
   "Guruh / yumshoq yopiladi",
   "Ishlatilishi / brend kaliti",
-  "Mijozga ko'rinadi"
+  "Mijozga ko'rinadi",
+  "Ishlab chiqaruvchi",
+  "Tekstura yo'nalishi",
+  "Namlikka chidamli",
+  "Izoh"
 ];
 function catalogToRows(ext) {
   return [
@@ -62527,7 +62546,11 @@ function catalogToRows(ext) {
       m.colorHex,
       m.group,
       m.usage.join(","),
-      m.visible ? "ha" : "yo'q"
+      m.visible ? "ha" : "yo'q",
+      m.brand ?? "",
+      m.grain ? "ha" : "yo'q",
+      m.moistureResistant ? "ha" : "yo'q",
+      m.note ?? ""
     ]),
     ...ext.hardware.map((h) => [
       "furnitura",
@@ -62539,7 +62562,11 @@ function catalogToRows(ext) {
       "",
       h.softClose ? "ha" : "yo'q",
       h.brandKey,
-      h.visible ? "ha" : "yo'q"
+      h.visible ? "ha" : "yo'q",
+      "",
+      "",
+      "",
+      h.note ?? ""
     ])
   ];
 }
@@ -62571,7 +62598,11 @@ function rowsToCatalog(rows) {
         colorHex: HEX.test(color) ? color : "#cccccc",
         group: group === "wood" ? "wood" : "plain",
         usage: USAGES.filter((u) => usage.split(",").includes(u)),
-        visible: visible !== "yo'q"
+        visible: visible !== "yo'q",
+        brand: c(10) || void 0,
+        grain: c(11) === "ha",
+        moistureResistant: c(12) === "ha",
+        note: c(13) || void 0
       });
     } else if (type === "furnitura" && id && (kind === "hinge" || kind === "slide") && usage) {
       hardware.push({
@@ -62581,7 +62612,8 @@ function rowsToCatalog(rows) {
         brand: name || id,
         model: code,
         softClose: group === "ha",
-        visible: visible !== "yo'q"
+        visible: visible !== "yo'q",
+        note: c(13) || void 0
       });
     }
   }
@@ -62688,7 +62720,7 @@ function parsePriceList(raw, version) {
       const products = Array.isArray(x?.products) ? x.products.filter((p) => typeof p === "string" && /^[a-z]+$/.test(p)) : [];
       if (!x || !name || !okBasis || !money(x.price) || x.basis === "pct" && x.price > 100)
         return { ok: false, field: `services.${i}` };
-      const id = typeof x.id === "string" && /^s_[a-z0-9]{1,12}$/.test(x.id) ? x.id : `s_${i + 1}`;
+      const id = typeof x.id === "string" && /^s_[a-z0-9_]{1,20}$/.test(x.id) ? x.id : `s_${i + 1}`;
       services.push({ id, name, basis: x.basis, products, price: Math.round(x.price) });
     }
     const seen = /* @__PURE__ */ new Set();

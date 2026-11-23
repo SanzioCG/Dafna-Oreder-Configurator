@@ -62736,7 +62736,7 @@ function toMaterial(m) {
     textureUrl: null,
     customerVisible: m.visible,
     unconfirmed: false,
-    note: "D-20: added on the admin page"
+    note: m.note ? `D-20 (admin): ${m.note}` : "D-20: added on the admin page"
   };
 }
 function applyCatalogExtension(ext) {
@@ -65187,7 +65187,11 @@ var CATALOG_HEADER = [
   "Rang",
   "Guruh / yumshoq yopiladi",
   "Ishlatilishi / brend kaliti",
-  "Mijozga ko'rinadi"
+  "Mijozga ko'rinadi",
+  "Ishlab chiqaruvchi",
+  "Tekstura yo'nalishi",
+  "Namlikka chidamli",
+  "Izoh"
 ];
 function catalogToRows(ext) {
   return [
@@ -65202,7 +65206,11 @@ function catalogToRows(ext) {
       m.colorHex,
       m.group,
       m.usage.join(","),
-      m.visible ? "ha" : "yo'q"
+      m.visible ? "ha" : "yo'q",
+      m.brand ?? "",
+      m.grain ? "ha" : "yo'q",
+      m.moistureResistant ? "ha" : "yo'q",
+      m.note ?? ""
     ]),
     ...ext.hardware.map((h) => [
       "furnitura",
@@ -65214,7 +65222,11 @@ function catalogToRows(ext) {
       "",
       h.softClose ? "ha" : "yo'q",
       h.brandKey,
-      h.visible ? "ha" : "yo'q"
+      h.visible ? "ha" : "yo'q",
+      "",
+      "",
+      "",
+      h.note ?? ""
     ])
   ];
 }
@@ -65246,7 +65258,11 @@ function rowsToCatalog(rows) {
         colorHex: HEX.test(color) ? color : "#cccccc",
         group: group === "wood" ? "wood" : "plain",
         usage: USAGES.filter((u) => usage.split(",").includes(u)),
-        visible: visible !== "yo'q"
+        visible: visible !== "yo'q",
+        brand: c(10) || void 0,
+        grain: c(11) === "ha",
+        moistureResistant: c(12) === "ha",
+        note: c(13) || void 0
       });
     } else if (type === "furnitura" && id && (kind === "hinge" || kind === "slide") && usage) {
       hardware.push({
@@ -65256,7 +65272,8 @@ function rowsToCatalog(rows) {
         brand: name || id,
         model: code,
         softClose: group === "ha",
-        visible: visible !== "yo'q"
+        visible: visible !== "yo'q",
+        note: c(13) || void 0
       });
     }
   }

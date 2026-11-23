@@ -31,6 +31,14 @@ export interface CustomMaterial {
   usage: MaterialUsage[];
   /** false = hidden from customers (kept for old applications) */
   visible: boolean;
+  /** manufacturer, e.g. "Egger", "Kronospan" */
+  brand?: string;
+  /** the decor has a grain direction (parts are cut along it); locked once saved */
+  grain?: boolean;
+  /** moisture resistant board (kitchen / bathroom); locked once saved */
+  moistureResistant?: boolean;
+  /** free note for the office (supplier, delivery time, …) */
+  note?: string;
 }
 
 export interface CustomHardware {
@@ -45,6 +53,8 @@ export interface CustomHardware {
   model: string;
   softClose: boolean;
   visible: boolean;
+  /** free note for the office */
+  note?: string;
 }
 
 export interface CatalogExtension {
@@ -87,7 +97,7 @@ export function toMaterial(m: CustomMaterial): Material {
     textureUrl: null,
     customerVisible: m.visible,
     unconfirmed: false,
-    note: 'D-20: added on the admin page',
+    note: m.note ? `D-20 (admin): ${m.note}` : 'D-20: added on the admin page',
   };
 }
 

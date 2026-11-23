@@ -93,8 +93,18 @@ export function mergeCatalog(saved: CatalogExtension, incoming: unknown): MergeR
     const visible = x?.visible !== false;
     if (!name || !HEX.test(colorHex)) return { ok: false, field: `materials.${i}` };
     const old = typeof x?.id === 'string' ? materials.find((m) => m.id === x.id) : undefined;
+    const brand = text(x?.brand, 40) || undefined;
+    const note = text(x?.note, 200) || undefined;
     if (old) {
-      Object.assign(old, { name, code, colorHex: colorHex.toLowerCase(), group, visible });
+      Object.assign(old, {
+        name,
+        code,
+        colorHex: colorHex.toLowerCase(),
+        group,
+        visible,
+        brand,
+        note,
+      });
       continue;
     }
     const kind = x?.kind === 'mdf' ? 'mdf' : x?.kind === 'ldsp' ? 'ldsp' : null;
@@ -114,6 +124,10 @@ export function mergeCatalog(saved: CatalogExtension, incoming: unknown): MergeR
       group,
       usage,
       visible,
+      brand,
+      grain: x?.grain === true,
+      moistureResistant: x?.moistureResistant === true,
+      note,
     });
   }
 
@@ -126,8 +140,9 @@ export function mergeCatalog(saved: CatalogExtension, incoming: unknown): MergeR
     const visible = x?.visible !== false;
     if (!brand || !model) return { ok: false, field: `hardware.${i}` };
     const old = typeof x?.id === 'string' ? hardware.find((h) => h.id === x.id) : undefined;
+    const note = text(x?.note, 200) || undefined;
     if (old) {
-      Object.assign(old, { brand, model, softClose, visible });
+      Object.assign(old, { brand, model, softClose, visible, note });
       continue;
     }
     const kind = x?.kind === 'hinge' || x?.kind === 'slide' ? x.kind : null;
@@ -137,7 +152,7 @@ export function mergeCatalog(saved: CatalogExtension, incoming: unknown): MergeR
     for (let n = 2; hardware.some((h) => h.kind === kind && h.brandKey === brandKey); n++)
       brandKey = `x_${slug(`${brand}_${model}`)}_${n}`;
     while (hardware.some((h) => h.id === `x_h${nextH}`)) nextH++;
-    hardware.push({ id: `x_h${nextH++}`, kind, brandKey, brand, model, softClose, visible });
+    hardware.push({ id: `x_h${nextH++}`, kind, brandKey, brand, model, softClose, visible, note });
   }
   return { ok: true, ext: { materials, hardware } };
 }
@@ -156,6 +171,10 @@ export const CATALOG_HEADER = [
   'Guruh / yumshoq yopiladi',
   'Ishlatilishi / brend kaliti',
   "Mijozga ko'rinadi",
+  'Ishlab chiqaruvchi',
+  "Tekstura yo'nalishi",
+  'Namlikka chidamli',
+  'Izoh',
 ];
 
 export function catalogToRows(ext: CatalogExtension): (string | number)[][] {
@@ -172,6 +191,10 @@ export function catalogToRows(ext: CatalogExtension): (string | number)[][] {
       m.group,
       m.usage.join(','),
       m.visible ? 'ha' : "yo'q",
+      m.brand ?? '',
+      m.grain ? 'ha' : "yo'q",
+      m.moistureResistant ? 'ha' : "yo'q",
+      m.note ?? '',
     ]),
     ...ext.hardware.map((h) => [
       'furnitura',
@@ -184,6 +207,10 @@ export function catalogToRows(ext: CatalogExtension): (string | number)[][] {
       h.softClose ? 'ha' : "yo'q",
       h.brandKey,
       h.visible ? 'ha' : "yo'q",
+      '',
+      '',
+      '',
+      h.note ?? '',
     ]),
   ];
 }
@@ -217,6 +244,10 @@ export function rowsToCatalog(rows: unknown[][]): CatalogExtension {
         group: group === 'wood' ? 'wood' : 'plain',
         usage: USAGES.filter((u) => usage.split(',').includes(u)),
         visible: visible !== "yo'q",
+        brand: c(10) || undefined,
+        grain: c(11) === 'ha',
+        moistureResistant: c(12) === 'ha',
+        note: c(13) || undefined,
       });
     } else if (type === 'furnitura' && id && (kind === 'hinge' || kind === 'slide') && usage) {
       hardware.push({
@@ -227,6 +258,7 @@ export function rowsToCatalog(rows: unknown[][]): CatalogExtension {
         model: code,
         softClose: group === 'ha',
         visible: visible !== "yo'q",
+        note: c(13) || undefined,
       });
     }
   }

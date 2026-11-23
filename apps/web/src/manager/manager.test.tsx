@@ -79,7 +79,7 @@ describe('D-19 manager price page', () => {
     expect(screen.queryByTestId('mgr-save')).toBeNull();
   });
 
-  it('profit %, assembly and a sheet price change the sample price; Saqlash sends them', async () => {
+  it('materials: every board with its data; a sheet price and 1C code are saved', async () => {
     const api = fakeManagerApi();
     render(
       <ThemeProvider>
@@ -88,20 +88,18 @@ describe('D-19 manager price page', () => {
     );
     await login('9137');
     await screen.findByTestId('mgr-save');
-    // the ERP is not connected yet: said plainly, sheet prices are typed here
-    expect(screen.getByTestId('mgr-erp-note').textContent).toContain('1C hali ulanmagan');
     expect(screen.getByTestId('mgr-updated').textContent).toContain('hali saqlanmagan');
-    const total = () =>
-      Number(screen.getByTestId('mgr-total-wardrobe').textContent?.replace(/\s/g, ''));
-    const t0 = total();
-    fireEvent.change(screen.getByTestId('mgr-markup'), { target: { value: '40' } });
-    const t1 = total();
-    expect(t1).toBeGreaterThan(t0);
-    fireEvent.change(screen.getByTestId('mgr-assembly-wardrobe'), { target: { value: '300000' } });
-    expect(total()).toBeGreaterThan(t1);
+    // the built-in catalog is listed (search narrows it); a row opens the full card
+    fireEvent.change(screen.getByTestId('mgr-material-search'), { target: { value: 'шагрень' } });
+    fireEvent.click(screen.getByTestId('mgr-material-row-ldsp_white_16'));
+    const card = screen.getByTestId('mgr-material-card');
+    expect(card.textContent).toContain('Asosiy katalog');
     fireEvent.change(screen.getByTestId('mgr-sheet-ldsp_white_16'), {
       target: { value: '579600' },
     });
+    fireEvent.change(screen.getByTestId('mgr-erp-ldsp_white_16'), { target: { value: 'LD-0001' } });
+    fireEvent.change(screen.getByTestId('mgr-edge-price'), { target: { value: '4200' } });
+    expect(screen.getByTestId('mgr-updated').textContent).toContain('Saqlanmagan');
     fireEvent.click(screen.getByTestId('mgr-save'));
     await waitFor(() =>
       expect(screen.getByTestId('mgr-updated').textContent).toContain('2026-11-23 14:05'),
@@ -110,22 +108,20 @@ describe('D-19 manager price page', () => {
     expect(put.url).toBe('/api/manager');
     expect(put.headers['x-manager-pin']).toBe('9137'); // a header, never the URL
     const list = (put.body as { list: Record<string, unknown> }).list as {
-      markupPct: number;
-      assembly: Record<string, number>;
+      edgePerM: number;
+      erpCodes: Record<string, string>;
       boardSheets: Record<string, { price: number; lengthMm: number; widthMm: number }>;
     };
-    expect(list.markupPct).toBe(40);
-    expect(list.assembly.wardrobe).toBe(300000);
     expect(list.boardSheets.ldsp_white_16).toEqual({
       price: 579600,
       lengthMm: 2750, // Dafna chipboard (no EGGER code): the GibLab sheet size
       widthMm: 1830,
     });
+    expect(list.erpCodes.ldsp_white_16).toBe('LD-0001');
+    expect(list.edgePerM).toBe(4200);
   });
-});
 
-describe('D-20 manager adds materials, hardware and services', () => {
-  it('a new board and a new hinge brand become kiosk options; a service is priced', async () => {
+  it('labour and assembly are services; the profit % and services change the price', async () => {
     const api = fakeManagerApi();
     render(
       <ThemeProvider>
@@ -134,19 +130,62 @@ describe('D-20 manager adds materials, hardware and services', () => {
     );
     await login('9137');
     await screen.findByTestId('mgr-save');
-    // a service: delivery 150 000 per product
-    const before = Number(screen.getByTestId('mgr-total-wardrobe').textContent?.replace(/\s/g, ''));
-    fireEvent.click(screen.getByTestId('mgr-service-add'));
-    fireEvent.change(screen.getByTestId('mgr-service-name-0'), { target: { value: 'Yetkazish' } });
-    fireEvent.change(screen.getByTestId('mgr-service-price-0'), { target: { value: '150000' } });
-    const after = Number(screen.getByTestId('mgr-total-wardrobe').textContent?.replace(/\s/g, ''));
-    expect(after).toBeGreaterThan(before);
-    // a board
-    fireEvent.click(screen.getByTestId('mgr-tab-materials'));
+    fireEvent.click(screen.getByTestId('mgr-tab-profit'));
+    const total = () =>
+      Number(screen.getByTestId('mgr-total-wardrobe').textContent?.replace(/\D/g, ''));
+    const t0 = total();
+    fireEvent.change(screen.getByTestId('mgr-markup'), { target: { value: '40' } });
+    const t1 = total();
+    expect(t1).toBeGreaterThan(t0);
+    // the demo labour per m² became a service; edge banding per metre and assembly per m² wait
+    fireEvent.click(screen.getByTestId('mgr-tab-services'));
+    const names = () =>
+      [...document.querySelectorAll('[data-testid^="mgr-service-name-"]')].map(
+        (x) => (x as HTMLInputElement).value,
+      );
+    expect(names()).toEqual(['Ish haqi (kesish, ishlov berish)', 'Kromkalash', "Yig'ish"]);
+    const basis = (i: number) =>
+      (screen.getByTestId(`mgr-service-basis-${i}`) as HTMLSelectElement).value;
+    expect([basis(0), basis(1), basis(2)]).toEqual(['m2', 'edge_m', 'm2']);
+    fireEvent.change(screen.getByTestId('mgr-service-price-1'), { target: { value: '1500' } });
+    fireEvent.change(screen.getByTestId('mgr-service-price-2'), { target: { value: '20000' } });
+    fireEvent.click(screen.getByTestId('mgr-tab-profit'));
+    expect(total()).toBeGreaterThan(t1);
+    fireEvent.click(screen.getByTestId('mgr-save'));
+    await waitFor(() => expect(screen.getByTestId('mgr-save').textContent).toBe('Saqlandi'));
+    const list = (api.calls.find((c) => c.method === 'PUT')!.body as { list: PriceListLike }).list;
+    expect(list.markupPct).toBe(40);
+    expect(list.laborPerM2).toBe(0); // the labour lives in the services now (same price)
+    expect(list.services.map((s) => [s.name, s.basis, s.price])).toEqual([
+      ['Ish haqi (kesish, ishlov berish)', 'm2', priceListDemo.laborPerM2],
+      ['Kromkalash', 'edge_m', 1500],
+      ["Yig'ish", 'm2', 20000],
+    ]);
+  });
+});
+
+interface PriceListLike {
+  markupPct: number;
+  laborPerM2: number;
+  services: { name: string; basis: string; price: number }[];
+}
+
+describe('D-20 manager adds materials, hardware and services', () => {
+  it('a new board (all its data) and a new hinge become kiosk options with price rows', async () => {
+    const api = fakeManagerApi();
+    render(
+      <ThemeProvider>
+        <ManagerPage fetchImpl={api.impl} />
+      </ThemeProvider>,
+    );
+    await login('9137');
+    await screen.findByTestId('mgr-save');
+    // a board: its card opens at once
     fireEvent.click(screen.getByTestId('mgr-material-add'));
-    fireEvent.change(screen.getByTestId('mgr-material-name-0'), {
+    fireEvent.change(screen.getByTestId('mgr-material-name'), {
       target: { value: 'Дуб Гладстоун табак' },
     });
+    expect(screen.getByTestId('mgr-material-card').textContent).toContain('avval «Saqlash»');
     // a hinge
     fireEvent.click(screen.getByTestId('mgr-tab-hardware'));
     fireEvent.click(screen.getByTestId('mgr-hw-add'));
@@ -156,25 +195,29 @@ describe('D-20 manager adds materials, hardware and services', () => {
     });
     fireEvent.click(screen.getByTestId('mgr-save'));
     await waitFor(() => expect(screen.getByTestId('mgr-save').textContent).toBe('Saqlandi'));
-    const put = api.calls.find((c) => c.method === 'PUT')!.body as {
-      list: { services: { name: string; price: number; basis: string }[] };
-      catalog: CatalogExtension;
-    };
-    expect(put.list.services).toEqual([
-      expect.objectContaining({ name: 'Yetkazish', price: 150000, basis: 'product' }),
-    ]);
-    expect(put.catalog.materials[0]).toMatchObject({ name: 'Дуб Гладстоун табак', kind: 'ldsp' });
+    const put = api.calls.find((c) => c.method === 'PUT')!.body as { catalog: CatalogExtension };
+    expect(put.catalog.materials[0]).toMatchObject({
+      name: 'Дуб Гладстоун табак',
+      kind: 'ldsp',
+      thicknessMm: 16,
+      grain: true,
+      moistureResistant: false,
+      usage: ['corpus', 'door'],
+    });
     expect(put.catalog.materials[0]!.id).toBeUndefined(); // the server assigns ids
     // the saved catalog is applied: the kiosk templates offer the new board and brand
     const opts = (key: string) =>
       wardrobeTemplate.parameters.find((p) => p.key === key)?.options ?? [];
     expect(opts('corpusMaterial')).toContain('x_m1');
     expect(opts('hingeBrand')).toContain('x_blum');
-    // its sheet price row is there now, with its 1C code field
-    fireEvent.click(screen.getByTestId('mgr-tab-prices'));
+    // the hinge now has its price and 1C code row
+    expect(screen.getByTestId('mgr-hw-x_h1')).toBeTruthy();
+    expect(screen.getByTestId('mgr-erp-x_h1')).toBeTruthy();
+    // the board's card has its price fields now
+    fireEvent.click(screen.getByTestId('mgr-tab-materials'));
+    fireEvent.click(screen.getByTestId('mgr-material-row-x_m1'));
     expect(screen.getByTestId('mgr-sheet-x_m1')).toBeTruthy();
     expect(screen.getByTestId('mgr-erp-x_m1')).toBeTruthy();
-    expect(screen.getByTestId('mgr-hw-x_h1')).toBeTruthy();
   });
 });
 
