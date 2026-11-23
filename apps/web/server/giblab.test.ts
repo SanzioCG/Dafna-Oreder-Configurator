@@ -30,6 +30,9 @@ const lead = (templateId: string, over: Record<string, unknown> = {}): LeadRecor
     telegramAttempts: 0,
     product: '',
     templateId,
+    orderId: '',
+    orderItem: '',
+    quantity: 1,
   };
 };
 

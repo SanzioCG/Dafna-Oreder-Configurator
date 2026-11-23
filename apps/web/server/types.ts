@@ -51,6 +51,12 @@ export interface LeadRecord {
   product: string;
   /** D-8: templateId ('wardrobe' | 'pedestal' | 'desk'); with templateVersion it regenerates */
   templateId: string;
+  /** D-25: the customer's order (the first product's ID); '' = a single-product application */
+  orderId: string;
+  /** D-25: "2/3" = second of three products in the order; '' = single */
+  orderItem: string;
+  /** D-25: how many of this product (1 when absent) */
+  quantity: number;
 }
 
 export interface StoredLead extends LeadRecord {

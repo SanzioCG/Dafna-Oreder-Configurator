@@ -22,6 +22,11 @@ export function telegramText(lead: LeadRecord): string {
     (lead.door && lead.door !== '—' ? ` · ${second}: ${lead.door}` : '');
   return [
     `🆕 <b>Yangi ariza ${escapeHtml(lead.id)}</b>${lead.product ? ` · ${escapeHtml(lead.product)}` : ''}`,
+    // D-25: one order with several products: every product is its own application
+    ...(lead.orderItem
+      ? [`🧾 Buyurtma <b>${escapeHtml(lead.orderId)}</b> · ${escapeHtml(lead.orderItem)} mahsulot`]
+      : []),
+    ...(lead.quantity > 1 ? [`🔢 Soni: <b>${lead.quantity}</b> ta`] : []),
     `👤 ${escapeHtml(name)}`,
     `📞 ${escapeHtml(lead.phone)}`,
     `📐 ${escapeHtml(sizeCm)} (${escapeHtml(lead.sizeMm)} mm)`,

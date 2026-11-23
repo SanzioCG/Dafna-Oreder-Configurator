@@ -62,6 +62,9 @@ export const COLUMN_WIDTHS: Partial<Record<keyof LeadRecord, number>> = {
   telegram: 120,
   managerNote: 300,
   product: 120,
+  orderId: 130,
+  orderItem: 90,
+  quantity: 60,
 };
 
 /** Columns the manager never needs: hidden (still there for the API and regeneration). */

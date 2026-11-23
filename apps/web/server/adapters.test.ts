@@ -31,6 +31,9 @@ const LEAD: LeadRecord = {
   telegramAttempts: 0,
   product: 'Shkaf',
   templateId: 'wardrobe',
+  orderId: '',
+  orderItem: '',
+  quantity: 1,
 };
 
 /** the parts of a Sheets batchUpdate request the tests look at */
@@ -66,6 +69,18 @@ function fakeFetch(handler: (c: Call) => { status?: number; json: unknown }) {
 }
 
 describe('Telegram notifier', () => {
+  it('D-25: a product of a multi-product order names the order, its place and the pieces', () => {
+    const text = telegramText({
+      ...LEAD,
+      orderId: 'DFN-261105-AAAA',
+      orderItem: '2/3',
+      quantity: 3,
+    });
+    expect(text).toContain('🧾 Buyurtma <b>DFN-261105-AAAA</b> · 2/3 mahsulot');
+    expect(text).toContain('🔢 Soni: <b>3</b> ta');
+    expect(telegramText(LEAD)).not.toContain('Buyurtma');
+  });
+
   it('message: ID, escaped name, tappable +998 phone, size, colours, interior, kiosk, status', () => {
     const text = telegramText(LEAD);
     expect(text).toContain('DFN-261105-K7QM');
@@ -385,6 +400,6 @@ describe('Google Sheets store', () => {
       { range: `${SHEET_TITLE}!N3`, values: [['sent']] },
       { range: `${SHEET_TITLE}!U3`, values: [[3]] },
     ]);
-    expect(LAST_COLUMN).toBe('W'); // D-8: + Mahsulot, templateId
+    expect(LAST_COLUMN).toBe('Z'); // D-8: + Mahsulot, templateId; D-25: + Buyurtma, Buyurtmada, Soni
   });
 });

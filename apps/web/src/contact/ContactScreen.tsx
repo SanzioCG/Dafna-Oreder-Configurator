@@ -18,6 +18,7 @@ import {
 import { PHONE_COUNTRY_CODE, formatPhoneDigits, normalizePhoneDigits } from '../lead/phone';
 import { Button } from '../ui/Button';
 import { ArrowLeftIcon, CheckIcon, CloseIcon, SpinnerIcon, WarningIcon } from '../ui/icons';
+import { orderItems, type CartItem } from '../cart/cart';
 import { OnScreenKeyboard } from './OnScreenKeyboard';
 import { autoCapitalize, backspace, insertText, type KeyboardLayout } from './keyboard';
 
@@ -29,8 +30,19 @@ export interface ContactScreenProps {
   product?: string;
   params: Params;
   kioskId?: string;
+  /**
+   * D-25: the cart. Empty = the product on screen alone (single form). Otherwise the whole
+   * order is sent as `items`: the cart, plus the product on screen when `includeCurrent`.
+   */
+  cart?: CartItem[];
+  includeCurrent?: boolean;
   onBack: () => void;
-  onSubmitted: (id: string, renderPng: string | undefined, assemblyPath?: string) => void;
+  onSubmitted: (
+    id: string,
+    renderPng: string | undefined,
+    assemblyPath?: string,
+    order?: { ids?: string[]; assemblyPaths?: string[] },
+  ) => void;
   /** PNG data URL of the 3D view (~1280 px wide), or null when unavailable */
   captureRender?: () => string | null;
   /** injectable for tests */
@@ -55,6 +67,8 @@ export function ContactScreen({
   product = 'wardrobe',
   params,
   kioskId,
+  cart = [],
+  includeCurrent = true,
   onBack,
   onSubmitted,
   captureRender,
@@ -148,22 +162,29 @@ export function ContactScreen({
     setFailCode(null);
     let renderPng: string | undefined;
     try {
-      renderPng = captureRender?.() ?? undefined;
+      renderPng = includeCurrent ? (captureRender?.() ?? undefined) : undefined;
     } catch {
       renderPng = undefined; // the render is a bonus, never a blocker
     }
+    // D-25: a cart goes as one order (`items`); a single product keeps the single form
+    const order =
+      cart.length > 0
+        ? { items: orderItems(cart, includeCurrent ? { product, params, renderPng } : null) }
+        : { product, params };
     const outcome = await submit({
       idempotencyKey: keyRef.current,
-      product,
-      params,
+      ...order,
       contact: cleanContact(contact),
       lang,
       ...(kioskId ? { kioskId } : {}),
-      ...(renderPng ? { renderPng } : {}),
+      ...(renderPng && cart.length === 0 ? { renderPng } : {}),
       ...(honeypot ? { website: honeypot } : {}),
     });
     if (outcome.ok) {
-      onSubmitted(outcome.id, renderPng, outcome.assemblyPath);
+      onSubmitted(outcome.id, renderPng ?? cart[0]?.renderPng, outcome.assemblyPath, {
+        ids: outcome.ids,
+        assemblyPaths: outcome.assemblyPaths,
+      });
       return;
     }
     setStatus('error');

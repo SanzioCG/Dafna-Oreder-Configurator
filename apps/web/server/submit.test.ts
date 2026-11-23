@@ -120,6 +120,9 @@ describe('sheet row mapping', () => {
       'Telegram urinishlar',
       'Mahsulot',
       'templateId',
+      'Buyurtma',
+      'Buyurtmada',
+      'Soni',
     ]);
   });
 
@@ -363,6 +366,71 @@ describe('POST /api/submit', () => {
     notifier.failing = true;
     await send(body(), { ...deps, log: (e, d) => lines.push(JSON.stringify({ e, d })) });
     expect(lines.join('\n')).not.toMatch(/Aziz|901234567/);
+  });
+});
+
+describe('D-25 several products in one order', () => {
+  const items = (): NonNullable<SubmitRequest['items']> => [
+    { product: 'wardrobe', params: defaultParams(wardrobeTemplate), renderPng: PNG },
+    { product: 'pedestal', params: defaultParams(pedestalTemplate), quantity: 3 },
+    { product: 'desk', params: defaultParams(deskTemplate) },
+  ];
+
+  it('one contact, one row per product linked by the order ID; a message each', async () => {
+    const res = await handleSubmit(post(body({ items: items() })), {
+      ...deps,
+      linkSecret: 'test-secret-0123456789',
+    });
+    const json = (await res.json()) as ApiJson & { ids: string[]; assemblyPaths: string[] };
+    expect(res.status).toBe(200);
+    expect(json.ids).toHaveLength(3);
+    expect(json.id).toBe(json.ids[0]);
+    expect(json.assemblyPaths).toHaveLength(3);
+    expect(
+      store.rows.map((r) => [r.templateId, r.orderId, r.orderItem, r.quantity, r.firstName]),
+    ).toEqual([
+      ['wardrobe', json.id, '1/3', 1, 'Aziz'],
+      ['pedestal', json.id, '2/3', 3, 'Aziz'],
+      ['desk', json.id, '3/3', 1, 'Aziz'],
+    ]);
+    expect(new Set(store.rows.map((r) => r.id)).size).toBe(3);
+    expect(notifier.sent.map((s) => [s.lead.orderItem, s.png !== undefined])).toEqual([
+      ['1/3', true],
+      ['2/3', false],
+      ['3/3', false],
+    ]);
+    // the row survives the sheet round trip
+    expect(rowToLead(leadToRow(store.rows[1]!))).toMatchObject({ orderItem: '2/3', quantity: 3 });
+  });
+
+  it('a resend with the same key stores nothing twice', async () => {
+    const first = await send(body({ items: items() }));
+    const again = await send(body({ items: items() }));
+    expect(again.status).toBe(200);
+    expect(again.json.id).toBe(first.json.id);
+    expect(store.rows).toHaveLength(3);
+    expect(notifier.sent).toHaveLength(3);
+  });
+
+  it('every product is checked; a bad quantity, too many or one invalid product refuse all', async () => {
+    const tooMany = await send(body({ items: [...items(), ...items()] }));
+    expect([tooMany.status, tooMany.json.error.fields]).toEqual([400, ['items']]);
+    const qty = items();
+    qty[1]!.quantity = 11;
+    expect((await send(body({ items: qty }))).json.error.fields).toEqual(['items.1.quantity']);
+    const odd = items();
+    odd[2]!.params = { ...defaultParams(deskTemplate), width: 1370 };
+    const res = await send(body({ items: odd }));
+    expect([res.status, res.json.error.issues]).toEqual([422, ['NON_STANDARD_SIZE']]);
+    expect(store.rows).toHaveLength(0);
+  });
+
+  it('rows written before D-25 read as a single product, one piece', () => {
+    expect(rowToLead(Array<string>(23).fill('x'))).toMatchObject({
+      orderId: '',
+      orderItem: '',
+      quantity: 1,
+    });
   });
 });
 

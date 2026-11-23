@@ -62,6 +62,9 @@ interface StepPanelProps {
   hidden?: boolean;
   /** "Konsultant chaqirish" hook (customer screens) */
   onCallConsultant?: () => void;
+  /** D-25: number of pieces in the cart (0 = no cart button) and opening the cart */
+  cartCount?: number;
+  onOpenCart?: () => void;
   /** start screen: a ready-made model was picked / "Noldan boshlash" */
   onPickModel?: (model: ReadyModel) => void;
   onScratch?: (product: ProductId) => void;
@@ -87,6 +90,8 @@ export function StepPanel({
   onPickModel,
   onScratch,
   onMechanismDemo,
+  cartCount = 0,
+  onOpenCart,
 }: StepPanelProps) {
   const { t, lang, setLang } = useI18n();
   const { theme, toggleTheme, logoUrl } = useTheme();
@@ -188,6 +193,22 @@ export function StepPanel({
           ))}
         </div>
       </header>
+
+      {cartCount > 0 && onOpenCart && (
+        <button
+          type="button"
+          className="cart-button"
+          onClick={onOpenCart}
+          data-testid="cart-button"
+          aria-haspopup="dialog"
+        >
+          <span className="cart-button-icon" aria-hidden="true">
+            🛒
+          </span>
+          <span>{t('cart.button')}</span>
+          <span className="cart-button-count">{cartCount}</span>
+        </button>
+      )}
 
       <StepNavigation step={step} onStepChange={setStep} product={config.product} steps={steps} />
 

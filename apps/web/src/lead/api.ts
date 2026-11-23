@@ -2,13 +2,33 @@ import type { Params } from '@dafna/engine';
 import type { Lang } from '../i18n/translate';
 import type { ContactInput } from './contact';
 
+/** D-25: one product of a multi-product order */
+export interface SubmitItem {
+  /** 'wardrobe' | 'pedestal' | 'desk' */
+  product: string;
+  params: Params;
+  /** 1..MAX_QUANTITY */
+  quantity?: number;
+  /** data:image/png;base64,… render of this product */
+  renderPng?: string;
+}
+
+/** D-25: at most this many products in one order, each at most MAX_QUANTITY pieces */
+export const MAX_ORDER_ITEMS = 5;
+export const MAX_QUANTITY = 10;
+
 /** POST /api/submit request body (contract shared by the kiosk and the API). */
 export interface SubmitRequest {
+  /**
+   * D-25: several products in one order (one contact). When present, product / params /
+   * renderPng are ignored; each item becomes its own application, linked by the order ID.
+   */
+  items?: SubmitItem[];
   /** generated once per application attempt; a retry reuses it (same key -> same ID) */
   idempotencyKey: string;
   /** D-8: 'wardrobe' (default, older kiosks send nothing) | 'pedestal' | 'desk' */
   product?: string;
-  params: Params;
+  params?: Params;
   contact: ContactInput;
   lang: Lang;
   kioskId?: string;
@@ -23,6 +43,10 @@ export interface SubmitSuccess {
   status: 'submitted';
   /** D-12: "/api/assembly?id=…&t=…", the customer's assembly instructions (QR) */
   assemblyPath?: string;
+  /** D-25: every product's application ID, in order (the first one is `id`, the order ID) */
+  ids?: string[];
+  /** D-25: every product's assembly instructions link, in order */
+  assemblyPaths?: string[];
 }
 
 export type SubmitErrorCode =
@@ -44,7 +68,8 @@ export interface SubmitError {
 }
 
 export type SubmitOutcome =
-  { ok: true; id: string; assemblyPath?: string } | { ok: false; code: SubmitErrorCode };
+  | { ok: true; id: string; assemblyPath?: string; ids?: string[]; assemblyPaths?: string[] }
+  | { ok: false; code: SubmitErrorCode };
 
 export const SUBMIT_TIMEOUT_MS = 15_000;
 export const SUBMIT_URL = '/api/submit';
@@ -57,6 +82,9 @@ export function newIdempotencyKey(): string {
   c.getRandomValues(bytes);
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
+
+const isAssemblyPath = (v: unknown): v is string =>
+  typeof v === 'string' && v.startsWith('/api/assembly?');
 
 /**
  * Client side of /api/submit: 15 s timeout, typed outcome, never throws.
@@ -81,8 +109,13 @@ export async function submitApplication(
       return {
         ok: true,
         id: data.id,
-        ...(typeof data.assemblyPath === 'string' && data.assemblyPath.startsWith('/api/assembly?')
-          ? { assemblyPath: data.assemblyPath }
+        ...(isAssemblyPath(data.assemblyPath) ? { assemblyPath: data.assemblyPath } : {}),
+        // D-25: a multi-product order
+        ...(Array.isArray(data.ids) && data.ids.every((x) => typeof x === 'string')
+          ? { ids: data.ids }
+          : {}),
+        ...(Array.isArray(data.assemblyPaths) && data.assemblyPaths.every(isAssemblyPath)
+          ? { assemblyPaths: data.assemblyPaths }
           : {}),
       };
     }

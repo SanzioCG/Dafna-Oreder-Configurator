@@ -61774,7 +61774,11 @@ var COLUMNS = [
   { key: "telegramAttempts", header: "Telegram urinishlar" },
   // D-8 (appended: existing sheets keep their columns)
   { key: "product", header: "Mahsulot" },
-  { key: "templateId", header: "templateId" }
+  { key: "templateId", header: "templateId" },
+  // D-25: several products in one order (appended: existing sheets keep their columns)
+  { key: "orderId", header: "Buyurtma" },
+  { key: "orderItem", header: "Buyurtmada" },
+  { key: "quantity", header: "Soni" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");

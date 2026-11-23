@@ -71075,6 +71075,22 @@ var uz = {
   "product.wardrobe": "Shkaf",
   "product.pedestal": "Ofis tumbasi",
   "product.desk": "Stol",
+  // D-25: cart (several products in one order)
+  "cart.button": "Savat",
+  "cart.title": "Savat",
+  "cart.close": "Yopish",
+  "cart.edit": "O'zgartirish",
+  "cart.remove": "O'chirish",
+  "cart.qty": "Soni",
+  "cart.less": "Kamaytirish",
+  "cart.more": "Ko'paytirish",
+  "cart.total": "Jami",
+  "cart.order": "Buyurtma berish",
+  "cart.orderAll": "Hammasini buyurtma qilish",
+  "cart.addMore": "Savatga qo'shish va yana tanlash",
+  "cart.note": "Savatda yana {count} ta mahsulot bor \u2014 hammasi bitta buyurtmada yuboriladi.",
+  "submitted.orderId": "Buyurtma raqami",
+  "submitted.qrEach": "Har bir mahsulotning yig'ish yo'riqnomasi \u2014 o'z QR kodida.",
   "start.product": "Mahsulot",
   "start.whatTitle": "Nima buyurtma qilmoqchisiz?",
   "start.whatHint": "Mahsulotni tanlang \u2014 keyin tayyor modellar chiqadi.",
@@ -71197,7 +71213,11 @@ var COLUMNS = [
   { key: "telegramAttempts", header: "Telegram urinishlar" },
   // D-8 (appended: existing sheets keep their columns)
   { key: "product", header: "Mahsulot" },
-  { key: "templateId", header: "templateId" }
+  { key: "templateId", header: "templateId" },
+  // D-25: several products in one order (appended: existing sheets keep their columns)
+  { key: "orderId", header: "Buyurtma" },
+  { key: "orderItem", header: "Buyurtmada" },
+  { key: "quantity", header: "Soni" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");

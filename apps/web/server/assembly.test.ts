@@ -30,6 +30,9 @@ const lead = (templateId: string, over: Partial<LeadRecord> = {}): LeadRecord =>
   telegramAttempts: 1,
   product: '',
   templateId,
+  orderId: '',
+  orderItem: '',
+  quantity: 1,
   ...over,
 });
 

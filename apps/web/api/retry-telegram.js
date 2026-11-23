@@ -63263,6 +63263,22 @@ var ru = {
   "start.productHint.desk": "\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0438 \u043F\u0438\u0441\u044C\u043C\u0435\u043D\u043D\u044B\u0439 \u0441\u0442\u043E\u043B",
   "start.models": "\u0413\u043E\u0442\u043E\u0432\u044B\u0445 \u043C\u043E\u0434\u0435\u043B\u0435\u0439: {count}",
   "start.products": "\u0418\u0437\u0434\u0435\u043B\u0438\u044F",
+  // D-25: cart (several products in one order)
+  "cart.button": "\u041A\u043E\u0440\u0437\u0438\u043D\u0430",
+  "cart.title": "\u041A\u043E\u0440\u0437\u0438\u043D\u0430",
+  "cart.close": "\u0417\u0430\u043A\u0440\u044B\u0442\u044C",
+  "cart.edit": "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C",
+  "cart.remove": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C",
+  "cart.qty": "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E",
+  "cart.less": "\u041C\u0435\u043D\u044C\u0448\u0435",
+  "cart.more": "\u0411\u043E\u043B\u044C\u0448\u0435",
+  "cart.total": "\u0418\u0442\u043E\u0433\u043E",
+  "cart.order": "\u041E\u0444\u043E\u0440\u043C\u0438\u0442\u044C \u0437\u0430\u043A\u0430\u0437",
+  "cart.orderAll": "\u0417\u0430\u043A\u0430\u0437\u0430\u0442\u044C \u0432\u0441\u0451",
+  "cart.addMore": "\u0412 \u043A\u043E\u0440\u0437\u0438\u043D\u0443 \u0438 \u0432\u044B\u0431\u0440\u0430\u0442\u044C \u0435\u0449\u0451",
+  "cart.note": "\u0412 \u043A\u043E\u0440\u0437\u0438\u043D\u0435 \u0435\u0449\u0451 {count} \u2014 \u0432\u0441\u0451 \u0443\u0439\u0434\u0451\u0442 \u043E\u0434\u043D\u0438\u043C \u0437\u0430\u043A\u0430\u0437\u043E\u043C.",
+  "submitted.orderId": "\u041D\u043E\u043C\u0435\u0440 \u0437\u0430\u043A\u0430\u0437\u0430",
+  "submitted.qrEach": "\u0418\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F \u043F\u043E \u0441\u0431\u043E\u0440\u043A\u0435 \u043A\u0430\u0436\u0434\u043E\u0433\u043E \u0438\u0437\u0434\u0435\u043B\u0438\u044F \u2014 \u0432 \u0441\u0432\u043E\u0451\u043C QR-\u043A\u043E\u0434\u0435.",
   "start.product": "\u0418\u0437\u0434\u0435\u043B\u0438\u0435",
   "start.title.wardrobe": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0448\u043A\u0430\u0444",
   "start.title.pedestal": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u0443\u043C\u0431\u0443",
@@ -63675,6 +63691,22 @@ var uz = {
   "product.wardrobe": "Shkaf",
   "product.pedestal": "Ofis tumbasi",
   "product.desk": "Stol",
+  // D-25: cart (several products in one order)
+  "cart.button": "Savat",
+  "cart.title": "Savat",
+  "cart.close": "Yopish",
+  "cart.edit": "O'zgartirish",
+  "cart.remove": "O'chirish",
+  "cart.qty": "Soni",
+  "cart.less": "Kamaytirish",
+  "cart.more": "Ko'paytirish",
+  "cart.total": "Jami",
+  "cart.order": "Buyurtma berish",
+  "cart.orderAll": "Hammasini buyurtma qilish",
+  "cart.addMore": "Savatga qo'shish va yana tanlash",
+  "cart.note": "Savatda yana {count} ta mahsulot bor \u2014 hammasi bitta buyurtmada yuboriladi.",
+  "submitted.orderId": "Buyurtma raqami",
+  "submitted.qrEach": "Har bir mahsulotning yig'ish yo'riqnomasi \u2014 o'z QR kodida.",
   "start.product": "Mahsulot",
   "start.whatTitle": "Nima buyurtma qilmoqchisiz?",
   "start.whatHint": "Mahsulotni tanlang \u2014 keyin tayyor modellar chiqadi.",
@@ -64696,7 +64728,11 @@ var COLUMNS = [
   { key: "telegramAttempts", header: "Telegram urinishlar" },
   // D-8 (appended: existing sheets keep their columns)
   { key: "product", header: "Mahsulot" },
-  { key: "templateId", header: "templateId" }
+  { key: "templateId", header: "templateId" },
+  // D-25: several products in one order (appended: existing sheets keep their columns)
+  { key: "orderId", header: "Buyurtma" },
+  { key: "orderItem", header: "Buyurtmada" },
+  { key: "quantity", header: "Soni" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
@@ -64724,11 +64760,13 @@ function rowToLead(row) {
     out[key] = cell(i);
   });
   const attempts = Number(out.telegramAttempts);
+  const quantity = Number(out.quantity);
   const telegram = TELEGRAM_STATES.includes(out.telegram) ? out.telegram : "failed";
   return {
     ...out,
     telegram,
-    telegramAttempts: Number.isFinite(attempts) ? attempts : 0
+    telegramAttempts: Number.isFinite(attempts) ? attempts : 0,
+    quantity: Number.isInteger(quantity) && quantity >= 1 ? quantity : 1
   };
 }
 
@@ -64777,7 +64815,10 @@ var COLUMN_WIDTHS = {
   lang: 50,
   telegram: 120,
   managerNote: 300,
-  product: 120
+  product: 120,
+  orderId: 130,
+  orderItem: 90,
+  quantity: 60
 };
 var HIDDEN_KEYS = [
   "paramsJson",
@@ -65468,6 +65509,9 @@ function telegramText(lead) {
   const colors = `${main}: ${lead.corpus}` + (lead.door && lead.door !== "\u2014" ? ` \xB7 ${second}: ${lead.door}` : "");
   return [
     `\u{1F195} <b>Yangi ariza ${escapeHtml(lead.id)}</b>${lead.product ? ` \xB7 ${escapeHtml(lead.product)}` : ""}`,
+    // D-25: one order with several products: every product is its own application
+    ...lead.orderItem ? [`\u{1F9FE} Buyurtma <b>${escapeHtml(lead.orderId)}</b> \xB7 ${escapeHtml(lead.orderItem)} mahsulot`] : [],
+    ...lead.quantity > 1 ? [`\u{1F522} Soni: <b>${lead.quantity}</b> ta`] : [],
     `\u{1F464} ${escapeHtml(name)}`,
     `\u{1F4DE} ${escapeHtml(lead.phone)}`,
     `\u{1F4D0} ${escapeHtml(sizeCm)} (${escapeHtml(lead.sizeMm)} mm)`,

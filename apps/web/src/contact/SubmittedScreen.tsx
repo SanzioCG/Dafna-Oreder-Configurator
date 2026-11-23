@@ -15,6 +15,11 @@ interface Props {
   renderPng?: string;
   /** D-12: "/api/assembly?id=…&t=…" -> QR code for the customer's phone */
   assemblyPath?: string;
+  /**
+   * D-25: a multi-product order - every product with its application ID, a one-line summary
+   * and its assembly instructions link (QR each); `id` is then the order ID.
+   */
+  items?: { id: string; name: string; line: string; quantity: number; assemblyPath?: string }[];
   onFinish: () => void;
 }
 
@@ -23,7 +28,15 @@ interface Props {
  * render and a short summary. "Yakunlash" or the 45 s countdown -> full session reset.
  * D-12: a QR code to the assembly instructions PDF (signed link, no personal data in it).
  */
-export function SubmittedScreen({ id, summary, renderPng, assemblyPath, onFinish }: Props) {
+export function SubmittedScreen({
+  id,
+  summary,
+  renderPng,
+  assemblyPath,
+  items = [],
+  onFinish,
+}: Props) {
+  const multi = items.length > 1;
   const { t } = useI18n();
   const [left, setLeft] = useState(SUBMITTED_COUNTDOWN_S);
   const finishRef = useRef(onFinish);
@@ -60,17 +73,42 @@ export function SubmittedScreen({ id, summary, renderPng, assemblyPath, onFinish
         </span>
         <h2 id="submitted-title">{t('submitted.title')}</h2>
         <p className="submitted-id">
-          <span className="muted">{t('submitted.id')}</span>
+          <span className="muted">{t(multi ? 'submitted.orderId' : 'submitted.id')}</span>
           <strong data-testid="submitted-id">{id}</strong>
         </p>
         <p className="submitted-text">{t('submitted.text')}</p>
         {renderPng && (
           <img className="submitted-render" src={renderPng} alt="" data-testid="submitted-render" />
         )}
-        <p className="submitted-summary" data-testid="submitted-summary">
-          {summary.sizeCm} · {colors}
-        </p>
-        {assemblyPath && (
+        {multi ? (
+          <ul className="submitted-items" data-testid="submitted-items">
+            {items.map((it) => (
+              <li key={it.id} className="submitted-item">
+                {it.assemblyPath && (
+                  <QrCode
+                    value={new URL(it.assemblyPath, window.location.origin).href}
+                    label={t('submitted.qr')}
+                  />
+                )}
+                <p>
+                  <strong>
+                    {it.name}
+                    {it.quantity > 1 ? ` × ${it.quantity}` : ''}
+                  </strong>
+                  <span className="muted">
+                    {it.id} · {it.line}
+                  </span>
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="submitted-summary" data-testid="submitted-summary">
+            {summary.sizeCm} · {colors}
+          </p>
+        )}
+        {multi && <p className="muted">{t('submitted.qrEach')}</p>}
+        {!multi && assemblyPath && (
           <div className="submitted-qr" data-testid="submitted-qr">
             <QrCode
               value={new URL(assemblyPath, window.location.origin).href}

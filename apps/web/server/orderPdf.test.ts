@@ -30,6 +30,9 @@ const lead = (templateId: string): LeadRecord => ({
   telegramAttempts: 0,
   product: '',
   templateId,
+  orderId: '',
+  orderItem: '',
+  quantity: 1,
 });
 
 describe('D-11 order PDF for the workshop', () => {

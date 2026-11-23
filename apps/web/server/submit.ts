@@ -1,5 +1,16 @@
-import { ORDER_SCHEMA_VERSION, PRODUCT_TEMPLATES, generate, resolveParams } from '@dafna/engine';
-import type { SubmitErrorCode, SubmitRequest } from '../src/lead/api';
+import {
+  ORDER_SCHEMA_VERSION,
+  PRODUCT_TEMPLATES,
+  generate,
+  resolveParams,
+  type Template,
+} from '@dafna/engine';
+import {
+  MAX_ORDER_ITEMS,
+  MAX_QUANTITY,
+  type SubmitErrorCode,
+  type SubmitRequest,
+} from '../src/lead/api';
 import { cleanContact, validateContact, type ContactInput } from '../src/lead/contact';
 import { phoneE164 } from '../src/lead/phone';
 import { summarizeResult } from '../src/lead/summary';
@@ -9,7 +20,7 @@ import { makeApplicationId, tashkentTimestamp } from './ids';
 import type { RateLimiter } from './rateLimit';
 import type { LeadRecord, LeadStore, Notifier } from './types';
 
-/** Whole request body (JSON incl. the base64 render). Vercel's own limit is 4.5 MB. */
+/** Whole request body (JSON incl. the base64 renders). Vercel's own limit is 4.5 MB. */
 export const MAX_BODY_CHARS = 3_000_000;
 /** Decoded render PNG. */
 export const MAX_RENDER_BYTES = 2_000_000;
@@ -68,10 +79,63 @@ function decodeRender(value: unknown): Uint8Array | undefined | null {
   return new Uint8Array(bytes);
 }
 
+interface OrderItem {
+  template: Template;
+  params: unknown;
+  quantity: number;
+  render?: Uint8Array;
+}
+
+/**
+ * The products of the request: `items` (D-25, several products in one order) or the single
+ * product / params / renderPng of older kiosks (D-8: no product = wardrobe). Invalid fields are
+ * collected in `bad` ("items.1.params", or "params" for the single form).
+ */
+function readItems(b: Record<string, unknown>, bad: string[]): OrderItem[] {
+  const multi = b.items !== undefined;
+  const raw: unknown[] = multi
+    ? Array.isArray(b.items)
+      ? b.items
+      : []
+    : [{ product: b.product ?? 'wardrobe', params: b.params, renderPng: b.renderPng }];
+  if (raw.length === 0 || raw.length > MAX_ORDER_ITEMS) bad.push('items');
+  const out: OrderItem[] = [];
+  raw.slice(0, MAX_ORDER_ITEMS).forEach((r, i) => {
+    const field = (name: string) => (multi ? `items.${i}.${name}` : name);
+    const it = isObject(r) ? r : {};
+    const template = PRODUCT_TEMPLATES[typeof it.product === 'string' ? it.product : ''];
+    if (!template) bad.push(field('product'));
+    if (!isObject(it.params) || JSON.stringify(it.params).length > MAX_PARAMS_CHARS) {
+      bad.push(field('params'));
+    }
+    const quantity = it.quantity === undefined ? 1 : it.quantity;
+    const qtyOk =
+      typeof quantity === 'number' &&
+      Number.isInteger(quantity) &&
+      quantity >= 1 &&
+      quantity <= MAX_QUANTITY;
+    if (!qtyOk) bad.push(field('quantity'));
+    const render = decodeRender(it.renderPng);
+    if (render === null) bad.push(field('renderPng'));
+    if (template && qtyOk) {
+      out.push({
+        template,
+        params: it.params,
+        quantity: quantity as number,
+        ...(render ? { render } : {}),
+      });
+    }
+  });
+  return out;
+}
+
 /**
  * POST /api/submit. Order of work: cheap checks -> engine re-validation -> idempotency lookup ->
- * persist the lead (the source of truth) -> notify Telegram. A notification failure never fails
+ * persist the leads (the source of truth) -> notify Telegram. A notification failure never fails
  * the request: the row is marked "failed" and the cron retries it.
+ * D-25: an order may hold several products (one contact). Each product is its own application
+ * (sheet row, ID, order sheet, GibLab file, assembly link), linked by the order ID = the first
+ * product's ID and "2/3" in the row and the Telegram message.
  */
 export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Response> {
   const log = deps.log ?? (() => {});
@@ -100,18 +164,11 @@ export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Resp
     bad.push('idempotencyKey');
   }
   if (b.lang !== 'uz' && b.lang !== 'ru') bad.push('lang');
-  // D-8: the product being ordered; kiosks before D-8 send none = wardrobe
-  const template = PRODUCT_TEMPLATES[typeof b.product === 'string' ? b.product : 'wardrobe'];
-  if (!template) bad.push('product');
   if (b.kioskId !== undefined && (typeof b.kioskId !== 'string' || !KIOSK_RE.test(b.kioskId))) {
     bad.push('kioskId');
   }
   if (!isObject(b.contact)) bad.push('contact');
-  if (!isObject(b.params) || JSON.stringify(b.params).length > MAX_PARAMS_CHARS) {
-    bad.push('params');
-  }
-  const render = decodeRender(b.renderPng);
-  if (render === null) bad.push('renderPng');
+  const items = readItems(b, bad);
   if (bad.length > 0) return fail(400, 'invalid_request', { fields: bad });
 
   const kioskId = b.kioskId ?? '';
@@ -130,95 +187,124 @@ export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Resp
   }
   const contact = cleanContact(contactIn);
 
-  // the engine is the authority: never trust the kiosk's own validation
-  const tpl = template!;
-  const resolved = resolveParams(tpl, b.params);
-  const result = generate(tpl, b.params);
-  const blocking = [...resolved.issues, ...result.issues].filter(
-    (i) => isCustomerBlocking(i) || i.code === 'UNKNOWN_PARAM',
-  );
-  // D-7: a kiosk application uses the standard sizes only (staff build custom sizes elsewhere)
-  const nonStandard = tpl.parameters.filter(
-    (d) => d.customerValues && !d.customerValues.includes(Number(resolved.params[d.key])),
-  );
-  if (blocking.length > 0 || nonStandard.length > 0 || !result.dimensions) {
+  // the engine is the authority: never trust the kiosk's own validation (every product)
+  const checked = items.map(({ template: tpl, params }) => {
+    const resolved = resolveParams(tpl, params);
+    const result = generate(tpl, params);
+    const blocking = [...resolved.issues, ...result.issues].filter(
+      (i) => isCustomerBlocking(i) || i.code === 'UNKNOWN_PARAM',
+    );
+    // D-7: a kiosk application uses the standard sizes only (staff build custom sizes elsewhere)
+    const nonStandard = tpl.parameters.filter(
+      (d) => d.customerValues && !d.customerValues.includes(Number(resolved.params[d.key])),
+    );
+    const codes = [
+      ...blocking.map((i) => i.code),
+      ...(nonStandard.length > 0 ? ['NON_STANDARD_SIZE'] : []),
+    ];
+    return { resolved, result, codes };
+  });
+  if (checked.some((c) => c.codes.length > 0 || !c.result.dimensions)) {
     return fail(422, 'invalid_configuration', {
-      issues: [
-        ...new Set([
-          ...blocking.map((i) => i.code),
-          ...(nonStandard.length > 0 ? ['NON_STANDARD_SIZE'] : []),
-        ]),
-      ],
+      issues: [...new Set(checked.flatMap((c) => c.codes))],
     });
   }
 
+  // one idempotency key per product: the request's key, then key~2, key~3, …
   const key = b.idempotencyKey as string;
-  let existing;
+  const itemKey = (i: number) => (i === 0 ? key : `${key}~${i + 1}`);
+  const ok = (ids: string[]) => {
+    const secret = deps.linkSecret;
+    const paths = secret ? ids.map((id) => assemblyPath(id, secret)) : [];
+    return json(200, {
+      id: ids[0],
+      status: 'submitted',
+      ...(paths[0] ? { assemblyPath: paths[0] } : {}),
+      ...(ids.length > 1 ? { ids, ...(paths.length > 0 ? { assemblyPaths: paths } : {}) } : {}),
+    });
+  };
+  // a resend (same key) finds the products stored before and only stores the missing ones
+  const known: (string | null)[] = [];
   try {
-    existing = await deps.store.findByKey(key);
+    for (let i = 0; i < items.length; i++) {
+      known.push((await deps.store.findByKey(itemKey(i)))?.id ?? null);
+    }
   } catch (e) {
     log('store_lookup_failed', { message: (e as Error).message });
     return fail(503, 'storage_failed');
   }
-  const ok = (id: string) =>
-    json(200, {
-      id,
-      status: 'submitted',
-      ...(deps.linkSecret ? { assemblyPath: assemblyPath(id, deps.linkSecret) } : {}),
-    });
-  if (existing) return ok(existing.id);
+  if (known.every((id) => id !== null)) return ok(known as string[]);
 
   const now = deps.now();
-  const summary = summarizeResult(resolved.params, result, 'uz', tpl);
-  let lead: LeadRecord;
-  let stored;
+  const multi = items.length > 1;
+  const ids: (string | null)[] = [...known];
+  const saved: { lead: LeadRecord; ref: number; render?: Uint8Array }[] = [];
+  let storeFailed = false;
   try {
-    let id = makeApplicationId(key, now);
-    for (let salt = 1; (await deps.store.hasId(id)) && salt <= 5; salt++) {
-      id = makeApplicationId(key, now, salt);
+    let orderId = known[0] ?? '';
+    for (let i = 0; i < items.length; i++) {
+      if (known[i] !== null) continue;
+      const { template: tpl, quantity, render } = items[i]!;
+      const { resolved, result } = checked[i]!;
+      const summary = summarizeResult(resolved.params, result, 'uz', tpl);
+      let id = makeApplicationId(itemKey(i), now);
+      for (let salt = 1; (await deps.store.hasId(id)) && salt <= 5; salt++) {
+        id = makeApplicationId(itemKey(i), now, salt);
+      }
+      if (i === 0) orderId = id;
+      const lead: LeadRecord = {
+        id,
+        createdAt: tashkentTimestamp(now),
+        status: 'Yangi',
+        firstName: contact.firstName,
+        lastName: contact.lastName ?? '',
+        phone: phoneE164(contact.phone),
+        sizeMm: summary.sizeMm,
+        // manager / production need the supplier code next to the decor name
+        corpus: withCode(summary.corpus, summary.corpusCode),
+        door: summary.door ? withCode(summary.door, summary.doorCode) : '—',
+        sections: summary.sections,
+        doors: summary.doors,
+        kiosk: kioskId,
+        lang: b.lang as string,
+        telegram: 'pending',
+        managerNote: '',
+        paramsJson: JSON.stringify(resolved.params),
+        schemaVersion: ORDER_SCHEMA_VERSION,
+        templateVersion: tpl.templateVersion,
+        engineVersion: deps.engineVersion,
+        idempotencyKey: itemKey(i),
+        telegramAttempts: 0,
+        product: summary.productName,
+        templateId: tpl.templateId,
+        orderId: multi ? orderId : '',
+        orderItem: multi ? `${i + 1}/${items.length}` : '',
+        quantity,
+      };
+      const stored = await deps.store.append(lead);
+      ids[i] = id;
+      saved.push({ lead, ref: stored.ref, ...(render ? { render } : {}) });
     }
-    lead = {
-      id,
-      createdAt: tashkentTimestamp(now),
-      status: 'Yangi',
-      firstName: contact.firstName,
-      lastName: contact.lastName ?? '',
-      phone: phoneE164(contact.phone),
-      sizeMm: summary.sizeMm,
-      // manager / production need the supplier code next to the decor name
-      corpus: withCode(summary.corpus, summary.corpusCode),
-      door: summary.door ? withCode(summary.door, summary.doorCode) : '—',
-      sections: summary.sections,
-      doors: summary.doors,
-      kiosk: kioskId,
-      lang: b.lang as string,
-      telegram: 'pending',
-      managerNote: '',
-      paramsJson: JSON.stringify(resolved.params),
-      schemaVersion: ORDER_SCHEMA_VERSION,
-      templateVersion: tpl.templateVersion,
-      engineVersion: deps.engineVersion,
-      idempotencyKey: key,
-      telegramAttempts: 0,
-      product: summary.productName,
-      templateId: tpl.templateId,
-    };
-    stored = await deps.store.append(lead);
   } catch (e) {
     log('store_append_failed', { message: (e as Error).message });
-    return fail(503, 'storage_failed');
+    storeFailed = true;
   }
+  if (saved.length === 0) return fail(503, 'storage_failed');
 
-  let delivered = false;
-  try {
-    await deps.notifier.notify(lead, render ?? undefined);
-    delivered = true;
-  } catch (e) {
-    log('telegram_failed', { id: lead.id, message: (e as Error).message });
+  for (const { lead, ref, render } of saved) {
+    let delivered = false;
+    try {
+      await deps.notifier.notify(lead, render);
+      delivered = true;
+    } catch (e) {
+      log('telegram_failed', { id: lead.id, message: (e as Error).message });
+    }
+    // a failed bookkeeping write leaves the row "pending": the cron then retries it later
+    await deps.store
+      .updateTelegram(ref, delivered ? 'sent' : 'failed', 1)
+      .catch((err: Error) => log('store_update_failed', { id: lead.id, message: err.message }));
   }
-  // a failed bookkeeping write leaves the row "pending": the cron then retries it later
-  await deps.store
-    .updateTelegram(stored.ref, delivered ? 'sent' : 'failed', 1)
-    .catch((err: Error) => log('store_update_failed', { id: lead.id, message: err.message }));
-  return ok(lead.id);
+  // some products stored, some not: the kiosk's retry (same key) stores only the missing ones
+  if (storeFailed) return fail(503, 'storage_failed');
+  return ok(ids as string[]);
 }

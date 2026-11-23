@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { I18nProvider } from './i18n/I18n';
+import { CartSheet } from './cart/CartSheet';
+import { MAX_ORDER_ITEMS, clampQuantity, newCartUid, orderItems, type CartItem } from './cart/cart';
 import { ContactScreen } from './contact/ContactScreen';
 import { SubmittedScreen } from './contact/SubmittedScreen';
 import { installKioskGuards, kioskId, requestConsultant } from './kiosk';
@@ -14,6 +16,8 @@ import { nextFlow, type FlowEvent, type FlowState } from './state/flow';
 import { useConfigurator } from './state/useConfigurator';
 import { TemplateContext } from './state/templateContext';
 import { modelParams } from './state/presets';
+import { usePrice } from './ui/PriceTag';
+import { PRODUCT_TEMPLATES } from '@dafna/engine';
 import { ThemeProvider, useTheme } from './theme/ThemeProvider';
 import { StepPanel } from './ui/StepPanel';
 import type { CaptureFn } from './viewer/renderCapture';
@@ -44,7 +48,13 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
     id: string;
     renderPng?: string;
     assemblyPath?: string;
+    items?: { id: string; name: string; line: string; quantity: number; assemblyPath?: string }[];
   } | null>(null);
+  // D-25: the cart (several products in one order) and where the contact form was opened from
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutFrom, setCheckoutFrom] = useState<'review' | 'cart'>('review');
+  const price = usePrice(config);
   // shared by the sheet and the 3D view: the interior step opens the doors and selects sections
   // customers start on the ready-made models screen (step 0); staff go straight to step 1
   const [step, setStep] = useState(mode === 'customer' ? 'start' : 'size');
@@ -103,6 +113,29 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
     setStep(target);
   };
 
+  /** D-25: the product on screen goes into the cart; the customer picks the next product */
+  const addToCart = () => {
+    let renderPng: string | undefined;
+    try {
+      renderPng = captureRef.current?.() ?? undefined;
+    } catch {
+      renderPng = undefined;
+    }
+    setCart((c) => [
+      ...c,
+      {
+        uid: newCartUid(),
+        product: config.product,
+        params: config.params,
+        quantity: 1,
+        ...(renderPng ? { renderPng } : {}),
+        price: price ? { total: price.total, demo: price.demo, currency: price.currency } : null,
+      },
+    ]);
+    edit('start');
+  };
+  const canAddMore = cart.length + 1 < MAX_ORDER_ITEMS;
+
   const changeStep = (next: string) => {
     if (next === step) return;
     if (next === 'review') present();
@@ -151,9 +184,26 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
           presentationContent={
             flow === 'ready_to_confirm' ? (
               <div className="present-actions" data-testid="present-actions">
-                <Button variant="success" large onClick={() => dispatch('confirm')}>
-                  {t('present.confirm')}
+                {cart.length > 0 && (
+                  <p className="present-cart-note" data-testid="present-cart-note">
+                    {t('cart.note', { count: cart.length })}
+                  </p>
+                )}
+                <Button
+                  variant="success"
+                  large
+                  onClick={() => {
+                    setCheckoutFrom('review');
+                    dispatch('confirm');
+                  }}
+                >
+                  {t(cart.length > 0 ? 'cart.orderAll' : 'present.confirm')}
                 </Button>
+                {canAddMore && (
+                  <Button variant="secondary" onClick={addToCart} data-testid="cart-add">
+                    {t('cart.addMore')}
+                  </Button>
+                )}
                 <Button variant="secondary" onClick={() => edit()}>
                   {t('present.edit')}
                 </Button>
@@ -179,16 +229,72 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
             config.switchProduct(product);
             setStep('size');
           }}
+          cartCount={cart.reduce((n, c) => n + c.quantity, 0)}
+          onOpenCart={() => setCartOpen(true)}
         />
+        {cartOpen && flow === 'configurator' && (
+          <CartSheet
+            mode={mode}
+            cart={cart}
+            onQuantity={(uid, q) =>
+              setCart((c) =>
+                c.map((x) => (x.uid === uid ? { ...x, quantity: clampQuantity(q) } : x)),
+              )
+            }
+            onRemove={(uid) => {
+              const rest = cart.filter((x) => x.uid !== uid);
+              setCart(rest);
+              if (rest.length === 0) setCartOpen(false);
+            }}
+            onEdit={(uid) => {
+              const item = cart.find((x) => x.uid === uid);
+              if (!item) return;
+              setCart((c) => c.filter((x) => x.uid !== uid));
+              config.switchProduct(item.product, item.params);
+              setCartOpen(false);
+              setStep('size');
+            }}
+            onOrder={() => {
+              setCartOpen(false);
+              setCheckoutFrom('cart');
+              dispatch('checkout');
+            }}
+            onClose={() => setCartOpen(false)}
+          />
+        )}
         {flow === 'contact' && (
           <ContactScreen
             product={config.product}
             params={config.params}
             kioskId={kioskId()}
-            onBack={() => dispatch('back')}
+            cart={cart}
+            includeCurrent={checkoutFrom === 'review'}
+            onBack={() => dispatch(checkoutFrom === 'cart' ? 'cancel' : 'back')}
             captureRender={() => captureRef.current?.() ?? null}
-            onSubmitted={(id, renderPng, assemblyPath) => {
-              setSubmission({ id, renderPng, assemblyPath });
+            onSubmitted={(id, renderPng, assemblyPath, order) => {
+              // D-25: every product of the order with its ID and assembly link
+              const ids = order?.ids ?? [];
+              const sent = orderItems(
+                cart,
+                checkoutFrom === 'review'
+                  ? { product: config.product, params: config.params }
+                  : null,
+              );
+              const items =
+                ids.length > 1
+                  ? sent.map((it, i) => {
+                      const s = summarizeParams(it.params, lang, PRODUCT_TEMPLATES[it.product]);
+                      const path = order?.assemblyPaths?.[i];
+                      return {
+                        id: ids[i] ?? id,
+                        name: t(`product.${it.product}`),
+                        line: `${s.sizeCm} · ${s.colorsLine}`,
+                        quantity: it.quantity ?? 1,
+                        ...(path ? { assemblyPath: path } : {}),
+                      };
+                    })
+                  : undefined;
+              setSubmission({ id, renderPng, assemblyPath, ...(items ? { items } : {}) });
               dispatch('submitted');
             }}
           />
@@ -198,6 +304,7 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
             id={submission.id}
             renderPng={submission.renderPng}
             assemblyPath={submission.assemblyPath}
+            {...(submission.items ? { items: submission.items } : {})}
             summary={summarizeParams(config.params, lang, config.template)}
             onFinish={onFinish}
           />

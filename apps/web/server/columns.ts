@@ -30,6 +30,10 @@ export const COLUMNS: { key: keyof LeadRecord; header: string }[] = [
   // D-8 (appended: existing sheets keep their columns)
   { key: 'product', header: 'Mahsulot' },
   { key: 'templateId', header: 'templateId' },
+  // D-25: several products in one order (appended: existing sheets keep their columns)
+  { key: 'orderId', header: 'Buyurtma' },
+  { key: 'orderItem', header: 'Buyurtmada' },
+  { key: 'quantity', header: 'Soni' },
 ];
 
 export const HEADERS = COLUMNS.map((c) => c.header);
@@ -65,6 +69,8 @@ export function rowToLead(row: unknown[]): LeadRecord {
     out[key] = cell(i);
   });
   const attempts = Number(out.telegramAttempts);
+  // D-25: rows written before the order columns existed are single products, one piece
+  const quantity = Number(out.quantity);
   const telegram = TELEGRAM_STATES.includes(out.telegram as TelegramState)
     ? (out.telegram as TelegramState)
     : 'failed';
@@ -72,5 +78,6 @@ export function rowToLead(row: unknown[]): LeadRecord {
     ...(out as unknown as LeadRecord),
     telegram,
     telegramAttempts: Number.isFinite(attempts) ? attempts : 0,
+    quantity: Number.isInteger(quantity) && quantity >= 1 ? quantity : 1,
   };
 }

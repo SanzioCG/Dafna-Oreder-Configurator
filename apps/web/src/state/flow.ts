@@ -12,16 +12,20 @@
  * The reveal animation state is separate (presentation/reveal.ts): `doorsClosed` is the only
  * thing the flow needs from it (the confirm button appears as soon as the doors have closed).
  * The submission itself (submitting / error / retry) is local to the contact screen.
+ *
+ * D-25: "Buyurtma berish" in the cart goes from the configurator straight to the contact form
+ * (`checkout`); its "back" then returns to the configurator (`cancel`).
  */
 export type FlowState =
   'configurator' | 'presentation' | 'ready_to_confirm' | 'contact' | 'submitted';
-export type FlowEvent = 'present' | 'doorsClosed' | 'confirm' | 'edit' | 'back' | 'submitted';
+export type FlowEvent =
+  'present' | 'doorsClosed' | 'confirm' | 'edit' | 'back' | 'submitted' | 'checkout' | 'cancel';
 
 const TRANSITIONS: Record<FlowState, Partial<Record<FlowEvent, FlowState>>> = {
-  configurator: { present: 'presentation' },
+  configurator: { present: 'presentation', checkout: 'contact' },
   presentation: { doorsClosed: 'ready_to_confirm', edit: 'configurator' },
   ready_to_confirm: { confirm: 'contact', edit: 'configurator' },
-  contact: { back: 'ready_to_confirm', submitted: 'submitted' },
+  contact: { back: 'ready_to_confirm', cancel: 'configurator', submitted: 'submitted' },
   submitted: {},
 };
 

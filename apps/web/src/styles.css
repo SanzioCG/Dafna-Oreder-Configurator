@@ -2127,6 +2127,200 @@ p {
   gap: var(--space-1);
 }
 
+/* D-25: cart button, cart sheet, products of a sent order */
+.cart-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 3.25rem;
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  border: var(--line-on-bg);
+  background: var(--step-hardware);
+  color: var(--ink);
+  font: inherit;
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+
+.cart-button-icon {
+  font-size: 1.4em;
+}
+
+.cart-button-count,
+.cart-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 2rem;
+  height: 2rem;
+  margin-left: auto;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--on-ink);
+  font-size: var(--fs-sm);
+}
+
+.cart-count {
+  margin-left: var(--space-2);
+  vertical-align: middle;
+}
+
+.cart-sheet {
+  width: min(56rem, 96vw);
+}
+
+.cart-list {
+  list-style: none;
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 0 var(--space-6);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+  border: var(--line-in-card);
+  background: var(--paper);
+}
+
+.cart-thumb {
+  flex: none;
+  display: block;
+  width: 8rem;
+  height: 8rem;
+  object-fit: contain;
+  border-radius: calc(var(--radius-card) - 8px);
+  background: var(--viewport);
+}
+
+.cart-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  flex: 1;
+}
+
+.cart-name {
+  font-size: var(--fs-xl);
+}
+
+.cart-line {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+}
+
+.cart-price {
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.cart-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.cart-item .btn-text {
+  color: var(--ink);
+  border: var(--line-in-card);
+  border-radius: var(--radius-pill);
+}
+
+.cart-qty {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cart-qty button {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: var(--line-in-card);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+
+.cart-qty button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.cart-qty-n {
+  min-width: 2ch;
+  text-align: center;
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+  font-variant-numeric: tabular-nums;
+}
+
+.cart-foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6) var(--space-6);
+}
+
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.present-cart-note {
+  max-width: 28rem;
+  text-align: center;
+  font-weight: var(--fw-bold);
+}
+
+.submitted-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.submitted-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: left;
+}
+
+.submitted-item svg,
+.submitted-item canvas,
+.submitted-item img {
+  width: 5.5rem;
+  height: 5.5rem;
+  flex: none;
+}
+
+.submitted-item p {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
 /* D-12: QR code to the assembly instructions */
 .submitted-qr {
   display: flex;

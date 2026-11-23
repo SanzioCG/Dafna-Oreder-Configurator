@@ -232,3 +232,90 @@ describe('D-5 session reset', () => {
     expect(screen.getByRole('heading', { name: uz['start.whatTitle'] })).toBeTruthy();
   });
 });
+
+describe('D-25 several products in one order (cart)', () => {
+  const toPresentation = () => {
+    fireEvent.click(tab(uz['step.review']));
+    fireEvent.click(screen.getByRole('button', { name: uz['present.skip'] }));
+  };
+  const pickDesk = () => {
+    fireEvent.click(document.querySelector('[data-product="desk"]') as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: uz['start.scratch'] }));
+  };
+
+  it('a wardrobe into the cart, then a desk: one contact form sends both as one order', async () => {
+    const multi = () =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify({
+            id: 'DFN-261105-AAAA',
+            status: 'submitted',
+            ids: ['DFN-261105-AAAA', 'DFN-261105-BBBB'],
+          }),
+          { status: 200 },
+        ),
+      );
+    stubFetch(multi);
+    start();
+    toPresentation();
+    fireEvent.click(screen.getByTestId('cart-add'));
+    // back to the product cards; the cart button shows one piece
+    expect(screen.getByRole('heading', { name: uz['start.whatTitle'] })).toBeTruthy();
+    expect(screen.getByTestId('cart-button').textContent).toContain('1');
+    pickDesk();
+    toPresentation();
+    expect(screen.getByTestId('present-cart-note').textContent).toContain('1');
+    fireEvent.click(screen.getByRole('button', { name: uz['cart.orderAll'] }));
+    fillValid();
+    await act(async () => fireEvent.click(submitBtn()));
+    const body = sent[0]!.body as { items: { product: string; quantity: number }[] };
+    expect(body.items.map((i) => [i.product, i.quantity])).toEqual([
+      ['wardrobe', 1],
+      ['desk', 1],
+    ]);
+    expect('params' in body).toBe(false);
+    expect(screen.getByTestId('submitted-id').textContent).toBe('DFN-261105-AAAA');
+    expect(screen.getByText(uz['submitted.orderId'])).toBeTruthy();
+    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      expect.stringContaining('DFN-261105-AAAA'),
+      expect.stringContaining('DFN-261105-BBBB'),
+    ]);
+  });
+
+  it('the cart: pieces +/-, remove, edit; "Buyurtma berish" sends the cart alone', async () => {
+    stubFetch(ok());
+    start();
+    toPresentation();
+    fireEvent.click(screen.getByTestId('cart-add'));
+    fireEvent.click(screen.getByTestId('cart-button'));
+    const sheet = screen.getByTestId('cart-sheet');
+    expect(within(sheet).getAllByTestId('cart-item')).toHaveLength(1);
+    fireEvent.click(within(sheet).getByRole('button', { name: uz['cart.more'] }));
+    fireEvent.click(within(sheet).getByRole('button', { name: uz['cart.more'] }));
+    expect(within(sheet).getByTestId('cart-qty').textContent).toBe('3');
+    expect(screen.getByTestId('cart-button').textContent).toContain('3');
+    fireEvent.click(within(sheet).getByTestId('cart-order'));
+    expect(flow()).toBe('contact');
+    // back from a cart checkout returns to the configurator
+    fireEvent.click(screen.getByRole('button', { name: uz['contact.back'] }));
+    expect(flow()).toBe('configurator');
+    fireEvent.click(screen.getByTestId('cart-button'));
+    fireEvent.click(screen.getByTestId('cart-order'));
+    fillValid();
+    await act(async () => fireEvent.click(submitBtn()));
+    const body = sent[0]!.body as { items: { product: string; quantity: number }[] };
+    expect(body.items.map((i) => [i.product, i.quantity])).toEqual([['wardrobe', 3]]);
+  });
+
+  it('"O\'zgartirish" puts the product back into the configurator; removing the last closes', () => {
+    start();
+    pickWidth('180 sm');
+    toPresentation();
+    fireEvent.click(screen.getByTestId('cart-add'));
+    pickDesk();
+    fireEvent.click(screen.getByTestId('cart-button'));
+    fireEvent.click(screen.getByRole('button', { name: uz['cart.edit'] }));
+    expect(stub().dataset.width).toBe('1800');
+    expect(screen.queryByTestId('cart-button')).toBeNull();
+  });
+});

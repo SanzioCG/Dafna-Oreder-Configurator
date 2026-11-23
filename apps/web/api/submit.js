@@ -63269,6 +63269,22 @@ var ru = {
   "start.productHint.desk": "\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0438 \u043F\u0438\u0441\u044C\u043C\u0435\u043D\u043D\u044B\u0439 \u0441\u0442\u043E\u043B",
   "start.models": "\u0413\u043E\u0442\u043E\u0432\u044B\u0445 \u043C\u043E\u0434\u0435\u043B\u0435\u0439: {count}",
   "start.products": "\u0418\u0437\u0434\u0435\u043B\u0438\u044F",
+  // D-25: cart (several products in one order)
+  "cart.button": "\u041A\u043E\u0440\u0437\u0438\u043D\u0430",
+  "cart.title": "\u041A\u043E\u0440\u0437\u0438\u043D\u0430",
+  "cart.close": "\u0417\u0430\u043A\u0440\u044B\u0442\u044C",
+  "cart.edit": "\u0418\u0437\u043C\u0435\u043D\u0438\u0442\u044C",
+  "cart.remove": "\u0423\u0434\u0430\u043B\u0438\u0442\u044C",
+  "cart.qty": "\u041A\u043E\u043B\u0438\u0447\u0435\u0441\u0442\u0432\u043E",
+  "cart.less": "\u041C\u0435\u043D\u044C\u0448\u0435",
+  "cart.more": "\u0411\u043E\u043B\u044C\u0448\u0435",
+  "cart.total": "\u0418\u0442\u043E\u0433\u043E",
+  "cart.order": "\u041E\u0444\u043E\u0440\u043C\u0438\u0442\u044C \u0437\u0430\u043A\u0430\u0437",
+  "cart.orderAll": "\u0417\u0430\u043A\u0430\u0437\u0430\u0442\u044C \u0432\u0441\u0451",
+  "cart.addMore": "\u0412 \u043A\u043E\u0440\u0437\u0438\u043D\u0443 \u0438 \u0432\u044B\u0431\u0440\u0430\u0442\u044C \u0435\u0449\u0451",
+  "cart.note": "\u0412 \u043A\u043E\u0440\u0437\u0438\u043D\u0435 \u0435\u0449\u0451 {count} \u2014 \u0432\u0441\u0451 \u0443\u0439\u0434\u0451\u0442 \u043E\u0434\u043D\u0438\u043C \u0437\u0430\u043A\u0430\u0437\u043E\u043C.",
+  "submitted.orderId": "\u041D\u043E\u043C\u0435\u0440 \u0437\u0430\u043A\u0430\u0437\u0430",
+  "submitted.qrEach": "\u0418\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u044F \u043F\u043E \u0441\u0431\u043E\u0440\u043A\u0435 \u043A\u0430\u0436\u0434\u043E\u0433\u043E \u0438\u0437\u0434\u0435\u043B\u0438\u044F \u2014 \u0432 \u0441\u0432\u043E\u0451\u043C QR-\u043A\u043E\u0434\u0435.",
   "start.product": "\u0418\u0437\u0434\u0435\u043B\u0438\u0435",
   "start.title.wardrobe": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0448\u043A\u0430\u0444",
   "start.title.pedestal": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0442\u0443\u043C\u0431\u0443",
@@ -63681,6 +63697,22 @@ var uz = {
   "product.wardrobe": "Shkaf",
   "product.pedestal": "Ofis tumbasi",
   "product.desk": "Stol",
+  // D-25: cart (several products in one order)
+  "cart.button": "Savat",
+  "cart.title": "Savat",
+  "cart.close": "Yopish",
+  "cart.edit": "O'zgartirish",
+  "cart.remove": "O'chirish",
+  "cart.qty": "Soni",
+  "cart.less": "Kamaytirish",
+  "cart.more": "Ko'paytirish",
+  "cart.total": "Jami",
+  "cart.order": "Buyurtma berish",
+  "cart.orderAll": "Hammasini buyurtma qilish",
+  "cart.addMore": "Savatga qo'shish va yana tanlash",
+  "cart.note": "Savatda yana {count} ta mahsulot bor \u2014 hammasi bitta buyurtmada yuboriladi.",
+  "submitted.orderId": "Buyurtma raqami",
+  "submitted.qrEach": "Har bir mahsulotning yig'ish yo'riqnomasi \u2014 o'z QR kodida.",
   "start.product": "Mahsulot",
   "start.whatTitle": "Nima buyurtma qilmoqchisiz?",
   "start.whatHint": "Mahsulotni tanlang \u2014 keyin tayyor modellar chiqadi.",
@@ -64714,7 +64746,11 @@ var COLUMNS = [
   { key: "telegramAttempts", header: "Telegram urinishlar" },
   // D-8 (appended: existing sheets keep their columns)
   { key: "product", header: "Mahsulot" },
-  { key: "templateId", header: "templateId" }
+  { key: "templateId", header: "templateId" },
+  // D-25: several products in one order (appended: existing sheets keep their columns)
+  { key: "orderId", header: "Buyurtma" },
+  { key: "orderItem", header: "Buyurtmada" },
+  { key: "quantity", header: "Soni" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
@@ -64742,11 +64778,13 @@ function rowToLead(row) {
     out[key] = cell(i);
   });
   const attempts = Number(out.telegramAttempts);
+  const quantity = Number(out.quantity);
   const telegram = TELEGRAM_STATES.includes(out.telegram) ? out.telegram : "failed";
   return {
     ...out,
     telegram,
-    telegramAttempts: Number.isFinite(attempts) ? attempts : 0
+    telegramAttempts: Number.isFinite(attempts) ? attempts : 0,
+    quantity: Number.isInteger(quantity) && quantity >= 1 ? quantity : 1
   };
 }
 
@@ -64813,7 +64851,10 @@ var COLUMN_WIDTHS = {
   lang: 50,
   telegram: 120,
   managerNote: 300,
-  product: 120
+  product: 120,
+  orderId: 130,
+  orderItem: 90,
+  quantity: 60
 };
 var HIDDEN_KEYS = [
   "paramsJson",
@@ -65535,6 +65576,9 @@ function telegramText(lead) {
   const colors = `${main}: ${lead.corpus}` + (lead.door && lead.door !== "\u2014" ? ` \xB7 ${second}: ${lead.door}` : "");
   return [
     `\u{1F195} <b>Yangi ariza ${escapeHtml(lead.id)}</b>${lead.product ? ` \xB7 ${escapeHtml(lead.product)}` : ""}`,
+    // D-25: one order with several products: every product is its own application
+    ...lead.orderItem ? [`\u{1F9FE} Buyurtma <b>${escapeHtml(lead.orderId)}</b> \xB7 ${escapeHtml(lead.orderItem)} mahsulot`] : [],
+    ...lead.quantity > 1 ? [`\u{1F522} Soni: <b>${lead.quantity}</b> ta`] : [],
     `\u{1F464} ${escapeHtml(name)}`,
     `\u{1F4DE} ${escapeHtml(lead.phone)}`,
     `\u{1F4D0} ${escapeHtml(sizeCm)} (${escapeHtml(lead.sizeMm)} mm)`,
@@ -65703,6 +65747,10 @@ async function applyCatalogFromEnv(env) {
   }
 }
 
+// src/lead/api.ts
+var MAX_ORDER_ITEMS = 5;
+var MAX_QUANTITY = 10;
+
 // src/lead/phone.ts
 var PHONE_COUNTRY_CODE = "+998";
 var PHONE_DIGITS = 9;
@@ -65792,6 +65840,35 @@ function decodeRender(value) {
   if (!PNG_SIGNATURE.every((b, i) => bytes[i] === b)) return null;
   return new Uint8Array(bytes);
 }
+function readItems(b, bad) {
+  const multi = b.items !== void 0;
+  const raw = multi ? Array.isArray(b.items) ? b.items : [] : [{ product: b.product ?? "wardrobe", params: b.params, renderPng: b.renderPng }];
+  if (raw.length === 0 || raw.length > MAX_ORDER_ITEMS) bad.push("items");
+  const out = [];
+  raw.slice(0, MAX_ORDER_ITEMS).forEach((r, i) => {
+    const field = (name) => multi ? `items.${i}.${name}` : name;
+    const it = isObject(r) ? r : {};
+    const template = PRODUCT_TEMPLATES[typeof it.product === "string" ? it.product : ""];
+    if (!template) bad.push(field("product"));
+    if (!isObject(it.params) || JSON.stringify(it.params).length > MAX_PARAMS_CHARS) {
+      bad.push(field("params"));
+    }
+    const quantity = it.quantity === void 0 ? 1 : it.quantity;
+    const qtyOk = typeof quantity === "number" && Number.isInteger(quantity) && quantity >= 1 && quantity <= MAX_QUANTITY;
+    if (!qtyOk) bad.push(field("quantity"));
+    const render = decodeRender(it.renderPng);
+    if (render === null) bad.push(field("renderPng"));
+    if (template && qtyOk) {
+      out.push({
+        template,
+        params: it.params,
+        quantity,
+        ...render ? { render } : {}
+      });
+    }
+  });
+  return out;
+}
 async function handleSubmit(req, deps2) {
   const log = deps2.log ?? (() => {
   });
@@ -65815,17 +65892,11 @@ async function handleSubmit(req, deps2) {
     bad.push("idempotencyKey");
   }
   if (b.lang !== "uz" && b.lang !== "ru") bad.push("lang");
-  const template = PRODUCT_TEMPLATES[typeof b.product === "string" ? b.product : "wardrobe"];
-  if (!template) bad.push("product");
   if (b.kioskId !== void 0 && (typeof b.kioskId !== "string" || !KIOSK_RE.test(b.kioskId))) {
     bad.push("kioskId");
   }
   if (!isObject(b.contact)) bad.push("contact");
-  if (!isObject(b.params) || JSON.stringify(b.params).length > MAX_PARAMS_CHARS) {
-    bad.push("params");
-  }
-  const render = decodeRender(b.renderPng);
-  if (render === null) bad.push("renderPng");
+  const items = readItems(b, bad);
   if (bad.length > 0) return fail(400, "invalid_request", { fields: bad });
   const kioskId = b.kioskId ?? "";
   if (kioskId && !deps2.kioskLimiter.take(kioskId)) return fail(429, "rate_limited");
@@ -65841,88 +65912,115 @@ async function handleSubmit(req, deps2) {
     return fail(422, "invalid_contact", { fields: Object.keys(contactErrors) });
   }
   const contact = cleanContact(contactIn);
-  const tpl = template;
-  const resolved = resolveParams(tpl, b.params);
-  const result = generate(tpl, b.params);
-  const blocking = [...resolved.issues, ...result.issues].filter(
-    (i) => isCustomerBlocking(i) || i.code === "UNKNOWN_PARAM"
-  );
-  const nonStandard = tpl.parameters.filter(
-    (d) => d.customerValues && !d.customerValues.includes(Number(resolved.params[d.key]))
-  );
-  if (blocking.length > 0 || nonStandard.length > 0 || !result.dimensions) {
+  const checked = items.map(({ template: tpl, params }) => {
+    const resolved = resolveParams(tpl, params);
+    const result = generate(tpl, params);
+    const blocking = [...resolved.issues, ...result.issues].filter(
+      (i) => isCustomerBlocking(i) || i.code === "UNKNOWN_PARAM"
+    );
+    const nonStandard = tpl.parameters.filter(
+      (d) => d.customerValues && !d.customerValues.includes(Number(resolved.params[d.key]))
+    );
+    const codes = [
+      ...blocking.map((i) => i.code),
+      ...nonStandard.length > 0 ? ["NON_STANDARD_SIZE"] : []
+    ];
+    return { resolved, result, codes };
+  });
+  if (checked.some((c) => c.codes.length > 0 || !c.result.dimensions)) {
     return fail(422, "invalid_configuration", {
-      issues: [
-        .../* @__PURE__ */ new Set([
-          ...blocking.map((i) => i.code),
-          ...nonStandard.length > 0 ? ["NON_STANDARD_SIZE"] : []
-        ])
-      ]
+      issues: [...new Set(checked.flatMap((c) => c.codes))]
     });
   }
   const key = b.idempotencyKey;
-  let existing;
+  const itemKey = (i) => i === 0 ? key : `${key}~${i + 1}`;
+  const ok = (ids2) => {
+    const secret = deps2.linkSecret;
+    const paths = secret ? ids2.map((id) => assemblyPath(id, secret)) : [];
+    return json(200, {
+      id: ids2[0],
+      status: "submitted",
+      ...paths[0] ? { assemblyPath: paths[0] } : {},
+      ...ids2.length > 1 ? { ids: ids2, ...paths.length > 0 ? { assemblyPaths: paths } : {} } : {}
+    });
+  };
+  const known = [];
   try {
-    existing = await deps2.store.findByKey(key);
+    for (let i = 0; i < items.length; i++) {
+      known.push((await deps2.store.findByKey(itemKey(i)))?.id ?? null);
+    }
   } catch (e) {
     log("store_lookup_failed", { message: e.message });
     return fail(503, "storage_failed");
   }
-  const ok = (id) => json(200, {
-    id,
-    status: "submitted",
-    ...deps2.linkSecret ? { assemblyPath: assemblyPath(id, deps2.linkSecret) } : {}
-  });
-  if (existing) return ok(existing.id);
+  if (known.every((id) => id !== null)) return ok(known);
   const now = deps2.now();
-  const summary = summarizeResult(resolved.params, result, "uz", tpl);
-  let lead;
-  let stored;
+  const multi = items.length > 1;
+  const ids = [...known];
+  const saved = [];
+  let storeFailed = false;
   try {
-    let id = makeApplicationId(key, now);
-    for (let salt = 1; await deps2.store.hasId(id) && salt <= 5; salt++) {
-      id = makeApplicationId(key, now, salt);
+    let orderId = known[0] ?? "";
+    for (let i = 0; i < items.length; i++) {
+      if (known[i] !== null) continue;
+      const { template: tpl, quantity, render } = items[i];
+      const { resolved, result } = checked[i];
+      const summary = summarizeResult(resolved.params, result, "uz", tpl);
+      let id = makeApplicationId(itemKey(i), now);
+      for (let salt = 1; await deps2.store.hasId(id) && salt <= 5; salt++) {
+        id = makeApplicationId(itemKey(i), now, salt);
+      }
+      if (i === 0) orderId = id;
+      const lead = {
+        id,
+        createdAt: tashkentTimestamp(now),
+        status: "Yangi",
+        firstName: contact.firstName,
+        lastName: contact.lastName ?? "",
+        phone: phoneE164(contact.phone),
+        sizeMm: summary.sizeMm,
+        // manager / production need the supplier code next to the decor name
+        corpus: withCode(summary.corpus, summary.corpusCode),
+        door: summary.door ? withCode(summary.door, summary.doorCode) : "\u2014",
+        sections: summary.sections,
+        doors: summary.doors,
+        kiosk: kioskId,
+        lang: b.lang,
+        telegram: "pending",
+        managerNote: "",
+        paramsJson: JSON.stringify(resolved.params),
+        schemaVersion: ORDER_SCHEMA_VERSION,
+        templateVersion: tpl.templateVersion,
+        engineVersion: deps2.engineVersion,
+        idempotencyKey: itemKey(i),
+        telegramAttempts: 0,
+        product: summary.productName,
+        templateId: tpl.templateId,
+        orderId: multi ? orderId : "",
+        orderItem: multi ? `${i + 1}/${items.length}` : "",
+        quantity
+      };
+      const stored = await deps2.store.append(lead);
+      ids[i] = id;
+      saved.push({ lead, ref: stored.ref, ...render ? { render } : {} });
     }
-    lead = {
-      id,
-      createdAt: tashkentTimestamp(now),
-      status: "Yangi",
-      firstName: contact.firstName,
-      lastName: contact.lastName ?? "",
-      phone: phoneE164(contact.phone),
-      sizeMm: summary.sizeMm,
-      // manager / production need the supplier code next to the decor name
-      corpus: withCode(summary.corpus, summary.corpusCode),
-      door: summary.door ? withCode(summary.door, summary.doorCode) : "\u2014",
-      sections: summary.sections,
-      doors: summary.doors,
-      kiosk: kioskId,
-      lang: b.lang,
-      telegram: "pending",
-      managerNote: "",
-      paramsJson: JSON.stringify(resolved.params),
-      schemaVersion: ORDER_SCHEMA_VERSION,
-      templateVersion: tpl.templateVersion,
-      engineVersion: deps2.engineVersion,
-      idempotencyKey: key,
-      telegramAttempts: 0,
-      product: summary.productName,
-      templateId: tpl.templateId
-    };
-    stored = await deps2.store.append(lead);
   } catch (e) {
     log("store_append_failed", { message: e.message });
-    return fail(503, "storage_failed");
+    storeFailed = true;
   }
-  let delivered = false;
-  try {
-    await deps2.notifier.notify(lead, render ?? void 0);
-    delivered = true;
-  } catch (e) {
-    log("telegram_failed", { id: lead.id, message: e.message });
+  if (saved.length === 0) return fail(503, "storage_failed");
+  for (const { lead, ref, render } of saved) {
+    let delivered = false;
+    try {
+      await deps2.notifier.notify(lead, render);
+      delivered = true;
+    } catch (e) {
+      log("telegram_failed", { id: lead.id, message: e.message });
+    }
+    await deps2.store.updateTelegram(ref, delivered ? "sent" : "failed", 1).catch((err) => log("store_update_failed", { id: lead.id, message: err.message }));
   }
-  await deps2.store.updateTelegram(stored.ref, delivered ? "sent" : "failed", 1).catch((err) => log("store_update_failed", { id: lead.id, message: err.message }));
-  return ok(lead.id);
+  if (storeFailed) return fail(503, "storage_failed");
+  return ok(ids);
 }
 
 // server/entries/submit.ts
