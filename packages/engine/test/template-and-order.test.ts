@@ -352,7 +352,8 @@ describe('D-0 order draft migration (chain D-0 -> 0.3)', () => {
     ['default (16 mm)', d0Default, 'ldsp_white_16'],
     ['width 2000, 18 mm, recess 20', d0T18, 'egger_w1000_st9_18'],
   ])('%s: same geometry, new material ids, schema 0.2', (_name, d0, corpus) => {
-    const { draft, issues } = migrateOrderDraft(d0);
+    // the D-0 geometry check targets the ADR-009 construction (top between the sides, < 0.12.0)
+    const { draft, issues } = migrateOrderDraft(d0, { template: TEMPLATE_ARCHIVE['0.11.0']! });
     expect(issues.map((i) => i.code)).toEqual(['MIGRATION_CONSTRUCTION_CHANGED']);
     if (!draft) throw new Error('no draft');
     expect(draft.schemaVersion).toBe('dafna-order/0.3-draft');

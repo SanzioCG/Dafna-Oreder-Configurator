@@ -196,7 +196,7 @@ describe('POST /api/submit', () => {
     const lead = store.rows[0]!;
     expect(lead.corpus).toBe('Серый камень (EGGER U727 ST9)');
     expect(lead.door).toBe('Дуб Гладстоун табак (EGGER H3325 ST28)');
-    expect(lead.templateVersion).toBe('0.11.0');
+    expect(lead.templateVersion).toBe('0.12.0');
   });
 
   it('a new key -> a new application', async () => {
@@ -242,7 +242,7 @@ describe('POST /api/submit', () => {
         params: {
           ...defaultParams(deskTemplate),
           legs: 'metal_lift',
-          topMaterial: 'egger_h3700_st10_25',
+          topMaterial: 'egger_h3133_st12_16', // D-22: a 16 mm decor, doubled
         },
       }),
     );
@@ -251,10 +251,10 @@ describe('POST /api/submit', () => {
     expect([d.product, d.templateId, d.templateVersion, d.sizeMm]).toEqual([
       'Stol',
       'desk',
-      '0.2.0',
+      '0.3.0',
       '1500 × 750 × 700',
     ]);
-    expect(d.corpus).toBe('Орех Пацифик натуральный (EGGER H3700 ST10)');
+    expect(d.corpus).toContain('(EGGER H3133 ST12)');
     expect(d.door).toBe('Металл чёрный');
     expect(d.sections).toBe("Ko'tarma mexanizmli karkas");
     const ped = await send(
@@ -270,7 +270,7 @@ describe('POST /api/submit', () => {
       '3 ta tortma',
       "G'ildirakli",
     ]);
-    // D-17: Dafna's 430 mm pedestal takes the A4 file drawer (it was blocked at 400 mm)
+    // D-22: no A4 file drawer any more (A4 files go into the document wardrobe)
     const file = await send(
       body({
         idempotencyKey: 'ped-file-0123456789ab',
@@ -278,7 +278,7 @@ describe('POST /api/submit', () => {
         params: { ...defaultParams(pedestalTemplate), layout: 'drawers2_file' },
       }),
     );
-    expect(file.status).toBe(200);
+    expect(file.status).toBe(422);
     expect((await send(body({ product: 'sofa' }))).json.error.fields).toEqual(['product']);
     expect(notifier.sent[0]!.lead.product).toBe('Stol');
   });

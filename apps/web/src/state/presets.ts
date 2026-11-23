@@ -58,13 +58,6 @@ export const READY_MODELS: ReadyModel[] = [
     fill: 'var(--step-size)',
   },
   {
-    id: 'ped-file',
-    product: 'pedestal',
-    nameKey: 'model.pedFile',
-    params: { layout: 'drawers2_file' },
-    fill: 'var(--step-color)',
-  },
-  {
     id: 'ped-door',
     product: 'pedestal',
     nameKey: 'model.pedDoor',

@@ -19,14 +19,21 @@ import deskLift from './fixtures/applications/desk.0.1.0.w1600-lift.json' with {
 // D-17: Dafna's own sizes (templates 0.2.0)
 import ped2Default from './fixtures/applications/pedestal.0.2.0.default.json' with { type: 'json' };
 import desk2 from './fixtures/applications/desk.0.2.0.w1700-d700.json' with { type: 'json' };
+// D-22: the technologist's confirmation table (templates 0.3.0)
+import ped3Default from './fixtures/applications/pedestal.0.3.0.default.json' with { type: 'json' };
+import desk3 from './fixtures/applications/desk.0.3.0.w1500-framed-top.json' with { type: 'json' };
+
+/** pedestal 0.2.0: the last template with the A4 hanging-file drawer */
+const PED_V2 = PRODUCT_ARCHIVE.pedestal!['0.2.0']!;
 
 /** world-space bounding box of a panel (product mm) */
 function bbox(p: Panel) {
-  const [rx, , rz] = p.rotation;
+  const [rx, ry, rz] = p.rotation;
   // local L (X), T (Y), W (Z) -> product axes for the rotations the generators use
   let size: [number, number, number] = [p.lengthMm, p.thicknessMm, p.widthMm];
   if (rz === 90) size = [p.thicknessMm, p.lengthMm, p.widthMm];
   else if (rx === 90) size = [p.lengthMm, p.widthMm, p.thicknessMm];
+  else if (ry === 90) size = [p.widthMm, p.thicknessMm, p.lengthMm]; // D-22 work-top frame ends
   return {
     min: p.position.map((c, i) => c - size[i]! / 2),
     max: p.position.map((c, i) => c + size[i]! / 2),
@@ -34,10 +41,14 @@ function bbox(p: Panel) {
 }
 
 describe('D-8 office pedestal (ofis tumbasi)', () => {
-  it('template 0.2.0, catalog 1.1.0, Dafna sizes 430 × 550 × 550 (D-17)', () => {
+  it('template 0.3.0, catalog 1.1.0, Dafna sizes 430 × 550 × 550 (D-17); no A4 file drawer (D-22)', () => {
+    expect(PED.parameters.find((p) => p.key === 'layout')?.options).toEqual([
+      'drawers3',
+      'door_shelf',
+    ]);
     expect([PED.templateId, PED.templateVersion, PED.productType]).toEqual([
       'pedestal',
-      '0.2.0',
+      '0.3.0',
       'pedestal',
     ]);
     expect(catalogForTemplate(PED).catalogVersion).toBe('1.1.0');
@@ -46,13 +57,18 @@ describe('D-8 office pedestal (ofis tumbasi)', () => {
     expect(PED.parameters.find((p) => p.key === 'depth')?.customerValues).toEqual([550]);
   });
 
-  for (const layout of ['drawers3', 'drawers2_file', 'door_shelf']) {
+  // drawers2_file: pedestal 0.2.0 (A4 file drawer, removed in 0.3.0)
+  for (const [T, layout] of [
+    [PED, 'drawers3'],
+    [PED_V2, 'drawers2_file'],
+    [PED, 'door_shelf'],
+  ] as const) {
     for (const base of ['castors', 'plinth']) {
       for (const width of [400, 430, 450]) {
-        it(`${layout} / ${base} / ${width}: valid, inside its overall box, fits under a 750 desk`, () => {
-          const p = { ...defaultParams(PED), layout, base, width };
-          const [H, D] = [Number(defaultParams(PED).height), Number(defaultParams(PED).depth)];
-          const r = generate(PED, p);
+        it(`${T.templateVersion} ${layout} / ${base} / ${width}: valid, inside its overall box, fits under a 750 desk`, () => {
+          const p = { ...defaultParams(T), layout, base, width };
+          const [H, D] = [Number(defaultParams(T).height), Number(defaultParams(T).depth)];
+          const r = generate(T, p);
           // 16 mm LDSP drawer sides: an A4 hanging-file box needs the 450 pedestal
           expect(r.issues.map((i) => i.code)).toEqual(
             layout === 'drawers2_file' && width === 400 ? ['FILE_DRAWER_TOO_SMALL'] : [],
@@ -83,13 +99,16 @@ describe('D-8 office pedestal (ofis tumbasi)', () => {
     }
   }
 
-  it('A4 hanging-file drawer (450 wide): box >= 330 wide and >= 240 high inside', () => {
-    const r = generate(PED, { ...defaultParams(PED), layout: 'drawers2_file', width: 450 });
+  it('0.2.0 A4 hanging-file drawer (450 wide): box >= 330 wide and >= 240 high inside', () => {
+    const r = generate(PED_V2, { ...defaultParams(PED_V2), layout: 'drawers2_file', width: 450 });
     const file = r.sections[0]!.drawers[0]!;
     expect(file.boxWidthMm - 2 * 16).toBeGreaterThanOrEqual(330);
     expect(file.boxHeightMm).toBeGreaterThanOrEqual(240);
     // a 300 mm pedestal cannot take A4 hanging files
-    const narrow = validate({ ...defaultParams(PED), layout: 'drawers2_file', width: 300 }, PED);
+    const narrow = validate(
+      { ...defaultParams(PED_V2), layout: 'drawers2_file', width: 300 },
+      PED_V2,
+    );
     expect(narrow.map((i) => i.code)).toContain('FILE_DRAWER_TOO_SMALL');
   });
 
@@ -114,7 +133,7 @@ describe('D-8 office pedestal (ofis tumbasi)', () => {
 });
 
 describe('D-8 desk (stol)', () => {
-  it('template 0.2.0, catalog 1.1.0, Dafna sizes, height 750 (EN 527-1: 740 ± 20)', () => {
+  it('template 0.3.0, catalog 1.1.0, Dafna sizes, height 750 (EN 527-1: 740 ± 20)', () => {
     expect([DESK.templateId, DESK.productType]).toEqual(['desk', 'desk']);
     expect(DESK.parameters.find((p) => p.key === 'height')?.default).toBe(750);
     expect(DESK.parameters.find((p) => p.key === 'width')?.customerValues).toEqual([
@@ -162,6 +181,27 @@ describe('D-8 desk (stol)', () => {
     }
   }
 
+  it('D-22: a 16 mm work top doubled with a 50 mm frame; one band over both layers', () => {
+    expect(DESK.parameters.find((p) => p.key === 'topMaterial')?.options).not.toContain(
+      'ldsp_white_22',
+    );
+    const r = generate(DESK, { ...defaultParams(DESK), width: 1500, depth: 700 });
+    const tops = r.panels.filter((p) => p.role === 'worktop');
+    expect(tops.map((p) => [p.id, p.lengthMm, p.widthMm, p.thicknessMm])).toEqual([
+      ['worktop', 1500, 700, 16],
+      ['worktop-frame-front', 1500, 50, 16],
+      ['worktop-frame-back', 1500, 50, 16],
+      ['worktop-frame-left', 600, 50, 16],
+      ['worktop-frame-right', 600, 50, 16],
+    ]);
+    // the frame is under the top board; the legs stand under the frame (750 - 2 x 16)
+    for (const f of tops.slice(1)) expect(bbox(f).max[1]).toBeCloseTo(750 - 16);
+    expect(r.panels.find((p) => p.role === 'leg')?.lengthMm).toBe(718);
+    expect(Object.values(tops[0]!.edges).every((e) => e.bandId)).toBe(true);
+    for (const f of tops.slice(1))
+      expect(Object.values(f.edges).every((e) => e.bandId === null)).toBe(true);
+  });
+
   it('EN 527-1: fixed legs outside 740 ± 20 warn; the lift frame does not', () => {
     const fixed = validate({ ...defaultParams(DESK), height: 800 }, DESK).map((i) => i.code);
     expect(fixed).toContain('DESK_HEIGHT_NOT_ERGONOMIC');
@@ -183,7 +223,7 @@ describe('D-8 desk (stol)', () => {
     const draft = toOrderDraft(defaultParams(DESK), r, { template: DESK, now: () => new Date(0) });
     expect([draft.productType, draft.templateVersion, draft.catalogVersion]).toEqual([
       'desk',
-      '0.2.0',
+      '0.3.0',
       '1.1.0',
     ]);
   });
@@ -197,6 +237,8 @@ describe('D-8 reproducibility per product', () => {
     'desk 1600 lift': ['desk', deskLift],
     'pedestal 0.2.0 default 430 × 550 × 550': ['pedestal', ped2Default],
     'desk 0.2.0 1700 × 700': ['desk', desk2],
+    'pedestal 0.3.0 default': ['pedestal', ped3Default],
+    'desk 0.3.0 1500 framed 16 mm top': ['desk', desk3],
   } as const;
   for (const [name, [templateId, fx]] of Object.entries(FIXTURES)) {
     it(`${name}: regenerated draft deep-equals the stored one`, () => {

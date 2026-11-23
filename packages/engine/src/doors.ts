@@ -108,6 +108,75 @@ export function roundLeaves(nominal: number[], total: number, step: number): num
   return out;
 }
 
+/**
+ * D-22: inset doors (vkladnoy, template 0.12.0+). Each section's leaves sit inside its opening
+ * (between its side panels / partitions), `gapEdge` all round and between the two leaves of a
+ * double door. Door types follow the same rule as overlay doors, on the inset single-leaf width
+ * (opening - 2 x gap). Hinge sides as planDoors; hingeMount 'inset'.
+ */
+export function planInsetDoors(input: DoorPlanInput): DoorPlan {
+  const { t, innerWidths, gapEdge: g } = input;
+  const n = innerWidths.length;
+  const splitAfter = input.splitAfter ?? null;
+  const source: (string | null)[] = [];
+  const singleLeafWidths = innerWidths.map((inner) => inner - 2 * g);
+  const types: DoorType[] = innerWidths.map((_, i) => {
+    const o = input.overrides[i];
+    if (o && o !== 'preset') {
+      source.push(`doorSection${i + 1}`);
+      return o as DoorType;
+    }
+    source.push(null);
+    if (input.preset === 'none') return 'none';
+    const kind =
+      input.preset === 'all_single'
+        ? 'single'
+        : doorKindForLeaf(singleLeafWidths[i] as number, input.maxSingleLeafWidth);
+    if (kind === 'double') return 'double';
+    return hingeSideFor(i, n) === 'left' ? 'single_left' : 'single_right';
+  });
+  const leaves: DoorLeaf[] = [];
+  let xStart = t;
+  innerWidths.forEach((inner, i) => {
+    const type = types[i] as DoorType;
+    const num = i + 1;
+    const x0 = xStart + g;
+    if (type === 'double') {
+      const total = inner - 3 * g;
+      const [a, b] = roundLeaves([total / 2, total / 2], total, input.rounding) as [number, number];
+      leaves.push(
+        {
+          id: `door-${num}-left`,
+          sectionIndex: i,
+          hingeSide: 'left',
+          hingeMount: 'inset',
+          xStartMm: x0,
+          widthMm: a,
+        },
+        {
+          id: `door-${num}-right`,
+          sectionIndex: i,
+          hingeSide: 'right',
+          hingeMount: 'inset',
+          xStartMm: x0 + a + g,
+          widthMm: b,
+        },
+      );
+    } else if (type !== 'none') {
+      leaves.push({
+        id: `door-${num}`,
+        sectionIndex: i,
+        hingeSide: type === 'single_left' ? 'left' : 'right',
+        hingeMount: 'inset',
+        xStartMm: x0,
+        widthMm: inner - 2 * g,
+      });
+    }
+    xStart += inner + (i === splitAfter ? 2 * t : t);
+  });
+  return { types, source, leaves, singleLeafWidths };
+}
+
 export function planDoors(input: DoorPlanInput): DoorPlan {
   const { widthMm: W, t, innerWidths, gapEdge, gapBetween } = input;
   const n = innerWidths.length;

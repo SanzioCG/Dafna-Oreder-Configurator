@@ -148,10 +148,16 @@ function preserveDoors(
       pinned.push(i);
     }
   });
-  // drop every pinned override that is invalid now, then read the resulting types once
+  // drop every pinned override that is invalid now, then read the resulting types once.
+  // D-22: a staff override from the old draft that is invalid now (e.g. a single leaf wider
+  // than the new 500 mm maximum) is dropped too — reported, never silently.
   const check = generate(template, out, catalog);
   const dropped: { i: number; from: string }[] = [];
-  for (const i of pinned) {
+  const overridden = [0, 1, 2, 3].filter((i) => {
+    const v = out[`doorSection${i + 1}`];
+    return typeof v === 'string' && v !== 'preset';
+  });
+  for (const i of overridden) {
     const key = `doorSection${i + 1}`;
     if (check.issues.some((x) => x.severity === 'error' && x.paramKey === key)) {
       dropped.push({ i, from: String(out[key]) });
@@ -180,6 +186,8 @@ export const MATERIALS_CHANGED_IN = '0.6.0';
 export const INTERIOR_CHANGED_IN = '0.7.0';
 /** D-15: wide wardrobes became two carcasses in this template version */
 export const CARCASS_SPLIT_IN = '0.10.0';
+/** D-22: the top lies on the side panels from this template version on */
+export const TOP_OVER_SIDES_IN = '0.12.0';
 
 /** Pre-0.7.0 hanging presets -> the GOST presets of template 0.7.0. */
 export const INTERIOR_MAP_07: Readonly<Record<string, string>> = {
@@ -331,12 +339,9 @@ export function migrateOrderDraft(
     params = { ...params, carcasses: '1' };
   }
 
-  const kept = preserveDoors(params, doorTypesOf(d), template, catalog);
-  params = kept.params;
-  issues.push(...kept.issues);
-
   // D-17: a size the current template no longer offers (e.g. a 2400 mm wardrobe, now <= 2200)
-  // is lowered to the template maximum — never silently
+  // is lowered to the template maximum — never silently. D-22: before the doors are checked,
+  // so the door rules see a valid size.
   for (const def of template.parameters) {
     const v = params[def.key];
     if (def.type === 'int' && typeof v === 'number' && def.max !== undefined && v > def.max) {
@@ -346,6 +351,10 @@ export function migrateOrderDraft(
       );
     }
   }
+
+  const kept = preserveDoors(params, doorTypesOf(d), template, catalog);
+  params = kept.params;
+  issues.push(...kept.issues);
 
   const result = generate(template, params, catalog);
   const errors = result.issues.filter((i) => i.severity === 'error');
@@ -371,7 +380,15 @@ export function migrateOrderDraft(
 
   // ADR-009: drafts made before template 0.5.0 had the sides standing on the plinth. With a
   // plinth the regenerated panels differ (side length, plinth strip length) — never silently.
-  if (params.base === 'plinth' && templateBefore(fromTemplate, CONSTRUCTION_CHANGED_IN)) {
+  // D-22: before 0.12.0 the top stood between the sides; now it lies on them (top, side lengths
+  // and doors / gaps differ) — never silently.
+  const topMoved =
+    templateBefore(fromTemplate, TOP_OVER_SIDES_IN) &&
+    template.constructionRules.some((r) => r.id === 'top-over-sides');
+  if (
+    topMoved ||
+    (params.base === 'plinth' && templateBefore(fromTemplate, CONSTRUCTION_CHANGED_IN))
+  ) {
     issues.push(
       makeIssue('MIGRATION_CONSTRUCTION_CHANGED', 'warning', 'base', {
         from: fromTemplate ?? 'unknown',

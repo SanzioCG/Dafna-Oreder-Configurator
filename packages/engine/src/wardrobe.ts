@@ -1,6 +1,6 @@
 import { catalogForTemplate, getMaterial, currentCatalog } from './catalog.js';
 import { generatorFor } from './registry.js';
-import { planDoors, type DoorLeaf, type DoorPlan } from './doors.js';
+import { planDoors, planInsetDoors, type DoorLeaf, type DoorPlan } from './doors.js';
 import {
   resolveInterior,
   type InteriorConstants,
@@ -86,6 +86,10 @@ export interface WardrobeLayout {
   interiorMin: { railDepth: number; railHeight: number; drawerWidth: number };
   drawerFrontSetbackMm: number;
   edgeBand: { bandId: string; thicknessMm: number };
+  /** D-22: doors sit inside the section openings (doorMount = inset) */
+  insetDoors: boolean;
+  /** D-22 (template 0.12.0+, rule top-over-sides): the top lies on the side panels */
+  topOverSides: boolean;
 }
 
 /** Split `total` whole millimetres into `n` parts differing by at most 1 mm (extra mm leftmost). */
@@ -145,7 +149,10 @@ function doorPlanFor(
   innerWidths: number[],
   splitAfter: number | null = null,
 ): DoorPlan {
-  return planDoors({
+  // D-22 (template 0.12.0+): inset doors sit inside the openings with their own gap
+  const inset = params.doorMount === 'inset';
+  const gap = getNumberConstant(template, inset ? 'insetDoorGapMm' : 'doorGapEdgeMm');
+  return (inset ? planInsetDoors : planDoors)({
     widthMm,
     t,
     innerWidths,
@@ -155,8 +162,8 @@ function doorPlanFor(
       const o = params[`doorSection${i + 1}`];
       return typeof o === 'string' ? o : undefined;
     }),
-    gapEdge: getNumberConstant(template, 'doorGapEdgeMm'),
-    gapBetween: getNumberConstant(template, 'doorGapBetweenMm'),
+    gapEdge: gap,
+    gapBetween: inset ? gap : getNumberConstant(template, 'doorGapBetweenMm'),
     maxSingleLeafWidth: getNumberConstant(template, 'maxSingleLeafWidthMm'),
     rounding: getNumberConstant(template, 'doorLeafRoundingMm'),
   });
@@ -273,18 +280,31 @@ export function computeLayout(
   const splitAfter = splitFor(sectionCount);
   const doors = doorPlanFor(template, params, widthMm, t, sectionInnerWidthsMm, splitAfter);
   const hasDoors = doors.types.some((d) => d !== 'none');
+  // D-22: inset doors stand inside the carcass, so they add nothing to the depth stack
+  const insetDoors = hasDoors && params.doorMount === 'inset';
   const doorThicknessMm = hasDoors ? doorMaterial.thicknessMm : 0;
-  const doorGapFrontMm = hasDoors ? getNumberConstant(template, 'doorGapFrontMm') : 0;
-  const doorGapEdgeMm = getNumberConstant(template, 'doorGapEdgeMm');
-  const doorGapBetweenMm = getNumberConstant(template, 'doorGapBetweenMm');
+  const doorGapFrontMm =
+    hasDoors && !insetDoors ? getNumberConstant(template, 'doorGapFrontMm') : 0;
+  const doorGapEdgeMm = getNumberConstant(
+    template,
+    insetDoors ? 'insetDoorGapMm' : 'doorGapEdgeMm',
+  );
+  const doorGapBetweenMm = insetDoors
+    ? doorGapEdgeMm
+    : getNumberConstant(template, 'doorGapBetweenMm');
   const carcassHeightMm = heightMm - plinthHeightMm;
-  const carcassDepthMm = depthMm - backThicknessMm - doorThicknessMm - doorGapFrontMm;
+  const carcassDepthMm =
+    depthMm - backThicknessMm - (insetDoors ? 0 : doorThicknessMm) - doorGapFrontMm;
+  // interior depth of a section behind an inset door: up to the door's back face
+  const doorDepthIn = (index: number) =>
+    insetDoors && (doors.types[index] ?? 'none') !== 'none' ? doorThicknessMm : 0;
 
   // D-14: a books_lower section's door height (parameter) and the door edge gap
   const ic = {
     ...interiorConstants(template),
     lowerDoorHeightMm: Number(params.lowerDoorHeight ?? 800),
     doorGapEdgeMm,
+    ...(insetDoors ? { insetDoors: true } : {}),
   };
   let xs = t;
   const interior = sectionInnerWidthsMm.map((innerW, index) => {
@@ -295,7 +315,7 @@ export function computeLayout(
       yBottom: plinthHeightMm + t,
       yTop: heightMm - t,
       zBack: backThicknessMm,
-      innerDepth: carcassDepthMm,
+      innerDepth: carcassDepthMm - doorDepthIn(index),
       t,
     };
     xs += innerW + (index === splitAfter ? 2 * t : t);
@@ -336,7 +356,9 @@ export function computeLayout(
     doorTypes: doors.types,
     doorTypeSource: doors.source,
     doorLeaves: doors.leaves,
-    doorHeightMm: carcassHeightMm - 2 * doorGapEdgeMm,
+    doorHeightMm: carcassHeightMm - 2 * doorGapEdgeMm - (insetDoors ? 2 * t : 0),
+    insetDoors,
+    topOverSides: template.constructionRules.some((r) => r.id === 'top-over-sides'),
     lowerDoorHeightMm: ic.lowerDoorHeightMm,
     maxShelfSpanMm: getNumberConstant(template, 'maxShelfSpanMm'),
     maxSingleLeafWidthMm,
@@ -431,7 +453,9 @@ function layoutIssues(layout: WardrobeLayout): Issue[] {
         preset: plan.preset,
       };
       if (code === 'RAIL_DEPTH_SHORT') {
-        values.innerDepthMm = layout.carcassDepthMm;
+        values.innerDepthMm =
+          layout.carcassDepthMm -
+          (layout.insetDoors && layout.doorTypes[index] !== 'none' ? layout.doorThicknessMm : 0);
         values.minMm = layout.interiorMin.railDepth;
       } else if (code === 'RAIL_HEIGHT_SHORT') {
         values.clearHangingHeightMm = plan.clearHangingHeightMm ?? 0;
@@ -545,14 +569,16 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
           [xSplit, W],
         ];
   const suffix = (i: number) => (carcasses.length > 1 ? `-${i + 1}` : '');
+  // D-22: with the top on the sides, the sides end under it
+  const sideH = layout.topOverSides ? H - t : H;
   const side = (id: string, x: number): BasePanel => ({
     id,
     role: 'side',
-    lengthMm: H,
+    lengthMm: sideH,
     widthMm: Dc,
     thicknessMm: t,
     material: corpus,
-    position: [x, H / 2, zMid],
+    position: [x, sideH / 2, zMid],
     rotation: ROT_VERTICAL_YZ,
   });
 
@@ -575,7 +601,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
       {
         id: `top${suffix(i)}`,
         role: 'top',
-        lengthMm: x1 - x0 - 2 * t,
+        lengthMm: x1 - x0 - (layout.topOverSides ? 0 : 2 * t),
         widthMm: Dc,
         thicknessMm: t,
         material: corpus,
@@ -648,7 +674,10 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
     // D-14: a books_lower section's leaf covers only the lower part, from the same bottom edge
     const lower = layout.interior[leaf.sectionIndex]?.preset === 'books_lower';
     const leafH = lower ? layout.lowerDoorHeightMm : layout.doorHeightMm;
-    const leafY = lower ? ph + layout.doorGapEdgeMm + leafH / 2 : ph + Hc / 2;
+    // D-22: an inset leaf starts on the bottom board and is flush with the carcass front
+    const bottomY = ph + (layout.insetDoors ? t : 0) + layout.doorGapEdgeMm;
+    const leafY = lower ? bottomY + leafH / 2 : ph + Hc / 2;
+    const frontZ = layout.insetDoors ? layout.carcassFrontZMm : layout.depthMm;
     panels.push({
       id: leaf.id,
       role: 'door',
@@ -656,7 +685,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
       widthMm: leafH,
       thicknessMm: td,
       material: layout.doorMaterial.id,
-      position: [leaf.xStartMm + leaf.widthMm / 2, leafY, layout.depthMm - td / 2],
+      position: [leaf.xStartMm + leaf.widthMm / 2, leafY, frontZ - td / 2],
       rotation: ROT_VERTICAL_XY,
       sectionIndex: leaf.sectionIndex,
       hingeSide: leaf.hingeSide,
@@ -680,8 +709,10 @@ function buildInterior(layout: WardrobeLayout, sections: Section[]): BasePanel[]
     if (!plan) continue;
     const xMid = s.xStartMm + s.innerWidthMm / 2;
     // drawers first (they are at the bottom), then shelves bottom to top
+    // D-22: behind an inset door the drawer fronts are set back from the door's back face
+    const doorIn = layout.insetDoors && s.doorType !== 'none' ? layout.doorThicknessMm : 0;
     for (const d of plan.drawers) {
-      const frontFaceZ = zFront - layoutDrawerSetback(layout);
+      const frontFaceZ = zFront - doorIn - layoutDrawerSetback(layout);
       const boxBackZ = frontFaceZ - t - d.boxDepthMm;
       const boxBottomY = d.frontYMm + (d.frontHeightMm - d.boxHeightMm) / 2;
       const boxLeft = xMid - d.boxWidthMm / 2;
@@ -787,6 +818,11 @@ function withProductionFields(p: BasePanel, layout: WardrobeLayout): Panel {
     left: allBanded ? { ...band } : { ...NO_BAND },
     right: allBanded ? { ...band } : { ...NO_BAND },
   };
+  // D-22: a top lying on the sides shows its ends - banded, except where two carcasses meet
+  if (layout.topOverSides && p.role === 'top') {
+    if (p.id !== 'top-2') edges.left = { ...band };
+    if (p.id !== 'top-1') edges.right = { ...band };
+  }
   const isHdf = p.material === layout.backMaterial.id && layout.backMaterial.kind === 'hdf';
   return { ...p, edges, grainDirection: isHdf ? null : 'length', operations: [] };
 }
@@ -815,7 +851,8 @@ function buildDimensions(layout: WardrobeLayout): Dimensions {
     carcassHeightMm: layout.carcassHeightMm,
     carcassDepthMm: layout.carcassDepthMm,
     backThicknessMm: layout.backThicknessMm,
-    doorThicknessMm: layout.doorThicknessMm,
+    // D-22: the depth stack (back + carcass + gap + door); an inset door is not in it
+    doorThicknessMm: layout.insetDoors ? 0 : layout.doorThicknessMm,
     doorGapFrontMm: layout.doorGapFrontMm,
     plinthHeightMm: layout.plinthHeightMm,
   };

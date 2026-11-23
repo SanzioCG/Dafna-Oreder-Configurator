@@ -51,11 +51,14 @@ const railTop = (s: Section) =>
   s.rails[0] ? s.rails[0].axisYMm + s.rails[0].diameterMm / 2 : null;
 
 describe('template 0.7.0 (D-7): standard sizes', () => {
-  it('0.7.0, same generator; current 0.11.0 = 0.7.0 + brands + lower doors + carcasses (height <= 2200)', () => {
+  it('0.7.0, same generator; current 0.12.0 = 0.7.0 + brands + lower doors + carcasses (height <= 2200) + door mount', () => {
     expect(T.templateVersion).toBe('0.7.0');
-    expect(wardrobeTemplate.templateVersion).toBe('0.11.0');
+    expect(wardrobeTemplate.templateVersion).toBe('0.12.0');
+    const keys = T.parameters.map((p) => p.key);
     expect(wardrobeTemplate.parameters.map((p) => p.key)).toEqual([
-      ...T.parameters.map((p) => p.key),
+      ...keys.slice(0, keys.indexOf('doors') + 1),
+      'doorMount', // D-22
+      ...keys.slice(keys.indexOf('doors') + 1),
       'hingeBrand',
       'slideBrand',
       'lowerDoorHeight',
@@ -206,7 +209,8 @@ describe('older drafts -> template 0.7.0', () => {
   it('rail presets map to the GOST presets; every changed section is reported', () => {
     const r = regenerateApplication(app6Lmdf.params, '0.6.0');
     if (!r.ok) throw new Error(r.code);
-    const { draft, issues } = migrateOrderDraft(r.draft);
+    // the D-7 interior mapping onto template 0.11.0 (0.12.0 also moves the top, D-22)
+    const { draft, issues } = migrateOrderDraft(r.draft, { template: TEMPLATE_ARCHIVE['0.11.0']! });
     if (!draft) throw new Error('no draft');
     expect(draft.templateVersion).toBe('0.11.0');
     expect(draft.params.height).toBe(2200); // D-17: 2400 is lowered to the new maximum

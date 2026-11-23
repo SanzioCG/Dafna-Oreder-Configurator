@@ -1,6 +1,6 @@
-import wardrobeV10Json from '../templates/wardrobe.v10.json' with { type: 'json' };
-import pedestalV2Json from '../templates/pedestal.v2.json' with { type: 'json' };
-import deskV2Json from '../templates/desk.v2.json' with { type: 'json' };
+import wardrobeV11Json from '../templates/wardrobe.v11.json' with { type: 'json' };
+import pedestalV3Json from '../templates/pedestal.v3.json' with { type: 'json' };
+import deskV3Json from '../templates/desk.v3.json' with { type: 'json' };
 import type {
   Material,
   MaterialCatalog,
@@ -11,19 +11,21 @@ import type {
 } from './types.js';
 
 /**
- * The current wardrobe (shkaf) template: v10 (templateVersion 0.11.0, D-17: height up to 2200).
+ * The current wardrobe (shkaf) template: v11 (templateVersion 0.12.0, D-22: the technologist's
+ * confirmation table - top on the sides, overlay or inset doors, confirmed gaps / setbacks).
+ * v10 (0.11.0, D-17): height up to 2200.
  * History: v7 (templateVersion 0.8.0, D-9: + hardware brands
  * hingeBrand / slideBrand for the BOM and price; otherwise = v6 / 0.7.0: standard customer sizes,
  * GOST 13025.1-85 storage presets, catalog 1.0.0, same generator). Older templates are archived
  * (regenerate.ts); older order drafts are migrated with migrateOrderDraft().
  */
-export const wardrobeTemplate: Template = wardrobeV10Json as Template;
+export const wardrobeTemplate: Template = wardrobeV11Json as Template;
 
-/** D-8: office pedestal (ofis tumbasi), template 0.2.0 (D-17: Dafna's 430 × 550 × 550) (pedestal.ts, ADR-014). */
-export const pedestalTemplate: Template = pedestalV2Json as Template;
+/** D-8: office pedestal (ofis tumbasi), template 0.3.0 (D-22: confirmed fronts / drawer values) (pedestal.ts, ADR-014). */
+export const pedestalTemplate: Template = pedestalV3Json as Template;
 
-/** D-8: office / writing desk (stol), template 0.2.0 (D-17: Dafna's 1100 / 1500 / 1700 sizes) (desk.ts, ADR-014). */
-export const deskTemplate: Template = deskV2Json as Template;
+/** D-8: office / writing desk (stol), template 0.3.0 (D-22: 16 / 18 mm top doubled with a 50 mm frame) (desk.ts, ADR-014). */
+export const deskTemplate: Template = deskV3Json as Template;
 
 /** The current template of every product, by templateId (= productType). */
 export const PRODUCT_TEMPLATES: Readonly<Record<string, Template>> = {

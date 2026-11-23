@@ -120,6 +120,8 @@ export const ru: Messages = {
   'option.carcasses.auto': 'Авто (2 шт. от 160 см)',
   'option.carcasses.1': '1 корпус',
   'option.carcasses.2': '2 корпуса',
+  'option.doorMount.overlay': 'Накладные',
+  'option.doorMount.inset': 'Вкладные',
   'option.doors.none': 'Без дверей',
   'option.doors.all_single': 'Одностворчатые',
   'option.doors.auto': 'Авто',
@@ -304,6 +306,9 @@ export const ru: Messages = {
   'c.hint.books_lower':
     'Внизу закрытое место с дверями, сверху открытые полки (папка А4 помещается)',
   'param.lowerDoorHeight': 'Высота нижних дверей',
+  'param.doorMount': 'Тип дверей',
+  'c.opt.doorMount.overlay': 'Накладные',
+  'c.opt.doorMount.inset': 'Вкладные',
   'c.hint.long_hang': 'Пальто, плащи, платья',
   'c.hint.short_hang': 'Рубашки, пиджаки; внизу полки',
   'c.hint.short_hang_drawers': 'На вешалках, внизу ящики',

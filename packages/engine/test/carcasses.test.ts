@@ -91,8 +91,10 @@ describe('D-15 two carcasses from 1600 mm', () => {
   });
 
   it('doors next to the split hinge on a carcass side (full overlay); leaves cover the front', () => {
+    // D-22: single leaves at most 500 mm -> 1400 wide, two carcasses forced
     const r = gen({
-      width: 1600,
+      width: 1400,
+      carcasses: '2',
       sections: 3,
       doorSection1: 'single_left',
       doorSection2: 'single_right',
@@ -107,7 +109,7 @@ describe('D-15 two carcasses from 1600 mm', () => {
       'full_overlay',
     ]);
     const covered = doors.reduce((w, d) => w + d.lengthMm, 0);
-    expect(covered).toBeGreaterThan(1600 - 10);
+    expect(covered).toBeGreaterThan(1400 - 15); // 2 x 3 mm edge + 2 x 3 mm between
   });
 
   it('an application made before 0.10.0 stays one carcass when migrated', () => {

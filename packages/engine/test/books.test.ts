@@ -16,6 +16,7 @@ import {
  * shelves above. GOST 13025.1-85 table 2 (books): clear gap between shelves 180..390 mm.
  */
 const T = wardrobeTemplate;
+const GAP = Number(T.constants.doorGapEdgeMm!.value);
 const books = (over: Params = {}) =>
   resolveParams(T, { ...defaultParams(T), interior1: 'books_lower', ...over }).params;
 
@@ -34,11 +35,11 @@ describe('D-14 books_lower: lower doors, book and document shelves above', () =>
           for (const d of leaves) {
             expect(d.widthMm).toBe(lower); // leaf height
             // leaf bottom edge where a full door starts
-            expect(d.position[1] - d.widthMm / 2).toBeCloseTo(100 + 1.5);
+            expect(d.position[1] - d.widthMm / 2).toBeCloseTo(100 + GAP);
           }
           const doorTop = leaves[0]!.position[1] + lower / 2;
           const fixed = s.shelves.find((x) => x.kind === 'fixed')!;
-          expect(fixed.yMm + 16).toBeCloseTo(doorTop + 1.5, 0); // top face one gap above
+          expect(fixed.yMm + 16).toBeCloseTo(doorTop + GAP, 0); // top face one gap above
           // open shelves above the door: GOST 13025.1-85 table 2 gaps, A4 folders upright
           const above = s.shelves.filter((x) => x.yMm > fixed.yMm).map((x) => x.yMm);
           const bounds = [fixed.yMm, ...above, height - 16 /* underside of the top board */];

@@ -44,14 +44,14 @@ describe('D-8 start screen: Shkaf / Ofis tumbasi / Stol', () => {
     expect(document.querySelectorAll('.model-card')).toHaveLength(4);
     pickProduct('pedestal');
     expect(screen.getByRole('heading', { name: uz['start.title.pedestal'] })).toBeTruthy();
-    expect(document.querySelectorAll('.model-card')).toHaveLength(3);
+    expect(document.querySelectorAll('.model-card')).toHaveLength(2); // D-22: no A4 file model
     pickProduct('desk');
     expect(document.querySelectorAll('.model-card')).toHaveLength(2);
   });
 });
 
 describe('D-8 office pedestal', () => {
-  it('model -> steps Joy / Rang / Tortmalar; drawers, castors; Dafna size 43 sm takes A4 files', () => {
+  it('model -> steps Joy / Rang / Tortmalar; drawers, castors; no A4 file drawer (D-22)', () => {
     render(<App />);
     pickProduct('pedestal');
     pickModel('model.pedDrawers');
@@ -69,7 +69,7 @@ describe('D-8 office pedestal', () => {
         .map((r) => r.textContent),
     ).toEqual(['43 sm']);
     fireEvent.click(tab(uz['step.interior.pedestal']));
-    expect(option('drawers2_file').disabled).toBe(false);
+    expect(document.querySelector('[data-option="drawers2_file"]')).toBeNull();
     fireEvent.click(option('door_shelf'));
     expect(stub().dataset.roles).toContain('door');
   });
@@ -112,7 +112,7 @@ describe('D-8 desk', () => {
     pickModel('model.deskLdsp');
     fireEvent.click(tab(uz['step.review']));
     expect(screen.getByTestId('present-summary-line').textContent).toBe(
-      '150 × 75 × 70 sm · Stoleshnitsa: Белый 22 мм · Oyoq: Белый шагрень',
+      '150 × 75 × 70 sm · Stoleshnitsa: Белый шагрень · Oyoq: Белый шагрень',
     );
   });
 

@@ -4,7 +4,7 @@ import { PRESETS_UNCONFIRMED, PRODUCTS, READY_MODELS, modelParams } from './pres
 import { isCustomerBlocking } from './useConfigurator';
 
 describe('ready-made models (start screen)', () => {
-  it('wardrobe: four models 100 / 150 / 200 / 240 sm; pedestal three; desk two', () => {
+  it('wardrobe: four models 100 / 150 / 200 / 240 sm; pedestal two (D-22: no A4 file drawer); desk two', () => {
     expect(
       READY_MODELS.filter((m) => m.product === 'wardrobe').map((m) => [m.id, modelParams(m).width]),
     ).toEqual([
@@ -14,7 +14,7 @@ describe('ready-made models (start screen)', () => {
       ['large', 2400],
     ]);
     expect(PRODUCTS.map((p) => READY_MODELS.filter((m) => m.product === p).length)).toEqual([
-      4, 3, 2,
+      4, 2, 2,
     ]);
     expect(PRESETS_UNCONFIRMED).toBe(true);
   });

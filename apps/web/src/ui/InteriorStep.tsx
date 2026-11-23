@@ -97,6 +97,7 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
   const section = sections[sel];
   const options = INTERIOR_ORDER.filter((o) => (def.options ?? []).includes(o));
   const doorsOn = config.params.doors !== 'none';
+  const mountDef = getParamDef(config.template, 'doorMount');
   // D-14: the lower door height, shown while any section uses "Kitob va hujjatlar"
   const lowerDef = getParamDef(config.template, 'lowerDoorHeight');
   const usesLower = sections.some((s) => s.preset === 'books_lower');
@@ -123,6 +124,20 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
         >
           {t('c.withDoors')}
         </Toggle>
+
+        {/* D-22: overlay (nakladnoy) or inset (vkladnoy) doors, template 0.12.0+ */}
+        {mountDef && doorsOn && (
+          <div className="param" data-testid="door-mount">
+            <span className="param-label">{t('param.doorMount')}</span>
+            <SelectionGrid
+              options={(mountDef.options ?? []).map(String)}
+              value={String(config.params.doorMount ?? mountDef.default)}
+              onChange={(v) => config.setParam('doorMount', v)}
+              label={(v) => t(`c.opt.doorMount.${v}`)}
+              ariaLabel={t('param.doorMount')}
+            />
+          </div>
+        )}
 
         <div className="param">
           <span className="param-label">{t('c.part')}</span>

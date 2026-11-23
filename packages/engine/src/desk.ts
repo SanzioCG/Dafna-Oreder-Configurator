@@ -59,7 +59,10 @@ function build(template: Template, p: Params, catalog: MaterialCatalog) {
     bandId: getStringConstant(template, 'edgeBandId'),
     thicknessMm: n(template, 'edgeBandThicknessMm'),
   };
-  const under = H - tt; // underside of the work top
+  // D-22 (template 0.3.0+): the top board is doubled underneath with a frame of strips
+  const strip =
+    template.constants.worktopFrameStripMm !== undefined ? n(template, 'worktopFrameStripMm') : 0;
+  const under = H - tt - (strip > 0 ? tt : 0); // underside of the work top (frame included)
   const panels: Panel[] = [
     part({
       id: 'worktop',
@@ -75,6 +78,30 @@ function build(template: Template, p: Params, catalog: MaterialCatalog) {
       grain: true,
     }),
   ];
+  if (strip > 0) {
+    // one band over both layers is on the top board; the strips themselves are not banded
+    const y = H - tt - tt / 2;
+    const frameStrip = (id: string, lengthMm: number, x: number, z: number, side: boolean) =>
+      part({
+        id,
+        role: 'worktop',
+        lengthMm,
+        widthMm: strip,
+        thicknessMm: tt,
+        material: top,
+        position: [x, y, z],
+        rotation: side ? [0, 90, 0] : ROT_FLAT,
+        banding: 'none',
+        band,
+        grain: true,
+      });
+    panels.push(
+      frameStrip('worktop-frame-front', W, W / 2, D - strip / 2, false),
+      frameStrip('worktop-frame-back', W, W / 2, strip / 2, false),
+      frameStrip('worktop-frame-left', D - 2 * strip, strip / 2, D / 2, true),
+      frameStrip('worktop-frame-right', D - 2 * strip, W - strip / 2, D / 2, true),
+    );
+  }
   if (legs === 'ldsp') {
     const inset = n(template, 'legDepthInsetMm');
     const legD = D - 2 * inset;

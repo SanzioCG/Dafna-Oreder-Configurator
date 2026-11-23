@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  PRODUCT_ARCHIVE,
   catalogForTemplate,
   computeBom,
   computePrice,
@@ -14,6 +15,8 @@ import {
   type Template,
 } from '../src/index.js';
 
+/** D-22: table-top boards (22 / 25 mm) were offered up to desk template 0.2.0 */
+const DESK_V2 = PRODUCT_ARCHIVE.desk!['0.2.0']!;
 const bomOf = (t: Template, p: Params) => computeBom(t, p, generate(t, p));
 const hw = (bom: ReturnType<typeof bomOf>, id: string) =>
   bom.find((l) => l.kind === 'hardware' && l.ref === id)?.qty ?? 0;
@@ -61,7 +64,8 @@ describe('D-9 BOM', () => {
   it('desk: the lift frame is one purchased item; the LDSP desk has none', () => {
     const lift = bomOf(deskTemplate, { ...defaultParams(deskTemplate), legs: 'metal_lift' });
     expect(hw(lift, 'lift_frame_2leg')).toBe(1);
-    expect(lift.filter((l) => l.kind === 'board').map((l) => l.ref)).toEqual(['ldsp_white_22']);
+    // D-22: the work top and its frame strips are the same 16 mm board
+    expect(lift.filter((l) => l.kind === 'board').map((l) => l.ref)).toEqual(['ldsp_white_16']);
     const ldsp = bomOf(deskTemplate, defaultParams(deskTemplate));
     expect(hw(ldsp, 'lift_frame_2leg')).toBe(0);
   });
@@ -98,21 +102,19 @@ describe('D-9 price (DEMO price list)', () => {
 
   it('every product prices without missing items; table tops use the thickness price', () => {
     for (const [t, p] of [
+      [pedestalTemplate, { ...defaultParams(pedestalTemplate), layout: 'door_shelf', width: 450 }],
       [
-        pedestalTemplate,
-        { ...defaultParams(pedestalTemplate), layout: 'drawers2_file', width: 450 },
-      ],
-      [
-        deskTemplate,
-        { ...defaultParams(deskTemplate), legs: 'metal_lift', topMaterial: 'egger_h3700_st10_25' },
+        DESK_V2,
+        { ...defaultParams(DESK_V2), legs: 'metal_lift', topMaterial: 'egger_h3700_st10_25' },
       ],
     ] as const) {
       const r = price(t, p);
       expect(r.missing, t.templateId).toEqual([]);
       expect(r.total, t.templateId).toBeGreaterThan(0);
     }
-    const desk = price(deskTemplate, {
-      ...defaultParams(deskTemplate),
+    // table-top boards: desk template 0.2.0 (0.3.0 doubles a 16 / 18 mm board instead)
+    const desk = price(DESK_V2, {
+      ...defaultParams(DESK_V2),
       topMaterial: 'egger_h3700_st10_25',
     });
     expect(desk.lines.find((l) => l.ref === 'egger_h3700_st10_25')?.unitPrice).toBe(

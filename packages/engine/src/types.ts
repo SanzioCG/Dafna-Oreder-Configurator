@@ -122,8 +122,11 @@ export type PanelRole =
   | 'frame';
 export type DoorType = 'none' | 'single_left' | 'single_right' | 'double';
 export type HingeSide = 'left' | 'right';
-/** full_overlay = hinged on an outer side panel; half_overlay = hinged on a partition. */
-export type HingeMount = 'full_overlay' | 'half_overlay';
+/**
+ * full_overlay = hinged on an outer side panel; half_overlay = hinged on a partition;
+ * inset (D-22) = the leaf sits inside its opening (vkladnoy).
+ */
+export type HingeMount = 'full_overlay' | 'half_overlay' | 'inset';
 
 export type Vec3 = [number, number, number];
 

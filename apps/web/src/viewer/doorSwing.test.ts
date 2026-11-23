@@ -19,7 +19,7 @@ describe('door swing angles', () => {
   it('3 singles L,L,R: no partition is shared, all open to 100°', () => {
     expect(
       angles({
-        width: 1600,
+        width: 1400, // D-22: single leaves <= 500 mm
         sections: 3,
         doorSection1: 'single_left',
         doorSection2: 'single_left',
@@ -31,7 +31,7 @@ describe('door swing angles', () => {
   it('single right + single left share partition 1: both 85°', () => {
     expect(
       angles({
-        width: 1206,
+        width: 1000, // D-22: single leaves <= 500 mm
         sections: 2,
         doorSection1: 'single_right',
         doorSection2: 'single_left',

@@ -77,6 +77,8 @@ export interface InteriorConstants {
   lowerDoorHeightMm?: number;
   /** D-14: door edge gap (the door of a books_lower section starts this far above the bottom) */
   doorGapEdgeMm?: number;
+  /** D-22: inset doors start inside the opening (above the bottom board), not at its edge */
+  insetDoors?: boolean;
   /** D-7: 'auto' presets by door type (template data); absent = the D-1b rule */
   autoPresetSingle?: InteriorPreset;
   autoPresetDouble?: InteriorPreset;
@@ -369,7 +371,8 @@ function planBooksLower(
     shelves.push({ id, yMm: half(yMm), kind, lengthMm: box.innerW, depthMm: shelfDepth });
 
   const gapEdge = c.doorGapEdgeMm ?? 1.5;
-  const doorBottom = yBottom - t + gapEdge; // the leaf starts at the carcass bottom edge
+  // the leaf starts at the carcass bottom edge (inset: on the bottom board, inside the opening)
+  const doorBottom = (c.insetDoors ? yBottom : yBottom - t) + gapEdge;
   const doorTop = doorBottom + (c.lowerDoorHeightMm ?? 800);
   const dividerTop = doorTop + gapEdge;
   const warnings: string[] = [];
