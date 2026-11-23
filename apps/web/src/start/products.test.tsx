@@ -36,15 +36,19 @@ const option = (key: string) =>
 describe('D-8 start screen: Shkaf / Ofis tumbasi / Stol', () => {
   it('three products; each shows its own ready-made models', () => {
     render(<App />);
-    expect([...document.querySelectorAll('[data-product]')].map((b) => b.textContent)).toEqual([
-      uz['product.wardrobe'],
-      uz['product.pedestal'],
-      uz['product.desk'],
-    ]);
+    // D-24: first only the three products (large cards with a drawing), no models yet
+    expect(
+      [...document.querySelectorAll('[data-product] .product-card-name')].map((b) => b.textContent),
+    ).toEqual([uz['product.wardrobe'], uz['product.pedestal'], uz['product.desk']]);
+    expect(document.querySelectorAll('.product-icon')).toHaveLength(3);
+    expect(document.querySelectorAll('.model-card')).toHaveLength(0);
+    pickProduct('wardrobe');
     expect(document.querySelectorAll('.model-card')).toHaveLength(4);
+    fireEvent.click(screen.getByTestId('start-back'));
     pickProduct('pedestal');
     expect(screen.getByRole('heading', { name: uz['start.title.pedestal'] })).toBeTruthy();
     expect(document.querySelectorAll('.model-card')).toHaveLength(2); // D-22: no A4 file model
+    fireEvent.click(screen.getByTestId('start-back'));
     pickProduct('desk');
     expect(document.querySelectorAll('.model-card')).toHaveLength(2);
   });

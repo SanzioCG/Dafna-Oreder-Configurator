@@ -80,6 +80,8 @@ const flow = () => document.querySelector('.app')?.getAttribute('data-flow');
 /** Renders the app; customers land on the start screen (step 0) — continue from scratch. */
 function renderApp() {
   const r = render(<App />);
+  const product = document.querySelector('[data-product="wardrobe"]');
+  if (product) fireEvent.click(product); // D-24: product first, then its models
   const scratch = screen.queryByRole('button', { name: uz['start.scratch'] });
   if (scratch) fireEvent.click(scratch);
   return r;
@@ -136,6 +138,10 @@ describe('start screen (step 0, customers)', () => {
   it('4 models with thumbnails, widths in sm, and "Noldan boshlash"', () => {
     render(<App />);
     expect(screen.getByTestId('start-screen')).toBeTruthy();
+    // D-24: three product cards first; the wardrobe opens its models
+    expect(screen.getByRole('heading', { name: uz['start.whatTitle'] })).toBeTruthy();
+    expect(document.querySelectorAll('[data-product]')).toHaveLength(3);
+    fireEvent.click(document.querySelector('[data-product="wardrobe"]') as HTMLElement); // D-24
     expect(screen.getAllByTestId('model-thumb').length).toBe(4);
     const widths = [...document.querySelectorAll('.model-width')].map((e) => e.textContent);
     expect(widths).toEqual(['100 sm', '150 sm', '200 sm', '240 sm']);
@@ -148,6 +154,7 @@ describe('start screen (step 0, customers)', () => {
 
   it('picking a model loads its params and goes to step 1', () => {
     render(<App />);
+    fireEvent.click(document.querySelector('[data-product="wardrobe"]') as HTMLElement); // D-24
     fireEvent.click(
       screen.getByRole('button', { name: `${uz['model.wide']}: ${uz['start.choose']}` }),
     );
@@ -750,7 +757,7 @@ describe('D-13 kiosk safety: idle reset and the consultant PIN', () => {
     expect(screen.queryByTestId('idle-warning')).toBeNull();
     wait(121);
     // back on the start screen of a fresh session
-    expect(screen.getByRole('button', { name: uz['start.scratch'] })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: uz['start.whatTitle'] })).toBeTruthy(); // D-24
     expect(screen.queryByTestId('idle-warning')).toBeNull();
   });
 
@@ -802,7 +809,7 @@ describe('D-13 kiosk safety: idle reset and the consultant PIN', () => {
     expect(document.body.innerHTML).not.toContain('4321');
     fireEvent.click(screen.getByTestId('staff-exit'));
     expect(screen.queryByTestId('staff-exit')).toBeNull();
-    expect(screen.getByRole('button', { name: uz['start.scratch'] })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: uz['start.whatTitle'] })).toBeTruthy(); // D-24
   });
 
   it('the logo really takes a press (no pointer-events: none on it)', async () => {

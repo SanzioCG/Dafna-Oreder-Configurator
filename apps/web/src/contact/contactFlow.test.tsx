@@ -59,6 +59,7 @@ const pickWidth = (label: string) =>
 
 function start() {
   render(<App />);
+  fireEvent.click(document.querySelector('[data-product="wardrobe"]') as HTMLElement); // D-24
   fireEvent.click(screen.getByRole('button', { name: uz['start.scratch'] }));
 }
 
@@ -204,10 +205,11 @@ describe('D-5 session reset', () => {
     fillValid();
     await act(async () => fireEvent.click(submitBtn()));
     fireEvent.click(screen.getByTestId('submitted-finish'));
-    expect(screen.getByRole('button', { name: uz['start.scratch'] })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: uz['start.whatTitle'] })).toBeTruthy();
     expect(document.documentElement.dataset.theme).toBe('dark'); // kiosk default
     expect(window.localStorage.getItem('dafna.theme')).toBeNull();
     expect(screen.queryByTestId('contact-screen')).toBeNull();
+    fireEvent.click(document.querySelector('[data-product="wardrobe"]') as HTMLElement); // D-24
     fireEvent.click(screen.getByRole('button', { name: uz['start.scratch'] }));
     expect(stub().dataset.width).toBe('1500');
   });
@@ -227,6 +229,6 @@ describe('D-5 session reset', () => {
     expect(screen.getByTestId('submitted-screen')).toBeTruthy();
     await act(async () => vi.advanceTimersByTime(1_500));
     expect(screen.queryByTestId('submitted-screen')).toBeNull();
-    expect(screen.getByRole('button', { name: uz['start.scratch'] })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: uz['start.whatTitle'] })).toBeTruthy();
   });
 });

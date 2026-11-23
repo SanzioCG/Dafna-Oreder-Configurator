@@ -31,6 +31,7 @@ describe('D-9 price and mechanisms', () => {
     expect(priceVisible('staff', demo, false)).toBe(true);
     expect(priceVisible('customer', demo, true)).toBe(true);
     render(<App />); // no VITE_HIDE_DEMO_PRICE: the demo price is shown
+    fireEvent.click(document.querySelector('[data-product="wardrobe"]') as HTMLElement); // D-24
     fireEvent.click(screen.getByRole('button', { name: uz['start.scratch'] }));
     expect(screen.getByTestId('price').textContent).toContain(uz['price.demo']);
   });

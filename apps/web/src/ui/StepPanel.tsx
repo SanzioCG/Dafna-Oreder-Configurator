@@ -197,7 +197,6 @@ export function StepPanel({
             mode={mode}
             onPick={(m) => onPickModel?.(m)}
             onScratch={(p) => onScratch?.(p)}
-            initialProduct={config.product as ProductId}
           />
         </div>
       )}
