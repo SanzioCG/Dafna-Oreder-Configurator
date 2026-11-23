@@ -325,6 +325,14 @@ export const ru: Messages = {
   // D-9: hardware + price
   'hw.softClose': 'плавное закрывание',
   'hw.title': 'Механизмы',
+  'hw.change': 'Выбрать другой',
+  'hw.close': 'Закрыть',
+  'hw.brands': 'Бренды',
+  'hw.all': 'Все',
+  'hw.selected': 'Выбрано',
+  'hw.softCloseTag': 'Плавное закрывание',
+  'hw.pick.hingeBrand': 'Выберите петлю для дверей',
+  'hw.pick.slideBrand': 'Выберите направляющие для ящиков',
   'hw.hint3d':
     'Жёлтым — выбранные механизмы. Нажмите бренд или «Показать закрывание» — увидите в 3D, как закрывается.',
   'hw.demo.hinge': 'Показать закрывание',

@@ -329,6 +329,14 @@ export const uz = {
   // D-9: hardware + price
   'hw.softClose': 'yumshoq yopiladi',
   'hw.title': 'Mexanizmlar',
+  'hw.change': 'Boshqasini tanlash',
+  'hw.close': 'Yopish',
+  'hw.brands': 'Brendlar',
+  'hw.all': 'Hammasi',
+  'hw.selected': 'Tanlangan',
+  'hw.softCloseTag': 'Yumshoq yopiladi',
+  'hw.pick.hingeBrand': 'Eshik petlyasini tanlang',
+  'hw.pick.slideBrand': "Tortma yo'naltiruvchisini tanlang",
   'hw.hint3d':
     "Sariq rangda — tanlangan mexanizmlar. Brendni bosing yoki «Yopilishini ko'rish» — 3D'da qanday yopilishini ko'rasiz.",
   'hw.demo.hinge': "Yopilishini ko'rish",

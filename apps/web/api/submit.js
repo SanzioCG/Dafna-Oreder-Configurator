@@ -59337,10 +59337,10 @@ var wardrobe_v11_default = {
   ]
 };
 
-// ../../packages/engine/templates/pedestal.v3.json
-var pedestal_v3_default = {
+// ../../packages/engine/templates/pedestal.v4.json
+var pedestal_v4_default = {
   templateId: "pedestal",
-  templateVersion: "0.3.0",
+  templateVersion: "0.4.0",
   productType: "pedestal",
   generator: "pedestal-v1",
   units: "mm",
@@ -59651,6 +59651,11 @@ var pedestal_v3_default = {
   },
   constructionRules: [
     {
+      id: "top-flush-with-fronts",
+      unconfirmed: false,
+      note: "D-23 (founder, 2026-11-23): the top reaches forward over the front gap and the fronts, flush with the fronts' face (top depth = depth - back). Was: the top ended at the carcass front edge and the fronts stood proud (up to 0.3.0)."
+    },
+    {
       id: "pedestal-carcass",
       unconfirmed: false,
       note: "Top over the sides; bottom between the sides on the base; HDF back overlay; castors under the bottom corners, or sides to the floor with a plinth strip between them. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
@@ -59937,7 +59942,7 @@ var desk_v3_default = {
 
 // ../../packages/engine/src/template.ts
 var wardrobeTemplate = wardrobe_v11_default;
-var pedestalTemplate = pedestal_v3_default;
+var pedestalTemplate = pedestal_v4_default;
 var deskTemplate = desk_v3_default;
 var PRODUCT_TEMPLATES = {
   wardrobe: wardrobeTemplate,
@@ -62318,6 +62323,8 @@ function build2(template, L) {
   const innerW = L.W - 2 * L.t;
   const sideY0 = L.base === "plinth" ? 0 : L.baseH;
   const sideH = L.H - L.t - sideY0;
+  const topFlush = template.constructionRules.some((r) => r.id === "top-flush-with-fronts");
+  const topDepth = topFlush ? L.carcassDepth + n2(template, "frontGapMm") + L.frontT : L.carcassDepth;
   const board = (x) => part({ ...x, band, grain: true });
   const panels = [
     board({
@@ -62357,10 +62364,10 @@ function build2(template, L) {
       id: "top",
       role: "top",
       lengthMm: L.W,
-      widthMm: L.carcassDepth,
+      widthMm: topDepth,
       thicknessMm: L.t,
       material: L.corpus,
-      position: [L.W / 2, L.H - L.t / 2, zMid],
+      position: [L.W / 2, L.H - L.t / 2, zBack + topDepth / 2],
       rotation: ROT_FLAT,
       banding: "all"
     }),
@@ -63209,6 +63216,14 @@ var ru = {
   // D-9: hardware + price
   "hw.softClose": "\u043F\u043B\u0430\u0432\u043D\u043E\u0435 \u0437\u0430\u043A\u0440\u044B\u0432\u0430\u043D\u0438\u0435",
   "hw.title": "\u041C\u0435\u0445\u0430\u043D\u0438\u0437\u043C\u044B",
+  "hw.change": "\u0412\u044B\u0431\u0440\u0430\u0442\u044C \u0434\u0440\u0443\u0433\u043E\u0439",
+  "hw.close": "\u0417\u0430\u043A\u0440\u044B\u0442\u044C",
+  "hw.brands": "\u0411\u0440\u0435\u043D\u0434\u044B",
+  "hw.all": "\u0412\u0441\u0435",
+  "hw.selected": "\u0412\u044B\u0431\u0440\u0430\u043D\u043E",
+  "hw.softCloseTag": "\u041F\u043B\u0430\u0432\u043D\u043E\u0435 \u0437\u0430\u043A\u0440\u044B\u0432\u0430\u043D\u0438\u0435",
+  "hw.pick.hingeBrand": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043F\u0435\u0442\u043B\u044E \u0434\u043B\u044F \u0434\u0432\u0435\u0440\u0435\u0439",
+  "hw.pick.slideBrand": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435 \u0434\u043B\u044F \u044F\u0449\u0438\u043A\u043E\u0432",
   "hw.hint3d": "\u0416\u0451\u043B\u0442\u044B\u043C \u2014 \u0432\u044B\u0431\u0440\u0430\u043D\u043D\u044B\u0435 \u043C\u0435\u0445\u0430\u043D\u0438\u0437\u043C\u044B. \u041D\u0430\u0436\u043C\u0438\u0442\u0435 \u0431\u0440\u0435\u043D\u0434 \u0438\u043B\u0438 \xAB\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0437\u0430\u043A\u0440\u044B\u0432\u0430\u043D\u0438\u0435\xBB \u2014 \u0443\u0432\u0438\u0434\u0438\u0442\u0435 \u0432 3D, \u043A\u0430\u043A \u0437\u0430\u043A\u0440\u044B\u0432\u0430\u0435\u0442\u0441\u044F.",
   "hw.demo.hinge": "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0437\u0430\u043A\u0440\u044B\u0432\u0430\u043D\u0438\u0435",
   "hw.demo.slide": "\u041F\u043E\u043A\u0430\u0437\u0430\u0442\u044C \u0437\u0430\u043A\u0440\u044B\u0432\u0430\u043D\u0438\u0435",
@@ -63613,6 +63628,14 @@ var uz = {
   // D-9: hardware + price
   "hw.softClose": "yumshoq yopiladi",
   "hw.title": "Mexanizmlar",
+  "hw.change": "Boshqasini tanlash",
+  "hw.close": "Yopish",
+  "hw.brands": "Brendlar",
+  "hw.all": "Hammasi",
+  "hw.selected": "Tanlangan",
+  "hw.softCloseTag": "Yumshoq yopiladi",
+  "hw.pick.hingeBrand": "Eshik petlyasini tanlang",
+  "hw.pick.slideBrand": "Tortma yo'naltiruvchisini tanlang",
   "hw.hint3d": "Sariq rangda \u2014 tanlangan mexanizmlar. Brendni bosing yoki \xABYopilishini ko'rish\xBB \u2014 3D'da qanday yopilishini ko'rasiz.",
   "hw.demo.hinge": "Yopilishini ko'rish",
   "hw.demo.slide": "Yopilishini ko'rish",

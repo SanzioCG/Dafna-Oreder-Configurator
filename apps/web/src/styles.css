@@ -1928,6 +1928,159 @@ p {
   object-fit: contain;
 }
 
+/* D-23: the chosen mechanism (opens the large menu) and the large hardware menu */
+.hw-current {
+  width: 100%;
+}
+
+.hw-current-action {
+  margin-left: auto;
+  flex: none;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+
+.hw-backdrop {
+  padding: var(--space-4);
+}
+
+.hw-sheet {
+  display: flex;
+  flex-direction: column;
+  width: min(72rem, 96vw);
+  max-height: 90vh;
+  border-radius: var(--radius-card);
+  background: var(--step-hardware);
+  color: var(--ink);
+  border: var(--line-on-bg);
+  overflow: hidden;
+}
+
+.hw-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6) var(--space-3);
+}
+
+.hw-sheet-head h2 {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+}
+
+.hw-sheet-close {
+  min-height: auto;
+  padding: var(--space-2);
+}
+
+.hw-sheet-close svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.hw-brands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0 var(--space-6) var(--space-3);
+}
+
+.hw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  border: var(--line-in-card);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+
+.hw-chip.active {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+
+.hw-chip-count {
+  font-size: var(--fs-sm);
+  opacity: 0.7;
+}
+
+.hw-sheet-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 0 var(--space-6) var(--space-6);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--space-5);
+  align-items: start;
+}
+
+.hw-brand-name {
+  margin-bottom: var(--space-3);
+  font-size: var(--fs-xl);
+  font-weight: var(--fw-bold);
+}
+
+.hw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--space-3);
+}
+
+.hw-model {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+  border: var(--line-in-card);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hw-model.active {
+  outline: var(--focus-line);
+}
+
+.hw-model .mech-photo {
+  width: 100%;
+  height: 12rem;
+  border-radius: calc(var(--radius-card) - 4px);
+}
+
+.hw-model .mech-photo svg {
+  width: 6rem;
+  height: 6rem;
+}
+
+.hw-model-name {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
+}
+
+.hw-model-hint {
+  font-size: var(--fs-sm);
+  line-height: var(--lh-snug);
+}
+
+.hw-model-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
 /* D-12: QR code to the assembly instructions */
 .submitted-qr {
   display: flex;

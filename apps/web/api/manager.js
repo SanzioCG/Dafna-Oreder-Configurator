@@ -59363,10 +59363,10 @@ var wardrobe_v11_default = {
   ]
 };
 
-// ../../packages/engine/templates/pedestal.v3.json
-var pedestal_v3_default = {
+// ../../packages/engine/templates/pedestal.v4.json
+var pedestal_v4_default = {
   templateId: "pedestal",
-  templateVersion: "0.3.0",
+  templateVersion: "0.4.0",
   productType: "pedestal",
   generator: "pedestal-v1",
   units: "mm",
@@ -59677,6 +59677,11 @@ var pedestal_v3_default = {
   },
   constructionRules: [
     {
+      id: "top-flush-with-fronts",
+      unconfirmed: false,
+      note: "D-23 (founder, 2026-11-23): the top reaches forward over the front gap and the fronts, flush with the fronts' face (top depth = depth - back). Was: the top ended at the carcass front edge and the fronts stood proud (up to 0.3.0)."
+    },
+    {
       id: "pedestal-carcass",
       unconfirmed: false,
       note: "Top over the sides; bottom between the sides on the base; HDF back overlay; castors under the bottom corners, or sides to the floor with a plinth strip between them. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
@@ -59963,7 +59968,7 @@ var desk_v3_default = {
 
 // ../../packages/engine/src/template.ts
 var wardrobeTemplate = wardrobe_v11_default;
-var pedestalTemplate = pedestal_v3_default;
+var pedestalTemplate = pedestal_v4_default;
 var deskTemplate = desk_v3_default;
 var PRODUCT_TEMPLATES = {
   wardrobe: wardrobeTemplate,
@@ -61255,6 +61260,8 @@ function build2(template, L) {
   const innerW = L.W - 2 * L.t;
   const sideY0 = L.base === "plinth" ? 0 : L.baseH;
   const sideH = L.H - L.t - sideY0;
+  const topFlush = template.constructionRules.some((r) => r.id === "top-flush-with-fronts");
+  const topDepth = topFlush ? L.carcassDepth + n2(template, "frontGapMm") + L.frontT : L.carcassDepth;
   const board = (x) => part({ ...x, band, grain: true });
   const panels = [
     board({
@@ -61294,10 +61301,10 @@ function build2(template, L) {
       id: "top",
       role: "top",
       lengthMm: L.W,
-      widthMm: L.carcassDepth,
+      widthMm: topDepth,
       thicknessMm: L.t,
       material: L.corpus,
-      position: [L.W / 2, L.H - L.t / 2, zMid],
+      position: [L.W / 2, L.H - L.t / 2, zBack + topDepth / 2],
       rotation: ROT_FLAT,
       banding: "all"
     }),
@@ -62110,6 +62117,14 @@ var uz = {
   // D-9: hardware + price
   "hw.softClose": "yumshoq yopiladi",
   "hw.title": "Mexanizmlar",
+  "hw.change": "Boshqasini tanlash",
+  "hw.close": "Yopish",
+  "hw.brands": "Brendlar",
+  "hw.all": "Hammasi",
+  "hw.selected": "Tanlangan",
+  "hw.softCloseTag": "Yumshoq yopiladi",
+  "hw.pick.hingeBrand": "Eshik petlyasini tanlang",
+  "hw.pick.slideBrand": "Tortma yo'naltiruvchisini tanlang",
   "hw.hint3d": "Sariq rangda \u2014 tanlangan mexanizmlar. Brendni bosing yoki \xABYopilishini ko'rish\xBB \u2014 3D'da qanday yopilishini ko'rasiz.",
   "hw.demo.hinge": "Yopilishini ko'rish",
   "hw.demo.slide": "Yopilishini ko'rish",

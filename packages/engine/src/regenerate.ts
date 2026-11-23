@@ -13,6 +13,7 @@ import wardrobeV11Json from '../templates/wardrobe.v11.json' with { type: 'json'
 import pedestalV1Json from '../templates/pedestal.v1.json' with { type: 'json' };
 import pedestalV2Json from '../templates/pedestal.v2.json' with { type: 'json' };
 import pedestalV3Json from '../templates/pedestal.v3.json' with { type: 'json' };
+import pedestalV4Json from '../templates/pedestal.v4.json' with { type: 'json' };
 import deskV1Json from '../templates/desk.v1.json' with { type: 'json' };
 import deskV2Json from '../templates/desk.v2.json' with { type: 'json' };
 import deskV3Json from '../templates/desk.v3.json' with { type: 'json' };
@@ -60,6 +61,7 @@ export const PRODUCT_ARCHIVE: Readonly<Record<string, Readonly<Record<string, Te
     '0.1.0': pedestalV1Json as Template,
     '0.2.0': pedestalV2Json as Template,
     '0.3.0': pedestalV3Json as Template,
+    '0.4.0': pedestalV4Json as Template,
   },
   desk: {
     '0.1.0': deskV1Json as Template,

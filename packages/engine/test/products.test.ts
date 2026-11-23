@@ -21,6 +21,7 @@ import ped2Default from './fixtures/applications/pedestal.0.2.0.default.json' wi
 import desk2 from './fixtures/applications/desk.0.2.0.w1700-d700.json' with { type: 'json' };
 // D-22: the technologist's confirmation table (templates 0.3.0)
 import ped3Default from './fixtures/applications/pedestal.0.3.0.default.json' with { type: 'json' };
+import ped4Default from './fixtures/applications/pedestal.0.4.0.default.json' with { type: 'json' };
 import desk3 from './fixtures/applications/desk.0.3.0.w1500-framed-top.json' with { type: 'json' };
 
 /** pedestal 0.2.0: the last template with the A4 hanging-file drawer */
@@ -41,14 +42,14 @@ function bbox(p: Panel) {
 }
 
 describe('D-8 office pedestal (ofis tumbasi)', () => {
-  it('template 0.3.0, catalog 1.1.0, Dafna sizes 430 × 550 × 550 (D-17); no A4 file drawer (D-22)', () => {
+  it('template 0.4.0, catalog 1.1.0, Dafna sizes 430 × 550 × 550 (D-17); no A4 file drawer (D-22)', () => {
     expect(PED.parameters.find((p) => p.key === 'layout')?.options).toEqual([
       'drawers3',
       'door_shelf',
     ]);
     expect([PED.templateId, PED.templateVersion, PED.productType]).toEqual([
       'pedestal',
-      '0.3.0',
+      '0.4.0',
       'pedestal',
     ]);
     expect(catalogForTemplate(PED).catalogVersion).toBe('1.1.0');
@@ -110,6 +111,18 @@ describe('D-8 office pedestal (ofis tumbasi)', () => {
       PED_V2,
     );
     expect(narrow.map((i) => i.code)).toContain('FILE_DRAWER_TOO_SMALL');
+  });
+
+  it('D-23: the top reaches over the fronts, flush with their face', () => {
+    const r = generate(PED, defaultParams(PED));
+    const top = r.panels.find((p) => p.id === 'top')!;
+    const D = Number(defaultParams(PED).depth);
+    expect(bbox(top).max[2]).toBeCloseTo(D);
+    for (const f of r.panels.filter((p) => p.role === 'drawer_front'))
+      expect(bbox(f).max[2]).toBeCloseTo(D);
+    // 0.3.0 kept the top at the carcass front
+    const old = generate(PRODUCT_ARCHIVE.pedestal!['0.3.0']!, defaultParams(PED));
+    expect(bbox(old.panels.find((p) => p.id === 'top')!).max[2]).toBeLessThan(D - 16);
   });
 
   it('too high for under a desk -> PEDESTAL_TOO_HIGH', () => {
@@ -238,6 +251,7 @@ describe('D-8 reproducibility per product', () => {
     'pedestal 0.2.0 default 430 × 550 × 550': ['pedestal', ped2Default],
     'desk 0.2.0 1700 × 700': ['desk', desk2],
     'pedestal 0.3.0 default': ['pedestal', ped3Default],
+    'pedestal 0.4.0 default (top flush with the fronts)': ['pedestal', ped4Default],
     'desk 0.3.0 1500 framed 16 mm top': ['desk', desk3],
   } as const;
   for (const [name, [templateId, fx]] of Object.entries(FIXTURES)) {

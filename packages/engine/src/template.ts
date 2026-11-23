@@ -1,5 +1,5 @@
 import wardrobeV11Json from '../templates/wardrobe.v11.json' with { type: 'json' };
-import pedestalV3Json from '../templates/pedestal.v3.json' with { type: 'json' };
+import pedestalV4Json from '../templates/pedestal.v4.json' with { type: 'json' };
 import deskV3Json from '../templates/desk.v3.json' with { type: 'json' };
 import type {
   Material,
@@ -21,8 +21,8 @@ import type {
  */
 export const wardrobeTemplate: Template = wardrobeV11Json as Template;
 
-/** D-8: office pedestal (ofis tumbasi), template 0.3.0 (D-22: confirmed fronts / drawer values) (pedestal.ts, ADR-014). */
-export const pedestalTemplate: Template = pedestalV3Json as Template;
+/** D-8: office pedestal (ofis tumbasi), template 0.4.0 (D-22: confirmed fronts / drawer values; D-23: top flush with the fronts) (pedestal.ts, ADR-014). */
+export const pedestalTemplate: Template = pedestalV4Json as Template;
 
 /** D-8: office / writing desk (stol), template 0.3.0 (D-22: 16 / 18 mm top doubled with a 50 mm frame) (desk.ts, ADR-014). */
 export const deskTemplate: Template = deskV3Json as Template;

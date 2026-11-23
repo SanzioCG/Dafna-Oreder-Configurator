@@ -57,19 +57,31 @@ describe('D-9 price and mechanisms', () => {
     const strax = priceNumber();
     expect(strax).toBeGreaterThan(0);
     fireEvent.click(tab(uz['step.hardware']));
-    const hinges = screen.getByRole('radiogroup', { name: uz['param.hingeBrand'] });
     // the default wardrobe has doors but no drawers: only the hinge choice is offered
-    expect(screen.queryByRole('radiogroup', { name: uz['param.slideBrand'] })).toBeNull();
-    fireEvent.click(within(hinges).getByRole('radio', { name: /Hettich/ }));
+    expect(screen.queryByTestId('hw-open-slideBrand')).toBeNull();
+    // D-23: the chosen hinge opens the large menu, models grouped by brand
+    fireEvent.click(screen.getByTestId('hw-open-hingeBrand'));
+    const sheet = screen.getByRole('dialog', { name: uz['hw.pick.hingeBrand'] });
+    expect(
+      within(sheet)
+        .getAllByRole('heading', { level: 3 })
+        .map((h) => h.textContent),
+    ).toEqual(['Strax', 'Hettich']);
+    // D-10b: every model carries a picture of its mechanism
+    expect(within(sheet).getByTestId('mech-photo-hinge-strax')).toBeTruthy();
+    expect(within(sheet).getByTestId('mech-photo-hinge-hettich')).toBeTruthy();
+    // a brand chip filters the list
+    fireEvent.click(within(sheet).getByRole('button', { name: /Hettich/ }));
+    expect(within(sheet).getAllByRole('radio')).toHaveLength(1);
+    fireEvent.click(within(sheet).getByRole('radio', { name: /Hettich/ }));
+    expect(screen.queryByTestId('hw-sheet')).toBeNull();
     expect(priceNumber()).toBeGreaterThan(strax);
     // D-10: the 3D legend names the chosen hinge and counts them like the bill of materials
     const legend = screen.getByTestId('mech-legend').textContent ?? '';
     expect(legend).toContain('Hettich Sensys');
     expect(legend).toMatch(/\d+ ta/);
     expect(screen.getByTestId('demo-hingeBrand')).toBeTruthy();
-    // D-10b: every brand option carries a picture of its mechanism
-    expect(screen.getByTestId('mech-photo-hinge-strax')).toBeTruthy();
-    expect(screen.getByTestId('mech-photo-hinge-hettich')).toBeTruthy();
+    expect(screen.getByTestId('mech-photo-hinge-hettich')).toBeTruthy(); // the chosen one
     fireEvent.click(screen.getByRole('button', { name: uz['staff.settings'] }));
     expect(screen.getByTestId('price-breakdown').textContent).toContain('hinge_hettich_sensys');
   });

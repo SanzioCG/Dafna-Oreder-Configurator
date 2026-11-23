@@ -133,6 +133,11 @@ function build(template: Template, L: Layout) {
   const innerW = L.W - 2 * L.t;
   const sideY0 = L.base === 'plinth' ? 0 : L.baseH;
   const sideH = L.H - L.t - sideY0;
+  // D-23 (template 0.4.0+): the top reaches over the fronts, flush with their face
+  const topFlush = template.constructionRules.some((r) => r.id === 'top-flush-with-fronts');
+  const topDepth = topFlush
+    ? L.carcassDepth + n(template, 'frontGapMm') + L.frontT
+    : L.carcassDepth;
   const board = (x: Omit<Parameters<typeof part>[0], 'band' | 'grain'>) =>
     part({ ...x, band, grain: true });
   const panels: Panel[] = [
@@ -173,10 +178,10 @@ function build(template: Template, L: Layout) {
       id: 'top',
       role: 'top',
       lengthMm: L.W,
-      widthMm: L.carcassDepth,
+      widthMm: topDepth,
       thicknessMm: L.t,
       material: L.corpus,
-      position: [L.W / 2, L.H - L.t / 2, zMid],
+      position: [L.W / 2, L.H - L.t / 2, zBack + topDepth / 2],
       rotation: ROT_FLAT,
       banding: 'all',
     }),
