@@ -6,6 +6,7 @@ import { getNumberConstant, getStringConstant } from './template.js';
 import type {
   Dimensions,
   DrawerSummary,
+  EdgeBand,
   GenerateResult,
   Issue,
   MaterialCatalog,
@@ -123,6 +124,10 @@ function slide(template: Template, depthAvailable: number) {
 }
 
 function build(template: Template, L: Layout) {
+  // D-26 (template 0.5.0+): the mobile pedestal of Dafna's Bazis model
+  if (template.constructionRules.some((r) => r.id === 'lester-pedestal')) {
+    return buildLester(template, L);
+  }
   const band = {
     bandId: getStringConstant(template, 'edgeBandId'),
     thicknessMm: n(template, 'edgeBandThicknessMm'),
@@ -373,6 +378,306 @@ function build(template: Template, L: Layout) {
     backThicknessMm: L.backT,
     doorThicknessMm: L.frontT,
     doorGapFrontMm: n(template, 'frontGapMm'),
+    plinthHeightMm: L.baseH,
+  };
+  return { panels, section, dimensions, drawers };
+}
+
+/**
+ * D-26: the mobile pedestal as in Dafna's Bazis model "Tum mobil" (docs/production/bazis):
+ * - top and bottom full size (W x D), the sides between them, sideInsetMm in from the ends and
+ *   sideRearInsetMm from the rear; the back is a board of the carcass decor between the sides,
+ *   backRearInsetMm from the rear;
+ * - the fronts overlay the sides (frontSideInsetMm in from the side's outer face), touch the
+ *   sides' front edges, and stand between bottom and top (frontBottomGapMm / frontTopGapMm,
+ *   drawerGapMm between them); top and bottom reach frontOverhangMm past the fronts;
+ * - drawer boxes: board sides and back, HDF bottom; the front is the box's front wall; box
+ *   height drawerBoxHeightMm whatever the front, drawerBoxLiftMm above the front's lower edge;
+ *   box width = opening - 2 x slide clearance; box length = the slide;
+ * - bands: top / bottom / fronts 1 mm all round, sides 0.6 mm front and back.
+ */
+function buildLester(template: Template, L: Layout) {
+  const thick = {
+    bandId: getStringConstant(template, 'edgeBandId'),
+    thicknessMm: n(template, 'edgeBandThicknessMm'),
+  };
+  const mid = {
+    bandId: getStringConstant(template, 'edgeBandMidId'),
+    thicknessMm: n(template, 'edgeBandMidMm'),
+  };
+  const none: EdgeBand = { bandId: null, thicknessMm: null };
+  const { W, H, D, t, frontT } = L;
+  const sideIn = n(template, 'sideInsetMm');
+  const sideRear = n(template, 'sideRearInsetMm');
+  const backRear = n(template, 'backRearInsetMm');
+  const over = n(template, 'frontOverhangMm');
+  const frontFace = D - over; // the fronts' face
+  const zFront = frontFace - frontT; // the sides' front edge (fronts touch it)
+  const sideD = zFront - sideRear;
+  const y0 = L.baseH + t; // top face of the bottom
+  const y1 = H - t; // underside of the top
+  const sideH = y1 - y0;
+  const innerW = W - 2 * sideIn - 2 * t;
+  const xIn = sideIn + t; // inner face of the left side
+  const banded = (b: typeof thick, sides: ('front' | 'back' | 'left' | 'right')[]) => {
+    const e = { front: { ...none }, back: { ...none }, left: { ...none }, right: { ...none } };
+    for (const k of sides) e[k] = { ...b };
+    return e;
+  };
+  const board = (
+    x: Omit<Parameters<typeof part>[0], 'band' | 'grain' | 'banding'>,
+    edges: Panel['edges'],
+  ): Panel => ({ ...part({ ...x, band: thick, grain: true, banding: 'none' }), edges });
+  const all4 = banded(thick, ['front', 'back', 'left', 'right']);
+
+  const panels: Panel[] = [
+    board(
+      {
+        id: 'bottom',
+        role: 'bottom',
+        lengthMm: W,
+        widthMm: D,
+        thicknessMm: t,
+        material: L.corpus,
+        position: [W / 2, L.baseH + t / 2, D / 2],
+        rotation: ROT_FLAT,
+      },
+      all4,
+    ),
+    board(
+      {
+        id: 'top',
+        role: 'top',
+        lengthMm: W,
+        widthMm: D,
+        thicknessMm: t,
+        material: L.corpus,
+        position: [W / 2, H - t / 2, D / 2],
+        rotation: ROT_FLAT,
+      },
+      all4,
+    ),
+    ...(['left', 'right'] as const).map((s) =>
+      board(
+        {
+          id: `side-${s}`,
+          role: 'side',
+          lengthMm: sideH,
+          widthMm: sideD,
+          thicknessMm: t,
+          material: L.corpus,
+          position: [
+            s === 'left' ? sideIn + t / 2 : W - sideIn - t / 2,
+            y0 + sideH / 2,
+            sideRear + sideD / 2,
+          ],
+          rotation: ROT_SIDE,
+        },
+        banded(mid, ['front', 'back']),
+      ),
+    ),
+    board(
+      {
+        id: 'back',
+        role: 'back',
+        lengthMm: innerW,
+        widthMm: sideH,
+        thicknessMm: t,
+        material: L.corpus,
+        position: [W / 2, y0 + sideH / 2, backRear + t / 2],
+        rotation: ROT_FRONT,
+      },
+      banded(thick, []),
+    ),
+  ];
+  if (L.base === 'plinth') {
+    for (const [id, z] of [
+      ['plinth-front', zFront - 20 - t / 2],
+      ['plinth-back', sideRear + t / 2],
+    ] as const) {
+      panels.push(
+        board(
+          {
+            id,
+            role: 'plinth',
+            lengthMm: innerW,
+            widthMm: L.baseH,
+            thicknessMm: t,
+            material: L.corpus,
+            position: [W / 2, L.baseH / 2, z],
+            rotation: ROT_FRONT,
+          },
+          id === 'plinth-front' ? banded(mid, ['front']) : banded(thick, []),
+        ),
+      );
+    }
+  } else {
+    const c = n(template, 'castorSizeMm');
+    const inset = n(template, 'castorInsetMm');
+    for (const [i, [x, z]] of [
+      [inset, inset],
+      [W - inset, inset],
+      [inset, D - inset],
+      [W - inset, D - inset],
+    ].entries()) {
+      panels.push(
+        metalBox(
+          `castor-${i + 1}`,
+          getStringConstant(template, 'castorMaterial'),
+          [c, L.baseH, c],
+          [x!, L.baseH / 2, z!],
+        ),
+      );
+    }
+  }
+
+  // fronts between bottom and top
+  const frontW = W - 2 * (sideIn + n(template, 'frontSideInsetMm'));
+  const fy0 = y0 + n(template, 'frontBottomGapMm');
+  const fy1 = y1 - n(template, 'frontTopGapMm');
+  const gap = n(template, 'drawerGapMm');
+  const zFrontC = frontFace - frontT / 2;
+  const drawers: DrawerSummary[] = [];
+  if (L.layout === 'door_shelf') {
+    panels.push(
+      board(
+        {
+          id: 'door-1',
+          role: 'door',
+          lengthMm: frontW,
+          widthMm: fy1 - fy0,
+          thicknessMm: frontT,
+          material: L.front,
+          position: [W / 2, (fy0 + fy1) / 2, zFrontC],
+          rotation: ROT_FRONT,
+          extra: { sectionIndex: 0, hingeSide: 'left', hingeMount: 'full_overlay' },
+        },
+        all4,
+      ),
+      board(
+        {
+          id: 's1-shelf-1',
+          role: 'shelf',
+          lengthMm: innerW,
+          widthMm: zFront - 1 - (backRear + t),
+          thicknessMm: t,
+          material: L.corpus,
+          position: [W / 2, half((y0 + y1) / 2), (backRear + t + zFront - 1) / 2],
+          rotation: ROT_FLAT,
+        },
+        banded(mid, ['front']),
+      ),
+    );
+  } else {
+    const h = (fy1 - fy0 - 2 * gap) / 3;
+    const clearance = n(template, 'drawerSlideClearanceMm');
+    const boxW = innerW - 2 * clearance;
+    const boxH = n(template, 'drawerBoxHeightMm');
+    const len = slide(template, zFront - (backRear + t) - n(template, 'drawerBackClearanceMm'));
+    const hdf = L.backT;
+    [0, 1, 2].forEach((i) => {
+      const id = `s1-drawer-${i + 1}`;
+      const fy = half(fy0 + i * (h + gap));
+      const fh = half(h);
+      drawers.push({
+        id,
+        frontYMm: fy,
+        frontHeightMm: fh,
+        frontWidthMm: frontW,
+        boxWidthMm: boxW,
+        boxDepthMm: len,
+        boxHeightMm: boxH,
+      });
+      const by = fy + n(template, 'drawerBoxLiftMm') + boxH / 2;
+      const zBox = zFront - len / 2;
+      panels.push(
+        board(
+          {
+            id: `${id}-front`,
+            role: 'drawer_front',
+            lengthMm: frontW,
+            widthMm: fh,
+            thicknessMm: frontT,
+            material: L.front,
+            position: [W / 2, fy + fh / 2, zFrontC],
+            rotation: ROT_FRONT,
+          },
+          all4,
+        ),
+        ...(['left', 'right'] as const).map((s) =>
+          board(
+            {
+              id: `${id}-side-${s}`,
+              role: 'drawer_side',
+              lengthMm: boxH,
+              widthMm: len,
+              thicknessMm: t,
+              material: L.corpus,
+              position: [
+                s === 'left' ? xIn + clearance + t / 2 : xIn + clearance + boxW - t / 2,
+                by,
+                zBox,
+              ],
+              rotation: ROT_SIDE,
+            },
+            banded(mid, ['front', 'back']),
+          ),
+        ),
+        board(
+          {
+            id: `${id}-back`,
+            role: 'drawer_back',
+            lengthMm: boxW - 2 * t,
+            widthMm: boxH - n(template, 'drawerBackLowerMm'),
+            thicknessMm: t,
+            material: L.corpus,
+            position: [W / 2, by + n(template, 'drawerBackLowerMm') / 2, zFront - len + t / 2],
+            rotation: ROT_FRONT,
+          },
+          banded(mid, ['front']),
+        ),
+        {
+          ...part({
+            id: `${id}-bottom`,
+            role: 'drawer_bottom',
+            lengthMm: boxW - 2 * t + 2 * n(template, 'drawerBottomGrooveMm'),
+            widthMm: len,
+            thicknessMm: hdf,
+            material: L.back,
+            position: [W / 2, by - boxH / 2 + hdf / 2, zBox],
+            rotation: ROT_FLAT,
+            banding: 'none',
+            band: thick,
+            grain: false,
+          }),
+        },
+      );
+    });
+  }
+
+  const section: Section = {
+    index: 0,
+    innerWidthMm: innerW,
+    innerHeightMm: sideH,
+    innerDepthMm: zFront - (backRear + t),
+    xStartMm: xIn,
+    doorType: L.layout === 'door_shelf' ? 'single_left' : 'none',
+    preset: L.layout === 'door_shelf' ? 'shelves' : 'drawers_shelves',
+    presetSource: 'chosen',
+    shelves: [],
+    rails: [],
+    drawers,
+    clearHangingHeightMm: null,
+  };
+  const dimensions: Dimensions = {
+    widthMm: W,
+    heightMm: H,
+    depthMm: D,
+    carcassHeightMm: sideH,
+    carcassDepthMm: sideD,
+    backThicknessMm: t,
+    doorThicknessMm: frontT,
+    doorGapFrontMm: 0,
     plinthHeightMm: L.baseH,
   };
   return { panels, section, dimensions, drawers };

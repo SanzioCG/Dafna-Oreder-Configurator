@@ -23,6 +23,9 @@ import desk2 from './fixtures/applications/desk.0.2.0.w1700-d700.json' with { ty
 import ped3Default from './fixtures/applications/pedestal.0.3.0.default.json' with { type: 'json' };
 import ped4Default from './fixtures/applications/pedestal.0.4.0.default.json' with { type: 'json' };
 import desk3 from './fixtures/applications/desk.0.3.0.w1500-framed-top.json' with { type: 'json' };
+// D-26: Dafna's Bazis models (pedestal 0.5.0, desk 0.4.0)
+import ped5Default from './fixtures/applications/pedestal.0.5.0.default.json' with { type: 'json' };
+import desk4 from './fixtures/applications/desk.0.4.0.w1500-bazis.json' with { type: 'json' };
 
 /** pedestal 0.2.0: the last template with the A4 hanging-file drawer */
 const PED_V2 = PRODUCT_ARCHIVE.pedestal!['0.2.0']!;
@@ -42,14 +45,14 @@ function bbox(p: Panel) {
 }
 
 describe('D-8 office pedestal (ofis tumbasi)', () => {
-  it('template 0.4.0, catalog 1.1.0, Dafna sizes 430 × 550 × 550 (D-17); no A4 file drawer (D-22)', () => {
+  it('template 0.5.0, catalog 1.1.0, Dafna sizes 430 × 550 × 550 (D-17); no A4 file drawer (D-22)', () => {
     expect(PED.parameters.find((p) => p.key === 'layout')?.options).toEqual([
       'drawers3',
       'door_shelf',
     ]);
     expect([PED.templateId, PED.templateVersion, PED.productType]).toEqual([
       'pedestal',
-      '0.4.0',
+      '0.5.0',
       'pedestal',
     ]);
     expect(catalogForTemplate(PED).catalogVersion).toBe('1.1.0');
@@ -113,10 +116,11 @@ describe('D-8 office pedestal (ofis tumbasi)', () => {
     expect(narrow.map((i) => i.code)).toContain('FILE_DRAWER_TOO_SMALL');
   });
 
-  it('D-23: the top reaches over the fronts, flush with their face', () => {
-    const r = generate(PED, defaultParams(PED));
+  it('D-23 (template 0.4.0): the top reaches over the fronts, flush with their face', () => {
+    const PED4 = PRODUCT_ARCHIVE.pedestal!['0.4.0']!;
+    const r = generate(PED4, defaultParams(PED4));
     const top = r.panels.find((p) => p.id === 'top')!;
-    const D = Number(defaultParams(PED).depth);
+    const D = Number(defaultParams(PED4).depth);
     expect(bbox(top).max[2]).toBeCloseTo(D);
     for (const f of r.panels.filter((p) => p.role === 'drawer_front'))
       expect(bbox(f).max[2]).toBeCloseTo(D);
@@ -178,8 +182,9 @@ describe('D-8 desk (stol)', () => {
           expect(b.min[1], p.id).toBeGreaterThanOrEqual(-0.01);
         }
         if (legs === 'ldsp') {
-          expect(r.panels.filter((p) => p.role === 'leg')).toHaveLength(2);
-          expect(r.panels.filter((p) => p.role === 'modesty')).toHaveLength(1);
+          // D-26: two boards per leg, a modesty panel of three stepped layers
+          expect(r.panels.filter((p) => p.role === 'leg')).toHaveLength(4);
+          expect(r.panels.filter((p) => p.role === 'modesty')).toHaveLength(3);
           expect(r.panels.some((p) => p.role === 'frame')).toBe(false);
         } else {
           expect(r.panels.filter((p) => p.role === 'frame').length).toBe(7);
@@ -194,11 +199,12 @@ describe('D-8 desk (stol)', () => {
     }
   }
 
-  it('D-22: a 16 mm work top doubled with a 50 mm frame; one band over both layers', () => {
-    expect(DESK.parameters.find((p) => p.key === 'topMaterial')?.options).not.toContain(
+  it('D-22 (template 0.3.0): a 16 mm work top doubled with a 50 mm frame; one band over both', () => {
+    const DESK3 = PRODUCT_ARCHIVE.desk!['0.3.0']!;
+    expect(DESK3.parameters.find((p) => p.key === 'topMaterial')?.options).not.toContain(
       'ldsp_white_22',
     );
-    const r = generate(DESK, { ...defaultParams(DESK), width: 1500, depth: 700 });
+    const r = generate(DESK3, { ...defaultParams(DESK3), width: 1500, depth: 700 });
     const tops = r.panels.filter((p) => p.role === 'worktop');
     expect(tops.map((p) => [p.id, p.lengthMm, p.widthMm, p.thicknessMm])).toEqual([
       ['worktop', 1500, 700, 16],
@@ -236,7 +242,7 @@ describe('D-8 desk (stol)', () => {
     const draft = toOrderDraft(defaultParams(DESK), r, { template: DESK, now: () => new Date(0) });
     expect([draft.productType, draft.templateVersion, draft.catalogVersion]).toEqual([
       'desk',
-      '0.3.0',
+      '0.4.0',
       '1.1.0',
     ]);
   });
@@ -253,6 +259,8 @@ describe('D-8 reproducibility per product', () => {
     'pedestal 0.3.0 default': ['pedestal', ped3Default],
     'pedestal 0.4.0 default (top flush with the fronts)': ['pedestal', ped4Default],
     'desk 0.3.0 1500 framed 16 mm top': ['desk', desk3],
+    'pedestal 0.5.0 default (Bazis)': ['pedestal', ped5Default],
+    'desk 0.4.0 1500 (Bazis)': ['desk', desk4],
   } as const;
   for (const [name, [templateId, fx]] of Object.entries(FIXTURES)) {
     it(`${name}: regenerated draft deep-equals the stored one`, () => {

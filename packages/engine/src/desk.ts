@@ -62,7 +62,9 @@ function build(template: Template, p: Params, catalog: MaterialCatalog) {
   // D-22 (template 0.3.0+): the top board is doubled underneath with a frame of strips
   const strip =
     template.constants.worktopFrameStripMm !== undefined ? n(template, 'worktopFrameStripMm') : 0;
-  const under = H - tt - (strip > 0 ? tt : 0); // underside of the work top (frame included)
+  // D-26 (template 0.4.0+, Dafna's Bazis model "stol 1500"): a full second sheet under the top
+  const lester = template.constructionRules.some((r) => r.id === 'lester-desk');
+  const under = H - tt - (strip > 0 || lester ? tt : 0); // underside of the work top
   const panels: Panel[] = [
     part({
       id: 'worktop',
@@ -73,11 +75,29 @@ function build(template: Template, p: Params, catalog: MaterialCatalog) {
       material: top,
       position: [W / 2, H - tt / 2, D / 2],
       rotation: ROT_FLAT,
-      banding: 'all',
+      // D-26: the band over both layers sits on the lower sheet
+      banding: lester ? 'none' : 'all',
       band,
       grain: true,
     }),
   ];
+  if (lester) {
+    panels.push(
+      part({
+        id: 'worktop-under',
+        role: 'worktop',
+        lengthMm: W,
+        widthMm: D,
+        thicknessMm: tt,
+        material: top,
+        position: [W / 2, H - tt - tt / 2, D / 2],
+        rotation: ROT_FLAT,
+        banding: 'all',
+        band,
+        grain: true,
+      }),
+    );
+  }
   if (strip > 0) {
     // one band over both layers is on the top board; the strips themselves are not banded
     const y = H - tt - tt / 2;
@@ -102,7 +122,9 @@ function build(template: Template, p: Params, catalog: MaterialCatalog) {
       frameStrip('worktop-frame-right', D - 2 * strip, W - strip / 2, D / 2, true),
     );
   }
-  if (legs === 'ldsp') {
+  if (legs === 'ldsp' && lester) {
+    panels.push(...lesterLegs(template, W, D, t, under, corpus));
+  } else if (legs === 'ldsp') {
     const inset = n(template, 'legDepthInsetMm');
     const legD = D - 2 * inset;
     for (const [id, x] of [
@@ -186,6 +208,101 @@ function build(template: Template, p: Params, catalog: MaterialCatalog) {
     plinthHeightMm: 0,
   };
   return { panels, dimensions, legs, under };
+}
+
+/**
+ * D-26: legs and modesty panel as in Dafna's Bazis model: each leg is two boards (outer + a
+ * thickening layer, banded front and back over both), legInsetMm in from the ends, front and
+ * back, standing on footPadMm pads; the modesty panel is three stepped layers hanging under the
+ * top between the legs, the tallest outermost, modestyBackInsetMm from the back edge.
+ */
+function lesterLegs(
+  template: Template,
+  W: number,
+  D: number,
+  t: number,
+  under: number,
+  corpus: string,
+): Panel[] {
+  const inset = n(template, 'legDepthInsetMm');
+  const pad = n(template, 'footPadMm');
+  const thin = {
+    bandId: getStringConstant(template, 'edgeBandThinId'),
+    thicknessMm: n(template, 'edgeBandThinMm'),
+  };
+  const legH = under - pad;
+  const legD = D - 2 * inset;
+  const out: Panel[] = [];
+  for (const [side, x0, dir] of [
+    ['left', inset, 1],
+    ['right', W - inset, -1],
+  ] as const) {
+    for (const [k, layer] of [
+      ['', 0],
+      ['-2', 1],
+    ] as const) {
+      out.push(
+        part({
+          id: `leg-${side}${k}`,
+          role: 'leg',
+          lengthMm: legH,
+          widthMm: legD,
+          thicknessMm: t,
+          material: corpus,
+          position: [x0 + dir * (layer * t + t / 2), pad + legH / 2, D / 2],
+          rotation: ROT_SIDE,
+          // the thickening layer carries the band over both boards (front and back)
+          banding: layer === 1 ? 'front' : 'none',
+          band: layer === 1 ? { ...thin, ...wideBand(template) } : thin,
+          grain: true,
+          extra:
+            layer === 1
+              ? {
+                  edges: {
+                    front: wideBand(template),
+                    back: wideBand(template),
+                    left: { bandId: null, thicknessMm: null },
+                    right: { bandId: null, thicknessMm: null },
+                  },
+                }
+              : {},
+        }),
+      );
+    }
+  }
+  const x0 = inset + 2 * t;
+  const width = W - 2 * x0;
+  const back = n(template, 'modestyBackInsetMm');
+  [
+    n(template, 'modestyLayer1Mm'),
+    n(template, 'modestyLayer2Mm'),
+    n(template, 'modestyLayer3Mm'),
+  ].forEach((h, i) =>
+    out.push(
+      part({
+        id: `modesty${i === 0 ? '' : `-${i + 1}`}`,
+        role: 'modesty',
+        lengthMm: width,
+        widthMm: h,
+        thicknessMm: t,
+        material: corpus,
+        position: [W / 2, under - h / 2, back + i * t + t / 2],
+        rotation: ROT_FRONT,
+        banding: 'front',
+        band: thin,
+        grain: true,
+      }),
+    ),
+  );
+  return out;
+}
+
+/** D-26: the 1 mm x 35 mm band that covers two boards */
+function wideBand(template: Template) {
+  return {
+    bandId: getStringConstant(template, 'edgeBandId'),
+    thicknessMm: n(template, 'edgeBandThicknessMm'),
+  };
 }
 
 function validateDesk(params: unknown, template: Template, catalog: MaterialCatalog): Issue[] {

@@ -59389,10 +59389,10 @@ var wardrobe_v12_default = {
   ]
 };
 
-// ../../packages/engine/templates/pedestal.v4.json
-var pedestal_v4_default = {
+// ../../packages/engine/templates/pedestal.v5.json
+var pedestal_v5_default = {
   templateId: "pedestal",
-  templateVersion: "0.4.0",
+  templateVersion: "0.5.0",
   productType: "pedestal",
   generator: "pedestal-v1",
   units: "mm",
@@ -59571,10 +59571,10 @@ var pedestal_v4_default = {
       note: "HDF back and drawer bottoms (as the wardrobe)."
     },
     castorHeightMm: {
-      value: 50,
+      value: 55,
       unit: "mm",
-      unconfirmed: true,
-      note: "Castor height incl. mounting plate (purchased part; unconfirmed). Dafna technologist, confirmation table 2026-11-23: depends on the hardware model - to come with the hardware list."
+      unconfirmed: false,
+      note: `Castor height ("\u041D\u043E\u0436\u043A\u0430-\u0440\u043E\u043B\u0438\u043A" 108, set 3016) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
     },
     castorSizeMm: {
       value: 40,
@@ -59614,8 +59614,8 @@ var pedestal_v4_default = {
     drawerGapMm: {
       value: 3,
       unit: "mm",
-      unconfirmed: true,
-      note: "Gap between drawer fronts (as the wardrobe)."
+      unconfirmed: false,
+      note: "Gap between fronts (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
     },
     fileFrontHeightMm: {
       value: 300,
@@ -59654,10 +59654,10 @@ var pedestal_v4_default = {
       note: "Box height = front height \u2212 40 (as the wardrobe). Dafna technologist, confirmation table 2026-11-23: depends on the hardware model - to come with the hardware list."
     },
     drawerBoxLiftMm: {
-      value: 10,
+      value: 14,
       unit: "mm",
       unconfirmed: false,
-      note: "Box bottom above the front bottom edge. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): 10 mm"
+      note: "Box bottom above the front's lower edge (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
     },
     drawerBackClearanceMm: {
       value: 20,
@@ -59684,28 +59684,105 @@ var pedestal_v4_default = {
       note: "Slide length step."
     },
     edgeBandId: {
-      value: "abs_0_8_placeholder",
-      unconfirmed: true,
-      note: "Edge band placeholder (as the wardrobe)."
+      value: "pvc_1_19",
+      unconfirmed: false,
+      note: `PVC 1 mm x 19 ("\u041A\u0440\u043E\u043C\u043A\u0430 1/19") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
     },
     edgeBandThicknessMm: {
-      value: 0.8,
+      value: 1,
       unit: "mm",
-      unconfirmed: true,
-      note: "Edge band thickness placeholder."
+      unconfirmed: false,
+      note: "Top, bottom and fronts: PVC 1 mm all round (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
     },
     smallFrontMinHeightMm: {
       value: 120,
       unit: "mm",
       unconfirmed: false,
       note: "Smallest drawer front (pens, stationery) in the 2 + file layout; the file drawer shrinks only below this. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): 120 mm"
+    },
+    castorInsetMm: {
+      value: 50,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Castor centre from the edges (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    sideInsetMm: {
+      value: 5,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Sides in from the ends of top and bottom (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    sideRearInsetMm: {
+      value: 15,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Sides in from the rear edge (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    backRearInsetMm: {
+      value: 16,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Board back in from the rear edge (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    frontOverhangMm: {
+      value: 4,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Top and bottom reach past the fronts (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    frontSideInsetMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Fronts in from the side's outer face (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    frontBottomGapMm: {
+      value: 4,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Gap above the bottom (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    frontTopGapMm: {
+      value: 3,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Gap under the top (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    drawerBoxHeightMm: {
+      value: 120,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Drawer box height, whatever the front (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    drawerBackLowerMm: {
+      value: 15,
+      unit: "mm",
+      unconfirmed: false,
+      note: "The box back is this much lower (it stands on the bottom) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    drawerBottomGrooveMm: {
+      value: 9,
+      unit: "mm",
+      unconfirmed: false,
+      note: "HDF bottom enters each box side groove (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    edgeBandMidMm: {
+      value: 0.6,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Sides and drawer boxes: 0.6 mm (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    edgeBandMidId: {
+      value: "pvc_0_6_19",
+      unconfirmed: false,
+      note: `0.6 mm x 19 ("\u041A\u0440\u043E\u043C\u043A\u0430 19/0.6") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
     }
   },
   constructionRules: [
     {
-      id: "top-flush-with-fronts",
+      id: "lester-pedestal",
       unconfirmed: false,
-      note: "D-23 (founder, 2026-11-23): the top reaches forward over the front gap and the fronts, flush with the fronts' face (top depth = depth - back). Was: the top ended at the carcass front edge and the fronts stood proud (up to 0.3.0)."
+      note: `D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right, "Tum mobil"): top and bottom full size, sides between them (5 mm in from the ends, 15 mm from the rear), a board back between the sides 16 mm from the rear; fronts overlay the sides 2 mm in from their outer face, touch their front edges and stand between bottom and top (4 mm above, 3 mm below, 3 mm between); top and bottom reach 4 mm past the fronts; drawer box 120 mm high, 14 mm above the front edge, the front is its front wall; bands 1 mm (top, bottom, fronts all round) and 0.6 mm (sides front and back). Replaces top-flush-with-fronts (0.4.0).`
     },
     {
       id: "pedestal-carcass",
@@ -59720,10 +59797,10 @@ var pedestal_v4_default = {
   ]
 };
 
-// ../../packages/engine/templates/desk.v3.json
-var desk_v3_default = {
+// ../../packages/engine/templates/desk.v4.json
+var desk_v4_default = {
   templateId: "desk",
-  templateVersion: "0.3.0",
+  templateVersion: "0.4.0",
   productType: "desk",
   generator: "desk-v1",
   units: "mm",
@@ -59818,7 +59895,7 @@ var desk_v3_default = {
       unconfirmed: false,
       control: "swatch",
       materialKinds: ["ldsp"],
-      note: "D-22 (Dafna technologist, confirmation table 2026-11-23): Dafna has no table-top boards now - the work top is a 16 / 18 mm laminated board, doubled underneath with a frame of strips (worktopFrameStripMm) and banded on the outer edges. Was: 22 / 25 mm table-top boards (up to 0.2.0)."
+      note: "D-22 (Dafna technologist, confirmation table 2026-11-23): Dafna has no table-top boards now - the work top is a 16 / 18 mm laminated board, doubled underneath with a frame of strips (worktopFrameStripMm) and banded on the outer edges. Was: 22 / 25 mm table-top boards (up to 0.2.0). D-26: doubled with a full second sheet (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
     },
     {
       key: "corpusMaterial",
@@ -59871,12 +59948,6 @@ var desk_v3_default = {
     }
   ],
   constants: {
-    worktopFrameStripMm: {
-      value: 50,
-      unit: "mm",
-      unconfirmed: false,
-      note: "D-22 (Dafna technologist, confirmation table 2026-11-23): width of the frame strips glued under the work top (front, back, left, right; same board). The work top edge shows two board thicknesses."
-    },
     fixedHeightMinMm: {
       value: 720,
       unit: "mm",
@@ -59902,10 +59973,10 @@ var desk_v3_default = {
       note: "GOST 13025.3-85: writing desk work surface at least 800 \xD7 500 mm."
     },
     legDepthInsetMm: {
-      value: 25,
+      value: 5,
       unit: "mm",
-      unconfirmed: true,
-      note: "LDSP leg panel set back from the front and back edges of the top."
+      unconfirmed: false,
+      note: "Legs in from the ends, front and back (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
     },
     modestyHeightMm: {
       value: 350,
@@ -59914,10 +59985,10 @@ var desk_v3_default = {
       note: "Modesty panel height under the top (leaves knee room)."
     },
     modestyBackInsetMm: {
-      value: 60,
+      value: 35,
       unit: "mm",
-      unconfirmed: true,
-      note: "Modesty panel distance from the back edge."
+      unconfirmed: false,
+      note: "The tallest modesty layer from the back edge (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
     },
     frameColumnMm: {
       value: 60,
@@ -59962,22 +60033,57 @@ var desk_v3_default = {
       note: "Cross beam section (visual)."
     },
     edgeBandId: {
-      value: "abs_0_8_placeholder",
-      unconfirmed: true,
-      note: "Edge band placeholder (as the wardrobe)."
+      value: "pvc_1_35",
+      unconfirmed: false,
+      note: `PVC 1 x 35 mm ("\u041A\u0440\u043E\u043C\u043A\u0430 35,1") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
     },
     edgeBandThicknessMm: {
-      value: 0.8,
+      value: 1,
       unit: "mm",
-      unconfirmed: true,
-      note: "Edge band thickness placeholder."
+      unconfirmed: false,
+      note: "Work top: one 1 mm band over both sheets (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    edgeBandThinMm: {
+      value: 0.4,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Less visible edges: 0.4 mm (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    footPadMm: {
+      value: 5,
+      unit: "mm",
+      unconfirmed: false,
+      note: `Pads under the legs ("\u041F\u043E\u0434\u043F\u044F\u0442\u043D\u0438\u043A") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    modestyLayer1Mm: {
+      value: 466,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Modesty layer 1 (outermost) height (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    modestyLayer2Mm: {
+      value: 316,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Modesty layer 2 height (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    modestyLayer3Mm: {
+      value: 166,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Modesty layer 3 (innermost) height (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    edgeBandThinId: {
+      value: "pvc_0_4_19",
+      unconfirmed: false,
+      note: `0.4 mm x 19 ("\u041A\u0440\u043E\u043C\u043A\u0430 19,04") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
     }
   },
   constructionRules: [
     {
-      id: "desk-worktop-frame",
+      id: "lester-desk",
       unconfirmed: false,
-      note: "D-22 CONFIRMED (Dafna technologist, confirmation table 2026-11-23): work top = one board (width x depth) + a frame of 4 strips under it (front / back: full width; left / right: between them), all of the top material; the outer edges are banded once over both layers (band on the top board, covers 2 x thickness). Legs / frame stand under the frame."
+      note: `D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right, "stol 1500"): the work top is two full sheets (16 + 16 mm), banded once over both with PVC 1 x 35 mm; each LDSP leg is two boards (32 mm), 5 mm in from the ends, front and back, on 5 mm pads, the band over both on the inner board; the modesty panel is three stepped layers (466 / 316 / 166 mm) hanging under the top, 35 mm from the back edge. Replaces desk-worktop-frame (0.3.0).`
     },
     {
       id: "desk-ldsp-legs",
@@ -59994,8 +60100,8 @@ var desk_v3_default = {
 
 // ../../packages/engine/src/template.ts
 var wardrobeTemplate = wardrobe_v12_default;
-var pedestalTemplate = pedestal_v4_default;
-var deskTemplate = desk_v3_default;
+var pedestalTemplate = pedestal_v5_default;
+var deskTemplate = desk_v4_default;
 var PRODUCT_TEMPLATES = {
   wardrobe: wardrobeTemplate,
   pedestal: pedestalTemplate,
@@ -62201,7 +62307,8 @@ function build(template, p, catalog) {
     thicknessMm: n(template, "edgeBandThicknessMm")
   };
   const strip = template.constants.worktopFrameStripMm !== void 0 ? n(template, "worktopFrameStripMm") : 0;
-  const under = H - tt - (strip > 0 ? tt : 0);
+  const lester = template.constructionRules.some((r) => r.id === "lester-desk");
+  const under = H - tt - (strip > 0 || lester ? tt : 0);
   const panels = [
     part({
       id: "worktop",
@@ -62212,11 +62319,29 @@ function build(template, p, catalog) {
       material: top,
       position: [W / 2, H - tt / 2, D / 2],
       rotation: ROT_FLAT,
-      banding: "all",
+      // D-26: the band over both layers sits on the lower sheet
+      banding: lester ? "none" : "all",
       band,
       grain: true
     })
   ];
+  if (lester) {
+    panels.push(
+      part({
+        id: "worktop-under",
+        role: "worktop",
+        lengthMm: W,
+        widthMm: D,
+        thicknessMm: tt,
+        material: top,
+        position: [W / 2, H - tt - tt / 2, D / 2],
+        rotation: ROT_FLAT,
+        banding: "all",
+        band,
+        grain: true
+      })
+    );
+  }
   if (strip > 0) {
     const y = H - tt - tt / 2;
     const frameStrip = (id, lengthMm, x, z, side) => part({
@@ -62239,7 +62364,9 @@ function build(template, p, catalog) {
       frameStrip("worktop-frame-right", D - 2 * strip, W - strip / 2, D / 2, true)
     );
   }
-  if (legs === "ldsp") {
+  if (legs === "ldsp" && lester) {
+    panels.push(...lesterLegs(template, W, D, t3, under, corpus));
+  } else if (legs === "ldsp") {
     const inset = n(template, "legDepthInsetMm");
     const legD = D - 2 * inset;
     for (const [id, x] of [
@@ -62323,6 +62450,82 @@ function build(template, p, catalog) {
     plinthHeightMm: 0
   };
   return { panels, dimensions, legs, under };
+}
+function lesterLegs(template, W, D, t3, under, corpus) {
+  const inset = n(template, "legDepthInsetMm");
+  const pad2 = n(template, "footPadMm");
+  const thin = {
+    bandId: getStringConstant(template, "edgeBandThinId"),
+    thicknessMm: n(template, "edgeBandThinMm")
+  };
+  const legH = under - pad2;
+  const legD = D - 2 * inset;
+  const out = [];
+  for (const [side, x02, dir] of [
+    ["left", inset, 1],
+    ["right", W - inset, -1]
+  ]) {
+    for (const [k, layer] of [
+      ["", 0],
+      ["-2", 1]
+    ]) {
+      out.push(
+        part({
+          id: `leg-${side}${k}`,
+          role: "leg",
+          lengthMm: legH,
+          widthMm: legD,
+          thicknessMm: t3,
+          material: corpus,
+          position: [x02 + dir * (layer * t3 + t3 / 2), pad2 + legH / 2, D / 2],
+          rotation: ROT_SIDE,
+          // the thickening layer carries the band over both boards (front and back)
+          banding: layer === 1 ? "front" : "none",
+          band: layer === 1 ? { ...thin, ...wideBand(template) } : thin,
+          grain: true,
+          extra: layer === 1 ? {
+            edges: {
+              front: wideBand(template),
+              back: wideBand(template),
+              left: { bandId: null, thicknessMm: null },
+              right: { bandId: null, thicknessMm: null }
+            }
+          } : {}
+        })
+      );
+    }
+  }
+  const x0 = inset + 2 * t3;
+  const width = W - 2 * x0;
+  const back = n(template, "modestyBackInsetMm");
+  [
+    n(template, "modestyLayer1Mm"),
+    n(template, "modestyLayer2Mm"),
+    n(template, "modestyLayer3Mm")
+  ].forEach(
+    (h, i) => out.push(
+      part({
+        id: `modesty${i === 0 ? "" : `-${i + 1}`}`,
+        role: "modesty",
+        lengthMm: width,
+        widthMm: h,
+        thicknessMm: t3,
+        material: corpus,
+        position: [W / 2, under - h / 2, back + i * t3 + t3 / 2],
+        rotation: ROT_FRONT,
+        banding: "front",
+        band: thin,
+        grain: true
+      })
+    )
+  );
+  return out;
+}
+function wideBand(template) {
+  return {
+    bandId: getStringConstant(template, "edgeBandId"),
+    thicknessMm: n(template, "edgeBandThicknessMm")
+  };
 }
 function validateDesk(params, template, catalog) {
   const resolved = resolveParams(template, params);
@@ -62436,6 +62639,9 @@ function slide(template, depthAvailable) {
   return Math.max(n2(template, "drawerSlideMinMm"), Math.min(n2(template, "drawerSlideMaxMm"), fit));
 }
 function build2(template, L) {
+  if (template.constructionRules.some((r) => r.id === "lester-pedestal")) {
+    return buildLester(template, L);
+  }
   const band = {
     bandId: getStringConstant(template, "edgeBandId"),
     thicknessMm: n2(template, "edgeBandThicknessMm")
@@ -62679,6 +62885,285 @@ function build2(template, L) {
     backThicknessMm: L.backT,
     doorThicknessMm: L.frontT,
     doorGapFrontMm: n2(template, "frontGapMm"),
+    plinthHeightMm: L.baseH
+  };
+  return { panels, section, dimensions, drawers };
+}
+function buildLester(template, L) {
+  const thick = {
+    bandId: getStringConstant(template, "edgeBandId"),
+    thicknessMm: n2(template, "edgeBandThicknessMm")
+  };
+  const mid = {
+    bandId: getStringConstant(template, "edgeBandMidId"),
+    thicknessMm: n2(template, "edgeBandMidMm")
+  };
+  const none = { bandId: null, thicknessMm: null };
+  const { W, H, D, t: t3, frontT } = L;
+  const sideIn = n2(template, "sideInsetMm");
+  const sideRear = n2(template, "sideRearInsetMm");
+  const backRear = n2(template, "backRearInsetMm");
+  const over = n2(template, "frontOverhangMm");
+  const frontFace = D - over;
+  const zFront = frontFace - frontT;
+  const sideD = zFront - sideRear;
+  const y0 = L.baseH + t3;
+  const y1 = H - t3;
+  const sideH = y1 - y0;
+  const innerW = W - 2 * sideIn - 2 * t3;
+  const xIn = sideIn + t3;
+  const banded = (b, sides) => {
+    const e = { front: { ...none }, back: { ...none }, left: { ...none }, right: { ...none } };
+    for (const k of sides) e[k] = { ...b };
+    return e;
+  };
+  const board = (x, edges) => ({ ...part({ ...x, band: thick, grain: true, banding: "none" }), edges });
+  const all4 = banded(thick, ["front", "back", "left", "right"]);
+  const panels = [
+    board(
+      {
+        id: "bottom",
+        role: "bottom",
+        lengthMm: W,
+        widthMm: D,
+        thicknessMm: t3,
+        material: L.corpus,
+        position: [W / 2, L.baseH + t3 / 2, D / 2],
+        rotation: ROT_FLAT
+      },
+      all4
+    ),
+    board(
+      {
+        id: "top",
+        role: "top",
+        lengthMm: W,
+        widthMm: D,
+        thicknessMm: t3,
+        material: L.corpus,
+        position: [W / 2, H - t3 / 2, D / 2],
+        rotation: ROT_FLAT
+      },
+      all4
+    ),
+    ...["left", "right"].map(
+      (s) => board(
+        {
+          id: `side-${s}`,
+          role: "side",
+          lengthMm: sideH,
+          widthMm: sideD,
+          thicknessMm: t3,
+          material: L.corpus,
+          position: [
+            s === "left" ? sideIn + t3 / 2 : W - sideIn - t3 / 2,
+            y0 + sideH / 2,
+            sideRear + sideD / 2
+          ],
+          rotation: ROT_SIDE
+        },
+        banded(mid, ["front", "back"])
+      )
+    ),
+    board(
+      {
+        id: "back",
+        role: "back",
+        lengthMm: innerW,
+        widthMm: sideH,
+        thicknessMm: t3,
+        material: L.corpus,
+        position: [W / 2, y0 + sideH / 2, backRear + t3 / 2],
+        rotation: ROT_FRONT
+      },
+      banded(thick, [])
+    )
+  ];
+  if (L.base === "plinth") {
+    for (const [id, z] of [
+      ["plinth-front", zFront - 20 - t3 / 2],
+      ["plinth-back", sideRear + t3 / 2]
+    ]) {
+      panels.push(
+        board(
+          {
+            id,
+            role: "plinth",
+            lengthMm: innerW,
+            widthMm: L.baseH,
+            thicknessMm: t3,
+            material: L.corpus,
+            position: [W / 2, L.baseH / 2, z],
+            rotation: ROT_FRONT
+          },
+          id === "plinth-front" ? banded(mid, ["front"]) : banded(thick, [])
+        )
+      );
+    }
+  } else {
+    const c = n2(template, "castorSizeMm");
+    const inset = n2(template, "castorInsetMm");
+    for (const [i, [x, z]] of [
+      [inset, inset],
+      [W - inset, inset],
+      [inset, D - inset],
+      [W - inset, D - inset]
+    ].entries()) {
+      panels.push(
+        metalBox(
+          `castor-${i + 1}`,
+          getStringConstant(template, "castorMaterial"),
+          [c, L.baseH, c],
+          [x, L.baseH / 2, z]
+        )
+      );
+    }
+  }
+  const frontW = W - 2 * (sideIn + n2(template, "frontSideInsetMm"));
+  const fy0 = y0 + n2(template, "frontBottomGapMm");
+  const fy1 = y1 - n2(template, "frontTopGapMm");
+  const gap = n2(template, "drawerGapMm");
+  const zFrontC = frontFace - frontT / 2;
+  const drawers = [];
+  if (L.layout === "door_shelf") {
+    panels.push(
+      board(
+        {
+          id: "door-1",
+          role: "door",
+          lengthMm: frontW,
+          widthMm: fy1 - fy0,
+          thicknessMm: frontT,
+          material: L.front,
+          position: [W / 2, (fy0 + fy1) / 2, zFrontC],
+          rotation: ROT_FRONT,
+          extra: { sectionIndex: 0, hingeSide: "left", hingeMount: "full_overlay" }
+        },
+        all4
+      ),
+      board(
+        {
+          id: "s1-shelf-1",
+          role: "shelf",
+          lengthMm: innerW,
+          widthMm: zFront - 1 - (backRear + t3),
+          thicknessMm: t3,
+          material: L.corpus,
+          position: [W / 2, half((y0 + y1) / 2), (backRear + t3 + zFront - 1) / 2],
+          rotation: ROT_FLAT
+        },
+        banded(mid, ["front"])
+      )
+    );
+  } else {
+    const h = (fy1 - fy0 - 2 * gap) / 3;
+    const clearance = n2(template, "drawerSlideClearanceMm");
+    const boxW = innerW - 2 * clearance;
+    const boxH = n2(template, "drawerBoxHeightMm");
+    const len = slide(template, zFront - (backRear + t3) - n2(template, "drawerBackClearanceMm"));
+    const hdf = L.backT;
+    [0, 1, 2].forEach((i) => {
+      const id = `s1-drawer-${i + 1}`;
+      const fy = half(fy0 + i * (h + gap));
+      const fh = half(h);
+      drawers.push({
+        id,
+        frontYMm: fy,
+        frontHeightMm: fh,
+        frontWidthMm: frontW,
+        boxWidthMm: boxW,
+        boxDepthMm: len,
+        boxHeightMm: boxH
+      });
+      const by = fy + n2(template, "drawerBoxLiftMm") + boxH / 2;
+      const zBox = zFront - len / 2;
+      panels.push(
+        board(
+          {
+            id: `${id}-front`,
+            role: "drawer_front",
+            lengthMm: frontW,
+            widthMm: fh,
+            thicknessMm: frontT,
+            material: L.front,
+            position: [W / 2, fy + fh / 2, zFrontC],
+            rotation: ROT_FRONT
+          },
+          all4
+        ),
+        ...["left", "right"].map(
+          (s) => board(
+            {
+              id: `${id}-side-${s}`,
+              role: "drawer_side",
+              lengthMm: boxH,
+              widthMm: len,
+              thicknessMm: t3,
+              material: L.corpus,
+              position: [
+                s === "left" ? xIn + clearance + t3 / 2 : xIn + clearance + boxW - t3 / 2,
+                by,
+                zBox
+              ],
+              rotation: ROT_SIDE
+            },
+            banded(mid, ["front", "back"])
+          )
+        ),
+        board(
+          {
+            id: `${id}-back`,
+            role: "drawer_back",
+            lengthMm: boxW - 2 * t3,
+            widthMm: boxH - n2(template, "drawerBackLowerMm"),
+            thicknessMm: t3,
+            material: L.corpus,
+            position: [W / 2, by + n2(template, "drawerBackLowerMm") / 2, zFront - len + t3 / 2],
+            rotation: ROT_FRONT
+          },
+          banded(mid, ["front"])
+        ),
+        {
+          ...part({
+            id: `${id}-bottom`,
+            role: "drawer_bottom",
+            lengthMm: boxW - 2 * t3 + 2 * n2(template, "drawerBottomGrooveMm"),
+            widthMm: len,
+            thicknessMm: hdf,
+            material: L.back,
+            position: [W / 2, by - boxH / 2 + hdf / 2, zBox],
+            rotation: ROT_FLAT,
+            banding: "none",
+            band: thick,
+            grain: false
+          })
+        }
+      );
+    });
+  }
+  const section = {
+    index: 0,
+    innerWidthMm: innerW,
+    innerHeightMm: sideH,
+    innerDepthMm: zFront - (backRear + t3),
+    xStartMm: xIn,
+    doorType: L.layout === "door_shelf" ? "single_left" : "none",
+    preset: L.layout === "door_shelf" ? "shelves" : "drawers_shelves",
+    presetSource: "chosen",
+    shelves: [],
+    rails: [],
+    drawers,
+    clearHangingHeightMm: null
+  };
+  const dimensions = {
+    widthMm: W,
+    heightMm: H,
+    depthMm: D,
+    carcassHeightMm: sideH,
+    carcassDepthMm: sideD,
+    backThicknessMm: t3,
+    doorThicknessMm: frontT,
+    doorGapFrontMm: 0,
     plinthHeightMm: L.baseH
   };
   return { panels, section, dimensions, drawers };

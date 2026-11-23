@@ -3,8 +3,10 @@ import {
   TEMPLATE_ARCHIVE,
   computeBom,
   defaultParams,
+  deskTemplate,
   generate,
   migrateOrderDraft,
+  pedestalTemplate,
   regenerateApplication,
   resolveParams,
   wardrobeTemplate as T,
@@ -136,5 +138,69 @@ describe('D-26 wardrobe as in the Bazis models (template 0.13.0)', () => {
     expect(draft?.templateVersion).toBe('0.13.0');
     expect(draft?.params.base).toBe('feet');
     expect(issues.map((i) => i.code)).toContain('MIGRATION_CONSTRUCTION_CHANGED');
+  });
+});
+
+describe('D-26 mobile pedestal as in "Tum mobil" (template 0.5.0)', () => {
+  const r = generate(pedestalTemplate, defaultParams(pedestalTemplate));
+  const by = (id: string) => r.panels.find((p) => p.id === id)!;
+
+  it('top and bottom full size on 55 mm castors; sides between them, 5 mm in, 15 mm from the rear', () => {
+    expect(r.issues).toEqual([]);
+    expect([by('top').lengthMm, by('top').widthMm, by('bottom').position[1]]).toEqual([
+      430, 550, 63,
+    ]);
+    expect([by('side-left').lengthMm, by('side-left').widthMm]).toEqual([463, 515]);
+    expect(by('side-left').position[0]).toBe(5 + 8);
+    expect(by('castor-1').thicknessMm).toBe(55);
+    // a board back of the carcass decor, between the sides, 16 mm from the rear
+    expect([by('back').lengthMm, by('back').thicknessMm, by('back').position[2]]).toEqual([
+      388, 16, 24,
+    ]);
+  });
+
+  it('fronts 416 x 150 between bottom and top; the top reaches 4 mm past them', () => {
+    const fronts = r.panels.filter((p) => p.role === 'drawer_front');
+    expect(fronts.map((f) => [f.lengthMm, f.widthMm, f.position[1] - f.widthMm / 2])).toEqual([
+      [416, 150, 75],
+      [416, 150, 228],
+      [416, 150, 381],
+    ]);
+    expect(fronts[0]!.position[2] + 8).toBe(550 - 4);
+  });
+
+  it('drawer box 120 mm high, 14 mm above the front edge, 13 mm slide clearance', () => {
+    const d = r.sections[0]!.drawers[0]!;
+    expect([d.boxHeightMm, d.boxWidthMm, d.boxDepthMm]).toEqual([120, 388 - 26, 450]);
+    const side = by('s1-drawer-1-side-left');
+    expect(side.position[1] - 60).toBe(75 + 14);
+  });
+});
+
+describe('D-26 desk as in "stol 1500" (template 0.4.0)', () => {
+  const r = generate(deskTemplate, { ...defaultParams(deskTemplate), width: 1500 });
+  const by = (id: string) => r.panels.find((p) => p.id === id)!;
+
+  it('two full top sheets, the lower one banded 1 mm x 35 over both', () => {
+    expect(r.issues).toEqual([]);
+    expect([by('worktop').position[1], by('worktop-under').position[1]]).toEqual([742, 726]);
+    expect(by('worktop').edges.front.bandId).toBeNull();
+    expect(by('worktop-under').edges.front).toEqual({ bandId: 'pvc_1_35', thicknessMm: 1 });
+  });
+
+  it('legs of two boards, 5 mm in, on 5 mm pads; three stepped modesty layers', () => {
+    const legs = r.panels.filter((p) => p.role === 'leg');
+    expect(legs.map((l) => [l.id, l.lengthMm, l.widthMm, l.position[0]])).toEqual([
+      ['leg-left', 713, 690, 13],
+      ['leg-left-2', 713, 690, 29],
+      ['leg-right', 713, 690, 1487],
+      ['leg-right-2', 713, 690, 1471],
+    ]);
+    const m = r.panels.filter((p) => p.role === 'modesty');
+    expect(m.map((x) => [x.lengthMm, x.widthMm, x.position[1] + x.widthMm / 2])).toEqual([
+      [1426, 466, 718],
+      [1426, 316, 718],
+      [1426, 166, 718],
+    ]);
   });
 });

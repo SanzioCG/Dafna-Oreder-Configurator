@@ -254,7 +254,7 @@ describe('POST /api/submit', () => {
     expect([d.product, d.templateId, d.templateVersion, d.sizeMm]).toEqual([
       'Stol',
       'desk',
-      '0.3.0',
+      '0.4.0',
       '1500 × 750 × 700',
     ]);
     expect(d.corpus).toContain('(EGGER H3133 ST12)');

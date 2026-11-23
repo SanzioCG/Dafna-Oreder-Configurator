@@ -1,6 +1,6 @@
 import wardrobeV12Json from '../templates/wardrobe.v12.json' with { type: 'json' };
-import pedestalV4Json from '../templates/pedestal.v4.json' with { type: 'json' };
-import deskV3Json from '../templates/desk.v3.json' with { type: 'json' };
+import pedestalV5Json from '../templates/pedestal.v5.json' with { type: 'json' };
+import deskV4Json from '../templates/desk.v4.json' with { type: 'json' };
 import type {
   Material,
   MaterialCatalog,
@@ -22,11 +22,11 @@ import type {
  */
 export const wardrobeTemplate: Template = wardrobeV12Json as Template;
 
-/** D-8: office pedestal (ofis tumbasi), template 0.4.0 (D-22: confirmed fronts / drawer values; D-23: top flush with the fronts) (pedestal.ts, ADR-014). */
-export const pedestalTemplate: Template = pedestalV4Json as Template;
+/** D-8: office pedestal (ofis tumbasi), template 0.5.0 (D-26: Bazis "Tum mobil" construction) (pedestal.ts, ADR-014). */
+export const pedestalTemplate: Template = pedestalV5Json as Template;
 
-/** D-8: office / writing desk (stol), template 0.3.0 (D-22: 16 / 18 mm top doubled with a 50 mm frame) (desk.ts, ADR-014). */
-export const deskTemplate: Template = deskV3Json as Template;
+/** D-8: office / writing desk (stol), template 0.4.0 (D-26: Bazis - two full top sheets, double legs, stepped modesty panel) (desk.ts, ADR-014). */
+export const deskTemplate: Template = deskV4Json as Template;
 
 /** The current template of every product, by templateId (= productType). */
 export const PRODUCT_TEMPLATES: Readonly<Record<string, Template>> = {
