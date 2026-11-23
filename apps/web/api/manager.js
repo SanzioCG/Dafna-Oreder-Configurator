@@ -58598,6 +58598,12 @@ var require_fontkit_umd = __commonJS({
 
 // server/blob.ts
 var BLOB_API = "https://vercel.com/api/blob";
+function blobTokenFrom(env) {
+  if (env.BLOB_READ_WRITE_TOKEN) return env.BLOB_READ_WRITE_TOKEN;
+  return Object.entries(env).find(
+    ([k, v]) => k.endsWith("_READ_WRITE_TOKEN") && v?.startsWith("vercel_blob_rw_")
+  )?.[1];
+}
 var BLOB_API_VERSION = "13";
 function blobPutter(token, fetchImpl = fetch) {
   if (!token) return void 0;
@@ -62969,7 +62975,7 @@ function handle(request) {
       now: () => /* @__PURE__ */ new Date(),
       catalogStore: catalogFromEnv(process.env).store,
       catalog: catalogFromEnv(process.env).catalog,
-      putTexture: blobPutter(process.env.BLOB_READ_WRITE_TOKEN)
+      putTexture: blobPutter(blobTokenFrom(process.env))
     };
   }
   return handleManager(request, deps);

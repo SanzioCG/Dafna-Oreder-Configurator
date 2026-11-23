@@ -6,6 +6,18 @@
  * "vercel_blob_rw_<storeId>_<secret>"); without it uploads answer storage_not_configured.
  */
 export const BLOB_API = 'https://vercel.com/api/blob';
+
+/**
+ * The store's read-write token. Vercel names it BLOB_READ_WRITE_TOKEN, or <PREFIX>_READ_WRITE_TOKEN
+ * when a custom prefix was chosen while connecting the store: any variable holding a Blob
+ * read-write token is accepted.
+ */
+export function blobTokenFrom(env: Record<string, string | undefined>): string | undefined {
+  if (env.BLOB_READ_WRITE_TOKEN) return env.BLOB_READ_WRITE_TOKEN;
+  return Object.entries(env).find(
+    ([k, v]) => k.endsWith('_READ_WRITE_TOKEN') && v?.startsWith('vercel_blob_rw_'),
+  )?.[1];
+}
 export const BLOB_API_VERSION = '13';
 
 export function blobPutter(

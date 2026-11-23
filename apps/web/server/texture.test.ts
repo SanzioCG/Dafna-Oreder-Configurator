@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { EMPTY_EXTENSION, applyCatalogExtension, textureFor } from '@dafna/engine';
 import { afterEach, describe, expect, it } from 'vitest';
-import { BLOB_API, blobPutter } from './blob';
+import { BLOB_API, blobPutter, blobTokenFrom } from './blob';
 import {
   CachedCatalog,
   MemoryCatalogStore,
@@ -138,5 +138,18 @@ describe('D-21 Vercel Blob upload request', () => {
     ]);
     expect(h['x-vercel-blob-store-id']).toBe('STORE1');
     expect(h.authorization).toBe('Bearer vercel_blob_rw_STORE1_secret');
+  });
+});
+
+describe('D-21 Blob token', () => {
+  it('BLOB_READ_WRITE_TOKEN, or a custom-prefixed one holding a Blob token', () => {
+    expect(blobTokenFrom({ BLOB_READ_WRITE_TOKEN: 'vercel_blob_rw_A_x' })).toBe(
+      'vercel_blob_rw_A_x',
+    );
+    expect(blobTokenFrom({ TEXTURES_READ_WRITE_TOKEN: 'vercel_blob_rw_B_y' })).toBe(
+      'vercel_blob_rw_B_y',
+    );
+    expect(blobTokenFrom({ OTHER_READ_WRITE_TOKEN: 'not-a-blob-token' })).toBeUndefined();
+    expect(blobTokenFrom({})).toBeUndefined();
   });
 });

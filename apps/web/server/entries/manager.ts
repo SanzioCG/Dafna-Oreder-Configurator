@@ -2,7 +2,7 @@
  * Vercel Function entry: GET / PUT /api/manager (D-19: the manager's price list; env
  * MANAGER_PIN). Bundled by scripts/build-api.mjs into api/manager.js.
  */
-import { blobPutter } from '../blob';
+import { blobPutter, blobTokenFrom } from '../blob';
 import { catalogFromEnv, pricesFromEnv } from '../config';
 import { handleManager, type ManagerDeps } from '../prices';
 import { RateLimiter } from '../rateLimit';
@@ -29,7 +29,7 @@ function handle(request: Request): Promise<Response> {
       now: () => new Date(),
       catalogStore: catalogFromEnv(process.env).store,
       catalog: catalogFromEnv(process.env).catalog,
-      putTexture: blobPutter(process.env.BLOB_READ_WRITE_TOKEN),
+      putTexture: blobPutter(blobTokenFrom(process.env)),
     };
   }
   return handleManager(request, deps);
