@@ -21,7 +21,14 @@ import { managerLoad, managerSave, type ManagerOutcome } from './managerApi';
  * Board sheet prices will come from Dafna's ERP; until the ERP is connected they are typed here.
  * An internal page for Dafna's office: Uzbek only.
  */
-const DEFAULT_SHEET = { lengthMm: 2800, widthMm: 2070 };
+/** the sheet size GibLab assumes (server/giblab.ts sheetSize): EGGER and HDF/MDF 2800 × 2070,
+ * other chipboard 2750 × 1830 — the manager corrects it per board */
+const defaultSheet = (id: string) => {
+  const m = allMaterials.materials.find((x) => x.id === id);
+  return m && m.kind === 'ldsp' && !m.code
+    ? { lengthMm: 2750, widthMm: 1830 }
+    : { lengthMm: 2800, widthMm: 2070 };
+};
 
 const HW_KIND: Record<string, string> = {
   hinge: 'Petlya',
@@ -62,7 +69,7 @@ const errorText = (o: Extract<ManagerOutcome, { ok: false }>) =>
 /** a list with every board / hardware / product row present (missing ones = 0) */
 function complete(list: PriceList): PriceList {
   const boardSheets = { ...list.boardSheets };
-  for (const b of BOARDS) boardSheets[b.id] ??= { price: 0, ...DEFAULT_SHEET };
+  for (const b of BOARDS) boardSheets[b.id] ??= { price: 0, ...defaultSheet(b.id) };
   const hardware = { ...list.hardware };
   for (const h of hardwareV1.items) hardware[h.id] ??= 0;
   const assembly = { ...list.assembly };
@@ -304,7 +311,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
           </thead>
           <tbody>
             {BOARDS.map((b) => {
-              const s = list.boardSheets?.[b.id] ?? { price: 0, ...DEFAULT_SHEET };
+              const s = list.boardSheets?.[b.id] ?? { price: 0, ...defaultSheet(b.id) };
               const put = (patch: Partial<typeof s>) =>
                 edit({ ...list, boardSheets: { ...list.boardSheets, [b.id]: { ...s, ...patch } } });
               const perM2 = s.price > 0 ? s.price / ((s.lengthMm * s.widthMm) / 1e6) : 0;

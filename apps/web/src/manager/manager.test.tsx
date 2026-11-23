@@ -94,8 +94,8 @@ describe('D-19 manager price page', () => {
     expect(list.assembly.wardrobe).toBe(300000);
     expect(list.boardSheets.ldsp_white_16).toEqual({
       price: 579600,
-      lengthMm: 2800,
-      widthMm: 2070,
+      lengthMm: 2750, // Dafna chipboard (no EGGER code): the GibLab sheet size
+      widthMm: 1830,
     });
   });
 });
