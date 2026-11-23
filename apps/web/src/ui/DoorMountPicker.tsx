@@ -2,8 +2,7 @@ import { useI18n } from '../i18n/I18n';
 
 /**
  * D-27: "Eshik turi" as two picture cards, so a customer sees the difference without the words
- * nakladnoy / vkladnoy. Each picture: the wardrobe from the front (doors blue, carcass edges
- * white) and, under it, the same wardrobe seen from above (where the doors sit).
+ * nakladnoy / vkladnoy. Each picture is a close-up of the top front corner, as in the 3D view.
  */
 export function DoorMountPicker({
   options,
@@ -39,40 +38,39 @@ export function DoorMountPicker({
   );
 }
 
-/** Front view (top) and plan view (bottom) of a two-door wardrobe; decorative. */
+/**
+ * A close-up of the wardrobe's top front corner (as in the 3D view, from front right above);
+ * decorative. Overlay: the door stands in front and hides the carcass edges. Inset: the door
+ * sits inside, flush, with the top and side edges showing round it.
+ */
 export function DoorMountIcon({ mount }: { mount: string }) {
-  const inset = mount === 'inset';
   const line = {
-    fill: 'none',
     stroke: 'currentColor',
     strokeWidth: 2.5,
     strokeLinejoin: 'round' as const,
   };
+  if (mount === 'inset')
+    return (
+      <svg viewBox="24 14 84 84" className="mount-icon" aria-hidden="true">
+        {/* top and side of the carcass */}
+        <path d="M8 42h64l30-22H38z" className="mount-carcass" {...line} />
+        <path d="M72 42l30-22v100H72z" className="mount-side" {...line} />
+        {/* the carcass front edges, the opening behind the door */}
+        <path d="M8 42h64v78H8z" className="mount-carcass" {...line} />
+        <path d="M8 51h55v69H8z" className="mount-gap" {...line} />
+        {/* the door inside the opening, flush with the edges */}
+        <path d="M8 54h52v66H8z" className="mount-door" {...line} />
+      </svg>
+    );
   return (
-    <svg viewBox="0 0 120 120" className="mount-icon" aria-hidden="true">
-      {/* front view: carcass */}
-      <rect x="22" y="6" width="76" height="78" rx="1.5" className="mount-carcass" {...line} />
-      {inset ? (
-        <>
-          {/* doors inside the carcass: its edges stay visible all round */}
-          <rect x="29" y="13" width="30" height="64" className="mount-door" {...line} />
-          <rect x="61" y="13" width="30" height="64" className="mount-door" {...line} />
-        </>
-      ) : (
-        <>
-          {/* doors over the carcass: they hide its edges */}
-          <rect x="22" y="6" width="37" height="78" className="mount-door" {...line} />
-          <rect x="61" y="6" width="37" height="78" className="mount-door" {...line} />
-        </>
-      )}
-      {/* plan view: sides and the door line */}
-      <rect x="22" y="96" width="6" height="18" className="mount-carcass" {...line} />
-      <rect x="92" y="96" width="6" height="18" className="mount-carcass" {...line} />
-      {inset ? (
-        <rect x="29" y="96" width="62" height="4" className="mount-door" {...line} />
-      ) : (
-        <rect x="22" y="91" width="76" height="4" className="mount-door" {...line} />
-      )}
+    <svg viewBox="30 6 84 84" className="mount-icon" aria-hidden="true">
+      {/* top and side of the carcass, behind the door */}
+      <path d="M14 34h64l30-22H44z" className="mount-carcass" {...line} />
+      <path d="M78 34l30-22v108H78z" className="mount-side" {...line} />
+      {/* the door in front: it covers the carcass edges; its own edges show */}
+      <path d="M8 40h66l6-5H14z" className="mount-door" {...line} />
+      <path d="M74 40l6-5v85h-6z" className="mount-door-edge" {...line} />
+      <path d="M8 40h66v80H8z" className="mount-door" {...line} />
     </svg>
   );
 }
