@@ -10,6 +10,7 @@ import wardrobeV8Json from '../templates/wardrobe.v8.json' with { type: 'json' }
 import wardrobeV9Json from '../templates/wardrobe.v9.json' with { type: 'json' };
 import wardrobeV10Json from '../templates/wardrobe.v10.json' with { type: 'json' };
 import wardrobeV11Json from '../templates/wardrobe.v11.json' with { type: 'json' };
+import wardrobeV12Json from '../templates/wardrobe.v12.json' with { type: 'json' };
 import pedestalV1Json from '../templates/pedestal.v1.json' with { type: 'json' };
 import pedestalV2Json from '../templates/pedestal.v2.json' with { type: 'json' };
 import pedestalV3Json from '../templates/pedestal.v3.json' with { type: 'json' };
@@ -42,6 +43,7 @@ export const TEMPLATE_ARCHIVE: Readonly<Record<string, Template>> = {
   '0.10.0': wardrobeV9Json as Template,
   '0.11.0': wardrobeV10Json as Template,
   '0.12.0': wardrobeV11Json as Template,
+  '0.13.0': wardrobeV12Json as Template,
 };
 
 /** Material catalogs by catalogVersion (same rule: archived, never edited). */
@@ -88,6 +90,8 @@ export const TEMPLATE_CATALOG: Readonly<Record<string, string>> = {
   '0.10.0': materialsV1.catalogVersion,
   '0.11.0': materialsV1.catalogVersion,
   '0.12.0': materialsV1.catalogVersion,
+  // D-26: feet (metal_black) need catalog 1.1.0 (= 1.0.0 + more)
+  '0.13.0': materialsV1_1.catalogVersion,
 };
 
 type Generator = (template: Template, params: unknown, catalog: MaterialCatalog) => GenerateResult;

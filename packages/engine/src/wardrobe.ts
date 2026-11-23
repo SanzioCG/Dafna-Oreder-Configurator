@@ -1,4 +1,5 @@
 import { catalogForTemplate, getMaterial, currentCatalog } from './catalog.js';
+import { metalBox } from './parts.js';
 import { generatorFor } from './registry.js';
 import { planDoors, planInsetDoors, type DoorLeaf, type DoorPlan } from './doors.js';
 import {
@@ -27,6 +28,9 @@ import type {
 } from './types.js';
 
 export const WARDROBE_GENERATOR = 'wardrobe-carcass-v4';
+
+/** D-26: the feet (Bingo 20 mm) are drawn as small dark parts */
+const FOOT_MATERIAL = 'metal_black';
 
 /** Rotations (degrees, XYZ) from the panel local frame (L→X, T→Y, W→Z) to product axes. */
 const ROT_HORIZONTAL: Vec3 = [0, 0, 0]; // length X, thickness Y, width Z
@@ -90,6 +94,24 @@ export interface WardrobeLayout {
   insetDoors: boolean;
   /** D-22 (template 0.12.0+, rule top-over-sides): the top lies on the side panels */
   topOverSides: boolean;
+  /**
+   * D-26 (template 0.13.0+, rule lester-carcass, Dafna's Bazis models): two edge bands, the
+   * back in a groove, removable shelves 1 mm short each side, feet instead of a plinth.
+   */
+  lester: boolean;
+  /** D-26: the bottom is full width and the sides stand on it (base = feet / none) */
+  bottomFull: boolean;
+  /** D-26: base = feet: their height (0 otherwise) and inset from the carcass corners */
+  feetHeightMm: number;
+  feetInsetMm: number;
+  /** D-26: how far the back enters the groove of each panel */
+  backGrooveDepthMm: number;
+  /** D-26: the back sits in a groove this far from the rear edge (0 = nailed on) */
+  backGrooveMm: number;
+  /** Z of the interior's back (the back panel's front face) */
+  interiorBackZMm: number;
+  /** D-26: the thin edge band of the less visible edges (null = one band) */
+  thinBand: { bandId: string; thicknessMm: number } | null;
 }
 
 /** Split `total` whole millimetres into `n` parts differing by at most 1 mm (extra mm leftmost). */
@@ -251,10 +273,17 @@ export function computeLayout(
   const depthMm = Number(params.depth);
   const t = corpusMaterial.thicknessMm;
   const hasPlinth = params.base === 'plinth';
-  const plinthHeightMm = hasPlinth ? Number(params.plinthHeight) : 0;
+  // D-26: feet (template 0.13.0+) lift the carcass like a plinth, without plinth strips
+  const feetHeightMm = params.base === 'feet' ? getNumberConstant(template, 'feetHeightMm') : 0;
+  const plinthHeightMm = hasPlinth ? Number(params.plinthHeight) : feetHeightMm;
+  const lester = template.constructionRules.some((r) => r.id === 'lester-carcass');
   const plinthRecessMm = hasPlinth ? Number(params.plinthRecess) : 0;
   const hasBack = params.backPanel === 'hdf_overlay';
   const backThicknessMm = hasBack ? backMaterial.thicknessMm : 0;
+  // D-26: the back in a groove is inside the carcass depth (not behind it)
+  const backGrooveMm = lester && hasBack ? getNumberConstant(template, 'backGrooveFromRearMm') : 0;
+  const backStackMm = backGrooveMm > 0 ? 0 : backThicknessMm;
+  const interiorBackZMm = backGrooveMm > 0 ? backGrooveMm + backThicknessMm : backThicknessMm;
   const maxSingleLeafWidthMm = getNumberConstant(template, 'maxSingleLeafWidthMm');
   // D-15 (template 0.10.0+): wide wardrobes are two carcasses, split at the middle boundary
   const splitWanted = carcassSplit(template, params, widthMm);
@@ -294,7 +323,15 @@ export function computeLayout(
     : getNumberConstant(template, 'doorGapBetweenMm');
   const carcassHeightMm = heightMm - plinthHeightMm;
   const carcassDepthMm =
-    depthMm - backThicknessMm - (insetDoors ? 0 : doorThicknessMm) - doorGapFrontMm;
+    depthMm - backStackMm - (insetDoors ? 0 : doorThicknessMm) - doorGapFrontMm;
+  // D-26: shelves 5 mm back in an open section, 1 mm behind an inset door (Bazis)
+  const shelfSetbackFor = (index: number): { shelfSetbackMm?: number } => {
+    if (template.constants.openShelfSetbackMm === undefined) return {};
+    if ((doors.types[index] ?? 'none') === 'none')
+      return { shelfSetbackMm: getNumberConstant(template, 'openShelfSetbackMm') };
+    if (insetDoors) return { shelfSetbackMm: getNumberConstant(template, 'insetShelfSetbackMm') };
+    return {};
+  };
   // interior depth of a section behind an inset door: up to the door's back face
   const doorDepthIn = (index: number) =>
     insetDoors && (doors.types[index] ?? 'none') !== 'none' ? doorThicknessMm : 0;
@@ -314,9 +351,10 @@ export function computeLayout(
       innerW,
       yBottom: plinthHeightMm + t,
       yTop: heightMm - t,
-      zBack: backThicknessMm,
-      innerDepth: carcassDepthMm - doorDepthIn(index),
+      zBack: interiorBackZMm,
+      innerDepth: carcassDepthMm - (interiorBackZMm - backStackMm) - doorDepthIn(index),
       t,
+      ...shelfSetbackFor(index),
     };
     xs += innerW + (index === splitAfter ? 2 * t : t);
     const choice = params[`interior${index + 1}`];
@@ -348,8 +386,8 @@ export function computeLayout(
     doorGapBetweenMm,
     carcassHeightMm,
     carcassDepthMm,
-    carcassBackZMm: backThicknessMm,
-    carcassFrontZMm: backThicknessMm + carcassDepthMm,
+    carcassBackZMm: backStackMm,
+    carcassFrontZMm: backStackMm + carcassDepthMm,
     sectionCount,
     sectionInnerWidthsMm,
     splitAfter,
@@ -359,6 +397,20 @@ export function computeLayout(
     doorHeightMm: carcassHeightMm - 2 * doorGapEdgeMm - (insetDoors ? 2 * t : 0),
     insetDoors,
     topOverSides: template.constructionRules.some((r) => r.id === 'top-over-sides'),
+    lester,
+    bottomFull: lester && !hasPlinth,
+    feetHeightMm,
+    feetInsetMm: feetHeightMm > 0 ? getNumberConstant(template, 'feetInsetMm') : 0,
+    backGrooveMm,
+    backGrooveDepthMm: backGrooveMm > 0 ? getNumberConstant(template, 'backGrooveDepthMm') : 0,
+    interiorBackZMm,
+    thinBand:
+      template.constants.edgeBandThinId !== undefined
+        ? {
+            bandId: getStringConstant(template, 'edgeBandThinId'),
+            thicknessMm: getNumberConstant(template, 'edgeBandThinMm'),
+          }
+        : null,
     lowerDoorHeightMm: ic.lowerDoorHeightMm,
     maxShelfSpanMm: getNumberConstant(template, 'maxShelfSpanMm'),
     maxSingleLeafWidthMm,
@@ -570,7 +622,9 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
         ];
   const suffix = (i: number) => (carcasses.length > 1 ? `-${i + 1}` : '');
   // D-22: with the top on the sides, the sides end under it
-  const sideH = layout.topOverSides ? H - t : H;
+  // D-26: on feet the sides stand on the full-width bottom, between bottom and top
+  const sideY0 = layout.bottomFull ? ph + t : 0;
+  const sideH = (layout.topOverSides ? H - t : H) - sideY0;
   const side = (id: string, x: number): BasePanel => ({
     id,
     role: 'side',
@@ -578,7 +632,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
     widthMm: Dc,
     thicknessMm: t,
     material: corpus,
-    position: [x, sideH / 2, zMid],
+    position: [x, sideY0 + sideH / 2, zMid],
     rotation: ROT_VERTICAL_YZ,
   });
 
@@ -591,7 +645,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
       {
         id: `bottom${suffix(i)}`,
         role: 'bottom',
-        lengthMm: x1 - x0 - 2 * t,
+        lengthMm: x1 - x0 - (layout.bottomFull ? 0 : 2 * t),
         widthMm: Dc,
         thicknessMm: t,
         material: corpus,
@@ -614,31 +668,57 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
   // A partition stands right of every section except the last (and the D-15 split).
   for (const s of sections.slice(0, -1)) {
     if (s.index === split) continue;
+    // D-26: with the back in a groove a partition stops at the back's front face
+    const pz0 = layout.backGrooveMm > 0 ? layout.interiorBackZMm : zC;
+    const pDepth = Dc - (pz0 - zC);
     panels.push({
       id: `partition-${s.index + 1}`,
       role: 'partition',
       lengthMm: Hc - 2 * t,
-      widthMm: Dc,
+      widthMm: pDepth,
       thicknessMm: t,
       material: corpus,
-      position: [s.xStartMm + s.innerWidthMm + t / 2, ph + Hc / 2, zMid],
+      position: [s.xStartMm + s.innerWidthMm + t / 2, ph + Hc / 2, pz0 + pDepth / 2],
       rotation: ROT_VERTICAL_YZ,
     });
   }
 
   if (layout.hasBack) {
     const tb = layout.backThicknessMm;
+    // D-26: in a groove the back enters the sides, top and bottom by grooveDepth each
+    const g = layout.backGrooveMm;
+    const into = g > 0 ? 2 * layout.backGrooveDepthMm : 0;
     carcasses.forEach(([x0, x1], i) => {
       panels.push({
         id: `back${suffix(i)}`,
         role: 'back',
-        lengthMm: x1 - x0,
-        widthMm: Hc,
+        lengthMm: g > 0 ? x1 - x0 - 2 * t + into : x1 - x0,
+        widthMm: g > 0 ? Hc - 2 * t + into : Hc,
         thicknessMm: tb,
         material: layout.backMaterial.id,
-        position: [(x0 + x1) / 2, ph + Hc / 2, tb / 2],
+        position: [(x0 + x1) / 2, ph + Hc / 2, g + tb / 2],
         rotation: ROT_VERTICAL_XY,
       });
+    });
+  }
+
+  // D-26: four feet per carcass, 50 mm in from the corners (Bingo 20 mm, a bought part)
+  if (layout.feetHeightMm > 0) {
+    const f = layout.feetHeightMm;
+    const inset = layout.feetInsetMm;
+    carcasses.forEach(([x0, x1], i) => {
+      [x0 + inset, x1 - inset].forEach((x, a) =>
+        [zC + inset, zC + Dc - inset].forEach((z, b) =>
+          panels.push(
+            metalBox(
+              `foot${suffix(i)}-${a * 2 + b + 1}`,
+              FOOT_MATERIAL,
+              [24, f, 24],
+              [x, f / 2, z],
+            ),
+          ),
+        ),
+      );
     });
   }
 
@@ -699,7 +779,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
 /** Shelves and internal drawers, section by section (left to right, bottom to top). */
 function buildInterior(layout: WardrobeLayout, sections: Section[]): BasePanel[] {
   const t = layout.panelThicknessMm;
-  const zBack = layout.carcassBackZMm;
+  const zBack = layout.interiorBackZMm;
   const zFront = layout.carcassFrontZMm;
   const corpus = layout.corpusMaterial.id;
   const hdf = layout.backMaterial;
@@ -783,7 +863,8 @@ function buildInterior(layout: WardrobeLayout, sections: Section[]): BasePanel[]
       out.push({
         id: sh.id,
         role: 'shelf',
-        lengthMm: sh.lengthMm,
+        // D-26: a removable shelf is 1 mm short at each side (Bazis)
+        lengthMm: layout.lester && sh.kind !== 'fixed' ? sh.lengthMm - 2 : sh.lengthMm,
         widthMm: sh.depthMm,
         thicknessMm: t,
         material: corpus,
@@ -823,9 +904,39 @@ function withProductionFields(p: BasePanel, layout: WardrobeLayout): Panel {
     if (p.id !== 'top-2') edges.left = { ...band };
     if (p.id !== 'top-1') edges.right = { ...band };
   }
+  if (layout.lester && layout.thinBand) lesterBands(p, edges, band, layout);
   const isHdf = p.material === layout.backMaterial.id && layout.backMaterial.kind === 'hdf';
   return { ...p, edges, grainDirection: isHdf ? null : 'length', operations: [] };
 }
+
+/**
+ * D-26 edge bands as in Dafna's Bazis models: doors and fronts 1 mm all round; top / bottom
+ * 1 mm at the front and the ends (not where two carcasses meet), thin at the back; sides thin
+ * front and back; partitions and fixed shelves thin at the front; removable shelves thin all
+ * round; back, plinth and drawer boxes none.
+ */
+function lesterBands(p: BasePanel, edges: PanelEdges, thick: EdgeBandLike, layout: WardrobeLayout) {
+  const thin = { ...layout.thinBand! };
+  const none = { ...NO_BAND };
+  const set = (f: EdgeBandLike, b: EdgeBandLike, l: EdgeBandLike, r: EdgeBandLike) => {
+    edges.front = { ...f };
+    edges.back = { ...b };
+    edges.left = { ...l };
+    edges.right = { ...r };
+  };
+  if (p.role === 'top' || (p.role === 'bottom' && layout.bottomFull)) {
+    const base = p.id.replace(/-\d$/, '');
+    const left = p.id === `${base}-2` ? none : thick;
+    const right = p.id === `${base}-1` ? none : thick;
+    set(thick, thin, left, right);
+  } else if (p.role === 'bottom') set(thick, thin, none, none);
+  else if (p.role === 'side') set(thin, thin, none, none);
+  else if (p.role === 'partition') set(thin, none, none, none);
+  else if (p.role === 'shelf' && p.id.includes('fixed')) set(thin, none, none, none);
+  else if (p.role === 'shelf') set(thin, thin, thin, thin);
+}
+
+type EdgeBandLike = { bandId: string | null; thicknessMm: number | null };
 
 function buildRails(layout: WardrobeLayout, sections: Section[]): Rail[] {
   const rails: Rail[] = [];

@@ -115,6 +115,7 @@ export const ru: Messages = {
   'option.backPanel.none': 'Нет',
   'option.backPanel.hdf_overlay': 'ХДФ (накладная)',
   'option.base.plinth': 'С цоколем',
+  'option.base.feet': 'На ножках',
   'option.base.none': 'Без цоколя',
   'param.carcasses': 'Количество корпусов',
   'option.carcasses.auto': 'Авто (2 шт. от 160 см)',

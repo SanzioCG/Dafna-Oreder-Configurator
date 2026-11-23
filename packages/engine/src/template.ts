@@ -1,4 +1,4 @@
-import wardrobeV11Json from '../templates/wardrobe.v11.json' with { type: 'json' };
+import wardrobeV12Json from '../templates/wardrobe.v12.json' with { type: 'json' };
 import pedestalV4Json from '../templates/pedestal.v4.json' with { type: 'json' };
 import deskV3Json from '../templates/desk.v3.json' with { type: 'json' };
 import type {
@@ -11,7 +11,8 @@ import type {
 } from './types.js';
 
 /**
- * The current wardrobe (shkaf) template: v11 (templateVersion 0.12.0, D-22: the technologist's
+ * The current wardrobe (shkaf) template: v12 (templateVersion 0.13.0, D-26: Dafna's Bazis models -
+ * feet, back in a groove, two edge bands, inset doors by default). v11 (0.12.0, D-22: the technologist's
  * confirmation table - top on the sides, overlay or inset doors, confirmed gaps / setbacks).
  * v10 (0.11.0, D-17): height up to 2200.
  * History: v7 (templateVersion 0.8.0, D-9: + hardware brands
@@ -19,7 +20,7 @@ import type {
  * GOST 13025.1-85 storage presets, catalog 1.0.0, same generator). Older templates are archived
  * (regenerate.ts); older order drafts are migrated with migrateOrderDraft().
  */
-export const wardrobeTemplate: Template = wardrobeV11Json as Template;
+export const wardrobeTemplate: Template = wardrobeV12Json as Template;
 
 /** D-8: office pedestal (ofis tumbasi), template 0.4.0 (D-22: confirmed fronts / drawer values; D-23: top flush with the fronts) (pedestal.ts, ADR-014). */
 export const pedestalTemplate: Template = pedestalV4Json as Template;

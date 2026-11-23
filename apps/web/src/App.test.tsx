@@ -218,9 +218,11 @@ describe('step 1 "Joy" (D-7: standard sizes only)', () => {
     expect(stub().dataset.width).toBe('1234');
   });
 
-  it('"Pastki yopiq taglik" = base plinth, ON by default', () => {
+  it('"Pastki yopiq taglik" = base plinth; OFF by default: the wardrobe stands on feet (D-26)', () => {
     renderApp();
-    expect(toggle(uz['c.base']).getAttribute('aria-checked')).toBe('true');
+    expect(toggle(uz['c.base']).getAttribute('aria-checked')).toBe('false');
+    expect(stub().dataset.plinth).toBe('no');
+    fireEvent.click(toggle(uz['c.base']));
     expect(stub().dataset.plinth).toBe('yes');
     fireEvent.click(toggle(uz['c.base']));
     expect(stub().dataset.plinth).toBe('no');

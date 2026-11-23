@@ -40,7 +40,9 @@ const before = (a: string, b: string) => {
  */
 export function catalogForTemplate(template: Template): MaterialCatalog {
   if (template.templateId === 'wardrobe') {
-    return before(template.templateVersion, '0.6.0') ? materialsV0 : materialsV1;
+    if (before(template.templateVersion, '0.6.0')) return materialsV0;
+    // D-26: from 0.13.0 the wardrobe stands on feet (metal_black, catalog 1.1.0 = 1.0.0 + more)
+    return before(template.templateVersion, '0.13.0') ? materialsV1 : materialsV1_1;
   }
   return materialsV1_1;
 }

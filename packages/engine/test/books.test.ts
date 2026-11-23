@@ -7,9 +7,12 @@ import {
   generate,
   hingeCount,
   resolveParams,
-  wardrobeTemplate,
+  TEMPLATE_ARCHIVE,
   type Params,
 } from '../src/index.js';
+
+/** D-14 behaviour on template 0.12.0 (0.13.0: feet and inset doors, D-26) */
+const wardrobeTemplate = TEMPLATE_ARCHIVE['0.12.0']!;
 
 /**
  * D-14 'books_lower' (template 0.9.0): door over the lower part only, open book / A4 folder

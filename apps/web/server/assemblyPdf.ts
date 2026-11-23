@@ -203,7 +203,14 @@ const isCastor = (p: Panel) => p.role === 'frame' && p.id.startsWith('castor-');
 /** Product -> ordered steps: [title key, which boards, tip]. Boards no step takes go last. */
 const PLANS: Record<string, [string, (p: Panel) => boolean, string?][]> = {
   wardrobe: [
-    ['base', (p) => p.role === 'bottom' || p.role === 'plinth'],
+    // D-26: the feet go under the bottom first
+    [
+      'base',
+      (p) =>
+        p.role === 'bottom' ||
+        p.role === 'plinth' ||
+        (p.role === 'frame' && p.id.startsWith('foot')),
+    ],
     ['sides', (p) => p.role === 'side'],
     ['partitions', (p) => p.role === 'partition'],
     ['top', (p) => p.role === 'top'],

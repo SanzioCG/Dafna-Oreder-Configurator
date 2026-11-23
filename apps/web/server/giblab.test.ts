@@ -141,7 +141,7 @@ describe('D-16 GibLab .project', () => {
     expect(giblabForLead({ ...lead('wardrobe'), paramsJson: '{' })).toBeNull();
   });
 
-  it('a wide oak wardrobe with a white door decor: two sheets, two bands', () => {
+  it('a wide oak wardrobe with a grey door decor: three sheets, three bands', () => {
     const l = lead('wardrobe', {
       width: 2400,
       sections: 3,
@@ -152,7 +152,8 @@ describe('D-16 GibLab .project', () => {
     const xml = new TextDecoder().decode(giblabForLead(l)!);
     const doc = parse(xml);
     expect(doc.querySelectorAll('good[typeId="sheet"]')).toHaveLength(3); // oak, grey, HDF
-    expect(doc.querySelectorAll('good[typeId="band"]')).toHaveLength(2);
+    // D-26: 1 mm on the oak carcass and the grey doors, 0.4 mm on the oak carcass
+    expect(doc.querySelectorAll('good[typeId="band"]')).toHaveLength(3);
     if (process.env.GIBLAB_OUT)
       writeFileSync(`${process.env.GIBLAB_OUT}/wardrobe-2400-oak.project`, xml);
   });

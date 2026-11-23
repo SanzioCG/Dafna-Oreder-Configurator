@@ -194,10 +194,12 @@ export function BaseToggle({ config }: { config: Configurator }) {
       </Toggle>
     );
   }
+  // D-26: without a plinth the wardrobe stands on feet (template 0.13.0+), before: on the floor
+  const off = def.options.includes('feet') ? 'feet' : 'none';
   return (
     <Toggle
       checked={config.params.base === 'plinth'}
-      onChange={(on) => config.setParam('base', on ? 'plinth' : 'none')}
+      onChange={(on) => config.setParam('base', on ? 'plinth' : off)}
       testId="toggle-base"
     >
       {t('c.base')}

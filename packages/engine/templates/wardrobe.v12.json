@@ -1,0 +1,785 @@
+{
+  "templateId": "wardrobe",
+  "templateVersion": "0.13.0",
+  "productType": "wardrobe",
+  "generator": "wardrobe-carcass-v4",
+  "units": "mm",
+  "parameters": [
+    {
+      "key": "width",
+      "type": "int",
+      "default": 1500,
+      "min": 600,
+      "max": 2400,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.width",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "Overall product width, outer faces of the side panels. Customers choose only customerValues (staff: free min..max). Standard sizes (D-7): industry-common wardrobe sizes, unconfirmed until Dafna confirms its range.",
+      "customerValues": [800, 1000, 1200, 1500, 1600, 1800, 2000, 2400]
+    },
+    {
+      "key": "height",
+      "type": "int",
+      "default": 2100,
+      "min": 1200,
+      "max": 2200,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.height",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "Overall product height from the floor, plinth included. Customers choose only customerValues. Standard sizes (D-7): industry-common wardrobe sizes, unconfirmed until Dafna confirms its range. D-17 (founder, 2026-11-16): Dafna's maximum wardrobe height is 2200 mm; customer heights 2000 / 2100 / 2200.",
+      "customerValues": [2000, 2100, 2200]
+    },
+    {
+      "key": "depth",
+      "type": "int",
+      "default": 600,
+      "min": 350,
+      "max": 650,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.depth",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "Overall outer depth: back panel + carcass + front door gap + door (ADR-003). Default 600 (D-1c, unconfirmed): carcass 579 with doors, so rail presets (>= 530 inner depth) are available at the default size. Customers choose 600 (hanging clothes: inner depth >= 560, GOST 13025.1-85) or 450 (shelves / drawers only). CONFIRMED (Dafna technologist, confirmation table 2026-11-23).",
+      "customerValues": [450, 600]
+    },
+    {
+      "key": "sections",
+      "type": "enum",
+      "default": "auto",
+      "options": ["auto", 1, 2, 3, 4],
+      "labelKey": "param.sections",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "auto = minimum section count that keeps each section inner width <= maxShelfSpanMm."
+    },
+    {
+      "key": "corpusMaterial",
+      "type": "enum",
+      "default": "ldsp_white_16",
+      "options": [
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      "labelKey": "param.corpusMaterial",
+      "uiStep": "color",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "control": "swatch",
+      "materialKinds": ["ldsp", "mdf"],
+      "note": "Carcass, partition and plinth board (LDSP only). Its thickness drives all carcass geometry. Decors = Dafna price list (catalog 1.0.0), colours unconfirmed."
+    },
+    {
+      "key": "doorMaterial",
+      "type": "enum",
+      "default": "same_as_corpus",
+      "options": [
+        "same_as_corpus",
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16",
+        "lmdf_egger_h1367_st40_16",
+        "lmdf_egger_h1385_st40_16",
+        "lmdf_egger_h1344_st32_16_7",
+        "lmdf_egger_h3325_st28_16_7"
+      ],
+      "labelKey": "param.doorMaterial",
+      "uiStep": "color",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "control": "swatch",
+      "materialKinds": ["ldsp", "mdf"],
+      "note": "'same_as_corpus' = door decor follows corpusMaterial. Door thickness = this material's thickness (LMDF 16 / 16.7 mm: doors only)."
+    },
+    {
+      "key": "backPanel",
+      "type": "enum",
+      "default": "hdf_overlay",
+      "options": ["none", "hdf_overlay"],
+      "labelKey": "param.backPanel",
+      "uiStep": "size",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "note": "D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right): HDF 3 mm in a groove backGrooveFromRearMm from the rear edge, entering every panel by backGrooveDepthMm (option id kept)."
+    },
+    {
+      "key": "base",
+      "type": "enum",
+      "default": "feet",
+      "options": ["feet", "plinth"],
+      "labelKey": "param.base",
+      "uiStep": "size",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right): feet = four 20 mm \"Bingo\" feet, the full-width bottom on them and the sides between bottom and top (no plinth); plinth = the D-3a.1 construction (sides to the floor, strips between them). \"none\" removed."
+    },
+    {
+      "key": "plinthHeight",
+      "type": "int",
+      "default": 100,
+      "min": 60,
+      "max": 150,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.plinthHeight",
+      "uiStep": "size",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "note": "Assumed plinth height range and default. Used only when base = plinth. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      "key": "plinthRecess",
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 60,
+      "step": 5,
+      "unit": "mm",
+      "labelKey": "param.plinthRecess",
+      "uiStep": "size",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "note": "Assumed: setback of the front plinth strip from the carcass front edge. Back strip is never recessed. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      "key": "doors",
+      "type": "enum",
+      "default": "auto",
+      "options": ["none", "all_single", "auto"],
+      "labelKey": "param.doors",
+      "uiStep": "doors",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "Preset for all sections. auto: single door if the single-leaf width (coverage minus gaps) <= maxSingleLeafWidthMm, else double. Single doors hinge toward the outer side of their half (ADR-006 rev. D-1c)."
+    },
+    {
+      "key": "doorMount",
+      "type": "enum",
+      "default": "inset",
+      "options": ["overlay", "inset"],
+      "labelKey": "param.doorMount",
+      "uiStep": "doors",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "note": "D-22 (Dafna technologist, confirmation table 2026-11-23): two door mountings to choose from. overlay (nakladnoy) = doors cover the carcass front; inset (vkladnoy) = doors sit inside the openings, flush with the carcass front, insetDoorGapMm all round and between leaves; the depth stack is then back + carcass (no door in front of the carcass). D-26: inset is the default (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right: every door in the Bazis models is inset)."
+    },
+    {
+      "key": "doorSection1",
+      "type": "enum",
+      "default": "preset",
+      "options": ["preset", "none", "single_left", "single_right", "double"],
+      "labelKey": "param.doorSection",
+      "uiStep": "doors",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "appliesToSection": 1,
+      "note": "Staff override for section 1. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "doorSection2",
+      "type": "enum",
+      "default": "preset",
+      "options": ["preset", "none", "single_left", "single_right", "double"],
+      "labelKey": "param.doorSection",
+      "uiStep": "doors",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "appliesToSection": 2,
+      "note": "Staff override for section 2. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "doorSection3",
+      "type": "enum",
+      "default": "preset",
+      "options": ["preset", "none", "single_left", "single_right", "double"],
+      "labelKey": "param.doorSection",
+      "uiStep": "doors",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "appliesToSection": 3,
+      "note": "Staff override for section 3. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "doorSection4",
+      "type": "enum",
+      "default": "preset",
+      "options": ["preset", "none", "single_left", "single_right", "double"],
+      "labelKey": "param.doorSection",
+      "uiStep": "doors",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "appliesToSection": 4,
+      "note": "Staff override for section 4. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      "key": "interior1",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 1,
+      "control": "presetCards",
+      "note": "Interior fill of section 1 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      "key": "interior2",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 2,
+      "control": "presetCards",
+      "note": "Interior fill of section 2 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      "key": "interior3",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 3,
+      "control": "presetCards",
+      "note": "Interior fill of section 3 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      "key": "interior4",
+      "type": "enum",
+      "default": "auto",
+      "options": [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      "labelKey": "param.interior",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": false,
+      "appliesToSection": 4,
+      "control": "presetCards",
+      "note": "Interior fill of section 4 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      "key": "hingeBrand",
+      "type": "enum",
+      "default": "strax",
+      "options": ["strax", "hettich"],
+      "labelKey": "param.hingeBrand",
+      "uiStep": "hardware",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      "key": "slideBrand",
+      "type": "enum",
+      "default": "strax",
+      "options": ["strax", "hettich"],
+      "labelKey": "param.slideBrand",
+      "uiStep": "hardware",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "note": "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      "key": "lowerDoorHeight",
+      "type": "int",
+      "default": 800,
+      "min": 400,
+      "max": 1200,
+      "step": 10,
+      "unit": "mm",
+      "labelKey": "param.lowerDoorHeight",
+      "uiStep": "interior",
+      "customerVisible": true,
+      "unconfirmed": true,
+      "customerValues": [600, 800, 1000],
+      "note": "D-14: door leaf height of a books_lower section (from the door bottom edge). Only used when a section has the books_lower interior. Customer sizes 60 / 80 / 100 cm, unconfirmed until Dafna confirms."
+    },
+    {
+      "key": "carcasses",
+      "type": "enum",
+      "default": "auto",
+      "options": ["auto", "1", "2"],
+      "labelKey": "param.carcasses",
+      "uiStep": "size",
+      "customerVisible": false,
+      "unconfirmed": false,
+      "note": "D-15: 'auto' = two carcasses from splitCarcassFromWidthMm on; staff may force one ('1') or two ('2'). Two carcasses need at least 2 sections."
+    }
+  ],
+  "constants": {
+    "maxShelfSpanMm": {
+      "value": 900,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed maximum section inner width before shelves sag (SHELF_SPAN warning, sections=auto)."
+    },
+    "backMaterial": {
+      "value": "hdf_white_3",
+      "unconfirmed": true,
+      "note": "Assumed back panel material (catalog id). Its thickness is the back thickness."
+    },
+    "doorGapFrontMm": {
+      "value": 2,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Assumed gap between the carcass front edge and the back face of the overlay door. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    "doorGapBetweenMm": {
+      "value": 3,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Assumed gap between two adjacent door leaves. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    "doorGapEdgeMm": {
+      "value": 3,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Assumed gap between a door leaf and the outer carcass edge (left, right, top, bottom). Also used next to a section without a door. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): 3 mm"
+    },
+    "maxSingleLeafWidthMm": {
+      "value": 500,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Assumed maximum width of one door leaf. Single source for doors=auto (single vs double) and DOOR_TOO_WIDE; measured on the leaf, not the section opening. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): 500 mm"
+    },
+    "doorLeafRoundingMm": {
+      "value": 1,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Assumed rounding step for door leaf widths; the remainder goes to the leaves that lost most by rounding so leaves + gaps = covered width exactly. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): answer \"0\" (no half millimetres) = leaf widths in whole millimetres"
+    },
+    "insetDoorGapMm": {
+      "value": 3,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Gap around and between inset door leaves (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    "maxDoorHeightMm": {
+      "value": 2400,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed door height above which DOOR_TOO_HEIGHT warns (warping risk)."
+    },
+    "shelfPitchTargetMm": {
+      "value": 334,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed target pitch of removable shelves; the count is derived from the available height (compartments = round(height / pitch)), openings are equal."
+    },
+    "shelfFrontSetbackMm": {
+      "value": 20,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Assumed setback of shelves from the carcass front (removable shelves); shelf depth = carcass inner depth - setback. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): shelves 20 mm behind the carcass front (inset doors: behind the door)"
+    },
+    "insetShelfSetbackMm": {
+      "value": 1,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Shelves behind an inset door: 1 mm behind the door (17 mm from the carcass front) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    "openShelfSetbackMm": {
+      "value": 5,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Shelves of an open section (no door): 5 mm from the carcass front (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    "railTopShelfDropMm": {
+      "value": 200,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Assumed distance from the carcass top inner face down to the top face of the shelf above a rail (rail presets). CONFIRMED (Dafna technologist, confirmation table 2026-11-23): 200 mm"
+    },
+    "railAxisDropMm": {
+      "value": 60,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed distance from the underside of the shelf/top above a rail down to the rail axis."
+    },
+    "railDiameterMm": {
+      "value": 25,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed hanging rail diameter."
+    },
+    "drawerFrontHeightMm": {
+      "value": 170,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Assumed internal drawer front height. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    "drawerCountPerSection": {
+      "value": 2,
+      "unconfirmed": true,
+      "note": "Assumed number of internal drawers per drawer preset, stacked at the bottom of the section."
+    },
+    "drawerGapMm": {
+      "value": 3,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Assumed vertical gap below, between and above internal drawer fronts (drawer zone = gap + count x (front + gap)). CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    "drawerFrontSetbackMm": {
+      "value": 20,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Assumed setback of internal drawer fronts behind the carcass front edge (they sit behind the doors). CONFIRMED (Dafna technologist, confirmation table 2026-11-23): 20 mm (inset doors: behind the door)"
+    },
+    "drawerSlideClearanceMm": {
+      "value": 13,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed slide clearance per side: drawer box width = section inner width - 2 x 13. Internal fronts are as wide as the box (simplified). Dafna technologist, confirmation table 2026-11-23: depends on the slide model - to come with the hardware list."
+    },
+    "drawerBoxHeightReductionMm": {
+      "value": 50,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Drawer box height is 120 mm (front 170 - 50) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    "drawerBackClearanceMm": {
+      "value": 20,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed free space behind a drawer box. Dafna technologist, confirmation table 2026-11-23: depends on the slide model - to come with the hardware list."
+    },
+    "drawerSlideMinMm": {
+      "value": 250,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed shortest slide; box depth = longest slide (250..550, 50 steps) that fits."
+    },
+    "drawerSlideMaxMm": {
+      "value": 550,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed longest slide."
+    },
+    "drawerSlideStepMm": {
+      "value": 50,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed slide length step."
+    },
+    "railMinDepthMm": {
+      "value": 560,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "GOST 13025.1-85 «Мебель бытовая. Функциональные размеры отделений для хранения», drawings 1-2: clothing compartment depth >= 560 mm (RAIL_DEPTH_SHORT below). Was 530 (assumed) up to template 0.6.0."
+    },
+    "railMinHangingHeightMm": {
+      "value": 900,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed minimum clear hanging height under a rail (RAIL_HEIGHT_SHORT warning below)."
+    },
+    "drawerMaxFrontWidthMm": {
+      "value": 900,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Assumed maximum internal drawer front width (DRAWER_SECTION_TOO_WIDE warning above)."
+    },
+    "edgeBandId": {
+      "value": "pvc_1_19",
+      "unconfirmed": false,
+      "note": "Visible edges: PVC 1 mm x 19 (\"Кромка 1/19\"): doors and fronts all round, top / bottom front and ends (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    "edgeBandThicknessMm": {
+      "value": 1,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Thick edge band thickness (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    "edgeBandThinId": {
+      "value": "pvc_0_4_19",
+      "unconfirmed": false,
+      "note": "Less visible edges: 0.4 mm x 19 (\"Кромка 19,04\"): sides front and back, partitions and shelves (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    "edgeBandThinMm": {
+      "value": 0.4,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Thin edge band thickness (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    "railTopMaxMm": {
+      "value": 1900,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "GOST 13025.1-85 «Мебель бытовая. Функциональные размеры отделений для хранения», cl. 2.3: rail top edge at most 1900 mm from the floor (higher only with a pull-down rail)."
+    },
+    "railTopToShelfMm": {
+      "value": 60,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "GOST 13025.1-85 «Мебель бытовая. Функциональные размеры отделений для хранения», drawings 1-2: >= 50 mm from the rail top to the shelf above. 60 chosen for hanger hooks (unconfirmed)."
+    },
+    "longHangMinMm": {
+      "value": 1400,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "GOST 13025.1-85 «Мебель бытовая. Функциональные размеры отделений для хранения», drawing 1 (coats, dresses): >= 1400 mm from the rail top to the element below."
+    },
+    "shortHangMinMm": {
+      "value": 900,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "GOST 13025.1-85 «Мебель бытовая. Функциональные размеры отделений для хранения», drawing 2 (suits, jackets, shirts): >= 900 mm from the rail top to the element below."
+    },
+    "shortHangClearMm": {
+      "value": 1000,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "Short-clothes hanging zone actually planned above the shelves (>= 900 by GOST 13025.1-85 «Мебель бытовая. Функциональные размеры отделений для хранения»); 1000 = margin for longer jackets (unconfirmed)."
+    },
+    "drawerTopMaxMm": {
+      "value": 1250,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "GOST 13025.1-85 «Мебель бытовая. Функциональные размеры отделений для хранения», cl. 7: top drawer edge at most 1250 mm from the floor (DRAWER_TOO_HIGH above)."
+    },
+    "minShelfGapMm": {
+      "value": 170,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "GOST 13025.1-85 «Мебель бытовая. Функциональные размеры отделений для хранения», cl. 3.1: clear gap between shelves >= 170 mm; smaller leftovers get no shelf / antresol."
+    },
+    "autoPresetDouble": {
+      "value": "short_hang",
+      "unconfirmed": true,
+      "note": "'auto' fill behind a double door: short clothes + shelves (D-7, unconfirmed)."
+    },
+    "autoPresetSingle": {
+      "value": "shelves",
+      "unconfirmed": true,
+      "note": "'auto' fill behind a single door or without a door: shelves (unchanged)."
+    },
+    "bookGapMinMm": {
+      "value": 330,
+      "unit": "mm",
+      "unconfirmed": true,
+      "note": "D-14: target clear gap of open book / document shelves, so an A4 folder stands upright (A4 = 297 mm, ISO 216; lever-arch files ~320 mm high). Inside the GOST 13025.1-85 table 2 range (180..390 mm)."
+    },
+    "bookGapMaxMm": {
+      "value": 390,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "GOST 13025.1-85 table 2 (books): clear gap between shelves 180..390 mm; depth 140..440 mm."
+    },
+    "splitCarcassFromWidthMm": {
+      "value": 1600,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "D-15 (founder's decision, 2026-11-14): from this width the wardrobe is made as two carcasses side by side, split at the middle boundary (sections 1+1, 2+1, 2+2): each carcass has its own sides, top, bottom, back and plinth strips. Easier to carry and assemble; ~1 side panel more board."
+    },
+    "feetHeightMm": {
+      "value": 20,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Bingo feet height (FN004 \"Бинго 2 см\") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    "feetInsetMm": {
+      "value": 50,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Feet centre from the carcass corners (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    "backGrooveFromRearMm": {
+      "value": 12,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "Back groove distance from the rear edge of sides, top and bottom (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    "backGrooveDepthMm": {
+      "value": 8,
+      "unit": "mm",
+      "unconfirmed": false,
+      "note": "How far the back enters each panel (back = inner size + 2 x 8) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    }
+  },
+  "constructionRules": [
+    {
+      "id": "lester-carcass",
+      "unconfirmed": false,
+      "note": "D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right): top and (on feet) bottom full width, sides between them; back HDF in a groove (partitions stop at its front face); removable shelves 1 mm short each side, banded all round; two edge bands (1 mm visible, 0.4 mm others); drawer boxes 120 mm high."
+    },
+    {
+      "id": "sides-to-floor",
+      "unconfirmed": false,
+      "note": "CONFIRMED by Dafna (D-3a.1): side panels run the full product height to the floor (base = plinth or none). The carcass bottom rests on the plinth strips at plinthHeight; carcass height (top of bottom board to top) = height - plinthHeight. D-26: only with base = plinth; on feet the sides stand on the bottom."
+    },
+    {
+      "id": "top-over-sides",
+      "unconfirmed": false,
+      "note": "D-22 CONFIRMED (Dafna technologist, confirmation table 2026-11-23): the top lies ON the side panels (length = carcass width, its ends are visible and banded); the bottom stays BETWEEN the sides (length = carcass width - 2 x panelThickness). Side height = height - panelThickness. Was: top and bottom between the sides (templates up to 0.11.0)."
+    },
+    {
+      "id": "equal-sections-integer-mm",
+      "unconfirmed": false,
+      "note": "Sections share the inner width equally in whole millimetres; any remainder (< sections mm) goes +1 mm to the leftmost sections. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      "id": "plinth-strips-between-sides",
+      "unconfirmed": false,
+      "note": "CONFIRMED by Dafna (D-3a.1): plinth = front and back strips BETWEEN the side panels (length = width - 2 x panelThickness, height = plinthHeight, board thickness = panelThickness). Front strip set back by plinthRecess from the carcass front, back strip flush with the carcass back. plinthHeight / plinthRecess values stay unconfirmed."
+    },
+    {
+      "id": "partitions-between-top-bottom",
+      "unconfirmed": false,
+      "note": "Vertical partitions are fitted between top and bottom and run the full carcass depth. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      "id": "depth-definition",
+      "unconfirmed": false,
+      "note": "depth = back + carcass + (doors ? doorGapFront + door : 0). carcassDepth = depth - back - (doors ? door + doorGapFront : 0). Decided in D-1a (ADR-003)."
+    },
+    {
+      "id": "back-overlay-covers-carcass",
+      "unconfirmed": false,
+      "note": "The overlay back covers the carcass only (width x carcass height), not the plinth. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      "id": "plinth-front-under-carcass",
+      "unconfirmed": false,
+      "note": "The front plinth strip is set back from the carcass front (not from the door) by plinthRecess. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      "id": "doors-overlay",
+      "unconfirmed": false,
+      "note": "Doors are overlay (nakladnye): they cover the carcass front. Height = carcass height - 2 x doorGapEdge; the plinth stays visible. D-22: or inset (doorMount = inset): leaves inside the section opening, flush with the carcass front, height = carcass inner height - 2 x insetDoorGapMm. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      "id": "door-split-at-partition-centre",
+      "unconfirmed": false,
+      "note": "Door coverage of a section ends at the centre line of its partitions (outer carcass edge for the end sections); a double door splits its coverage in two leaves. Leaf widths are rounded to doorLeafRoundingMm (ADR-006). CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      "id": "interior-default-rule",
+      "unconfirmed": true,
+      "note": "interior 'auto': single door -> shelves, double door -> rail_shelf, no door -> shelves; if that preset would produce a warning (e.g. rail in a shallow carcass), shelves instead."
+    },
+    {
+      "id": "interior-layout",
+      "unconfirmed": true,
+      "note": "Drawers stack at the bottom of the section with a fixed shelf directly above; rail presets put a top shelf 400 mm below the top inner face and the rail axis 60 mm below the shelf (or the top); remaining free space without a rail gets evenly spaced removable shelves."
+    },
+    {
+      "id": "edge-default-rule",
+      "unconfirmed": false,
+      "note": "Visible front edges are banded (sides, partitions, top, bottom, shelves: local front edge; doors and drawer fronts: all four edges); back, plinth, drawer box parts: no band. D-22: every visible edge is banded - with the top on the sides, also the top ends (not where two carcasses meet). CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      "id": "grain-placeholder",
+      "unconfirmed": true,
+      "note": "grainDirection = 'length' for LDSP/MDF parts, null for HDF; real grain rules need Dafna data (oak decors). Dafna technologist, confirmation table 2026-11-23: grain is set by the manager per material."
+    },
+    {
+      "id": "door-hinge-sides",
+      "unconfirmed": true,
+      "note": "Single doors hinge toward the outer side of their half of the wardrobe: 1: L, 2: L,R, 3: L,L,R, 4: L,L,R,R (middle of an odd count: left). Two leaves may hinge on the same partition (half-overlay hinges on both faces); they cannot both be fully open at once."
+    },
+    {
+      "id": "door-hinge-mount",
+      "unconfirmed": true,
+      "note": "hingeMount per leaf: 'full_overlay' when hinged on an outer side panel, 'half_overlay' when hinged on a partition (each leaf covers half the partition). Data only, for later hardware / export."
+    },
+    {
+      "id": "auto-sections-door-leaf",
+      "unconfirmed": true,
+      "note": "sections=auto picks the smallest count that keeps every section inner width <= maxShelfSpanMm and, unless doors=none, no single leaf wider than maxSingleLeafWidthMm (relevant for doors=all_single)."
+    },
+    {
+      "id": "ergonomics-gost-13025",
+      "unconfirmed": false,
+      "note": "D-7: long_hang / short_hang / short_hang_drawers follow GOST 13025.1-85 «Мебель бытовая. Функциональные размеры отделений для хранения»: rail top <= 1900 from the floor and >= 50 below the shelf above; >= 1400 (long) / >= 900 (short) below the rail top; inner depth >= 560 for a rail; top drawer edge <= 1250; shelves >= 170 apart; space above the rail that fits a >= 170 compartment becomes an antresol (rarely used items, GOST table 6 note)."
+    }
+  ]
+}

@@ -115,6 +115,7 @@ export const uz = {
   'option.backPanel.none': "Yo'q",
   'option.backPanel.hdf_overlay': 'HDF (ustidan)',
   'option.base.plinth': 'Tsokol bilan',
+  'option.base.feet': 'Oyoqchada',
   'option.base.none': 'Tsokolsiz',
   'param.carcasses': 'Korpuslar soni',
   'option.carcasses.auto': 'Avto (160 sm dan 2 ta)',

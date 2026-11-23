@@ -94,6 +94,8 @@ export interface SectionBox {
   innerDepth: number;
   /** corpus board thickness (shelves, drawer fronts and box sides) */
   t: number;
+  /** D-26: this section's shelf setback (open / behind an inset door); absent = the constant */
+  shelfSetbackMm?: number;
 }
 
 export interface InteriorPlan {
@@ -154,7 +156,7 @@ export function planInterior(
   }
   const { t, yBottom, yTop } = box;
   const n = box.index + 1;
-  const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
+  const shelfDepth = box.innerDepth - (box.shelfSetbackMm ?? c.shelfFrontSetbackMm);
   const shelves: ShelfSummary[] = [];
   const rails: RailSummary[] = [];
   const drawers: DrawerSummary[] = [];
@@ -269,7 +271,7 @@ function planErgonomic(
 ): InteriorPlan {
   const { t, yBottom, yTop } = box;
   const n = box.index + 1;
-  const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
+  const shelfDepth = box.innerDepth - (box.shelfSetbackMm ?? c.shelfFrontSetbackMm);
   const shelves: ShelfSummary[] = [];
   const rails: RailSummary[] = [];
   let drawers: DrawerSummary[] = [];
@@ -365,7 +367,7 @@ function planBooksLower(
 ): InteriorPlan {
   const { t, yBottom, yTop } = box;
   const n = box.index + 1;
-  const shelfDepth = box.innerDepth - c.shelfFrontSetbackMm;
+  const shelfDepth = box.innerDepth - (box.shelfSetbackMm ?? c.shelfFrontSetbackMm);
   const shelves: ShelfSummary[] = [];
   const addShelf = (yMm: number, kind: ShelfSummary['kind'], id: string) =>
     shelves.push({ id, yMm: half(yMm), kind, lengthMm: box.innerW, depthMm: shelfDepth });

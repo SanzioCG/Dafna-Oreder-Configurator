@@ -6,10 +6,12 @@ import {
   migrateOrderDraft,
   regenerateApplication,
   resolveParams,
-  wardrobeTemplate,
   type GenerateResult,
   type Params,
 } from '../src/index.js';
+
+/** D-22 values on template 0.12.0 (0.13.0 follows the Bazis models, D-26) */
+const wardrobeTemplate = TEMPLATE_ARCHIVE['0.12.0']!;
 
 /**
  * D-22: the Dafna technologist's confirmation table (2026-11-23) in wardrobe template 0.12.0 -
@@ -111,7 +113,7 @@ describe('D-22 confirmed values (template 0.12.0)', () => {
     expect(old.panels.find((p) => p.id === 'top')?.lengthMm).toBe(1500 - 2 * 16);
     const r = regenerateApplication(defaultParams(v11), '0.11.0');
     if (!r.ok) throw new Error(r.code);
-    const { draft, issues } = migrateOrderDraft(r.draft);
+    const { draft, issues } = migrateOrderDraft(r.draft, { template: wardrobeTemplate });
     expect(draft?.templateVersion).toBe('0.12.0');
     expect(issues.map((i) => i.code)).toContain('MIGRATION_CONSTRUCTION_CHANGED');
     expect(draft?.panels.find((p) => p.id === 'top')?.lengthMm).toBe(1500);

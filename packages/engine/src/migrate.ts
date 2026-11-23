@@ -188,6 +188,8 @@ export const INTERIOR_CHANGED_IN = '0.7.0';
 export const CARCASS_SPLIT_IN = '0.10.0';
 /** D-22: the top lies on the side panels from this template version on */
 export const TOP_OVER_SIDES_IN = '0.12.0';
+/** D-26: the construction of Dafna's Bazis models from this template version on */
+export const LESTER_IN = '0.13.0';
 
 /** Pre-0.7.0 hanging presets -> the GOST presets of template 0.7.0. */
 export const INTERIOR_MAP_07: Readonly<Record<string, string>> = {
@@ -352,6 +354,13 @@ export function migrateOrderDraft(
     }
   }
 
+  // D-26: "no plinth" (base none) became "feet" in template 0.13.0 (reported below as a
+  // construction change)
+  const baseOptions = template.parameters.find((p) => p.key === 'base')?.options ?? [];
+  if (params.base === 'none' && !baseOptions.includes('none') && baseOptions.includes('feet')) {
+    params = { ...params, base: 'feet' };
+  }
+
   const kept = preserveDoors(params, doorTypesOf(d), template, catalog);
   params = kept.params;
   issues.push(...kept.issues);
@@ -385,8 +394,13 @@ export function migrateOrderDraft(
   const topMoved =
     templateBefore(fromTemplate, TOP_OVER_SIDES_IN) &&
     template.constructionRules.some((r) => r.id === 'top-over-sides');
+  // D-26: the Bazis construction (feet, back in a groove, bands) from 0.13.0
+  const lesterNew =
+    templateBefore(fromTemplate, LESTER_IN) &&
+    template.constructionRules.some((r) => r.id === 'lester-carcass');
   if (
     topMoved ||
+    lesterNew ||
     (params.base === 'plinth' && templateBefore(fromTemplate, CONSTRUCTION_CHANGED_IN))
   ) {
     issues.push(

@@ -9,11 +9,14 @@ import {
   migrateOrderDraft,
   regenerateApplication,
   resolveParams,
-  wardrobeTemplate,
+  TEMPLATE_ARCHIVE,
   type GenerateResult,
   type Panel,
   type Params,
 } from '../src/index.js';
+
+/** D-15 behaviour on template 0.12.0 (0.13.0 changes the construction, D-26) */
+const wardrobeTemplate = TEMPLATE_ARCHIVE['0.12.0']!;
 
 /** axis-aligned box of a wardrobe board (rotations used by the wardrobe generator) */
 function panelBoxOf(p: Panel) {
@@ -118,7 +121,10 @@ describe('D-15 two carcasses from 1600 mm', () => {
     delete (p as Record<string, unknown>).lowerDoorHeight;
     const old = regenerateApplication(p, '0.9.0');
     if (!old.ok) throw new Error(old.code);
-    const { draft } = migrateOrderDraft({ ...old.draft, schemaVersion: old.draft.schemaVersion });
+    const { draft } = migrateOrderDraft(
+      { ...old.draft, schemaVersion: old.draft.schemaVersion },
+      { template: wardrobeTemplate },
+    );
     expect(draft?.templateVersion).toBe(wardrobeTemplate.templateVersion);
     expect(draft?.params.carcasses).toBe('1');
     expect(draft?.panels.filter((x) => x.role === 'side')).toHaveLength(2);

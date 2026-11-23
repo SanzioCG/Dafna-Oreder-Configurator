@@ -41,6 +41,9 @@ import app11Books from './fixtures/applications/0.11.0.w2400-h2200-books-lower.j
 // D-22 (template 0.12.0): the technologist's confirmation table - top on the sides, inset doors
 import app12Default from './fixtures/applications/0.12.0.default.json' with { type: 'json' };
 import app12Inset from './fixtures/applications/0.12.0.w1800-inset-drawers.json' with { type: 'json' };
+// D-26 (template 0.13.0): Dafna's Bazis models - feet, back in a groove, two edge bands
+import app13Default from './fixtures/applications/0.13.0.default.json' with { type: 'json' };
+import app13Plinth from './fixtures/applications/0.13.0.w2000-plinth-overlay-open.json' with { type: 'json' };
 
 interface ApplicationFixture {
   templateVersion: string;
@@ -68,6 +71,8 @@ const FIXTURES: Record<string, ApplicationFixture> = {
   '0.11.0 w2400 h2200 books_lower': app11Books as unknown as ApplicationFixture,
   '0.12.0 default': app12Default as unknown as ApplicationFixture,
   '0.12.0 w1800 inset doors + drawers': app12Inset as unknown as ApplicationFixture,
+  '0.13.0 default (feet, inset)': app13Default as unknown as ApplicationFixture,
+  '0.13.0 w2000 plinth, overlay, open section': app13Plinth as unknown as ApplicationFixture,
 };
 
 describe('reproducibility: stored applications regenerate exactly (ADR-011)', () => {
@@ -125,6 +130,7 @@ describe('template archive', () => {
       '0.10.0',
       '0.11.0',
       '0.12.0',
+      '0.13.0',
     ]);
     // every template version is mapped to the catalog it was released with
     expect(Object.keys(TEMPLATE_CATALOG)).toEqual(Object.keys(TEMPLATE_ARCHIVE));
