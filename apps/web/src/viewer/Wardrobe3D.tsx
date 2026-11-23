@@ -1,4 +1,4 @@
-import { hingesForDoor, type Panel, type Rail } from '@dafna/engine';
+import { brandItem, hingesForDoor, type Panel, type Rail } from '@dafna/engine';
 import { Edges } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, type MutableRefObject, type ReactNode } from 'react';
@@ -182,7 +182,7 @@ function DoorHinges({ panel, sign, brand }: { panel: Panel; sign: number; brand:
             <mesh position={[sign * 2, 0, -28]} material={mechMaterial}>
               <boxGeometry args={[12, 22, 50]} />
             </mesh>
-            {brand === 'hettich' && (
+            {brandItem('hinge', brand)?.softClose === true && (
               <mesh
                 rotation={[Math.PI / 2, 0, 0]}
                 position={[-sign * 10, 15, -20]}
@@ -222,7 +222,8 @@ export function slideBars(
     const left = (b.min[0] + b.max[0]) / 2 < cx;
     const len = b.max[2] - b.min[2] - 10;
     const z = (b.min[2] + b.max[2]) / 2;
-    if (brand === 'hettich') {
+    // D-28: hidden (under-mount) slides: Hettich Quadro, Samet Smart Slide / Slidea
+    if (brandItem('slide', brand)?.slideMount === 'under') {
       const y0 = Math.min(b.min[1], bottom ? panelBox(bottom).min[1] : b.min[1]);
       const x = left ? b.max[0] : b.min[0];
       moving.push({ key: `m${i}`, position: [x, y0 - 6, z], size: [18, 12, len] });

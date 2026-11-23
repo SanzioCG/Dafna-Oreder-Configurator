@@ -256,9 +256,9 @@ export function assemblySteps(
     for (const p of panels) left.delete(p.id);
     const hardware =
       key === 'doors'
-        ? itemsOf('hinge')
+        ? [...itemsOf('hinge'), ...itemsOf('hinge_plate')] // D-28: plates go with the hinges
         : key === 'drawers'
-          ? itemsOf('slide')
+          ? [...itemsOf('slide'), ...itemsOf('slide_lock')]
           : key === 'castors'
             ? itemsOf('castor')
             : rails.length > 0

@@ -58596,10 +58596,10 @@ var require_fontkit_umd = __commonJS({
   }
 });
 
-// ../../packages/engine/templates/wardrobe.v13.json
-var wardrobe_v13_default = {
+// ../../packages/engine/templates/wardrobe.v14.json
+var wardrobe_v14_default = {
   templateId: "wardrobe",
-  templateVersion: "0.14.0",
+  templateVersion: "0.15.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -58948,24 +58948,24 @@ var wardrobe_v13_default = {
     {
       key: "hingeBrand",
       type: "enum",
-      default: "strax",
-      options: ["strax", "hettich"],
+      default: "samet",
+      options: ["samet"],
       labelKey: "param.hingeBrand",
       uiStep: "hardware",
       customerVisible: true,
-      unconfirmed: true,
-      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+      unconfirmed: false,
+      note: "D-28 (Dafna's stock report (Furniture.docx, founder 2026-11-23: Samet replaces the demo brands)): Samet Master soft-close hinges; the hinge model follows each leaf's mounting (0 mm full overlay, 8 mm half overlay, 18 mm inset) plus one mounting plate per hinge (hardware catalog hingeByMount / hingePlate)."
     },
     {
       key: "slideBrand",
       type: "enum",
-      default: "strax",
-      options: ["strax", "hettich"],
+      default: "samet_ball",
+      options: ["samet_ball", "samet_soft", "samet_smart", "samet_slidea"],
       labelKey: "param.slideBrand",
       uiStep: "hardware",
       customerVisible: true,
-      unconfirmed: true,
-      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+      unconfirmed: false,
+      note: "D-28 (Dafna's stock report (Furniture.docx, founder 2026-11-23: Samet replaces the demo brands)): Samet slides - SO Class ball bearing (default, as in the Bazis pedestal), SO Class soft close, Smart Slide (hidden, full extension) and Slidea (hidden, single extension), one pair per drawer; Smart Slide and Slidea add their left + right locks (slideExtras)."
     },
     {
       key: "lowerDoorHeight",
@@ -59394,10 +59394,10 @@ var wardrobe_v13_default = {
   ]
 };
 
-// ../../packages/engine/templates/pedestal.v5.json
-var pedestal_v5_default = {
+// ../../packages/engine/templates/pedestal.v6.json
+var pedestal_v6_default = {
   templateId: "pedestal",
-  templateVersion: "0.5.0",
+  templateVersion: "0.6.0",
   productType: "pedestal",
   generator: "pedestal-v1",
   units: "mm",
@@ -59549,24 +59549,24 @@ var pedestal_v5_default = {
     {
       key: "slideBrand",
       type: "enum",
-      default: "strax",
-      options: ["strax", "hettich"],
+      default: "samet_ball",
+      options: ["samet_ball", "samet_soft", "samet_smart", "samet_slidea"],
       labelKey: "param.slideBrand",
       uiStep: "hardware",
       customerVisible: true,
-      unconfirmed: true,
-      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+      unconfirmed: false,
+      note: "D-28 (Dafna's stock report (Furniture.docx, founder 2026-11-23: Samet replaces the demo brands)): Samet slides - SO Class ball bearing (default, as in the Bazis pedestal), SO Class soft close, Smart Slide (hidden, full extension) and Slidea (hidden, single extension), one pair per drawer; Smart Slide and Slidea add their left + right locks (slideExtras)."
     },
     {
       key: "hingeBrand",
       type: "enum",
-      default: "strax",
-      options: ["strax", "hettich"],
+      default: "samet",
+      options: ["samet"],
       labelKey: "param.hingeBrand",
       uiStep: "hardware",
       customerVisible: true,
-      unconfirmed: true,
-      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+      unconfirmed: false,
+      note: "D-28 (Dafna's stock report (Furniture.docx, founder 2026-11-23: Samet replaces the demo brands)): Samet Master soft-close hinges; the hinge model follows each leaf's mounting (0 mm full overlay, 8 mm half overlay, 18 mm inset) plus one mounting plate per hinge (hardware catalog hingeByMount / hingePlate)."
     }
   ],
   constants: {
@@ -60104,8 +60104,8 @@ var desk_v4_default = {
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v13_default;
-var pedestalTemplate = pedestal_v5_default;
+var wardrobeTemplate = wardrobe_v14_default;
+var pedestalTemplate = pedestal_v6_default;
 var deskTemplate = desk_v4_default;
 var PRODUCT_TEMPLATES = {
   wardrobe: wardrobeTemplate,
@@ -70086,6 +70086,804 @@ var wardrobe_v12_default = {
   ]
 };
 
+// ../../packages/engine/templates/wardrobe.v13.json
+var wardrobe_v13_default = {
+  templateId: "wardrobe",
+  templateVersion: "0.14.0",
+  productType: "wardrobe",
+  generator: "wardrobe-carcass-v4",
+  units: "mm",
+  parameters: [
+    {
+      key: "width",
+      type: "int",
+      default: 1500,
+      min: 600,
+      max: 2400,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.width",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "Overall product width, outer faces of the side panels. Customers choose only customerValues (staff: free min..max). Standard sizes (D-7): industry-common wardrobe sizes, unconfirmed until Dafna confirms its range.",
+      customerValues: [800, 1e3, 1200, 1500, 1600, 1800, 2e3, 2400]
+    },
+    {
+      key: "height",
+      type: "int",
+      default: 2100,
+      min: 1200,
+      max: 2200,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.height",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "Overall product height from the floor, plinth included. Customers choose only customerValues. Standard sizes (D-7): industry-common wardrobe sizes, unconfirmed until Dafna confirms its range. D-17 (founder, 2026-11-16): Dafna's maximum wardrobe height is 2200 mm; customer heights 2000 / 2100 / 2200.",
+      customerValues: [2e3, 2100, 2200]
+    },
+    {
+      key: "depth",
+      type: "int",
+      default: 600,
+      min: 350,
+      max: 650,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.depth",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "Overall outer depth: back panel + carcass + front door gap + door (ADR-003). Default 600 (D-1c, unconfirmed): carcass 579 with doors, so rail presets (>= 530 inner depth) are available at the default size. Customers choose 600 (hanging clothes: inner depth >= 560, GOST 13025.1-85) or 450 (shelves / drawers only). CONFIRMED (Dafna technologist, confirmation table 2026-11-23).",
+      customerValues: [450, 600]
+    },
+    {
+      key: "sections",
+      type: "enum",
+      default: "auto",
+      options: ["auto", 1, 2, 3, 4],
+      labelKey: "param.sections",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "auto = minimum section count that keeps each section inner width <= maxShelfSpanMm."
+    },
+    {
+      key: "corpusMaterial",
+      type: "enum",
+      default: "ldsp_white_16",
+      options: [
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      labelKey: "param.corpusMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp", "mdf"],
+      note: "Carcass, partition and plinth board (LDSP only). Its thickness drives all carcass geometry. Decors = Dafna price list (catalog 1.0.0), colours unconfirmed."
+    },
+    {
+      key: "doorMaterial",
+      type: "enum",
+      default: "same_as_corpus",
+      options: [
+        "same_as_corpus",
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16",
+        "lmdf_egger_h1367_st40_16",
+        "lmdf_egger_h1385_st40_16",
+        "lmdf_egger_h1344_st32_16_7",
+        "lmdf_egger_h3325_st28_16_7"
+      ],
+      labelKey: "param.doorMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp", "mdf"],
+      note: "'same_as_corpus' = door decor follows corpusMaterial. Door thickness = this material's thickness (LMDF 16 / 16.7 mm: doors only)."
+    },
+    {
+      key: "backPanel",
+      type: "enum",
+      default: "hdf_overlay",
+      options: ["none", "hdf_overlay"],
+      labelKey: "param.backPanel",
+      uiStep: "size",
+      customerVisible: false,
+      unconfirmed: false,
+      note: "D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right): HDF 3 mm in a groove backGrooveFromRearMm from the rear edge, entering every panel by backGrooveDepthMm (option id kept)."
+    },
+    {
+      key: "base",
+      type: "enum",
+      default: "feet",
+      options: ["feet", "plinth"],
+      labelKey: "param.base",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      note: `D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right): feet = four 20 mm "Bingo" feet, the full-width bottom on them and the sides between bottom and top (no plinth); plinth = the D-3a.1 construction (sides to the floor, strips between them). "none" removed.`
+    },
+    {
+      key: "plinthHeight",
+      type: "int",
+      default: 100,
+      min: 60,
+      max: 150,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.plinthHeight",
+      uiStep: "size",
+      customerVisible: false,
+      unconfirmed: false,
+      note: "Assumed plinth height range and default. Used only when base = plinth. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      key: "plinthRecess",
+      type: "int",
+      default: 0,
+      min: 0,
+      max: 60,
+      step: 5,
+      unit: "mm",
+      labelKey: "param.plinthRecess",
+      uiStep: "size",
+      customerVisible: false,
+      unconfirmed: false,
+      note: "Assumed: setback of the front plinth strip from the carcass front edge. Back strip is never recessed. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      key: "doors",
+      type: "enum",
+      default: "auto",
+      options: ["none", "all_single", "auto"],
+      labelKey: "param.doors",
+      uiStep: "doors",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "Preset for all sections. auto: single door if the single-leaf width (coverage minus gaps) <= maxSingleLeafWidthMm, else double. Single doors hinge toward the outer side of their half (ADR-006 rev. D-1c)."
+    },
+    {
+      key: "doorMount",
+      type: "enum",
+      default: "inset",
+      options: ["overlay", "inset"],
+      labelKey: "param.doorMount",
+      uiStep: "doors",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "D-22 (Dafna technologist, confirmation table 2026-11-23): two door mountings to choose from. overlay (nakladnoy) = doors cover the carcass front; inset (vkladnoy) = doors sit inside the openings, flush with the carcass front, insetDoorGapMm all round and between leaves; the depth stack is then back + carcass (no door in front of the carcass). D-26: inset is the default (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right: every door in the Bazis models is inset). D-27: inset leaves span the partitions between doored sections (the partitions stand behind them)."
+    },
+    {
+      key: "doorSection1",
+      type: "enum",
+      default: "preset",
+      options: ["preset", "none", "single_left", "single_right", "double"],
+      labelKey: "param.doorSection",
+      uiStep: "doors",
+      customerVisible: false,
+      unconfirmed: false,
+      appliesToSection: 1,
+      note: "Staff override for section 1. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      key: "doorSection2",
+      type: "enum",
+      default: "preset",
+      options: ["preset", "none", "single_left", "single_right", "double"],
+      labelKey: "param.doorSection",
+      uiStep: "doors",
+      customerVisible: false,
+      unconfirmed: false,
+      appliesToSection: 2,
+      note: "Staff override for section 2. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      key: "doorSection3",
+      type: "enum",
+      default: "preset",
+      options: ["preset", "none", "single_left", "single_right", "double"],
+      labelKey: "param.doorSection",
+      uiStep: "doors",
+      customerVisible: false,
+      unconfirmed: false,
+      appliesToSection: 3,
+      note: "Staff override for section 3. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      key: "doorSection4",
+      type: "enum",
+      default: "preset",
+      options: ["preset", "none", "single_left", "single_right", "double"],
+      labelKey: "param.doorSection",
+      uiStep: "doors",
+      customerVisible: false,
+      unconfirmed: false,
+      appliesToSection: 4,
+      note: "Staff override for section 4. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      key: "interior1",
+      type: "enum",
+      default: "auto",
+      options: [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      labelKey: "param.interior",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      appliesToSection: 1,
+      control: "presetCards",
+      note: "Interior fill of section 1 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      key: "interior2",
+      type: "enum",
+      default: "auto",
+      options: [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      labelKey: "param.interior",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      appliesToSection: 2,
+      control: "presetCards",
+      note: "Interior fill of section 2 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      key: "interior3",
+      type: "enum",
+      default: "auto",
+      options: [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      labelKey: "param.interior",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      appliesToSection: 3,
+      control: "presetCards",
+      note: "Interior fill of section 3 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      key: "interior4",
+      type: "enum",
+      default: "auto",
+      options: [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      labelKey: "param.interior",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      appliesToSection: 4,
+      control: "presetCards",
+      note: "Interior fill of section 4 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      key: "hingeBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.hingeBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      key: "slideBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.slideBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      key: "lowerDoorHeight",
+      type: "int",
+      default: 800,
+      min: 400,
+      max: 1200,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.lowerDoorHeight",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [600, 800, 1e3],
+      note: "D-14: door leaf height of a books_lower section (from the door bottom edge). Only used when a section has the books_lower interior. Customer sizes 60 / 80 / 100 cm, unconfirmed until Dafna confirms."
+    },
+    {
+      key: "carcasses",
+      type: "enum",
+      default: "auto",
+      options: ["auto", "1", "2"],
+      labelKey: "param.carcasses",
+      uiStep: "size",
+      customerVisible: false,
+      unconfirmed: false,
+      note: "D-15: 'auto' = two carcasses from splitCarcassFromWidthMm on; staff may force one ('1') or two ('2'). Two carcasses need at least 2 sections."
+    }
+  ],
+  constants: {
+    maxShelfSpanMm: {
+      value: 900,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed maximum section inner width before shelves sag (SHELF_SPAN warning, sections=auto)."
+    },
+    backMaterial: {
+      value: "hdf_white_3",
+      unconfirmed: true,
+      note: "Assumed back panel material (catalog id). Its thickness is the back thickness."
+    },
+    doorGapFrontMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Assumed gap between the carcass front edge and the back face of the overlay door. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    doorGapBetweenMm: {
+      value: 3,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Assumed gap between two adjacent door leaves. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    doorGapEdgeMm: {
+      value: 3,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Assumed gap between a door leaf and the outer carcass edge (left, right, top, bottom). Also used next to a section without a door. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): 3 mm"
+    },
+    maxSingleLeafWidthMm: {
+      value: 500,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Assumed maximum width of one door leaf. Single source for doors=auto (single vs double) and DOOR_TOO_WIDE; measured on the leaf, not the section opening. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): 500 mm"
+    },
+    doorLeafRoundingMm: {
+      value: 1,
+      unit: "mm",
+      unconfirmed: false,
+      note: 'Assumed rounding step for door leaf widths; the remainder goes to the leaves that lost most by rounding so leaves + gaps = covered width exactly. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): answer "0" (no half millimetres) = leaf widths in whole millimetres'
+    },
+    insetDoorGapMm: {
+      value: 3,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Gap around and between inset door leaves (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    maxDoorHeightMm: {
+      value: 2400,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed door height above which DOOR_TOO_HEIGHT warns (warping risk)."
+    },
+    shelfPitchTargetMm: {
+      value: 334,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed target pitch of removable shelves; the count is derived from the available height (compartments = round(height / pitch)), openings are equal."
+    },
+    shelfFrontSetbackMm: {
+      value: 20,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Assumed setback of shelves from the carcass front (removable shelves); shelf depth = carcass inner depth - setback. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): shelves 20 mm behind the carcass front (inset doors: behind the door)"
+    },
+    insetShelfSetbackMm: {
+      value: 1,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Shelves behind an inset door: 1 mm behind the door (17 mm from the carcass front) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    openShelfSetbackMm: {
+      value: 5,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Shelves of an open section (no door): 5 mm from the carcass front (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    railTopShelfDropMm: {
+      value: 200,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Assumed distance from the carcass top inner face down to the top face of the shelf above a rail (rail presets). CONFIRMED (Dafna technologist, confirmation table 2026-11-23): 200 mm"
+    },
+    railAxisDropMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed distance from the underside of the shelf/top above a rail down to the rail axis."
+    },
+    railDiameterMm: {
+      value: 25,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed hanging rail diameter."
+    },
+    drawerFrontHeightMm: {
+      value: 170,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Assumed internal drawer front height. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    drawerCountPerSection: {
+      value: 2,
+      unconfirmed: true,
+      note: "Assumed number of internal drawers per drawer preset, stacked at the bottom of the section."
+    },
+    drawerGapMm: {
+      value: 3,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Assumed vertical gap below, between and above internal drawer fronts (drawer zone = gap + count x (front + gap)). CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    drawerFrontSetbackMm: {
+      value: 20,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Assumed setback of internal drawer fronts behind the carcass front edge (they sit behind the doors). CONFIRMED (Dafna technologist, confirmation table 2026-11-23): 20 mm (inset doors: behind the door)"
+    },
+    drawerSlideClearanceMm: {
+      value: 13,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed slide clearance per side: drawer box width = section inner width - 2 x 13. Internal fronts are as wide as the box (simplified). Dafna technologist, confirmation table 2026-11-23: depends on the slide model - to come with the hardware list."
+    },
+    drawerBoxHeightReductionMm: {
+      value: 50,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Drawer box height is 120 mm (front 170 - 50) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    drawerBackClearanceMm: {
+      value: 20,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed free space behind a drawer box. Dafna technologist, confirmation table 2026-11-23: depends on the slide model - to come with the hardware list."
+    },
+    drawerSlideMinMm: {
+      value: 250,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed shortest slide; box depth = longest slide (250..550, 50 steps) that fits."
+    },
+    drawerSlideMaxMm: {
+      value: 550,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed longest slide."
+    },
+    drawerSlideStepMm: {
+      value: 50,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed slide length step."
+    },
+    railMinDepthMm: {
+      value: 560,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawings 1-2: clothing compartment depth >= 560 mm (RAIL_DEPTH_SHORT below). Was 530 (assumed) up to template 0.6.0."
+    },
+    railMinHangingHeightMm: {
+      value: 900,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed minimum clear hanging height under a rail (RAIL_HEIGHT_SHORT warning below)."
+    },
+    drawerMaxFrontWidthMm: {
+      value: 900,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed maximum internal drawer front width (DRAWER_SECTION_TOO_WIDE warning above)."
+    },
+    edgeBandId: {
+      value: "pvc_1_19",
+      unconfirmed: false,
+      note: `Visible edges: PVC 1 mm x 19 ("\u041A\u0440\u043E\u043C\u043A\u0430 1/19"): doors and fronts all round, top / bottom front and ends (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    edgeBandThicknessMm: {
+      value: 1,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Thick edge band thickness (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    edgeBandThinId: {
+      value: "pvc_0_4_19",
+      unconfirmed: false,
+      note: `Less visible edges: 0.4 mm x 19 ("\u041A\u0440\u043E\u043C\u043A\u0430 19,04"): sides front and back, partitions and shelves (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    edgeBandThinMm: {
+      value: 0.4,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Thin edge band thickness (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    railTopMaxMm: {
+      value: 1900,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, cl. 2.3: rail top edge at most 1900 mm from the floor (higher only with a pull-down rail)."
+    },
+    railTopToShelfMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawings 1-2: >= 50 mm from the rail top to the shelf above. 60 chosen for hanger hooks (unconfirmed)."
+    },
+    longHangMinMm: {
+      value: 1400,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawing 1 (coats, dresses): >= 1400 mm from the rail top to the element below."
+    },
+    shortHangMinMm: {
+      value: 900,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawing 2 (suits, jackets, shirts): >= 900 mm from the rail top to the element below."
+    },
+    shortHangClearMm: {
+      value: 1e3,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Short-clothes hanging zone actually planned above the shelves (>= 900 by GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB); 1000 = margin for longer jackets (unconfirmed)."
+    },
+    drawerTopMaxMm: {
+      value: 1250,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, cl. 7: top drawer edge at most 1250 mm from the floor (DRAWER_TOO_HIGH above)."
+    },
+    minShelfGapMm: {
+      value: 170,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, cl. 3.1: clear gap between shelves >= 170 mm; smaller leftovers get no shelf / antresol."
+    },
+    autoPresetDouble: {
+      value: "short_hang",
+      unconfirmed: true,
+      note: "'auto' fill behind a double door: short clothes + shelves (D-7, unconfirmed)."
+    },
+    autoPresetSingle: {
+      value: "shelves",
+      unconfirmed: true,
+      note: "'auto' fill behind a single door or without a door: shelves (unchanged)."
+    },
+    bookGapMinMm: {
+      value: 330,
+      unit: "mm",
+      unconfirmed: true,
+      note: "D-14: target clear gap of open book / document shelves, so an A4 folder stands upright (A4 = 297 mm, ISO 216; lever-arch files ~320 mm high). Inside the GOST 13025.1-85 table 2 range (180..390 mm)."
+    },
+    bookGapMaxMm: {
+      value: 390,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 table 2 (books): clear gap between shelves 180..390 mm; depth 140..440 mm."
+    },
+    splitCarcassFromWidthMm: {
+      value: 1600,
+      unit: "mm",
+      unconfirmed: false,
+      note: "D-15 (founder's decision, 2026-11-14): from this width the wardrobe is made as two carcasses side by side, split at the middle boundary (sections 1+1, 2+1, 2+2): each carcass has its own sides, top, bottom, back and plinth strips. Easier to carry and assemble; ~1 side panel more board."
+    },
+    feetHeightMm: {
+      value: 20,
+      unit: "mm",
+      unconfirmed: false,
+      note: `Bingo feet height (FN004 "\u0411\u0438\u043D\u0433\u043E 2 \u0441\u043C") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    feetInsetMm: {
+      value: 50,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Feet centre from the carcass corners (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    backGrooveFromRearMm: {
+      value: 12,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Back groove distance from the rear edge of sides, top and bottom (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    backGrooveDepthMm: {
+      value: 8,
+      unit: "mm",
+      unconfirmed: false,
+      note: "How far the back enters each panel (back = inner size + 2 x 8) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    insetPartitionBehindDoorMm: {
+      value: 1,
+      unit: "mm",
+      unconfirmed: false,
+      note: "A partition hidden behind inset doors: its front edge 1 mm behind the doors, as the shelves (Dafna's Bazis models (docs/production/bazis/ANALIZ.md: Offis 377.5 mm leaves, sectional pedestal 3 mm between leaves), founder 2026-11-23)."
+    }
+  },
+  constructionRules: [
+    {
+      id: "lester-carcass",
+      unconfirmed: false,
+      note: "D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right): top and (on feet) bottom full width, sides between them; back HDF in a groove (partitions stop at its front face); removable shelves 1 mm short each side, banded all round; two edge bands (1 mm visible, 0.4 mm others); drawer boxes 120 mm high."
+    },
+    {
+      id: "inset-doors-hide-partitions",
+      unconfirmed: false,
+      note: "D-27 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md: Offis 377.5 mm leaves, sectional pedestal 3 mm between leaves), founder 2026-11-23): inset doors close a whole run of doored sections as one opening - the leaves meet with insetDoorGapMm between them and no partition shows between them. A partition between two doored sections stands behind the doors (door thickness + insetPartitionBehindDoorMm shorter at the front); next to an open section, a books_lower section or at a carcass split it stays full depth and frames the opening. A leaf hinging on a hidden partition is half overlay on it."
+    },
+    {
+      id: "sides-to-floor",
+      unconfirmed: false,
+      note: "CONFIRMED by Dafna (D-3a.1): side panels run the full product height to the floor (base = plinth or none). The carcass bottom rests on the plinth strips at plinthHeight; carcass height (top of bottom board to top) = height - plinthHeight. D-26: only with base = plinth; on feet the sides stand on the bottom."
+    },
+    {
+      id: "top-over-sides",
+      unconfirmed: false,
+      note: "D-22 CONFIRMED (Dafna technologist, confirmation table 2026-11-23): the top lies ON the side panels (length = carcass width, its ends are visible and banded); the bottom stays BETWEEN the sides (length = carcass width - 2 x panelThickness). Side height = height - panelThickness. Was: top and bottom between the sides (templates up to 0.11.0)."
+    },
+    {
+      id: "equal-sections-integer-mm",
+      unconfirmed: false,
+      note: "Sections share the inner width equally in whole millimetres; any remainder (< sections mm) goes +1 mm to the leftmost sections. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      id: "plinth-strips-between-sides",
+      unconfirmed: false,
+      note: "CONFIRMED by Dafna (D-3a.1): plinth = front and back strips BETWEEN the side panels (length = width - 2 x panelThickness, height = plinthHeight, board thickness = panelThickness). Front strip set back by plinthRecess from the carcass front, back strip flush with the carcass back. plinthHeight / plinthRecess values stay unconfirmed."
+    },
+    {
+      id: "partitions-between-top-bottom",
+      unconfirmed: false,
+      note: "Vertical partitions are fitted between top and bottom and run the full carcass depth. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      id: "depth-definition",
+      unconfirmed: false,
+      note: "depth = back + carcass + (doors ? doorGapFront + door : 0). carcassDepth = depth - back - (doors ? door + doorGapFront : 0). Decided in D-1a (ADR-003)."
+    },
+    {
+      id: "back-overlay-covers-carcass",
+      unconfirmed: false,
+      note: "The overlay back covers the carcass only (width x carcass height), not the plinth. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      id: "plinth-front-under-carcass",
+      unconfirmed: false,
+      note: "The front plinth strip is set back from the carcass front (not from the door) by plinthRecess. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      id: "doors-overlay",
+      unconfirmed: false,
+      note: "Doors are overlay (nakladnye): they cover the carcass front. Height = carcass height - 2 x doorGapEdge; the plinth stays visible. D-22: or inset (doorMount = inset): leaves inside the section opening, flush with the carcass front, height = carcass inner height - 2 x insetDoorGapMm. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      id: "door-split-at-partition-centre",
+      unconfirmed: false,
+      note: "Door coverage of a section ends at the centre line of its partitions (outer carcass edge for the end sections); a double door splits its coverage in two leaves. Leaf widths are rounded to doorLeafRoundingMm (ADR-006). CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      id: "interior-default-rule",
+      unconfirmed: true,
+      note: "interior 'auto': single door -> shelves, double door -> rail_shelf, no door -> shelves; if that preset would produce a warning (e.g. rail in a shallow carcass), shelves instead."
+    },
+    {
+      id: "interior-layout",
+      unconfirmed: true,
+      note: "Drawers stack at the bottom of the section with a fixed shelf directly above; rail presets put a top shelf 400 mm below the top inner face and the rail axis 60 mm below the shelf (or the top); remaining free space without a rail gets evenly spaced removable shelves."
+    },
+    {
+      id: "edge-default-rule",
+      unconfirmed: false,
+      note: "Visible front edges are banded (sides, partitions, top, bottom, shelves: local front edge; doors and drawer fronts: all four edges); back, plinth, drawer box parts: no band. D-22: every visible edge is banded - with the top on the sides, also the top ends (not where two carcasses meet). CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      id: "grain-placeholder",
+      unconfirmed: true,
+      note: "grainDirection = 'length' for LDSP/MDF parts, null for HDF; real grain rules need Dafna data (oak decors). Dafna technologist, confirmation table 2026-11-23: grain is set by the manager per material."
+    },
+    {
+      id: "door-hinge-sides",
+      unconfirmed: true,
+      note: "Single doors hinge toward the outer side of their half of the wardrobe: 1: L, 2: L,R, 3: L,L,R, 4: L,L,R,R (middle of an odd count: left). Two leaves may hinge on the same partition (half-overlay hinges on both faces); they cannot both be fully open at once."
+    },
+    {
+      id: "door-hinge-mount",
+      unconfirmed: true,
+      note: "hingeMount per leaf: 'full_overlay' when hinged on an outer side panel, 'half_overlay' when hinged on a partition (each leaf covers half the partition). Data only, for later hardware / export."
+    },
+    {
+      id: "auto-sections-door-leaf",
+      unconfirmed: true,
+      note: "sections=auto picks the smallest count that keeps every section inner width <= maxShelfSpanMm and, unless doors=none, no single leaf wider than maxSingleLeafWidthMm (relevant for doors=all_single)."
+    },
+    {
+      id: "ergonomics-gost-13025",
+      unconfirmed: false,
+      note: "D-7: long_hang / short_hang / short_hang_drawers follow GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB: rail top <= 1900 from the floor and >= 50 below the shelf above; >= 1400 (long) / >= 900 (short) below the rail top; inner depth >= 560 for a rail; top drawer edge <= 1250; shelves >= 170 apart; space above the rail that fits a >= 170 compartment becomes an antresol (rarely used items, GOST table 6 note)."
+    }
+  ]
+};
+
 // ../../packages/engine/templates/pedestal.v1.json
 var pedestal_v1_default = {
   templateId: "pedestal",
@@ -71381,6 +72179,414 @@ var pedestal_v4_default = {
       id: "top-flush-with-fronts",
       unconfirmed: false,
       note: "D-23 (founder, 2026-11-23): the top reaches forward over the front gap and the fronts, flush with the fronts' face (top depth = depth - back). Was: the top ended at the carcass front edge and the fronts stood proud (up to 0.3.0)."
+    },
+    {
+      id: "pedestal-carcass",
+      unconfirmed: false,
+      note: "Top over the sides; bottom between the sides on the base; HDF back overlay; castors under the bottom corners, or sides to the floor with a plinth strip between them. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      id: "pedestal-fronts",
+      unconfirmed: true,
+      note: "Fronts overlay the sides (full overlay), equal 3 mm gaps; drawer boxes on side slides."
+    }
+  ]
+};
+
+// ../../packages/engine/templates/pedestal.v5.json
+var pedestal_v5_default = {
+  templateId: "pedestal",
+  templateVersion: "0.5.0",
+  productType: "pedestal",
+  generator: "pedestal-v1",
+  units: "mm",
+  parameters: [
+    {
+      key: "width",
+      type: "int",
+      default: 430,
+      min: 300,
+      max: 600,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.width",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      customerValues: [430],
+      note: "Overall width. Standard 400 / 450 (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 300 / 400 / 410 wide), unconfirmed for Dafna. D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16). CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      key: "height",
+      type: "int",
+      default: 550,
+      min: 450,
+      max: 760,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.height",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      customerValues: [550],
+      note: "Overall height incl. castors / plinth. \u2248 600 fits under a 740 mm desk (EN 527-1) with a 22\u201325 mm top (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 597). D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16). CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      key: "depth",
+      type: "int",
+      default: 550,
+      min: 400,
+      max: 650,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.depth",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      customerValues: [550],
+      note: "Overall depth incl. fronts. 500 (desk depth 600\u2013700) / 600 (desk depth 800); unconfirmed. D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16). CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      key: "layout",
+      type: "enum",
+      default: "drawers3",
+      options: ["drawers3", "door_shelf"],
+      labelKey: "param.layout",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "3 equal drawers; 2 small drawers + 1 A4 hanging-file drawer (box >= 330 \xD7 240, FILE_DRAWER_TOO_SMALL below); a door with one shelf. D-22 (Dafna technologist, confirmation table 2026-11-23): no A4 hanging-file drawer - A4 files go into the document wardrobe, not a drawer (drawers2_file removed; the smallest drawer front is 120 mm, so 2 small drawers + a file drawer no longer fit 550 mm)."
+    },
+    {
+      key: "base",
+      type: "enum",
+      default: "castors",
+      options: ["castors", "plinth"],
+      labelKey: "param.pedestalBase",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Mobile (castors) or standing on a plinth strip (sides to the floor)."
+    },
+    {
+      key: "corpusMaterial",
+      type: "enum",
+      default: "ldsp_white_16",
+      options: [
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      labelKey: "param.corpusMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp"],
+      note: "Carcass board (LDSP), catalog 1.1.0."
+    },
+    {
+      key: "doorMaterial",
+      type: "enum",
+      default: "same_as_corpus",
+      options: [
+        "same_as_corpus",
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16",
+        "lmdf_egger_h1367_st40_16",
+        "lmdf_egger_h1385_st40_16",
+        "lmdf_egger_h1344_st32_16_7",
+        "lmdf_egger_h3325_st28_16_7"
+      ],
+      labelKey: "param.frontMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp", "mdf"],
+      note: "Drawer fronts / door. 'same_as_corpus' follows the carcass decor."
+    },
+    {
+      key: "slideBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.slideBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      key: "hingeBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.hingeBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    }
+  ],
+  constants: {
+    backMaterial: {
+      value: "hdf_white_3",
+      unconfirmed: true,
+      note: "HDF back and drawer bottoms (as the wardrobe)."
+    },
+    castorHeightMm: {
+      value: 55,
+      unit: "mm",
+      unconfirmed: false,
+      note: `Castor height ("\u041D\u043E\u0436\u043A\u0430-\u0440\u043E\u043B\u0438\u043A" 108, set 3016) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    castorSizeMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Castor footprint drawn in 3D (visual only)."
+    },
+    castorMaterial: {
+      value: "metal_black",
+      unconfirmed: true,
+      note: "Castor finish (visual / BOM)."
+    },
+    plinthHeightMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Plinth strip height when standing (unconfirmed)."
+    },
+    frontGapMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Gap between the carcass front edge and the fronts (as the wardrobe doors). CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    frontSideGapMm: {
+      value: 0,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Gap between a front and the outer side edge. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): fronts flush with the side panels"
+    },
+    frontEdgeGapMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Gap below the lowest front and under the top. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    drawerGapMm: {
+      value: 3,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Gap between fronts (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    fileFrontHeightMm: {
+      value: 300,
+      unit: "mm",
+      unconfirmed: false,
+      note: "A4 hanging-file drawer front: box 260 high >= 240 (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): file drawer \u2248 330 \xD7 440 \xD7 240). CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    fileDrawerMinBoxWidthMm: {
+      value: 330,
+      unit: "mm",
+      unconfirmed: false,
+      note: "A4 hanging-file frame needs >= 330 mm inside the box (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet))."
+    },
+    fileDrawerMinBoxHeightMm: {
+      value: 240,
+      unit: "mm",
+      unconfirmed: false,
+      note: "A4 hanging files need >= 240 mm box height (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet))."
+    },
+    underDeskMaxHeightMm: {
+      value: 700,
+      unit: "mm",
+      unconfirmed: true,
+      note: "An under-desk pedestal must stay below the desk top underside (740 \u2212 top \u2212 clearance); PEDESTAL_TOO_HIGH above."
+    },
+    drawerSlideClearanceMm: {
+      value: 13,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Side clearance per side for ball-bearing / roller slides (as the wardrobe). Dafna technologist, confirmation table 2026-11-23: depends on the hardware model - to come with the hardware list."
+    },
+    drawerBoxHeightReductionMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Box height = front height \u2212 40 (as the wardrobe). Dafna technologist, confirmation table 2026-11-23: depends on the hardware model - to come with the hardware list."
+    },
+    drawerBoxLiftMm: {
+      value: 14,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Box bottom above the front's lower edge (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    drawerBackClearanceMm: {
+      value: 20,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Space behind the drawer box. Dafna technologist, confirmation table 2026-11-23: depends on the hardware model - to come with the hardware list."
+    },
+    drawerSlideMinMm: {
+      value: 250,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Shortest slide."
+    },
+    drawerSlideMaxMm: {
+      value: 550,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Longest slide."
+    },
+    drawerSlideStepMm: {
+      value: 50,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Slide length step."
+    },
+    edgeBandId: {
+      value: "pvc_1_19",
+      unconfirmed: false,
+      note: `PVC 1 mm x 19 ("\u041A\u0440\u043E\u043C\u043A\u0430 1/19") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    edgeBandThicknessMm: {
+      value: 1,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Top, bottom and fronts: PVC 1 mm all round (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    smallFrontMinHeightMm: {
+      value: 120,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Smallest drawer front (pens, stationery) in the 2 + file layout; the file drawer shrinks only below this. CONFIRMED (Dafna technologist, confirmation table 2026-11-23): 120 mm"
+    },
+    castorInsetMm: {
+      value: 50,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Castor centre from the edges (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    sideInsetMm: {
+      value: 5,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Sides in from the ends of top and bottom (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    sideRearInsetMm: {
+      value: 15,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Sides in from the rear edge (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    backRearInsetMm: {
+      value: 16,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Board back in from the rear edge (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    frontOverhangMm: {
+      value: 4,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Top and bottom reach past the fronts (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    frontSideInsetMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Fronts in from the side's outer face (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    frontBottomGapMm: {
+      value: 4,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Gap above the bottom (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    frontTopGapMm: {
+      value: 3,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Gap under the top (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    drawerBoxHeightMm: {
+      value: 120,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Drawer box height, whatever the front (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    drawerBackLowerMm: {
+      value: 15,
+      unit: "mm",
+      unconfirmed: false,
+      note: "The box back is this much lower (it stands on the bottom) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    drawerBottomGrooveMm: {
+      value: 9,
+      unit: "mm",
+      unconfirmed: false,
+      note: "HDF bottom enters each box side groove (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    edgeBandMidMm: {
+      value: 0.6,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Sides and drawer boxes: 0.6 mm (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    edgeBandMidId: {
+      value: "pvc_0_6_19",
+      unconfirmed: false,
+      note: `0.6 mm x 19 ("\u041A\u0440\u043E\u043C\u043A\u0430 19/0.6") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    }
+  },
+  constructionRules: [
+    {
+      id: "lester-pedestal",
+      unconfirmed: false,
+      note: `D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right, "Tum mobil"): top and bottom full size, sides between them (5 mm in from the ends, 15 mm from the rear), a board back between the sides 16 mm from the rear; fronts overlay the sides 2 mm in from their outer face, touch their front edges and stand between bottom and top (4 mm above, 3 mm below, 3 mm between); top and bottom reach 4 mm past the fronts; drawer box 120 mm high, 14 mm above the front edge, the front is its front wall; bands 1 mm (top, bottom, fronts all round) and 0.6 mm (sides front and back). Replaces top-flush-with-fronts (0.4.0).`
     },
     {
       id: "pedestal-carcass",
@@ -73147,7 +74353,8 @@ var TEMPLATE_ARCHIVE = {
   "0.11.0": wardrobe_v10_default,
   "0.12.0": wardrobe_v11_default,
   "0.13.0": wardrobe_v12_default,
-  "0.14.0": wardrobe_v13_default
+  "0.14.0": wardrobe_v13_default,
+  "0.15.0": wardrobe_v14_default
 };
 var CATALOG_ARCHIVE = {
   [materialsV0.catalogVersion]: materialsV0,
@@ -73161,7 +74368,8 @@ var PRODUCT_ARCHIVE = {
     "0.2.0": pedestal_v2_default,
     "0.3.0": pedestal_v3_default,
     "0.4.0": pedestal_v4_default,
-    "0.5.0": pedestal_v5_default
+    "0.5.0": pedestal_v5_default,
+    "0.6.0": pedestal_v6_default
   },
   desk: {
     "0.1.0": desk_v1_default,
@@ -73185,12 +74393,13 @@ var TEMPLATE_CATALOG = {
   "0.12.0": materialsV1.catalogVersion,
   // D-26: feet (metal_black) need catalog 1.1.0 (= 1.0.0 + more)
   "0.13.0": materialsV1_1.catalogVersion,
-  "0.14.0": materialsV1_1.catalogVersion
+  "0.14.0": materialsV1_1.catalogVersion,
+  "0.15.0": materialsV1_1.catalogVersion
 };
 
 // ../../packages/engine/catalog/hardware.v1.json
 var hardware_v1_default = {
-  hardwareVersion: "1.1.0",
+  hardwareVersion: "1.2.0",
   items: [
     {
       id: "slide_strax_ball",
@@ -73200,7 +74409,9 @@ var hardware_v1_default = {
       softClose: false,
       unit: "pair",
       unconfirmed: true,
-      note: "Ball-bearing drawer slides (pair). DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Ball-bearing drawer slides (pair). DEMO value until Dafna sends its hardware list (D-9).",
+      use: "legacy",
+      slideMount: "side"
     },
     {
       id: "slide_hettich_quadro",
@@ -73210,7 +74421,9 @@ var hardware_v1_default = {
       softClose: true,
       unit: "pair",
       unconfirmed: true,
-      note: "Concealed soft-close drawer runners (pair). DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Concealed soft-close drawer runners (pair). DEMO value until Dafna sends its hardware list (D-9).",
+      use: "legacy",
+      slideMount: "under"
     },
     {
       id: "hinge_strax",
@@ -73220,7 +74433,8 @@ var hardware_v1_default = {
       softClose: false,
       unit: "pcs",
       unconfirmed: true,
-      note: "Cup hinge 35 mm. DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Cup hinge 35 mm. DEMO value until Dafna sends its hardware list (D-9).",
+      use: "legacy"
     },
     {
       id: "hinge_hettich_sensys",
@@ -73230,7 +74444,8 @@ var hardware_v1_default = {
       softClose: true,
       unit: "pcs",
       unconfirmed: true,
-      note: "Cup hinge with integrated soft close. DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Cup hinge with integrated soft close. DEMO value until Dafna sends its hardware list (D-9).",
+      use: "legacy"
     },
     {
       id: "castor_standard",
@@ -73240,7 +74455,8 @@ var hardware_v1_default = {
       softClose: false,
       unit: "pcs",
       unconfirmed: true,
-      note: "Office pedestal castor. DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Office pedestal castor. DEMO value until Dafna sends its hardware list (D-9).",
+      use: "kiosk"
     },
     {
       id: "lift_frame_2leg",
@@ -73250,7 +74466,8 @@ var hardware_v1_default = {
       softClose: false,
       unit: "pcs",
       unconfirmed: true,
-      note: "Electric 2-leg sit-stand desk frame. DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Electric 2-leg sit-stand desk frame. DEMO value until Dafna sends its hardware list (D-9).",
+      use: "kiosk"
     },
     {
       id: "rail_oval_25",
@@ -73260,7 +74477,8 @@ var hardware_v1_default = {
       softClose: false,
       unit: "m",
       unconfirmed: true,
-      note: "Wardrobe hanging rail (per metre). DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Wardrobe hanging rail (per metre). DEMO value until Dafna sends its hardware list (D-9).",
+      use: "kiosk"
     },
     {
       id: "rail_holder",
@@ -73270,17 +74488,433 @@ var hardware_v1_default = {
       softClose: false,
       unit: "pcs",
       unconfirmed: true,
-      note: "Rail end holder (2 per rail). DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Rail end holder (2 per rail). DEMO value until Dafna sends its hardware list (D-9).",
+      use: "kiosk"
+    },
+    {
+      id: "hinge_samet_master_0",
+      kind: "hinge",
+      brand: "Samet",
+      nameKey: "Samet Master 0 mm",
+      model: "Master 0 mm",
+      erpName: "\u041F\u0435\u0442\u043B\u044F Master \u0441\u043E \u0432\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u043C \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C 0MM 48 \u043C\u043C/MASTER SOFT CLOSE HINGE 0MM 48AX NI",
+      softClose: true,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.944,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Full overlay (door on an outer side panel)."
+    },
+    {
+      id: "hinge_samet_master_18",
+      kind: "hinge",
+      brand: "Samet",
+      nameKey: "Samet Master 18 mm",
+      model: "Master 18 mm",
+      erpName: "\u041F\u0435\u0442\u043B\u044F Master \u0441\u043E \u0432\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u043C \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C 18MM 48 \u043C\u043C/MASTER SOFT CLOSE HINGE 18MM 48AX NI",
+      softClose: true,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.943,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Inset (vkladnoy) door."
+    },
+    {
+      id: "hinge_samet_master_8",
+      kind: "hinge",
+      brand: "Samet",
+      nameKey: "Samet Master 8 mm",
+      model: "Master 8 mm",
+      erpName: "",
+      softClose: true,
+      unit: "pcs",
+      unconfirmed: true,
+      use: "kiosk",
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Half overlay (door on a partition). NOT in the stock report - Dafna to confirm which hinge it uses; priced as the 0 mm hinge meanwhile."
+    },
+    {
+      id: "plate_samet_5",
+      kind: "hinge_plate",
+      brand: "Samet",
+      nameKey: "Samet Montaj planka 5 mm",
+      model: "Montaj planka 5 mm",
+      erpName: "\u041C\u043E\u043D\u0442\u0430\u0436\u043D\u0430\u044F \u043F\u043B\u0430\u043D\u043A\u0430 \u0434\u043B\u044F MASTER/IMPRO/INVO 3D 5\u043C\u043C/5MM ADJUSTABLE MOUNTING PLATE",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.16,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). One per hinge (which plate per hinge: Dafna to confirm)."
+    },
+    {
+      id: "plate_samet_7",
+      kind: "hinge_plate",
+      brand: "Samet",
+      nameKey: "Samet Montaj planka 7 mm",
+      model: "Montaj planka 7 mm",
+      erpName: "\u041C\u043E\u043D\u0442\u0430\u0436\u043D\u0430\u044F \u043F\u043B\u0430\u043D\u043A\u0430 \u0434\u043B\u044F MASTER / IMPRO / INVO 3D 7 \u043C\u043C/7MM ADJUSTABLE MOUNTING PLATE",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.18,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "plate_samet_euro_5",
+      kind: "hinge_plate",
+      brand: "Samet",
+      nameKey: "Samet Montaj planka EURO 5 mm",
+      model: "Montaj planka EURO 5 mm",
+      erpName: "\u041C\u043E\u043D\u0442\u0430\u0436\u043D\u0430\u044F \u043F\u043B\u0430\u043D\u043A\u0430 \u0434\u043B\u044F MASTER / IMPRO / INVO 3D 5 \u043C\u043C 6,3x14/5MM ADJUSTABLE MOUNTING PLATE EURO",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.223,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "plate_samet_euro_7",
+      kind: "hinge_plate",
+      brand: "Samet",
+      nameKey: "Samet Montaj planka EURO 7 mm",
+      model: "Montaj planka EURO 7 mm",
+      erpName: "\u041C\u043E\u043D\u0442\u0430\u0436\u043D\u0430\u044F \u043F\u043B\u0430\u043D\u043A\u0430 \u0434\u043B\u044F MASTER / IMPRO / INVO 3D 7 \u043C\u043C 6,3x14/7MM ADJUSTABLE MOUNTING PLATE EURO",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.244,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "slide_samet_so_ball",
+      kind: "slide",
+      brand: "Samet",
+      nameKey: "Samet SO Class",
+      model: "SO Class",
+      erpName: "\u0428\u0430\u0440\u0438\u043A. \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435 SO CLASS/ZINC COATED 46-300\u2026450",
+      softClose: false,
+      unit: "pair",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 4.45,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Ball bearing, 300-450 mm (cost of the 400 mm pair).",
+      slideMount: "side"
+    },
+    {
+      id: "slide_samet_so_soft",
+      kind: "slide",
+      brand: "Samet",
+      nameKey: "Samet SO Class Soft Close",
+      model: "SO Class Soft Close",
+      erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435 SO CLASS/ZINC COATED SOFT CLOSE 46-300\u2026450",
+      softClose: true,
+      unit: "pair",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 6.56,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Ball bearing with soft close, 300-450 mm (cost of the 400 mm pair).",
+      slideMount: "side"
+    },
+    {
+      id: "slide_samet_smart",
+      kind: "slide",
+      brand: "Samet",
+      nameKey: "Samet Smart Slide",
+      model: "Smart Slide",
+      erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0430\u044F \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0432\u044B\u0434\u0432\u0438\u0436\u0435\u043D\u0438\u044F Smart Slide \u0441 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C 350/400\u043C\u043C/SMSLD FULL OILB FULL EXTENSION SY",
+      softClose: true,
+      unit: "pair",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 11.288,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Hidden, full extension, soft close, 350 / 400 mm; with the SmartLock left + right per drawer.",
+      slideMount: "under"
+    },
+    {
+      id: "slide_samet_slidea",
+      kind: "slide",
+      brand: "Samet",
+      nameKey: "Samet Slidea",
+      model: "Slidea",
+      erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0430\u044F LOCK FIX (18 \u043C\u043C) Slidea 450 \u043C\u043C/SLIDEA 450 MM SINGLE EXTENSION SOFT CLOSE LOCK-FIX 18MM",
+      softClose: true,
+      unit: "pair",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 4.663,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Hidden, single extension, soft close, 435 / 450 mm; with the LOCK FIX left + right per drawer.",
+      slideMount: "under"
+    },
+    {
+      id: "slide_samet_slidea_pin",
+      kind: "slide",
+      brand: "Samet",
+      nameKey: "Samet Slidea Pin Fix 435",
+      model: "Slidea Pin Fix 435",
+      erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0430\u044F PIN FIX (18 \u043C\u043C) Slidea 435 \u043C\u043C/SLIDEA 435 MM SINGLE EXTENSION SOFT CLOSE PIN-FIX 18MM",
+      softClose: true,
+      unit: "pair",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 4.765,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23).",
+      slideMount: "under"
+    },
+    {
+      id: "smartlock_left",
+      kind: "slide_lock",
+      brand: "Samet",
+      nameKey: "Samet SmartLock chap",
+      model: "SmartLock chap",
+      erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F SmartLock, \u043B\u0435\u0432\u0430\u044F/SMARTSLIDE NEW LOCK, LEFT (120)",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.47,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "smartlock_right",
+      kind: "slide_lock",
+      brand: "Samet",
+      nameKey: "Samet SmartLock o'ng",
+      model: "SmartLock o'ng",
+      erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F SmartLock, \u043F\u0440\u0430\u0432\u0430\u044F/SMARTSLIDE NEW LOCK, RIGHT (120)",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.47,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "slidea_lock_left",
+      kind: "slide_lock",
+      brand: "Samet",
+      nameKey: "Samet Lock Fix chap",
+      model: "Lock Fix chap",
+      erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F \u0441 \u0444\u0438\u043A\u0441\u0430\u0442\u043E\u0440\u0430\u043C\u0438 LOCK FIX, \u043B\u0435\u0432\u0430\u044F/SLIDEA LOCK L",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.355,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "slidea_lock_right",
+      kind: "slide_lock",
+      brand: "Samet",
+      nameKey: "Samet Lock Fix o'ng",
+      model: "Lock Fix o'ng",
+      erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F \u0441 \u0444\u0438\u043A\u0441\u0430\u0442\u043E\u0440\u0430\u043C\u0438 LOCK FIX, \u043F\u0440\u0430\u0432\u0430\u044F/SLIDEA LOCK R",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.355,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "sliding_samet_smt75_roller",
+      kind: "sliding",
+      brand: "Samet",
+      nameKey: "Samet SMT 75 T mexanizm (1 eshik)",
+      model: "SMT 75 T mexanizm (1 eshik)",
+      erpName: "SMT 75 T \u0420\u0435\u0433\u0443\u043B\u0438\u0440\u0443\u0435\u043C\u044B\u0439 \u043C\u0435\u0445\u0430\u043D\u0438\u0437\u043C \u043D\u0430 1 \u0434\u0432\u0435\u0440\u044C/75 KG ADJUSTABLE SLIDING DOOR SYSTEM SINGLE ROLLER",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 3.81,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "sliding_samet_rail_3m",
+      kind: "sliding",
+      brand: "Samet",
+      nameKey: "Samet Alyumin profil 3 m (75 kg)",
+      model: "Alyumin profil 3 m (75 kg)",
+      erpName: "75 \u043A\u0433 - \u041D\u0438\u0436\u043D\u0438\u0439 \u0445\u043E\u0434\u043E\u0432\u043E\u0439 \u043F\u0440\u043E\u0444\u0438\u043B\u044C \u0438\u0437 \u0430\u043B\u044E\u043C\u0438\u043D\u0438\u044F 10-12 3 M/75 KG ALU SINGLE LOWER/UPPER RAIL 10-12\xB5 3M",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 2.1,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_jetfix_34",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet JetFix 34 mm \xD88",
+      model: "JetFix 34 mm \xD88",
+      erpName: "JetFix, \u0434\u044E\u0431\u0435\u043B\u044C+\u043C\u0443\u0444\u0442\u0430 \u0441 \u0440\u0435\u0437\u044C\u0431\u043E\u0439 \xD88X11, \u0434\u043B\u0438\u043D\u043E\u0439 34 \u043C\u043C, \u0441\u0442\u0430\u043B\u044C, \u0446\u0438\u043D\u043A/Jetfix 34 mm \xD88 X11 + Bolt",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.042,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_bolt_zinc",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix bolt M6x34 (sink)",
+      model: "SamFix bolt M6x34 (sink)",
+      erpName: "SamFix, \u0434\u044E\u0431\u0435\u043B\u044C \u0441 \u0440\u0435\u0437\u044C\u0431\u043E\u0439 \u0434\u043B\u044F \u043E\u0442\u0432\u0435\u0440\u0441\u0442\u0438\u0439 M6X34 \u043C\u043C, \u0441\u0442\u0430\u043B\u044C, \u0426\u0438\u043D\u043A/Sam-Fix Bolt M6X34 mm Milled ZINC",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.034,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_bolt",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix bolt M6x34",
+      model: "SamFix bolt M6x34",
+      erpName: "SamFix, \u0434\u044E\u0431\u0435\u043B\u044C \u0441 \u0440\u0435\u0437\u044C\u0431\u043E\u0439 \u0434\u043B\u044F \u043E\u0442\u0432\u0435\u0440\u0441\u0442\u0438\u0439 M6X34 \u043C\u043C, \u0441\u0442\u0430\u043B\u044C,/Sam-Fix Bolt M6X34 mm Milled Not Plated",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.026,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_sleeve_10",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix plastik mufta \xD810x10",
+      model: "SamFix plastik mufta \xD810x10",
+      erpName: "SamFix, \u043F\u043B\u0430\u0441\u0442\u0438\u043A\u043E\u0432\u0430\u044F \u043C\u0443\u0444\u0442\u0430 \xD810x10 \u043C\u043C \u043F\u043E\u0434 \u0440\u0435\u0437\u044C\u0431\u0443 M6 (\u0432 \u043B\u0435\u043D\u0442\u0435)/SAM-FIX CHANNELED DIA M6 X10X10 PLS. CH",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.012,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_sleeve_8",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix plastik mufta \xD88x10",
+      model: "SamFix plastik mufta \xD88x10",
+      erpName: "SamFix, \u043F\u043B\u0430\u0441\u0442\u0438\u043A\u043E\u0432\u0430\u044F \u043C\u0443\u0444\u0442\u0430 \xD88x10 \u043C\u043C \u043F\u043E\u0434 \u0440\u0435\u0437\u044C\u0431\u0443 M6 (\u0432 \u043B\u0435\u043D\u0442\u0435)/SAM-FIX CHANNELED DIA M6 X 8 X 10 PLS. CH",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.011,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_cam",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix ekssentrik \xD815x12",
+      model: "SamFix ekssentrik \xD815x12",
+      erpName: "SamFix, \u044D\u043A\u0441\u0446\u0435\u043D\u0442\u0440\u0438\u043A\u043E\u0432\u0430\u044F \u0441\u0442\u044F\u0436\u043A\u0430, \xD815x12, /SAM-FIX CAM DIA 15 x 12",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.057,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_cam_zinc",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix ekssentrik \xD815x12 (sink)",
+      model: "SamFix ekssentrik \xD815x12 (sink)",
+      erpName: "SamFix, \u044D\u043A\u0441\u0446\u0435\u043D\u0442\u0440\u0438\u043A\u043E\u0432\u0430\u044F \u0441\u0442\u044F\u0436\u043A\u0430, \xD815x12, \u0446\u0438\u043D\u043A/SAM-FIX CAM DIA 15 x 12 ZINC",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.064,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_mesan_dowel_m6",
+      kind: "connector",
+      brand: "Mesan",
+      nameKey: "Mesan Plastik dyubel M6 10x10",
+      model: "Plastik dyubel M6 10x10",
+      erpName: "\u0414\u044E\u0431\u0435\u043B\u044C \u043F\u043B\u0430\u0441\u0442\u0438\u043A\u043E\u0432\u044B\u0439 \u041C6 10x10\u043C\u043C",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.02,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "screw_confirmat_6_2x50",
+      kind: "screw",
+      brand: "",
+      nameKey: "Konfirmat 6,2x50",
+      model: "Konfirmat 6,2x50",
+      erpName: "\u0412\u0438\u043D\u0442 \u043A\u043E\u043D\u0444\u0438\u0440\u043C\u0430\u0442 6,2x50\u043C\u043C \u0446\u0438\u043D\u043A\u043E\u0432\u044B\u0435 \u043F\u043E\u043A\u0440\u044B\u0442\u044B\u0435",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 2.753,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Cost as in the report (probably per pack) - Dafna to confirm the unit."
+    },
+    {
+      id: "screw_4x16",
+      kind: "screw",
+      brand: "",
+      nameKey: "Mebel samorezi 4x16",
+      model: "Mebel samorezi 4x16",
+      erpName: "\u0421\u0430\u043C\u043E\u0440\u0435\u0437 \u043C\u0435\u0431\u0435\u043B\u044C\u043D\u044B\u0439 4x16\u043C\u043C \u0446\u044B\u043D\u043A\u043E\u0432\u044B\u0435 \u043F\u043E\u043A\u0440\u044B\u0442\u044B\u0435",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 3.795,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Cost as in the report (probably per pack) - Dafna to confirm the unit."
+    },
+    {
+      id: "screw_3_5x30",
+      kind: "screw",
+      brand: "",
+      nameKey: "Shurup 3,5x30",
+      model: "Shurup 3,5x30",
+      erpName: "\u0428\u0443\u0440\u0443\u043F\u044B \u0434\u043B\u044F \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F 3,5x30\u043C\u043C \u0424\u043E\u0441\u0444\u0430\u0442\u043D\u043E\u0435 \u043F\u043E\u043A\u0440\u044B\u0442\u044B\u0435",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 2.38,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Cost as in the report (probably per pack) - Dafna to confirm the unit."
     }
   ],
   brands: {
     slide: {
       strax: "slide_strax_ball",
-      hettich: "slide_hettich_quadro"
+      hettich: "slide_hettich_quadro",
+      samet_ball: "slide_samet_so_ball",
+      samet_soft: "slide_samet_so_soft",
+      samet_smart: "slide_samet_smart",
+      samet_slidea: "slide_samet_slidea"
     },
     hinge: {
       strax: "hinge_strax",
-      hettich: "hinge_hettich_sensys"
+      hettich: "hinge_hettich_sensys",
+      samet: "hinge_samet_master_0"
     }
   },
   hingeRule: [
@@ -73329,7 +74963,22 @@ var hardware_v1_default = {
     hdf: 850,
     metal: 7850
   },
-  boardDensityNote: "Assumed board densities for the door weight (chipboard ~650-700, MDF ~750-800 kg/m3); unconfirmed until Dafna's supplier data."
+  boardDensityNote: "Assumed board densities for the door weight (chipboard ~650-700, MDF ~750-800 kg/m3); unconfirmed until Dafna's supplier data.",
+  hingeByMount: {
+    samet: {
+      full_overlay: "hinge_samet_master_0",
+      half_overlay: "hinge_samet_master_8",
+      inset: "hinge_samet_master_18"
+    }
+  },
+  hingePlate: {
+    samet: "plate_samet_5"
+  },
+  slideExtras: {
+    samet_smart: ["smartlock_left", "smartlock_right"],
+    samet_slidea: ["slidea_lock_left", "slidea_lock_right"]
+  },
+  hardwareNote: "D-28: real items from Dafna's stock report (Furniture.docx, founder 2026-11-23), sorted by brand (Samet, Mesan, screws). costUsd = cost of one unit in USD as in the report (stock counts are not kept: they change daily). Strax / Hettich (use = legacy) stay for applications made before; the kiosk offers Samet. Connectors, screws and sliding-door parts are listed for the office only (no product rule counts them yet)."
 };
 
 // ../../packages/engine/catalog/pricelist.demo.json
@@ -73337,7 +74986,7 @@ var pricelist_demo_default = {
   priceListVersion: "demo-2026-11",
   currency: "UZS",
   demo: true,
-  note: "DEMO prices for testing the calculation only (D-9). Never show to customers; Dafna will send the real price list and calculation rules.",
+  note: "DEMO prices for testing the calculation only (D-9). Never show to customers; Dafna will send the real price list and calculation rules. D-28: Samet / Mesan items = cost in USD from Dafna's stock report x usdRate 12900 (assumed rate, demo), rounded to 100 so'm.",
   boardPerM2: {
     ldsp: 95e3,
     mdf: 21e4,
@@ -73357,12 +75006,42 @@ var pricelist_demo_default = {
     castor_standard: 2e4,
     lift_frame_2leg: 24e5,
     rail_oval_25: 3e4,
-    rail_holder: 8e3
+    rail_holder: 8e3,
+    hinge_samet_master_0: 12200,
+    hinge_samet_master_18: 12200,
+    hinge_samet_master_8: 12200,
+    plate_samet_5: 2100,
+    plate_samet_7: 2300,
+    plate_samet_euro_5: 2900,
+    plate_samet_euro_7: 3100,
+    slide_samet_so_ball: 57400,
+    slide_samet_so_soft: 84600,
+    slide_samet_smart: 145600,
+    slide_samet_slidea: 60200,
+    slide_samet_slidea_pin: 61500,
+    smartlock_left: 6100,
+    smartlock_right: 6100,
+    slidea_lock_left: 4600,
+    slidea_lock_right: 4600,
+    sliding_samet_smt75_roller: 49100,
+    sliding_samet_rail_3m: 27100,
+    conn_samet_jetfix_34: 500,
+    conn_samet_samfix_bolt_zinc: 400,
+    conn_samet_samfix_bolt: 300,
+    conn_samet_samfix_sleeve_10: 200,
+    conn_samet_samfix_sleeve_8: 100,
+    conn_samet_samfix_cam: 700,
+    conn_samet_samfix_cam_zinc: 800,
+    conn_mesan_dowel_m6: 300,
+    screw_confirmat_6_2x50: 35500,
+    screw_4x16: 49e3,
+    screw_3_5x30: 30700
   },
   laborPerM2: 35e3,
   wasteFactor: 1.15,
   markupPct: 25,
-  roundTo: 1e3
+  roundTo: 1e3,
+  usdRate: 12900
 };
 
 // ../../packages/engine/src/bom.ts
@@ -73404,12 +75083,20 @@ function computeBom(template, params, result, hw = hardwareV1) {
     }
   }
   const brand = (kind, key) => hw.brands[kind]?.[String(params[key] ?? "strax")] ?? hw.brands[kind]?.strax;
-  const hinges = result.panels.filter((p) => p.role === "door").reduce((n3, d) => n3 + hingesForDoor(d, hw), 0);
-  addHw(brand("hinge", "hingeBrand"), hinges);
-  addHw(
-    brand("slide", "slideBrand"),
-    result.panels.filter((p) => p.role === "drawer_front").length
-  );
+  const hingeKey = String(params.hingeBrand ?? "strax");
+  const byMount = hw.hingeByMount?.[hingeKey];
+  for (const d of result.panels.filter((p) => p.role === "door")) {
+    const n3 = hingesForDoor(d, hw);
+    addHw(
+      byMount ? byMount[d.hingeMount ?? "full_overlay"] ?? byMount.full_overlay : brand("hinge", "hingeBrand"),
+      n3
+    );
+    addHw(hw.hingePlate?.[hingeKey], n3);
+  }
+  const drawers = result.panels.filter((p) => p.role === "drawer_front").length;
+  addHw(brand("slide", "slideBrand"), drawers);
+  for (const extra of hw.slideExtras?.[String(params.slideBrand ?? "")] ?? [])
+    addHw(extra, drawers);
   const railM = result.rails.reduce((m, r) => m + r.lengthMm / 1e3, 0);
   if (railM > 0) {
     hardware.set("rail_oval_25", r3(railM));
@@ -73905,6 +75592,22 @@ var uz = {
   "hw.hint.hingeBrand.hettich": "Yumshoq yopiladi (Sensys)",
   "hw.hint.slideBrand.strax": "Sharikli yo'naltiruvchilar, standart",
   "hw.hint.slideBrand.hettich": "Yashirin, yumshoq yopiladi (Quadro)",
+  "hw.model.hinge.samet": "Samet Master",
+  "hw.model.slide.samet_ball": "Samet SO Class",
+  "hw.model.slide.samet_soft": "Samet SO Class Soft Close",
+  "hw.model.slide.samet_smart": "Samet Smart Slide",
+  "hw.model.slide.samet_slidea": "Samet Slidea",
+  "hw.brand.samet": "Samet",
+  "hw.brand.samet_ball": "Samet",
+  "hw.brand.samet_soft": "Samet",
+  "hw.brand.samet_smart": "Samet",
+  "hw.brand.samet_slidea": "Samet",
+  "hw.hint.hingeBrand.samet": "Master, yumshoq yopiladi",
+  "hw.hint.slideBrand.samet_ball": "SO Class, sharikli, yon tomonda",
+  "hw.hint.slideBrand.samet_soft": "SO Class, sharikli, yumshoq yopiladi",
+  "hw.hint.slideBrand.samet_smart": "Smart Slide: yashirin, to'liq chiqadi, yumshoq yopiladi",
+  "hw.hint.slideBrand.samet_slidea": "Slidea: yashirin, yumshoq yopiladi",
+  "issue.MIGRATION_HARDWARE_CHANGED": "Mexanizm endi sotilmaydi: {from} o'rniga {to} qo'yildi",
   "param.hingeBrand": "Eshik petlyalari",
   "param.slideBrand": "Tortma yo'naltiruvchilari",
   "price.total": "Narx",

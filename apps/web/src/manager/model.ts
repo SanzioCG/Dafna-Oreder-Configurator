@@ -37,6 +37,19 @@ export const HW_KIND: Record<string, string> = {
   lift_frame: "Ko'tariladigan rama",
   rail: 'Shtanga',
   rail_holder: 'Shtanga tutqichi',
+  // D-28: from Dafna's stock report
+  hinge_plate: 'Montaj planka',
+  slide_lock: "Yo'naltiruvchi qulfi",
+  sliding: 'Siljiydigan eshik mexanizmi',
+  connector: 'Biriktirgich',
+  screw: 'Vint / shurup',
+};
+
+/** D-28: what an item is for (hardware catalog `use`) */
+export const HW_USE: Record<string, string> = {
+  kiosk: 'Sotuvda',
+  production: 'Ishlab chiqarish uchun',
+  legacy: 'Eski (faqat eski arizalar)',
 };
 
 export const UNIT_LABEL: Record<string, string> = {

@@ -1,4 +1,4 @@
-import type { Panel } from '@dafna/engine';
+import { brandItem, type Panel } from '@dafna/engine';
 import { Euler, Vector3 } from 'three';
 
 /**
@@ -89,7 +89,8 @@ const clamp01 = (k: number) => Math.min(1, Math.max(0, k));
  */
 export function demoProgress(brand: string, t: number): number | null {
   if (t < 0) return 1;
-  const soft = brand === 'hettich';
+  // D-28: soft close from the hardware catalog (Hettich, Samet Master, Samet soft slides, …)
+  const soft = ['hinge', 'slide'].some((k) => brandItem(k, brand)?.softClose === true);
   if (soft) {
     if (t < 0.35) return 1 - 0.85 * (t / 0.35) ** 2;
     if (t < 1.75) return 0.15 * (1 - (1 - (1 - (t - 0.35) / 1.4) ** 3));

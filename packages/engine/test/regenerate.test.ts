@@ -47,6 +47,8 @@ import app13Plinth from './fixtures/applications/0.13.0.w2000-plinth-overlay-ope
 // D-27 (template 0.14.0): inset doors span the partitions (which stand behind them)
 import app14Default from './fixtures/applications/0.14.0.default.json' with { type: 'json' };
 import app14Open from './fixtures/applications/0.14.0.w1500-3sections-inset-open.json' with { type: 'json' };
+// D-28 (template 0.15.0): Samet hinges and slides from Dafna's stock report
+import app15Smart from './fixtures/applications/0.15.0.default-samet-smart.json' with { type: 'json' };
 
 interface ApplicationFixture {
   templateVersion: string;
@@ -78,6 +80,7 @@ const FIXTURES: Record<string, ApplicationFixture> = {
   '0.13.0 w2000 plinth, overlay, open section': app13Plinth as unknown as ApplicationFixture,
   '0.14.0 default (inset over the partitions)': app14Default as unknown as ApplicationFixture,
   '0.14.0 w1500 3 sections, open third': app14Open as unknown as ApplicationFixture,
+  '0.15.0 default, Samet Smart Slide': app15Smart as unknown as ApplicationFixture,
 };
 
 describe('reproducibility: stored applications regenerate exactly (ADR-011)', () => {
@@ -137,6 +140,7 @@ describe('template archive', () => {
       '0.12.0',
       '0.13.0',
       '0.14.0',
+      '0.15.0',
     ]);
     // every template version is mapped to the catalog it was released with
     expect(Object.keys(TEMPLATE_CATALOG)).toEqual(Object.keys(TEMPLATE_ARCHIVE));

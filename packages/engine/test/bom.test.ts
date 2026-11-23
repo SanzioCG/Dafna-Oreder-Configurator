@@ -7,7 +7,11 @@ import {
   defaultParams,
   deskTemplate,
   generate,
+  hardwareV1,
   hingeCount,
+  hingesForDoor,
+  migrateOrderDraft,
+  regenerateApplication,
   pedestalTemplate,
   priceListDemo,
   wardrobeTemplate,
@@ -17,6 +21,9 @@ import {
 
 /** D-22: table-top boards (22 / 25 mm) were offered up to desk template 0.2.0 */
 const DESK_V2 = PRODUCT_ARCHIVE.desk!['0.2.0']!;
+/** D-28: the demo brands Strax / Hettich up to wardrobe 0.14.0 and pedestal 0.5.0 */
+const WARDROBE_V14 = PRODUCT_ARCHIVE.wardrobe!['0.14.0']!;
+const PEDESTAL_V5 = PRODUCT_ARCHIVE.pedestal!['0.5.0']!;
 const bomOf = (t: Template, p: Params) => computeBom(t, p, generate(t, p));
 const hw = (bom: ReturnType<typeof bomOf>, id: string) =>
   bom.find((l) => l.kind === 'hardware' && l.ref === id)?.qty ?? 0;
@@ -29,9 +36,9 @@ describe('D-9 BOM', () => {
   });
 
   it('wardrobe: boards in m², edge metres, hinges per leaf, rail + holders; brand from params', () => {
-    const p = { ...defaultParams(wardrobeTemplate), interior1: 'short_hang_drawers' };
-    const r = generate(wardrobeTemplate, p);
-    const bom = computeBom(wardrobeTemplate, p, r);
+    const p = { ...defaultParams(WARDROBE_V14), interior1: 'short_hang_drawers' };
+    const r = generate(WARDROBE_V14, p);
+    const bom = computeBom(WARDROBE_V14, p, r);
     const leaves = r.panels.filter((x) => x.role === 'door');
     const hinges = leaves.reduce((n, d) => n + hingeCount(d.widthMm), 0);
     expect(hw(bom, 'hinge_strax')).toBe(hinges);
@@ -42,23 +49,78 @@ describe('D-9 BOM', () => {
     const corpus = bom.find((l) => l.kind === 'board' && l.ref === 'ldsp_white_16')!;
     expect(corpus.qty).toBeGreaterThan(5);
     expect(bom.find((l) => l.kind === 'edge')?.qty).toBeGreaterThan(10);
-    const hettich = bomOf(wardrobeTemplate, { ...p, hingeBrand: 'hettich', slideBrand: 'hettich' });
+    const hettich = bomOf(WARDROBE_V14, { ...p, hingeBrand: 'hettich', slideBrand: 'hettich' });
     expect(hw(hettich, 'hinge_hettich_sensys')).toBe(hinges);
     expect(hw(hettich, 'slide_hettich_quadro')).toBe(2);
     expect(hw(hettich, 'hinge_strax')).toBe(0);
   });
 
   it('pedestal: a pair of slides per drawer, 4 castors (metal, not board)', () => {
-    const bom = bomOf(pedestalTemplate, defaultParams(pedestalTemplate));
+    const bom = bomOf(PEDESTAL_V5, defaultParams(PEDESTAL_V5));
     expect(hw(bom, 'slide_strax_ball')).toBe(3);
     expect(hw(bom, 'castor_standard')).toBe(4);
     expect(bom.some((l) => l.kind === 'board' && l.ref.startsWith('metal'))).toBe(false);
-    const door = bomOf(pedestalTemplate, {
-      ...defaultParams(pedestalTemplate),
+    const door = bomOf(PEDESTAL_V5, {
+      ...defaultParams(PEDESTAL_V5),
       layout: 'door_shelf',
     });
     expect(hw(door, 'hinge_strax')).toBe(2);
     expect(hw(door, 'slide_strax_ball')).toBe(0);
+  });
+
+  it('D-28 Samet: the hinge follows the leaf mounting (0 / 8 / 18 mm), a plate per hinge', () => {
+    const p = { ...defaultParams(wardrobeTemplate), width: 1500, sections: 3, doors: 'all_single' };
+    const r = generate(wardrobeTemplate, p);
+    const doors = r.panels.filter((x) => x.role === 'door');
+    const per = (mount: string) =>
+      doors.filter((d) => d.hingeMount === mount).reduce((n, d) => n + hingesForDoor(d), 0);
+    const bom = computeBom(wardrobeTemplate, p, r);
+    // inset doors (default): the middle leaf hinges on a hidden partition (half overlay)
+    expect(hw(bom, 'hinge_samet_master_18')).toBe(per('inset'));
+    expect(hw(bom, 'hinge_samet_master_8')).toBe(per('half_overlay'));
+    expect(per('half_overlay')).toBeGreaterThan(0);
+    const all = doors.reduce((n, d) => n + hingesForDoor(d), 0);
+    expect(hw(bom, 'plate_samet_5')).toBe(all);
+    const overlay = bomOf(wardrobeTemplate, { ...p, doorMount: 'overlay' });
+    expect(hw(overlay, 'hinge_samet_master_18')).toBe(0);
+    expect(hw(overlay, 'hinge_samet_master_0')).toBeGreaterThan(0);
+  });
+
+  it('D-28 Samet slides: a pair per drawer; Smart Slide and Slidea add their two locks', () => {
+    const p = defaultParams(pedestalTemplate);
+    expect(p.slideBrand).toBe('samet_ball');
+    expect(hw(bomOf(pedestalTemplate, p), 'slide_samet_so_ball')).toBe(3);
+    const smart = bomOf(pedestalTemplate, { ...p, slideBrand: 'samet_smart' });
+    expect(hw(smart, 'slide_samet_smart')).toBe(3);
+    expect(hw(smart, 'smartlock_left')).toBe(3);
+    expect(hw(smart, 'smartlock_right')).toBe(3);
+    const slidea = bomOf(pedestalTemplate, { ...p, slideBrand: 'samet_slidea' });
+    expect(hw(slidea, 'slidea_lock_left')).toBe(3);
+    expect(hw(bomOf(pedestalTemplate, { ...p, slideBrand: 'samet_soft' }), 'smartlock_left')).toBe(
+      0,
+    );
+  });
+
+  it('D-28 catalog: every item has a brand group, kiosk items a price; demo brands are legacy', () => {
+    const items = hardwareV1.items;
+    for (const id of ['hinge_strax', 'hinge_hettich_sensys', 'slide_strax_ball'])
+      expect(items.find((i) => i.id === id)?.use).toBe('legacy');
+    const report = items.filter((i) => i.erpName);
+    expect(new Set(report.map((i) => i.brand))).toEqual(new Set(['Samet', 'Mesan', '']));
+    for (const i of items.filter((x) => x.use === 'kiosk'))
+      expect(priceListDemo.hardware[i.id], i.id).toBeGreaterThan(0);
+  });
+
+  it('D-28 migration: Hettich -> Samet soft close, Strax -> Samet ball bearing, reported', () => {
+    const r = regenerateApplication(
+      { ...defaultParams(WARDROBE_V14), hingeBrand: 'hettich', slideBrand: 'hettich' },
+      '0.14.0',
+    );
+    if (!r.ok) throw new Error(r.code);
+    const { draft, issues } = migrateOrderDraft(r.draft);
+    expect(draft?.params.hingeBrand).toBe('samet');
+    expect(draft?.params.slideBrand).toBe('samet_soft');
+    expect(issues.filter((i) => i.code === 'MIGRATION_HARDWARE_CHANGED')).toHaveLength(2);
   });
 
   it('desk: the lift frame is one purchased item; the LDSP desk has none', () => {
@@ -91,13 +153,16 @@ describe('D-9 price (DEMO price list)', () => {
     expect(board.cost).toBe(Math.round(board.qty * priceListDemo.wasteFactor * board.unitPrice));
   });
 
-  it('Hettich costs more than Strax; a wider wardrobe costs more', () => {
-    const base = defaultParams(wardrobeTemplate);
-    const strax = price(wardrobeTemplate, base).total;
-    expect(price(wardrobeTemplate, { ...base, hingeBrand: 'hettich' }).total).toBeGreaterThan(
-      strax,
+  it('Hettich costs more than Strax (0.14.0); Smart Slide more than SO Class; wider costs more', () => {
+    const base = defaultParams(WARDROBE_V14);
+    const strax = price(WARDROBE_V14, base).total;
+    expect(price(WARDROBE_V14, { ...base, hingeBrand: 'hettich' }).total).toBeGreaterThan(strax);
+    const now = { ...defaultParams(wardrobeTemplate), interior1: 'short_hang_drawers' };
+    const ball = price(wardrobeTemplate, now).total;
+    expect(price(wardrobeTemplate, { ...now, slideBrand: 'samet_smart' }).total).toBeGreaterThan(
+      ball,
     );
-    expect(price(wardrobeTemplate, { ...base, width: 2400 }).total).toBeGreaterThan(strax);
+    expect(price(wardrobeTemplate, { ...now, width: 2200 }).total).toBeGreaterThan(ball);
   });
 
   it('every product prices without missing items; table tops use the thickness price', () => {

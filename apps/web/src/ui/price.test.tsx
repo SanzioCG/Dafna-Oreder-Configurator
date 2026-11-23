@@ -68,13 +68,12 @@ describe('D-9 price and mechanisms', () => {
     ).toBe('true');
   });
 
-  it('staff see the demo price, marked; Hettich costs more than Strax; breakdown', () => {
+  it('staff see the demo price, marked; D-28 Samet hinges from the stock report; breakdown', () => {
     window.history.replaceState(null, '', '/?mode=staff');
     render(<App />);
     const tag = screen.getByTestId('price');
     expect(tag.textContent).toContain(uz['price.demo']);
-    const strax = priceNumber();
-    expect(strax).toBeGreaterThan(0);
+    expect(priceNumber()).toBeGreaterThan(0);
     fireEvent.click(tab(uz['step.hardware']));
     // the default wardrobe has doors but no drawers: only the hinge choice is offered
     expect(screen.queryByTestId('hw-open-slideBrand')).toBeNull();
@@ -85,23 +84,20 @@ describe('D-9 price and mechanisms', () => {
       within(sheet)
         .getAllByRole('heading', { level: 3 })
         .map((h) => h.textContent),
-    ).toEqual(['Strax', 'Hettich']);
+    ).toEqual(['Samet']);
     // D-10b: every model carries a picture of its mechanism
-    expect(within(sheet).getByTestId('mech-photo-hinge-strax')).toBeTruthy();
-    expect(within(sheet).getByTestId('mech-photo-hinge-hettich')).toBeTruthy();
-    // a brand chip filters the list
-    fireEvent.click(within(sheet).getByRole('button', { name: /Hettich/ }));
-    expect(within(sheet).getAllByRole('radio')).toHaveLength(1);
-    fireEvent.click(within(sheet).getByRole('radio', { name: /Hettich/ }));
+    expect(within(sheet).getByTestId('mech-photo-hinge-samet')).toBeTruthy();
+    fireEvent.click(within(sheet).getByRole('radio', { name: /Samet/ }));
     expect(screen.queryByTestId('hw-sheet')).toBeNull();
-    expect(priceNumber()).toBeGreaterThan(strax);
     // D-10: the 3D legend names the chosen hinge and counts them like the bill of materials
     const legend = screen.getByTestId('mech-legend').textContent ?? '';
-    expect(legend).toContain('Hettich Sensys');
+    expect(legend).toContain('Samet Master');
     expect(legend).toMatch(/\d+ ta/);
     expect(screen.getByTestId('demo-hingeBrand')).toBeTruthy();
-    expect(screen.getByTestId('mech-photo-hinge-hettich')).toBeTruthy(); // the chosen one
     fireEvent.click(screen.getByRole('button', { name: uz['staff.settings'] }));
-    expect(screen.getByTestId('price-breakdown').textContent).toContain('hinge_hettich_sensys');
+    // inset doors (default): the 18 mm Master hinge and a plate per hinge
+    const breakdown = screen.getByTestId('price-breakdown').textContent ?? '';
+    expect(breakdown).toContain('hinge_samet_master_18');
+    expect(breakdown).toContain('plate_samet_5');
   });
 });

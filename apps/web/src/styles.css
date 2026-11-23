@@ -2658,6 +2658,16 @@ p {
 .mgr-table tbody tr:nth-child(odd):not(.mgr-card-row) {
   background: color-mix(in srgb, var(--ink) 5%, transparent);
 }
+/* D-28: a brand heading row in the hardware list */
+.mgr-table .mgr-group-row th {
+  padding-top: 18px;
+  font-size: 15px;
+  font-weight: 700;
+  opacity: 1;
+}
+.mgr-table tbody tr.mgr-group-row {
+  background: transparent;
+}
 .mgr-rows .mgr-row {
   cursor: pointer;
 }

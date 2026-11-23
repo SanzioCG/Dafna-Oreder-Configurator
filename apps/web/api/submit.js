@@ -58602,10 +58602,10 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 // ../../packages/engine/src/types.ts
 var ORDER_SCHEMA_VERSION = "dafna-order/0.3-draft";
 
-// ../../packages/engine/templates/wardrobe.v13.json
-var wardrobe_v13_default = {
+// ../../packages/engine/templates/wardrobe.v14.json
+var wardrobe_v14_default = {
   templateId: "wardrobe",
-  templateVersion: "0.14.0",
+  templateVersion: "0.15.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -58954,24 +58954,24 @@ var wardrobe_v13_default = {
     {
       key: "hingeBrand",
       type: "enum",
-      default: "strax",
-      options: ["strax", "hettich"],
+      default: "samet",
+      options: ["samet"],
       labelKey: "param.hingeBrand",
       uiStep: "hardware",
       customerVisible: true,
-      unconfirmed: true,
-      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+      unconfirmed: false,
+      note: "D-28 (Dafna's stock report (Furniture.docx, founder 2026-11-23: Samet replaces the demo brands)): Samet Master soft-close hinges; the hinge model follows each leaf's mounting (0 mm full overlay, 8 mm half overlay, 18 mm inset) plus one mounting plate per hinge (hardware catalog hingeByMount / hingePlate)."
     },
     {
       key: "slideBrand",
       type: "enum",
-      default: "strax",
-      options: ["strax", "hettich"],
+      default: "samet_ball",
+      options: ["samet_ball", "samet_soft", "samet_smart", "samet_slidea"],
       labelKey: "param.slideBrand",
       uiStep: "hardware",
       customerVisible: true,
-      unconfirmed: true,
-      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+      unconfirmed: false,
+      note: "D-28 (Dafna's stock report (Furniture.docx, founder 2026-11-23: Samet replaces the demo brands)): Samet slides - SO Class ball bearing (default, as in the Bazis pedestal), SO Class soft close, Smart Slide (hidden, full extension) and Slidea (hidden, single extension), one pair per drawer; Smart Slide and Slidea add their left + right locks (slideExtras)."
     },
     {
       key: "lowerDoorHeight",
@@ -59400,10 +59400,10 @@ var wardrobe_v13_default = {
   ]
 };
 
-// ../../packages/engine/templates/pedestal.v5.json
-var pedestal_v5_default = {
+// ../../packages/engine/templates/pedestal.v6.json
+var pedestal_v6_default = {
   templateId: "pedestal",
-  templateVersion: "0.5.0",
+  templateVersion: "0.6.0",
   productType: "pedestal",
   generator: "pedestal-v1",
   units: "mm",
@@ -59555,24 +59555,24 @@ var pedestal_v5_default = {
     {
       key: "slideBrand",
       type: "enum",
-      default: "strax",
-      options: ["strax", "hettich"],
+      default: "samet_ball",
+      options: ["samet_ball", "samet_soft", "samet_smart", "samet_slidea"],
       labelKey: "param.slideBrand",
       uiStep: "hardware",
       customerVisible: true,
-      unconfirmed: true,
-      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+      unconfirmed: false,
+      note: "D-28 (Dafna's stock report (Furniture.docx, founder 2026-11-23: Samet replaces the demo brands)): Samet slides - SO Class ball bearing (default, as in the Bazis pedestal), SO Class soft close, Smart Slide (hidden, full extension) and Slidea (hidden, single extension), one pair per drawer; Smart Slide and Slidea add their left + right locks (slideExtras)."
     },
     {
       key: "hingeBrand",
       type: "enum",
-      default: "strax",
-      options: ["strax", "hettich"],
+      default: "samet",
+      options: ["samet"],
       labelKey: "param.hingeBrand",
       uiStep: "hardware",
       customerVisible: true,
-      unconfirmed: true,
-      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+      unconfirmed: false,
+      note: "D-28 (Dafna's stock report (Furniture.docx, founder 2026-11-23: Samet replaces the demo brands)): Samet Master soft-close hinges; the hinge model follows each leaf's mounting (0 mm full overlay, 8 mm half overlay, 18 mm inset) plus one mounting plate per hinge (hardware catalog hingeByMount / hingePlate)."
     }
   ],
   constants: {
@@ -60110,8 +60110,8 @@ var desk_v4_default = {
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v13_default;
-var pedestalTemplate = pedestal_v5_default;
+var wardrobeTemplate = wardrobe_v14_default;
+var pedestalTemplate = pedestal_v6_default;
 var deskTemplate = desk_v4_default;
 var PRODUCT_TEMPLATES = {
   wardrobe: wardrobeTemplate,
@@ -63338,12 +63338,13 @@ var TEMPLATE_CATALOG = {
   "0.12.0": materialsV1.catalogVersion,
   // D-26: feet (metal_black) need catalog 1.1.0 (= 1.0.0 + more)
   "0.13.0": materialsV1_1.catalogVersion,
-  "0.14.0": materialsV1_1.catalogVersion
+  "0.14.0": materialsV1_1.catalogVersion,
+  "0.15.0": materialsV1_1.catalogVersion
 };
 
 // ../../packages/engine/catalog/hardware.v1.json
 var hardware_v1_default = {
-  hardwareVersion: "1.1.0",
+  hardwareVersion: "1.2.0",
   items: [
     {
       id: "slide_strax_ball",
@@ -63353,7 +63354,9 @@ var hardware_v1_default = {
       softClose: false,
       unit: "pair",
       unconfirmed: true,
-      note: "Ball-bearing drawer slides (pair). DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Ball-bearing drawer slides (pair). DEMO value until Dafna sends its hardware list (D-9).",
+      use: "legacy",
+      slideMount: "side"
     },
     {
       id: "slide_hettich_quadro",
@@ -63363,7 +63366,9 @@ var hardware_v1_default = {
       softClose: true,
       unit: "pair",
       unconfirmed: true,
-      note: "Concealed soft-close drawer runners (pair). DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Concealed soft-close drawer runners (pair). DEMO value until Dafna sends its hardware list (D-9).",
+      use: "legacy",
+      slideMount: "under"
     },
     {
       id: "hinge_strax",
@@ -63373,7 +63378,8 @@ var hardware_v1_default = {
       softClose: false,
       unit: "pcs",
       unconfirmed: true,
-      note: "Cup hinge 35 mm. DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Cup hinge 35 mm. DEMO value until Dafna sends its hardware list (D-9).",
+      use: "legacy"
     },
     {
       id: "hinge_hettich_sensys",
@@ -63383,7 +63389,8 @@ var hardware_v1_default = {
       softClose: true,
       unit: "pcs",
       unconfirmed: true,
-      note: "Cup hinge with integrated soft close. DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Cup hinge with integrated soft close. DEMO value until Dafna sends its hardware list (D-9).",
+      use: "legacy"
     },
     {
       id: "castor_standard",
@@ -63393,7 +63400,8 @@ var hardware_v1_default = {
       softClose: false,
       unit: "pcs",
       unconfirmed: true,
-      note: "Office pedestal castor. DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Office pedestal castor. DEMO value until Dafna sends its hardware list (D-9).",
+      use: "kiosk"
     },
     {
       id: "lift_frame_2leg",
@@ -63403,7 +63411,8 @@ var hardware_v1_default = {
       softClose: false,
       unit: "pcs",
       unconfirmed: true,
-      note: "Electric 2-leg sit-stand desk frame. DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Electric 2-leg sit-stand desk frame. DEMO value until Dafna sends its hardware list (D-9).",
+      use: "kiosk"
     },
     {
       id: "rail_oval_25",
@@ -63413,7 +63422,8 @@ var hardware_v1_default = {
       softClose: false,
       unit: "m",
       unconfirmed: true,
-      note: "Wardrobe hanging rail (per metre). DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Wardrobe hanging rail (per metre). DEMO value until Dafna sends its hardware list (D-9).",
+      use: "kiosk"
     },
     {
       id: "rail_holder",
@@ -63423,17 +63433,433 @@ var hardware_v1_default = {
       softClose: false,
       unit: "pcs",
       unconfirmed: true,
-      note: "Rail end holder (2 per rail). DEMO value until Dafna sends its hardware list (D-9)."
+      note: "Rail end holder (2 per rail). DEMO value until Dafna sends its hardware list (D-9).",
+      use: "kiosk"
+    },
+    {
+      id: "hinge_samet_master_0",
+      kind: "hinge",
+      brand: "Samet",
+      nameKey: "Samet Master 0 mm",
+      model: "Master 0 mm",
+      erpName: "\u041F\u0435\u0442\u043B\u044F Master \u0441\u043E \u0432\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u043C \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C 0MM 48 \u043C\u043C/MASTER SOFT CLOSE HINGE 0MM 48AX NI",
+      softClose: true,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.944,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Full overlay (door on an outer side panel)."
+    },
+    {
+      id: "hinge_samet_master_18",
+      kind: "hinge",
+      brand: "Samet",
+      nameKey: "Samet Master 18 mm",
+      model: "Master 18 mm",
+      erpName: "\u041F\u0435\u0442\u043B\u044F Master \u0441\u043E \u0432\u0441\u0442\u0440\u043E\u0435\u043D\u043D\u044B\u043C \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C 18MM 48 \u043C\u043C/MASTER SOFT CLOSE HINGE 18MM 48AX NI",
+      softClose: true,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.943,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Inset (vkladnoy) door."
+    },
+    {
+      id: "hinge_samet_master_8",
+      kind: "hinge",
+      brand: "Samet",
+      nameKey: "Samet Master 8 mm",
+      model: "Master 8 mm",
+      erpName: "",
+      softClose: true,
+      unit: "pcs",
+      unconfirmed: true,
+      use: "kiosk",
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Half overlay (door on a partition). NOT in the stock report - Dafna to confirm which hinge it uses; priced as the 0 mm hinge meanwhile."
+    },
+    {
+      id: "plate_samet_5",
+      kind: "hinge_plate",
+      brand: "Samet",
+      nameKey: "Samet Montaj planka 5 mm",
+      model: "Montaj planka 5 mm",
+      erpName: "\u041C\u043E\u043D\u0442\u0430\u0436\u043D\u0430\u044F \u043F\u043B\u0430\u043D\u043A\u0430 \u0434\u043B\u044F MASTER/IMPRO/INVO 3D 5\u043C\u043C/5MM ADJUSTABLE MOUNTING PLATE",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.16,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). One per hinge (which plate per hinge: Dafna to confirm)."
+    },
+    {
+      id: "plate_samet_7",
+      kind: "hinge_plate",
+      brand: "Samet",
+      nameKey: "Samet Montaj planka 7 mm",
+      model: "Montaj planka 7 mm",
+      erpName: "\u041C\u043E\u043D\u0442\u0430\u0436\u043D\u0430\u044F \u043F\u043B\u0430\u043D\u043A\u0430 \u0434\u043B\u044F MASTER / IMPRO / INVO 3D 7 \u043C\u043C/7MM ADJUSTABLE MOUNTING PLATE",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.18,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "plate_samet_euro_5",
+      kind: "hinge_plate",
+      brand: "Samet",
+      nameKey: "Samet Montaj planka EURO 5 mm",
+      model: "Montaj planka EURO 5 mm",
+      erpName: "\u041C\u043E\u043D\u0442\u0430\u0436\u043D\u0430\u044F \u043F\u043B\u0430\u043D\u043A\u0430 \u0434\u043B\u044F MASTER / IMPRO / INVO 3D 5 \u043C\u043C 6,3x14/5MM ADJUSTABLE MOUNTING PLATE EURO",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.223,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "plate_samet_euro_7",
+      kind: "hinge_plate",
+      brand: "Samet",
+      nameKey: "Samet Montaj planka EURO 7 mm",
+      model: "Montaj planka EURO 7 mm",
+      erpName: "\u041C\u043E\u043D\u0442\u0430\u0436\u043D\u0430\u044F \u043F\u043B\u0430\u043D\u043A\u0430 \u0434\u043B\u044F MASTER / IMPRO / INVO 3D 7 \u043C\u043C 6,3x14/7MM ADJUSTABLE MOUNTING PLATE EURO",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.244,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "slide_samet_so_ball",
+      kind: "slide",
+      brand: "Samet",
+      nameKey: "Samet SO Class",
+      model: "SO Class",
+      erpName: "\u0428\u0430\u0440\u0438\u043A. \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435 SO CLASS/ZINC COATED 46-300\u2026450",
+      softClose: false,
+      unit: "pair",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 4.45,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Ball bearing, 300-450 mm (cost of the 400 mm pair).",
+      slideMount: "side"
+    },
+    {
+      id: "slide_samet_so_soft",
+      kind: "slide",
+      brand: "Samet",
+      nameKey: "Samet SO Class Soft Close",
+      model: "SO Class Soft Close",
+      erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435 SO CLASS/ZINC COATED SOFT CLOSE 46-300\u2026450",
+      softClose: true,
+      unit: "pair",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 6.56,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Ball bearing with soft close, 300-450 mm (cost of the 400 mm pair).",
+      slideMount: "side"
+    },
+    {
+      id: "slide_samet_smart",
+      kind: "slide",
+      brand: "Samet",
+      nameKey: "Samet Smart Slide",
+      model: "Smart Slide",
+      erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0430\u044F \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0432\u044B\u0434\u0432\u0438\u0436\u0435\u043D\u0438\u044F Smart Slide \u0441 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C 350/400\u043C\u043C/SMSLD FULL OILB FULL EXTENSION SY",
+      softClose: true,
+      unit: "pair",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 11.288,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Hidden, full extension, soft close, 350 / 400 mm; with the SmartLock left + right per drawer.",
+      slideMount: "under"
+    },
+    {
+      id: "slide_samet_slidea",
+      kind: "slide",
+      brand: "Samet",
+      nameKey: "Samet Slidea",
+      model: "Slidea",
+      erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0430\u044F LOCK FIX (18 \u043C\u043C) Slidea 450 \u043C\u043C/SLIDEA 450 MM SINGLE EXTENSION SOFT CLOSE LOCK-FIX 18MM",
+      softClose: true,
+      unit: "pair",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 4.663,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Hidden, single extension, soft close, 435 / 450 mm; with the LOCK FIX left + right per drawer.",
+      slideMount: "under"
+    },
+    {
+      id: "slide_samet_slidea_pin",
+      kind: "slide",
+      brand: "Samet",
+      nameKey: "Samet Slidea Pin Fix 435",
+      model: "Slidea Pin Fix 435",
+      erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0430\u044F PIN FIX (18 \u043C\u043C) Slidea 435 \u043C\u043C/SLIDEA 435 MM SINGLE EXTENSION SOFT CLOSE PIN-FIX 18MM",
+      softClose: true,
+      unit: "pair",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 4.765,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23).",
+      slideMount: "under"
+    },
+    {
+      id: "smartlock_left",
+      kind: "slide_lock",
+      brand: "Samet",
+      nameKey: "Samet SmartLock chap",
+      model: "SmartLock chap",
+      erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F SmartLock, \u043B\u0435\u0432\u0430\u044F/SMARTSLIDE NEW LOCK, LEFT (120)",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.47,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "smartlock_right",
+      kind: "slide_lock",
+      brand: "Samet",
+      nameKey: "Samet SmartLock o'ng",
+      model: "SmartLock o'ng",
+      erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F SmartLock, \u043F\u0440\u0430\u0432\u0430\u044F/SMARTSLIDE NEW LOCK, RIGHT (120)",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.47,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "slidea_lock_left",
+      kind: "slide_lock",
+      brand: "Samet",
+      nameKey: "Samet Lock Fix chap",
+      model: "Lock Fix chap",
+      erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F \u0441 \u0444\u0438\u043A\u0441\u0430\u0442\u043E\u0440\u0430\u043C\u0438 LOCK FIX, \u043B\u0435\u0432\u0430\u044F/SLIDEA LOCK L",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.355,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "slidea_lock_right",
+      kind: "slide_lock",
+      brand: "Samet",
+      nameKey: "Samet Lock Fix o'ng",
+      model: "Lock Fix o'ng",
+      erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F \u0441 \u0444\u0438\u043A\u0441\u0430\u0442\u043E\u0440\u0430\u043C\u0438 LOCK FIX, \u043F\u0440\u0430\u0432\u0430\u044F/SLIDEA LOCK R",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "kiosk",
+      costUsd: 0.355,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "sliding_samet_smt75_roller",
+      kind: "sliding",
+      brand: "Samet",
+      nameKey: "Samet SMT 75 T mexanizm (1 eshik)",
+      model: "SMT 75 T mexanizm (1 eshik)",
+      erpName: "SMT 75 T \u0420\u0435\u0433\u0443\u043B\u0438\u0440\u0443\u0435\u043C\u044B\u0439 \u043C\u0435\u0445\u0430\u043D\u0438\u0437\u043C \u043D\u0430 1 \u0434\u0432\u0435\u0440\u044C/75 KG ADJUSTABLE SLIDING DOOR SYSTEM SINGLE ROLLER",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 3.81,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "sliding_samet_rail_3m",
+      kind: "sliding",
+      brand: "Samet",
+      nameKey: "Samet Alyumin profil 3 m (75 kg)",
+      model: "Alyumin profil 3 m (75 kg)",
+      erpName: "75 \u043A\u0433 - \u041D\u0438\u0436\u043D\u0438\u0439 \u0445\u043E\u0434\u043E\u0432\u043E\u0439 \u043F\u0440\u043E\u0444\u0438\u043B\u044C \u0438\u0437 \u0430\u043B\u044E\u043C\u0438\u043D\u0438\u044F 10-12 3 M/75 KG ALU SINGLE LOWER/UPPER RAIL 10-12\xB5 3M",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 2.1,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_jetfix_34",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet JetFix 34 mm \xD88",
+      model: "JetFix 34 mm \xD88",
+      erpName: "JetFix, \u0434\u044E\u0431\u0435\u043B\u044C+\u043C\u0443\u0444\u0442\u0430 \u0441 \u0440\u0435\u0437\u044C\u0431\u043E\u0439 \xD88X11, \u0434\u043B\u0438\u043D\u043E\u0439 34 \u043C\u043C, \u0441\u0442\u0430\u043B\u044C, \u0446\u0438\u043D\u043A/Jetfix 34 mm \xD88 X11 + Bolt",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.042,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_bolt_zinc",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix bolt M6x34 (sink)",
+      model: "SamFix bolt M6x34 (sink)",
+      erpName: "SamFix, \u0434\u044E\u0431\u0435\u043B\u044C \u0441 \u0440\u0435\u0437\u044C\u0431\u043E\u0439 \u0434\u043B\u044F \u043E\u0442\u0432\u0435\u0440\u0441\u0442\u0438\u0439 M6X34 \u043C\u043C, \u0441\u0442\u0430\u043B\u044C, \u0426\u0438\u043D\u043A/Sam-Fix Bolt M6X34 mm Milled ZINC",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.034,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_bolt",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix bolt M6x34",
+      model: "SamFix bolt M6x34",
+      erpName: "SamFix, \u0434\u044E\u0431\u0435\u043B\u044C \u0441 \u0440\u0435\u0437\u044C\u0431\u043E\u0439 \u0434\u043B\u044F \u043E\u0442\u0432\u0435\u0440\u0441\u0442\u0438\u0439 M6X34 \u043C\u043C, \u0441\u0442\u0430\u043B\u044C,/Sam-Fix Bolt M6X34 mm Milled Not Plated",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.026,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_sleeve_10",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix plastik mufta \xD810x10",
+      model: "SamFix plastik mufta \xD810x10",
+      erpName: "SamFix, \u043F\u043B\u0430\u0441\u0442\u0438\u043A\u043E\u0432\u0430\u044F \u043C\u0443\u0444\u0442\u0430 \xD810x10 \u043C\u043C \u043F\u043E\u0434 \u0440\u0435\u0437\u044C\u0431\u0443 M6 (\u0432 \u043B\u0435\u043D\u0442\u0435)/SAM-FIX CHANNELED DIA M6 X10X10 PLS. CH",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.012,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_sleeve_8",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix plastik mufta \xD88x10",
+      model: "SamFix plastik mufta \xD88x10",
+      erpName: "SamFix, \u043F\u043B\u0430\u0441\u0442\u0438\u043A\u043E\u0432\u0430\u044F \u043C\u0443\u0444\u0442\u0430 \xD88x10 \u043C\u043C \u043F\u043E\u0434 \u0440\u0435\u0437\u044C\u0431\u0443 M6 (\u0432 \u043B\u0435\u043D\u0442\u0435)/SAM-FIX CHANNELED DIA M6 X 8 X 10 PLS. CH",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.011,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_cam",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix ekssentrik \xD815x12",
+      model: "SamFix ekssentrik \xD815x12",
+      erpName: "SamFix, \u044D\u043A\u0441\u0446\u0435\u043D\u0442\u0440\u0438\u043A\u043E\u0432\u0430\u044F \u0441\u0442\u044F\u0436\u043A\u0430, \xD815x12, /SAM-FIX CAM DIA 15 x 12",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.057,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_samet_samfix_cam_zinc",
+      kind: "connector",
+      brand: "Samet",
+      nameKey: "Samet SamFix ekssentrik \xD815x12 (sink)",
+      model: "SamFix ekssentrik \xD815x12 (sink)",
+      erpName: "SamFix, \u044D\u043A\u0441\u0446\u0435\u043D\u0442\u0440\u0438\u043A\u043E\u0432\u0430\u044F \u0441\u0442\u044F\u0436\u043A\u0430, \xD815x12, \u0446\u0438\u043D\u043A/SAM-FIX CAM DIA 15 x 12 ZINC",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.064,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "conn_mesan_dowel_m6",
+      kind: "connector",
+      brand: "Mesan",
+      nameKey: "Mesan Plastik dyubel M6 10x10",
+      model: "Plastik dyubel M6 10x10",
+      erpName: "\u0414\u044E\u0431\u0435\u043B\u044C \u043F\u043B\u0430\u0441\u0442\u0438\u043A\u043E\u0432\u044B\u0439 \u041C6 10x10\u043C\u043C",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 0.02,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      id: "screw_confirmat_6_2x50",
+      kind: "screw",
+      brand: "",
+      nameKey: "Konfirmat 6,2x50",
+      model: "Konfirmat 6,2x50",
+      erpName: "\u0412\u0438\u043D\u0442 \u043A\u043E\u043D\u0444\u0438\u0440\u043C\u0430\u0442 6,2x50\u043C\u043C \u0446\u0438\u043D\u043A\u043E\u0432\u044B\u0435 \u043F\u043E\u043A\u0440\u044B\u0442\u044B\u0435",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 2.753,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Cost as in the report (probably per pack) - Dafna to confirm the unit."
+    },
+    {
+      id: "screw_4x16",
+      kind: "screw",
+      brand: "",
+      nameKey: "Mebel samorezi 4x16",
+      model: "Mebel samorezi 4x16",
+      erpName: "\u0421\u0430\u043C\u043E\u0440\u0435\u0437 \u043C\u0435\u0431\u0435\u043B\u044C\u043D\u044B\u0439 4x16\u043C\u043C \u0446\u044B\u043D\u043A\u043E\u0432\u044B\u0435 \u043F\u043E\u043A\u0440\u044B\u0442\u044B\u0435",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 3.795,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Cost as in the report (probably per pack) - Dafna to confirm the unit."
+    },
+    {
+      id: "screw_3_5x30",
+      kind: "screw",
+      brand: "",
+      nameKey: "Shurup 3,5x30",
+      model: "Shurup 3,5x30",
+      erpName: "\u0428\u0443\u0440\u0443\u043F\u044B \u0434\u043B\u044F \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F 3,5x30\u043C\u043C \u0424\u043E\u0441\u0444\u0430\u0442\u043D\u043E\u0435 \u043F\u043E\u043A\u0440\u044B\u0442\u044B\u0435",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: false,
+      use: "production",
+      costUsd: 2.38,
+      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Cost as in the report (probably per pack) - Dafna to confirm the unit."
     }
   ],
   brands: {
     slide: {
       strax: "slide_strax_ball",
-      hettich: "slide_hettich_quadro"
+      hettich: "slide_hettich_quadro",
+      samet_ball: "slide_samet_so_ball",
+      samet_soft: "slide_samet_so_soft",
+      samet_smart: "slide_samet_smart",
+      samet_slidea: "slide_samet_slidea"
     },
     hinge: {
       strax: "hinge_strax",
-      hettich: "hinge_hettich_sensys"
+      hettich: "hinge_hettich_sensys",
+      samet: "hinge_samet_master_0"
     }
   },
   hingeRule: [
@@ -63482,7 +63908,22 @@ var hardware_v1_default = {
     hdf: 850,
     metal: 7850
   },
-  boardDensityNote: "Assumed board densities for the door weight (chipboard ~650-700, MDF ~750-800 kg/m3); unconfirmed until Dafna's supplier data."
+  boardDensityNote: "Assumed board densities for the door weight (chipboard ~650-700, MDF ~750-800 kg/m3); unconfirmed until Dafna's supplier data.",
+  hingeByMount: {
+    samet: {
+      full_overlay: "hinge_samet_master_0",
+      half_overlay: "hinge_samet_master_8",
+      inset: "hinge_samet_master_18"
+    }
+  },
+  hingePlate: {
+    samet: "plate_samet_5"
+  },
+  slideExtras: {
+    samet_smart: ["smartlock_left", "smartlock_right"],
+    samet_slidea: ["slidea_lock_left", "slidea_lock_right"]
+  },
+  hardwareNote: "D-28: real items from Dafna's stock report (Furniture.docx, founder 2026-11-23), sorted by brand (Samet, Mesan, screws). costUsd = cost of one unit in USD as in the report (stock counts are not kept: they change daily). Strax / Hettich (use = legacy) stay for applications made before; the kiosk offers Samet. Connectors, screws and sliding-door parts are listed for the office only (no product rule counts them yet)."
 };
 
 // ../../packages/engine/src/bom.ts
@@ -63523,12 +63964,20 @@ function computeBom(template, params, result, hw = hardwareV1) {
     }
   }
   const brand = (kind, key) => hw.brands[kind]?.[String(params[key] ?? "strax")] ?? hw.brands[kind]?.strax;
-  const hinges = result.panels.filter((p) => p.role === "door").reduce((n3, d) => n3 + hingesForDoor(d, hw), 0);
-  addHw(brand("hinge", "hingeBrand"), hinges);
-  addHw(
-    brand("slide", "slideBrand"),
-    result.panels.filter((p) => p.role === "drawer_front").length
-  );
+  const hingeKey = String(params.hingeBrand ?? "strax");
+  const byMount = hw.hingeByMount?.[hingeKey];
+  for (const d of result.panels.filter((p) => p.role === "door")) {
+    const n3 = hingesForDoor(d, hw);
+    addHw(
+      byMount ? byMount[d.hingeMount ?? "full_overlay"] ?? byMount.full_overlay : brand("hinge", "hingeBrand"),
+      n3
+    );
+    addHw(hw.hingePlate?.[hingeKey], n3);
+  }
+  const drawers = result.panels.filter((p) => p.role === "drawer_front").length;
+  addHw(brand("slide", "slideBrand"), drawers);
+  for (const extra of hw.slideExtras?.[String(params.slideBrand ?? "")] ?? [])
+    addHw(extra, drawers);
   const railM = result.rails.reduce((m, r) => m + r.lengthMm / 1e3, 0);
   if (railM > 0) {
     hardware.set("rail_oval_25", r3(railM));
@@ -63963,6 +64412,22 @@ var ru = {
   "hw.hint.hingeBrand.hettich": "\u0421 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C (Sensys)",
   "hw.hint.slideBrand.strax": "\u0428\u0430\u0440\u0438\u043A\u043E\u0432\u044B\u0435 \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435, \u0441\u0442\u0430\u043D\u0434\u0430\u0440\u0442",
   "hw.hint.slideBrand.hettich": "\u0421\u043A\u0440\u044B\u0442\u044B\u0435, \u0441 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C (Quadro)",
+  "hw.model.hinge.samet": "Samet Master",
+  "hw.model.slide.samet_ball": "Samet SO Class",
+  "hw.model.slide.samet_soft": "Samet SO Class Soft Close",
+  "hw.model.slide.samet_smart": "Samet Smart Slide",
+  "hw.model.slide.samet_slidea": "Samet Slidea",
+  "hw.brand.samet": "Samet",
+  "hw.brand.samet_ball": "Samet",
+  "hw.brand.samet_soft": "Samet",
+  "hw.brand.samet_smart": "Samet",
+  "hw.brand.samet_slidea": "Samet",
+  "hw.hint.hingeBrand.samet": "Master, \u0441 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C",
+  "hw.hint.slideBrand.samet_ball": "SO Class, \u0448\u0430\u0440\u0438\u043A\u043E\u0432\u044B\u0435, \u0431\u043E\u043A\u043E\u0432\u044B\u0435",
+  "hw.hint.slideBrand.samet_soft": "SO Class, \u0448\u0430\u0440\u0438\u043A\u043E\u0432\u044B\u0435, \u0441 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C",
+  "hw.hint.slideBrand.samet_smart": "Smart Slide: \u0441\u043A\u0440\u044B\u0442\u044B\u0435, \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0432\u044B\u0434\u0432\u0438\u0436\u0435\u043D\u0438\u044F, \u0441 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C",
+  "hw.hint.slideBrand.samet_slidea": "Slidea: \u0441\u043A\u0440\u044B\u0442\u044B\u0435, \u0441 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C",
+  "issue.MIGRATION_HARDWARE_CHANGED": "\u041C\u0435\u0445\u0430\u043D\u0438\u0437\u043C \u0431\u043E\u043B\u044C\u0448\u0435 \u043D\u0435 \u043F\u0440\u043E\u0434\u0430\u0451\u0442\u0441\u044F: {from} \u0437\u0430\u043C\u0435\u043D\u0451\u043D \u043D\u0430 {to}",
   "param.hingeBrand": "\u041F\u0435\u0442\u043B\u0438 \u0434\u0432\u0435\u0440\u0435\u0439",
   "param.slideBrand": "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435 \u044F\u0449\u0438\u043A\u043E\u0432",
   "price.total": "\u0426\u0435\u043D\u0430",
@@ -64404,6 +64869,22 @@ var uz = {
   "hw.hint.hingeBrand.hettich": "Yumshoq yopiladi (Sensys)",
   "hw.hint.slideBrand.strax": "Sharikli yo'naltiruvchilar, standart",
   "hw.hint.slideBrand.hettich": "Yashirin, yumshoq yopiladi (Quadro)",
+  "hw.model.hinge.samet": "Samet Master",
+  "hw.model.slide.samet_ball": "Samet SO Class",
+  "hw.model.slide.samet_soft": "Samet SO Class Soft Close",
+  "hw.model.slide.samet_smart": "Samet Smart Slide",
+  "hw.model.slide.samet_slidea": "Samet Slidea",
+  "hw.brand.samet": "Samet",
+  "hw.brand.samet_ball": "Samet",
+  "hw.brand.samet_soft": "Samet",
+  "hw.brand.samet_smart": "Samet",
+  "hw.brand.samet_slidea": "Samet",
+  "hw.hint.hingeBrand.samet": "Master, yumshoq yopiladi",
+  "hw.hint.slideBrand.samet_ball": "SO Class, sharikli, yon tomonda",
+  "hw.hint.slideBrand.samet_soft": "SO Class, sharikli, yumshoq yopiladi",
+  "hw.hint.slideBrand.samet_smart": "Smart Slide: yashirin, to'liq chiqadi, yumshoq yopiladi",
+  "hw.hint.slideBrand.samet_slidea": "Slidea: yashirin, yumshoq yopiladi",
+  "issue.MIGRATION_HARDWARE_CHANGED": "Mexanizm endi sotilmaydi: {from} o'rniga {to} qo'yildi",
   "param.hingeBrand": "Eshik petlyalari",
   "param.slideBrand": "Tortma yo'naltiruvchilari",
   "price.total": "Narx",
@@ -64778,6 +65259,10 @@ var HARDWARE_NAMES = {
   castor_standard: "G'ildirakcha",
   lift_frame_2leg: "Ko'tariluvchi metall rama, 2 oyoqli"
 };
+function hardwareName(ref) {
+  const item = hardwareV1.items.find((i) => i.id === ref);
+  return HARDWARE_NAMES[ref] ?? (item?.model ? `${item.brand} ${item.model}`.trim() : void 0) ?? ref;
+}
 var UNIT_NAMES = { pcs: "dona", pair: "juft", m: "m", m2: "m\xB2" };
 function edgeName(result, bandId) {
   for (const p of result.panels)
@@ -64865,10 +65350,10 @@ async function buildOrderPdf({
   const name = [lead.firstName, lead.lastName].filter(Boolean).join(" ");
   const bom = computeBom(template, params, result);
   const hwLine = (kind) => {
-    const l = bom.find(
+    const lines = bom.filter(
       (b) => b.kind === "hardware" && hardwareV1.items.find((i) => i.id === b.ref)?.kind === kind
     );
-    return l ? `${HARDWARE_NAMES[l.ref] ?? l.ref} \u2014 ${l.qty} ${UNIT_NAMES[l.unit] ?? l.unit}` : null;
+    return lines.length > 0 ? lines.map((l) => `${hardwareName(l.ref)} \u2014 ${l.qty} ${UNIT_NAMES[l.unit] ?? l.unit}`).join("; ") : null;
   };
   const [mainLabel, secondLabel] = template.templateId === "desk" ? ["Stoleshnitsa", "Oyoq"] : template.templateId === "pedestal" ? ["Korpus", "Old panel"] : ["Korpus", "Eshik"];
   const info = [
@@ -64986,7 +65471,7 @@ async function buildOrderPdf({
     section(
       "Furnitura",
       hardware.map((b) => [
-        HARDWARE_NAMES[b.ref] ?? b.ref,
+        hardwareName(b.ref),
         `${b.unit === "m" ? b.qty.toFixed(2) : b.qty} ${UNIT_NAMES[b.unit] ?? b.unit}`
       ])
     );

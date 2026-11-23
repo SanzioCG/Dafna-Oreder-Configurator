@@ -1,5 +1,5 @@
 {
-  "hardwareVersion": "1.1.0",
+  "hardwareVersion": "1.2.0",
   "items": [
     {
       "id": "slide_strax_ball",
@@ -9,7 +9,9 @@
       "softClose": false,
       "unit": "pair",
       "unconfirmed": true,
-      "note": "Ball-bearing drawer slides (pair). DEMO value until Dafna sends its hardware list (D-9)."
+      "note": "Ball-bearing drawer slides (pair). DEMO value until Dafna sends its hardware list (D-9).",
+      "use": "legacy",
+      "slideMount": "side"
     },
     {
       "id": "slide_hettich_quadro",
@@ -19,7 +21,9 @@
       "softClose": true,
       "unit": "pair",
       "unconfirmed": true,
-      "note": "Concealed soft-close drawer runners (pair). DEMO value until Dafna sends its hardware list (D-9)."
+      "note": "Concealed soft-close drawer runners (pair). DEMO value until Dafna sends its hardware list (D-9).",
+      "use": "legacy",
+      "slideMount": "under"
     },
     {
       "id": "hinge_strax",
@@ -29,7 +33,8 @@
       "softClose": false,
       "unit": "pcs",
       "unconfirmed": true,
-      "note": "Cup hinge 35 mm. DEMO value until Dafna sends its hardware list (D-9)."
+      "note": "Cup hinge 35 mm. DEMO value until Dafna sends its hardware list (D-9).",
+      "use": "legacy"
     },
     {
       "id": "hinge_hettich_sensys",
@@ -39,7 +44,8 @@
       "softClose": true,
       "unit": "pcs",
       "unconfirmed": true,
-      "note": "Cup hinge with integrated soft close. DEMO value until Dafna sends its hardware list (D-9)."
+      "note": "Cup hinge with integrated soft close. DEMO value until Dafna sends its hardware list (D-9).",
+      "use": "legacy"
     },
     {
       "id": "castor_standard",
@@ -49,7 +55,8 @@
       "softClose": false,
       "unit": "pcs",
       "unconfirmed": true,
-      "note": "Office pedestal castor. DEMO value until Dafna sends its hardware list (D-9)."
+      "note": "Office pedestal castor. DEMO value until Dafna sends its hardware list (D-9).",
+      "use": "kiosk"
     },
     {
       "id": "lift_frame_2leg",
@@ -59,7 +66,8 @@
       "softClose": false,
       "unit": "pcs",
       "unconfirmed": true,
-      "note": "Electric 2-leg sit-stand desk frame. DEMO value until Dafna sends its hardware list (D-9)."
+      "note": "Electric 2-leg sit-stand desk frame. DEMO value until Dafna sends its hardware list (D-9).",
+      "use": "kiosk"
     },
     {
       "id": "rail_oval_25",
@@ -69,7 +77,8 @@
       "softClose": false,
       "unit": "m",
       "unconfirmed": true,
-      "note": "Wardrobe hanging rail (per metre). DEMO value until Dafna sends its hardware list (D-9)."
+      "note": "Wardrobe hanging rail (per metre). DEMO value until Dafna sends its hardware list (D-9).",
+      "use": "kiosk"
     },
     {
       "id": "rail_holder",
@@ -79,17 +88,433 @@
       "softClose": false,
       "unit": "pcs",
       "unconfirmed": true,
-      "note": "Rail end holder (2 per rail). DEMO value until Dafna sends its hardware list (D-9)."
+      "note": "Rail end holder (2 per rail). DEMO value until Dafna sends its hardware list (D-9).",
+      "use": "kiosk"
+    },
+    {
+      "id": "hinge_samet_master_0",
+      "kind": "hinge",
+      "brand": "Samet",
+      "nameKey": "Samet Master 0 mm",
+      "model": "Master 0 mm",
+      "erpName": "Петля Master со встроенным доводчиком 0MM 48 мм/MASTER SOFT CLOSE HINGE 0MM 48AX NI",
+      "softClose": true,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "kiosk",
+      "costUsd": 0.944,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Full overlay (door on an outer side panel)."
+    },
+    {
+      "id": "hinge_samet_master_18",
+      "kind": "hinge",
+      "brand": "Samet",
+      "nameKey": "Samet Master 18 mm",
+      "model": "Master 18 mm",
+      "erpName": "Петля Master со встроенным доводчиком 18MM 48 мм/MASTER SOFT CLOSE HINGE 18MM 48AX NI",
+      "softClose": true,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "kiosk",
+      "costUsd": 0.943,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Inset (vkladnoy) door."
+    },
+    {
+      "id": "hinge_samet_master_8",
+      "kind": "hinge",
+      "brand": "Samet",
+      "nameKey": "Samet Master 8 mm",
+      "model": "Master 8 mm",
+      "erpName": "",
+      "softClose": true,
+      "unit": "pcs",
+      "unconfirmed": true,
+      "use": "kiosk",
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Half overlay (door on a partition). NOT in the stock report - Dafna to confirm which hinge it uses; priced as the 0 mm hinge meanwhile."
+    },
+    {
+      "id": "plate_samet_5",
+      "kind": "hinge_plate",
+      "brand": "Samet",
+      "nameKey": "Samet Montaj planka 5 mm",
+      "model": "Montaj planka 5 mm",
+      "erpName": "Монтажная планка для MASTER/IMPRO/INVO 3D 5мм/5MM ADJUSTABLE MOUNTING PLATE",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "kiosk",
+      "costUsd": 0.16,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). One per hinge (which plate per hinge: Dafna to confirm)."
+    },
+    {
+      "id": "plate_samet_7",
+      "kind": "hinge_plate",
+      "brand": "Samet",
+      "nameKey": "Samet Montaj planka 7 mm",
+      "model": "Montaj planka 7 mm",
+      "erpName": "Монтажная планка для MASTER / IMPRO / INVO 3D 7 мм/7MM ADJUSTABLE MOUNTING PLATE",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 0.18,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "plate_samet_euro_5",
+      "kind": "hinge_plate",
+      "brand": "Samet",
+      "nameKey": "Samet Montaj planka EURO 5 mm",
+      "model": "Montaj planka EURO 5 mm",
+      "erpName": "Монтажная планка для MASTER / IMPRO / INVO 3D 5 мм 6,3x14/5MM ADJUSTABLE MOUNTING PLATE EURO",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 0.223,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "plate_samet_euro_7",
+      "kind": "hinge_plate",
+      "brand": "Samet",
+      "nameKey": "Samet Montaj planka EURO 7 mm",
+      "model": "Montaj planka EURO 7 mm",
+      "erpName": "Монтажная планка для MASTER / IMPRO / INVO 3D 7 мм 6,3x14/7MM ADJUSTABLE MOUNTING PLATE EURO",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 0.244,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "slide_samet_so_ball",
+      "kind": "slide",
+      "brand": "Samet",
+      "nameKey": "Samet SO Class",
+      "model": "SO Class",
+      "erpName": "Шарик. направляющие SO CLASS/ZINC COATED 46-300…450",
+      "softClose": false,
+      "unit": "pair",
+      "unconfirmed": false,
+      "use": "kiosk",
+      "costUsd": 4.45,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Ball bearing, 300-450 mm (cost of the 400 mm pair).",
+      "slideMount": "side"
+    },
+    {
+      "id": "slide_samet_so_soft",
+      "kind": "slide",
+      "brand": "Samet",
+      "nameKey": "Samet SO Class Soft Close",
+      "model": "SO Class Soft Close",
+      "erpName": "Направляющие SO CLASS/ZINC COATED SOFT CLOSE 46-300…450",
+      "softClose": true,
+      "unit": "pair",
+      "unconfirmed": false,
+      "use": "kiosk",
+      "costUsd": 6.56,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Ball bearing with soft close, 300-450 mm (cost of the 400 mm pair).",
+      "slideMount": "side"
+    },
+    {
+      "id": "slide_samet_smart",
+      "kind": "slide",
+      "brand": "Samet",
+      "nameKey": "Samet Smart Slide",
+      "model": "Smart Slide",
+      "erpName": "Направляющая полного выдвижения Smart Slide с доводчиком 350/400мм/SMSLD FULL OILB FULL EXTENSION SY",
+      "softClose": true,
+      "unit": "pair",
+      "unconfirmed": false,
+      "use": "kiosk",
+      "costUsd": 11.288,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Hidden, full extension, soft close, 350 / 400 mm; with the SmartLock left + right per drawer.",
+      "slideMount": "under"
+    },
+    {
+      "id": "slide_samet_slidea",
+      "kind": "slide",
+      "brand": "Samet",
+      "nameKey": "Samet Slidea",
+      "model": "Slidea",
+      "erpName": "Направляющая LOCK FIX (18 мм) Slidea 450 мм/SLIDEA 450 MM SINGLE EXTENSION SOFT CLOSE LOCK-FIX 18MM",
+      "softClose": true,
+      "unit": "pair",
+      "unconfirmed": false,
+      "use": "kiosk",
+      "costUsd": 4.663,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Hidden, single extension, soft close, 435 / 450 mm; with the LOCK FIX left + right per drawer.",
+      "slideMount": "under"
+    },
+    {
+      "id": "slide_samet_slidea_pin",
+      "kind": "slide",
+      "brand": "Samet",
+      "nameKey": "Samet Slidea Pin Fix 435",
+      "model": "Slidea Pin Fix 435",
+      "erpName": "Направляющая PIN FIX (18 мм) Slidea 435 мм/SLIDEA 435 MM SINGLE EXTENSION SOFT CLOSE PIN-FIX 18MM",
+      "softClose": true,
+      "unit": "pair",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 4.765,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23).",
+      "slideMount": "under"
+    },
+    {
+      "id": "smartlock_left",
+      "kind": "slide_lock",
+      "brand": "Samet",
+      "nameKey": "Samet SmartLock chap",
+      "model": "SmartLock chap",
+      "erpName": "Система крепления SmartLock, левая/SMARTSLIDE NEW LOCK, LEFT (120)",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "kiosk",
+      "costUsd": 0.47,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "smartlock_right",
+      "kind": "slide_lock",
+      "brand": "Samet",
+      "nameKey": "Samet SmartLock o'ng",
+      "model": "SmartLock o'ng",
+      "erpName": "Система крепления SmartLock, правая/SMARTSLIDE NEW LOCK, RIGHT (120)",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "kiosk",
+      "costUsd": 0.47,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "slidea_lock_left",
+      "kind": "slide_lock",
+      "brand": "Samet",
+      "nameKey": "Samet Lock Fix chap",
+      "model": "Lock Fix chap",
+      "erpName": "Система крепления с фиксаторами LOCK FIX, левая/SLIDEA LOCK L",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "kiosk",
+      "costUsd": 0.355,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "slidea_lock_right",
+      "kind": "slide_lock",
+      "brand": "Samet",
+      "nameKey": "Samet Lock Fix o'ng",
+      "model": "Lock Fix o'ng",
+      "erpName": "Система крепления с фиксаторами LOCK FIX, правая/SLIDEA LOCK R",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "kiosk",
+      "costUsd": 0.355,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "sliding_samet_smt75_roller",
+      "kind": "sliding",
+      "brand": "Samet",
+      "nameKey": "Samet SMT 75 T mexanizm (1 eshik)",
+      "model": "SMT 75 T mexanizm (1 eshik)",
+      "erpName": "SMT 75 T Регулируемый механизм на 1 дверь/75 KG ADJUSTABLE SLIDING DOOR SYSTEM SINGLE ROLLER",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 3.81,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "sliding_samet_rail_3m",
+      "kind": "sliding",
+      "brand": "Samet",
+      "nameKey": "Samet Alyumin profil 3 m (75 kg)",
+      "model": "Alyumin profil 3 m (75 kg)",
+      "erpName": "75 кг - Нижний ходовой профиль из алюминия 10-12 3 M/75 KG ALU SINGLE LOWER/UPPER RAIL 10-12µ 3M",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 2.1,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "conn_samet_jetfix_34",
+      "kind": "connector",
+      "brand": "Samet",
+      "nameKey": "Samet JetFix 34 mm Ø8",
+      "model": "JetFix 34 mm Ø8",
+      "erpName": "JetFix, дюбель+муфта с резьбой Ø8X11, длиной 34 мм, сталь, цинк/Jetfix 34 mm Ø8 X11 + Bolt",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 0.042,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "conn_samet_samfix_bolt_zinc",
+      "kind": "connector",
+      "brand": "Samet",
+      "nameKey": "Samet SamFix bolt M6x34 (sink)",
+      "model": "SamFix bolt M6x34 (sink)",
+      "erpName": "SamFix, дюбель с резьбой для отверстий M6X34 мм, сталь, Цинк/Sam-Fix Bolt M6X34 mm Milled ZINC",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 0.034,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "conn_samet_samfix_bolt",
+      "kind": "connector",
+      "brand": "Samet",
+      "nameKey": "Samet SamFix bolt M6x34",
+      "model": "SamFix bolt M6x34",
+      "erpName": "SamFix, дюбель с резьбой для отверстий M6X34 мм, сталь,/Sam-Fix Bolt M6X34 mm Milled Not Plated",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 0.026,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "conn_samet_samfix_sleeve_10",
+      "kind": "connector",
+      "brand": "Samet",
+      "nameKey": "Samet SamFix plastik mufta Ø10x10",
+      "model": "SamFix plastik mufta Ø10x10",
+      "erpName": "SamFix, пластиковая муфта Ø10x10 мм под резьбу M6 (в ленте)/SAM-FIX CHANNELED DIA M6 X10X10 PLS. CH",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 0.012,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "conn_samet_samfix_sleeve_8",
+      "kind": "connector",
+      "brand": "Samet",
+      "nameKey": "Samet SamFix plastik mufta Ø8x10",
+      "model": "SamFix plastik mufta Ø8x10",
+      "erpName": "SamFix, пластиковая муфта Ø8x10 мм под резьбу M6 (в ленте)/SAM-FIX CHANNELED DIA M6 X 8 X 10 PLS. CH",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 0.011,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "conn_samet_samfix_cam",
+      "kind": "connector",
+      "brand": "Samet",
+      "nameKey": "Samet SamFix ekssentrik Ø15x12",
+      "model": "SamFix ekssentrik Ø15x12",
+      "erpName": "SamFix, эксцентриковая стяжка, Ø15x12, /SAM-FIX CAM DIA 15 x 12",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 0.057,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "conn_samet_samfix_cam_zinc",
+      "kind": "connector",
+      "brand": "Samet",
+      "nameKey": "Samet SamFix ekssentrik Ø15x12 (sink)",
+      "model": "SamFix ekssentrik Ø15x12 (sink)",
+      "erpName": "SamFix, эксцентриковая стяжка, Ø15x12, цинк/SAM-FIX CAM DIA 15 x 12 ZINC",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 0.064,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "conn_mesan_dowel_m6",
+      "kind": "connector",
+      "brand": "Mesan",
+      "nameKey": "Mesan Plastik dyubel M6 10x10",
+      "model": "Plastik dyubel M6 10x10",
+      "erpName": "Дюбель пластиковый М6 10x10мм",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 0.02,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+    },
+    {
+      "id": "screw_confirmat_6_2x50",
+      "kind": "screw",
+      "brand": "",
+      "nameKey": "Konfirmat 6,2x50",
+      "model": "Konfirmat 6,2x50",
+      "erpName": "Винт конфирмат 6,2x50мм цинковые покрытые",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 2.753,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Cost as in the report (probably per pack) - Dafna to confirm the unit."
+    },
+    {
+      "id": "screw_4x16",
+      "kind": "screw",
+      "brand": "",
+      "nameKey": "Mebel samorezi 4x16",
+      "model": "Mebel samorezi 4x16",
+      "erpName": "Саморез мебельный 4x16мм цынковые покрытые",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 3.795,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Cost as in the report (probably per pack) - Dafna to confirm the unit."
+    },
+    {
+      "id": "screw_3_5x30",
+      "kind": "screw",
+      "brand": "",
+      "nameKey": "Shurup 3,5x30",
+      "model": "Shurup 3,5x30",
+      "erpName": "Шурупы для крепления 3,5x30мм Фосфатное покрытые",
+      "softClose": false,
+      "unit": "pcs",
+      "unconfirmed": false,
+      "use": "production",
+      "costUsd": 2.38,
+      "note": "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Cost as in the report (probably per pack) - Dafna to confirm the unit."
     }
   ],
   "brands": {
     "slide": {
       "strax": "slide_strax_ball",
-      "hettich": "slide_hettich_quadro"
+      "hettich": "slide_hettich_quadro",
+      "samet_ball": "slide_samet_so_ball",
+      "samet_soft": "slide_samet_so_soft",
+      "samet_smart": "slide_samet_smart",
+      "samet_slidea": "slide_samet_slidea"
     },
     "hinge": {
       "strax": "hinge_strax",
-      "hettich": "hinge_hettich_sensys"
+      "hettich": "hinge_hettich_sensys",
+      "samet": "hinge_samet_master_0"
     }
   },
   "hingeRule": [
@@ -138,5 +563,20 @@
     "hdf": 850,
     "metal": 7850
   },
-  "boardDensityNote": "Assumed board densities for the door weight (chipboard ~650-700, MDF ~750-800 kg/m3); unconfirmed until Dafna's supplier data."
+  "boardDensityNote": "Assumed board densities for the door weight (chipboard ~650-700, MDF ~750-800 kg/m3); unconfirmed until Dafna's supplier data.",
+  "hingeByMount": {
+    "samet": {
+      "full_overlay": "hinge_samet_master_0",
+      "half_overlay": "hinge_samet_master_8",
+      "inset": "hinge_samet_master_18"
+    }
+  },
+  "hingePlate": {
+    "samet": "plate_samet_5"
+  },
+  "slideExtras": {
+    "samet_smart": ["smartlock_left", "smartlock_right"],
+    "samet_slidea": ["slidea_lock_left", "slidea_lock_right"]
+  },
+  "hardwareNote": "D-28: real items from Dafna's stock report (Furniture.docx, founder 2026-11-23), sorted by brand (Samet, Mesan, screws). costUsd = cost of one unit in USD as in the report (stock counts are not kept: they change daily). Strax / Hettich (use = legacy) stay for applications made before; the kiosk offers Samet. Connectors, screws and sliding-door parts are listed for the office only (no product rule counts them yet)."
 }

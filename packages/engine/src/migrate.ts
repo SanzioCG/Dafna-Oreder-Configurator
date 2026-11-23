@@ -188,6 +188,14 @@ export const INTERIOR_CHANGED_IN = '0.7.0';
 export const CARCASS_SPLIT_IN = '0.10.0';
 /** D-22: the top lies on the side panels from this template version on */
 export const TOP_OVER_SIDES_IN = '0.12.0';
+/**
+ * D-28: demo hardware brands -> the Samet items of Dafna's stock report (template 0.15.0):
+ * Hettich (soft close) -> the soft-close Samet slide, Strax (standard) -> the ball-bearing one.
+ */
+export const HARDWARE_MAP_028: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  hingeBrand: { strax: 'samet', hettich: 'samet' },
+  slideBrand: { strax: 'samet_ball', hettich: 'samet_soft' },
+};
 /** D-26: the construction of Dafna's Bazis models from this template version on */
 export const LESTER_IN = '0.13.0';
 /** D-27: inset doors span the partitions (which stand behind them) from this version on */
@@ -361,6 +369,18 @@ export function migrateOrderDraft(
   const baseOptions = template.parameters.find((p) => p.key === 'base')?.options ?? [];
   if (params.base === 'none' && !baseOptions.includes('none') && baseOptions.includes('feet')) {
     params = { ...params, base: 'feet' };
+  }
+
+  // D-28: the demo brands Strax / Hettich became Samet (template 0.15.0) — never silently
+  for (const key of ['hingeBrand', 'slideBrand'] as const) {
+    const options = template.parameters.find((p) => p.key === key)?.options ?? [];
+    const from = params[key];
+    if (typeof from !== 'string' || options.length === 0 || options.includes(from)) continue;
+    const to =
+      HARDWARE_MAP_028[key]?.[from] ?? template.parameters.find((p) => p.key === key)?.default;
+    if (typeof to !== 'string' || !options.includes(to)) continue;
+    params = { ...params, [key]: to };
+    issues.push(makeIssue('MIGRATION_HARDWARE_CHANGED', 'warning', key, { from, to }));
   }
 
   const kept = preserveDoors(params, doorTypesOf(d), template, catalog);

@@ -50,12 +50,15 @@ describe('D-12 assembly instructions', () => {
 
   it('wardrobe order: carcass before shelves, doors last; hinges counted on the door step', () => {
     const tpl = PRODUCT_TEMPLATES.wardrobe!;
-    const params = { ...defaultParams(tpl), hingeBrand: 'hettich' };
+    const params = defaultParams(tpl);
     const steps = assemblySteps(tpl, params, generate(tpl, params));
     const keys = steps.map((s) => s.key);
     expect(keys.indexOf('sides')).toBeLessThan(keys.indexOf('shelves'));
     expect(keys.at(-1)).toBe('doors');
-    expect(steps.at(-1)!.hardware).toEqual(['hinge_hettich_sensys']);
+    // D-28: Samet Master for inset leaves, with its mounting plate
+    expect(steps.at(-1)!.hardware).toEqual(
+      expect.arrayContaining(['hinge_samet_master_18', 'plate_samet_5']),
+    );
   });
 
   it.each(['uz', 'ru'] as const)('a valid PDF in %s', async (lang) => {

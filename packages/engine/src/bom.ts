@@ -22,6 +22,19 @@ export interface HardwareItem {
   unit: 'pcs' | 'pair' | 'm';
   unconfirmed: boolean;
   note?: string;
+  /** D-28: model as the office calls it (e.g. "Master 18 mm") */
+  model?: string;
+  /** D-28: the article's name in Dafna's 1C stock report */
+  erpName?: string;
+  /** D-28: cost of one unit in USD (Dafna's stock report) */
+  costUsd?: number;
+  /**
+   * D-28: kiosk = offered to customers or counted in the BOM; production = the office's list
+   * only (connectors, screws, …); legacy = kept for applications made before (Strax, Hettich)
+   */
+  use?: 'kiosk' | 'production' | 'legacy';
+  /** D-28: slides only - side-mounted (ball bearing) or hidden under the drawer */
+  slideMount?: 'side' | 'under';
 }
 
 export interface HardwareCatalog {
@@ -35,6 +48,13 @@ export interface HardwareCatalog {
   hingeExtraAboveWidthMm?: number;
   /** D-15: board density by material kind, kg/m3 (door weight) */
   boardDensityKgM3?: Record<string, number>;
+  /** D-28: hinge brand -> hinge item per mounting (full_overlay / half_overlay / inset) */
+  hingeByMount?: Record<string, Record<string, string>>;
+  /** D-28: hinge brand -> its mounting plate (one per hinge) */
+  hingePlate?: Record<string, string>;
+  /** D-28: slide brand -> parts added once per drawer (e.g. the left and right locks) */
+  slideExtras?: Record<string, string[]>;
+  hardwareNote?: string;
 }
 
 /** D-19: a board priced per sheet (from the supplier API or typed by the manager). */
@@ -76,6 +96,8 @@ export interface PriceList {
   services?: PriceService[];
   /** D-20: our material / hardware id -> its ERP article (the ERP price sync matches on it) */
   erpCodes?: Record<string, string>;
+  /** D-28: USD -> so'm rate the demo hardware prices were made with */
+  usdRate?: number;
   wasteFactor: number;
   markupPct: number;
   roundTo: number;
@@ -93,6 +115,16 @@ export interface BomLine {
 }
 
 const r3 = (v: number) => Math.round(v * 1000) / 1000;
+
+/** D-28: the hardware item behind a brand option (hingeBrand / slideBrand value). */
+export function brandItem(
+  kind: string,
+  key: string,
+  hw: HardwareCatalog = hardwareV1,
+): HardwareItem | undefined {
+  const id = hw.brands[kind]?.[key];
+  return id ? hw.items.find((i) => i.id === id) : undefined;
+}
 
 /** Hinges for one door leaf of the given height. */
 export function hingeCount(heightMm: number, hw: HardwareCatalog = hardwareV1): number {
@@ -149,14 +181,23 @@ export function computeBom(
   const brand = (kind: string, key: string) =>
     hw.brands[kind]?.[String(params[key] ?? 'strax')] ?? hw.brands[kind]?.strax;
   // doors: hinges per leaf (a leaf's height is its panel width: front-plane boards)
-  const hinges = result.panels
-    .filter((p) => p.role === 'door')
-    .reduce((n, d) => n + hingesForDoor(d, hw), 0);
-  addHw(brand('hinge', 'hingeBrand'), hinges);
-  addHw(
-    brand('slide', 'slideBrand'),
-    result.panels.filter((p) => p.role === 'drawer_front').length,
-  );
+  const hingeKey = String(params.hingeBrand ?? 'strax');
+  const byMount = hw.hingeByMount?.[hingeKey];
+  for (const d of result.panels.filter((p) => p.role === 'door')) {
+    const n = hingesForDoor(d, hw);
+    // D-28: the hinge model follows the leaf's mounting (0 / 8 / 18 mm), one plate per hinge
+    addHw(
+      byMount
+        ? (byMount[d.hingeMount ?? 'full_overlay'] ?? byMount.full_overlay)
+        : brand('hinge', 'hingeBrand'),
+      n,
+    );
+    addHw(hw.hingePlate?.[hingeKey], n);
+  }
+  const drawers = result.panels.filter((p) => p.role === 'drawer_front').length;
+  addHw(brand('slide', 'slideBrand'), drawers);
+  for (const extra of hw.slideExtras?.[String(params.slideBrand ?? '')] ?? [])
+    addHw(extra, drawers);
   const railM = result.rails.reduce((m, r) => m + r.lengthMm / 1000, 0);
   if (railM > 0) {
     hardware.set('rail_oval_25', r3(railM));

@@ -60,6 +60,14 @@ export const HARDWARE_NAMES: Record<string, string> = {
   lift_frame_2leg: "Ko'tariluvchi metall rama, 2 oyoqli",
 };
 
+/** D-28: a hardware item's name - the list above, else its brand and model from the catalog */
+export function hardwareName(ref: string): string {
+  const item = hardwareV1.items.find((i) => i.id === ref);
+  return (
+    HARDWARE_NAMES[ref] ?? (item?.model ? `${item.brand} ${item.model}`.trim() : undefined) ?? ref
+  );
+}
+
 const UNIT_NAMES: Record<string, string> = { pcs: 'dona', pair: 'juft', m: 'm', m2: 'm²' };
 
 /** "Kromka 0.8 mm" (band ids are placeholders until Dafna's edge band list) */
@@ -189,11 +197,14 @@ export async function buildOrderPdf({
   const name = [lead.firstName, lead.lastName].filter(Boolean).join(' ');
   const bom = computeBom(template, params, result);
   const hwLine = (kind: string) => {
-    const l = bom.find(
+    // D-28: a hinge brand can give several models (0 / 8 / 18 mm by the leaf mounting)
+    const lines = bom.filter(
       (b) => b.kind === 'hardware' && hardwareV1.items.find((i) => i.id === b.ref)?.kind === kind,
     );
-    return l
-      ? `${HARDWARE_NAMES[l.ref] ?? l.ref} — ${l.qty} ${UNIT_NAMES[l.unit] ?? l.unit}`
+    return lines.length > 0
+      ? lines
+          .map((l) => `${hardwareName(l.ref)} — ${l.qty} ${UNIT_NAMES[l.unit] ?? l.unit}`)
+          .join('; ')
       : null;
   };
   const [mainLabel, secondLabel] =
@@ -339,7 +350,7 @@ export async function buildOrderPdf({
     section(
       'Furnitura',
       hardware.map((b) => [
-        HARDWARE_NAMES[b.ref] ?? b.ref,
+        hardwareName(b.ref),
         `${b.unit === 'm' ? b.qty.toFixed(2) : b.qty} ${UNIT_NAMES[b.unit] ?? b.unit}`,
       ]),
     );

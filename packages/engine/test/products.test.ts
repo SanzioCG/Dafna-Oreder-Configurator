@@ -25,6 +25,8 @@ import ped4Default from './fixtures/applications/pedestal.0.4.0.default.json' wi
 import desk3 from './fixtures/applications/desk.0.3.0.w1500-framed-top.json' with { type: 'json' };
 // D-26: Dafna's Bazis models (pedestal 0.5.0, desk 0.4.0)
 import ped5Default from './fixtures/applications/pedestal.0.5.0.default.json' with { type: 'json' };
+// D-28: Samet slides
+import ped6Default from './fixtures/applications/pedestal.0.6.0.default.json' with { type: 'json' };
 import desk4 from './fixtures/applications/desk.0.4.0.w1500-bazis.json' with { type: 'json' };
 
 /** pedestal 0.2.0: the last template with the A4 hanging-file drawer */
@@ -45,14 +47,14 @@ function bbox(p: Panel) {
 }
 
 describe('D-8 office pedestal (ofis tumbasi)', () => {
-  it('template 0.5.0, catalog 1.1.0, Dafna sizes 430 × 550 × 550 (D-17); no A4 file drawer (D-22)', () => {
+  it('template 0.6.0, catalog 1.1.0, Dafna sizes 430 × 550 × 550 (D-17); no A4 file drawer (D-22)', () => {
     expect(PED.parameters.find((p) => p.key === 'layout')?.options).toEqual([
       'drawers3',
       'door_shelf',
     ]);
     expect([PED.templateId, PED.templateVersion, PED.productType]).toEqual([
       'pedestal',
-      '0.5.0',
+      '0.6.0',
       'pedestal',
     ]);
     expect(catalogForTemplate(PED).catalogVersion).toBe('1.1.0');
@@ -125,7 +127,8 @@ describe('D-8 office pedestal (ofis tumbasi)', () => {
     for (const f of r.panels.filter((p) => p.role === 'drawer_front'))
       expect(bbox(f).max[2]).toBeCloseTo(D);
     // 0.3.0 kept the top at the carcass front
-    const old = generate(PRODUCT_ARCHIVE.pedestal!['0.3.0']!, defaultParams(PED));
+    const PED3 = PRODUCT_ARCHIVE.pedestal!['0.3.0']!;
+    const old = generate(PED3, defaultParams(PED3));
     expect(bbox(old.panels.find((p) => p.id === 'top')!).max[2]).toBeLessThan(D - 16);
   });
 
@@ -260,6 +263,7 @@ describe('D-8 reproducibility per product', () => {
     'pedestal 0.4.0 default (top flush with the fronts)': ['pedestal', ped4Default],
     'desk 0.3.0 1500 framed 16 mm top': ['desk', desk3],
     'pedestal 0.5.0 default (Bazis)': ['pedestal', ped5Default],
+    'pedestal 0.6.0 default (Samet)': ['pedestal', ped6Default],
     'desk 0.4.0 1500 (Bazis)': ['desk', desk4],
   } as const;
   for (const [name, [templateId, fx]] of Object.entries(FIXTURES)) {

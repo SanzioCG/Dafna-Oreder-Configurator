@@ -107,7 +107,7 @@ describe('D-27 inset doors span the partitions (template 0.14.0)', () => {
     const r = regenerateApplication(params, '0.13.0');
     if (!r.ok) throw new Error(r.code);
     const { draft, issues } = migrateOrderDraft(r.draft);
-    expect(draft?.templateVersion).toBe('0.14.0');
+    expect(draft?.templateVersion).toBe(T.templateVersion);
     expect(issues.map((i) => i.code)).toContain('MIGRATION_CONSTRUCTION_CHANGED');
   });
 });

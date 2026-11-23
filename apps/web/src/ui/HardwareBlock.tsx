@@ -1,4 +1,4 @@
-import { extensionBrand } from '@dafna/engine';
+import { brandItem, extensionBrand } from '@dafna/engine';
 import { useState } from 'react';
 import { useI18n } from '../i18n/I18n';
 import type { Configurator } from '../state/useConfigurator';
@@ -120,7 +120,7 @@ function choicesFor(
         brand: text.title,
         model: text.model,
         hint: text.hint,
-        softClose: x ? x.softClose : o === 'hettich',
+        softClose: x ? x.softClose : brandItem(kind ?? '', o)?.softClose === true,
       };
     });
 }

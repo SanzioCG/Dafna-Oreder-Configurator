@@ -91,6 +91,7 @@ export { DESK_GENERATOR } from './desk.js';
 export { registerGenerator, generatorFor, type ProductGenerator } from './registry.js';
 export {
   boardPrice,
+  brandItem,
   computeBom,
   computePrice,
   hardwareV1,
