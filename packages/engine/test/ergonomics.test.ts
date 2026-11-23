@@ -51,9 +51,9 @@ const railTop = (s: Section) =>
   s.rails[0] ? s.rails[0].axisYMm + s.rails[0].diameterMm / 2 : null;
 
 describe('template 0.7.0 (D-7): standard sizes', () => {
-  it('0.7.0, same generator; current 0.13.0 = 0.7.0 + brands + lower doors + carcasses (height <= 2200) + door mount', () => {
+  it('0.7.0, same generator; current 0.14.0 = 0.7.0 + brands + lower doors + carcasses (height <= 2200) + door mount', () => {
     expect(T.templateVersion).toBe('0.7.0');
-    expect(wardrobeTemplate.templateVersion).toBe('0.13.0');
+    expect(wardrobeTemplate.templateVersion).toBe('0.14.0');
     const keys = T.parameters.map((p) => p.key);
     expect(wardrobeTemplate.parameters.map((p) => p.key)).toEqual([
       ...keys.slice(0, keys.indexOf('doors') + 1),

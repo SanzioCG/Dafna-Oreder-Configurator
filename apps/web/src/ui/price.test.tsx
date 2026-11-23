@@ -50,6 +50,24 @@ describe('D-9 price and mechanisms', () => {
     ).toEqual(expect.arrayContaining([expect.stringContaining(uz['step.hardware'])]));
   });
 
+  it('D-27: door mount as two picture cards with a plain hint; tapping one selects it', () => {
+    window.history.replaceState(null, '', '/?mode=staff');
+    render(<App />);
+    fireEvent.click(tab(uz['step.interior']));
+    const cards = within(screen.getByTestId('door-mount')).getAllByRole('radio');
+    expect(cards.map((c) => c.dataset.mount)).toEqual(['overlay', 'inset']);
+    expect(cards.every((c) => c.querySelector('svg.mount-icon'))).toBe(true);
+    const inset = cards[1] as HTMLElement;
+    expect(inset.getAttribute('aria-checked')).toBe('true');
+    expect(inset.textContent).toContain(uz['c.hint.doorMount.inset']);
+    fireEvent.click(cards[0] as HTMLElement);
+    expect(
+      within(screen.getByTestId('door-mount'))
+        .getAllByRole('radio')[0]!
+        .getAttribute('aria-checked'),
+    ).toBe('true');
+  });
+
   it('staff see the demo price, marked; Hettich costs more than Strax; breakdown', () => {
     window.history.replaceState(null, '', '/?mode=staff');
     render(<App />);

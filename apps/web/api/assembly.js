@@ -58599,10 +58599,10 @@ var require_fontkit_umd = __commonJS({
 // server/assemblyLink.ts
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
-// ../../packages/engine/templates/wardrobe.v12.json
-var wardrobe_v12_default = {
+// ../../packages/engine/templates/wardrobe.v13.json
+var wardrobe_v13_default = {
   templateId: "wardrobe",
-  templateVersion: "0.13.0",
+  templateVersion: "0.14.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -58810,7 +58810,7 @@ var wardrobe_v12_default = {
       uiStep: "doors",
       customerVisible: true,
       unconfirmed: false,
-      note: "D-22 (Dafna technologist, confirmation table 2026-11-23): two door mountings to choose from. overlay (nakladnoy) = doors cover the carcass front; inset (vkladnoy) = doors sit inside the openings, flush with the carcass front, insetDoorGapMm all round and between leaves; the depth stack is then back + carcass (no door in front of the carcass). D-26: inset is the default (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right: every door in the Bazis models is inset)."
+      note: "D-22 (Dafna technologist, confirmation table 2026-11-23): two door mountings to choose from. overlay (nakladnoy) = doors cover the carcass front; inset (vkladnoy) = doors sit inside the openings, flush with the carcass front, insetDoorGapMm all round and between leaves; the depth stack is then back + carcass (no door in front of the carcass). D-26: inset is the default (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right: every door in the Bazis models is inset). D-27: inset leaves span the partitions between doored sections (the partitions stand behind them)."
     },
     {
       key: "doorSection1",
@@ -59285,6 +59285,12 @@ var wardrobe_v12_default = {
       unit: "mm",
       unconfirmed: false,
       note: "How far the back enters each panel (back = inner size + 2 x 8) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    insetPartitionBehindDoorMm: {
+      value: 1,
+      unit: "mm",
+      unconfirmed: false,
+      note: "A partition hidden behind inset doors: its front edge 1 mm behind the doors, as the shelves (Dafna's Bazis models (docs/production/bazis/ANALIZ.md: Offis 377.5 mm leaves, sectional pedestal 3 mm between leaves), founder 2026-11-23)."
     }
   },
   constructionRules: [
@@ -59292,6 +59298,11 @@ var wardrobe_v12_default = {
       id: "lester-carcass",
       unconfirmed: false,
       note: "D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right): top and (on feet) bottom full width, sides between them; back HDF in a groove (partitions stop at its front face); removable shelves 1 mm short each side, banded all round; two edge bands (1 mm visible, 0.4 mm others); drawer boxes 120 mm high."
+    },
+    {
+      id: "inset-doors-hide-partitions",
+      unconfirmed: false,
+      note: "D-27 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md: Offis 377.5 mm leaves, sectional pedestal 3 mm between leaves), founder 2026-11-23): inset doors close a whole run of doored sections as one opening - the leaves meet with insetDoorGapMm between them and no partition shows between them. A partition between two doored sections stands behind the doors (door thickness + insetPartitionBehindDoorMm shorter at the front); next to an open section, a books_lower section or at a carcass split it stays full depth and frames the opening. A leaf hinging on a hidden partition is half overlay on it."
     },
     {
       id: "sides-to-floor",
@@ -60096,7 +60107,7 @@ var desk_v4_default = {
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v12_default;
+var wardrobeTemplate = wardrobe_v13_default;
 var pedestalTemplate = pedestal_v5_default;
 var deskTemplate = desk_v4_default;
 var PRODUCT_TEMPLATES = {
@@ -61177,6 +61188,9 @@ function planInsetDoors(input) {
     if (kind === "double") return "double";
     return hingeSideFor(i, n3) === "left" ? "single_left" : "single_right";
   });
+  if (input.spanPartitions) {
+    return { types, source, leaves: spanInsetLeaves(input, types), singleLeafWidths };
+  }
   const leaves = [];
   let xStart = t2;
   innerWidths.forEach((inner, i) => {
@@ -61217,6 +61231,83 @@ function planInsetDoors(input) {
     xStart += inner + (i === splitAfter ? 2 * t2 : t2);
   });
   return { types, source, leaves, singleLeafWidths };
+}
+function partitionHidden(i, types, lowerOnly, splitAfter) {
+  const full = (k) => (types[k] ?? "none") !== "none" && !lowerOnly[k];
+  return i !== splitAfter && full(i) && full(i + 1);
+}
+function spanInsetLeaves(input, types) {
+  const { t: t2, innerWidths, gapEdge: g } = input;
+  const n3 = innerWidths.length;
+  const splitAfter = input.splitAfter ?? null;
+  const lowerOnly = input.lowerOnly ?? [];
+  const hidden = (i) => partitionHidden(i, types, lowerOnly, splitAfter);
+  const x0 = [];
+  let xs = t2;
+  innerWidths.forEach((inner, i) => {
+    x0.push(xs);
+    xs += inner + (i === splitAfter ? 2 * t2 : t2);
+  });
+  const left = (i) => i > 0 && hidden(i - 1) ? x0[i] - t2 / 2 : x0[i];
+  const right = (i) => hidden(i) ? x0[i] + innerWidths[i] + t2 / 2 : x0[i] + innerWidths[i];
+  const leaves = [];
+  for (let i = 0; i < n3; ) {
+    if (types[i] === "none") {
+      i++;
+      continue;
+    }
+    let j = i + 1;
+    while (j < n3 && hidden(j - 1)) j++;
+    const meta = [];
+    for (let k = i; k < j; k++) {
+      const share = right(k) - left(k);
+      const num = k + 1;
+      if (types[k] === "double") {
+        meta.push({
+          sectionIndex: k,
+          hingeSide: "left",
+          id: `door-${num}-left`,
+          nominal: share / 2
+        });
+        meta.push({
+          sectionIndex: k,
+          hingeSide: "right",
+          id: `door-${num}-right`,
+          nominal: share / 2
+        });
+      } else {
+        meta.push({
+          sectionIndex: k,
+          hingeSide: types[k] === "single_left" ? "left" : "right",
+          id: `door-${num}`,
+          nominal: share
+        });
+      }
+    }
+    const startX = left(i) + g;
+    const total = right(j - 1) - g - startX - (meta.length - 1) * g;
+    const widths = roundLeaves(
+      meta.map((m) => m.nominal - g),
+      total,
+      input.rounding
+    );
+    let x = startX;
+    meta.forEach((m, k) => {
+      const w = widths[k];
+      const atRunEnd = m.hingeSide === "left" && k === 0 || m.hingeSide === "right" && k === meta.length - 1;
+      leaves.push({
+        id: m.id,
+        sectionIndex: m.sectionIndex,
+        hingeSide: m.hingeSide,
+        hingeMount: atRunEnd ? "inset" : "half_overlay",
+        xStartMm: x,
+        widthMm: w
+      });
+      x += w + g;
+    });
+    i = j;
+  }
+  return leaves;
 }
 function planDoors(input) {
   const { widthMm: W, t: t2, innerWidths, gapEdge, gapBetween } = input;
@@ -61586,8 +61677,17 @@ function doorPlanFor(template, params, widthMm, t2, innerWidths, splitAfter = nu
     gapEdge: gap,
     gapBetween: inset ? gap : getNumberConstant(template, "doorGapBetweenMm"),
     maxSingleLeafWidth: getNumberConstant(template, "maxSingleLeafWidthMm"),
-    rounding: getNumberConstant(template, "doorLeafRoundingMm")
+    rounding: getNumberConstant(template, "doorLeafRoundingMm"),
+    // D-27 (template 0.14.0+): inset leaves span the partitions between doored sections
+    spanPartitions: inset && spansPartitions(template),
+    lowerOnly: lowerOnlyFor(params, innerWidths.length)
   });
+}
+function spansPartitions(template) {
+  return template.constructionRules.some((r) => r.id === "inset-doors-hide-partitions");
+}
+function lowerOnlyFor(params, count) {
+  return Array.from({ length: count }, (_, i) => params[`interior${i + 1}`] === "books_lower");
 }
 function doorPlanValid(plan, maxLeaf) {
   return plan.leaves.every((l) => plan.types[l.sectionIndex] === "double" || l.widthMm <= maxLeaf);
@@ -61757,6 +61857,11 @@ function computeLayout(template, params, catalog = currentCatalog) {
     doorLeaves: doors.leaves,
     doorHeightMm: carcassHeightMm - 2 * doorGapEdgeMm - (insetDoors ? 2 * t2 : 0),
     insetDoors,
+    // D-27: partitions standing behind inset doors (index = the section left of the partition)
+    hiddenPartitions: sectionInnerWidthsMm.map(
+      (_, i) => insetDoors && spansPartitions(template) && i < sectionCount - 1 && partitionHidden(i, doors.types, lowerOnlyFor(params, sectionCount), splitAfter)
+    ),
+    partitionBehindDoorMm: template.constants.insetPartitionBehindDoorMm !== void 0 ? getNumberConstant(template, "insetPartitionBehindDoorMm") : 0,
     topOverSides: template.constructionRules.some((r) => r.id === "top-over-sides"),
     lester,
     bottomFull: lester && !hasPlinth,
@@ -61987,7 +62092,8 @@ function buildCarcassAndDoors(layout, sections) {
   for (const s of sections.slice(0, -1)) {
     if (s.index === split) continue;
     const pz0 = layout.backGrooveMm > 0 ? layout.interiorBackZMm : zC;
-    const pDepth = Dc - (pz0 - zC);
+    const behind = layout.hiddenPartitions[s.index] ? layout.doorThicknessMm + layout.partitionBehindDoorMm : 0;
+    const pDepth = Dc - (pz0 - zC) - behind;
     panels.push({
       id: `partition-${s.index + 1}`,
       role: "partition",
@@ -63228,7 +63334,8 @@ var TEMPLATE_CATALOG = {
   "0.11.0": materialsV1.catalogVersion,
   "0.12.0": materialsV1.catalogVersion,
   // D-26: feet (metal_black) need catalog 1.1.0 (= 1.0.0 + more)
-  "0.13.0": materialsV1_1.catalogVersion
+  "0.13.0": materialsV1_1.catalogVersion,
+  "0.14.0": materialsV1_1.catalogVersion
 };
 
 // ../../packages/engine/catalog/hardware.v1.json
@@ -63809,6 +63916,8 @@ var ru = {
   "param.doorMount": "\u0422\u0438\u043F \u0434\u0432\u0435\u0440\u0435\u0439",
   "c.opt.doorMount.overlay": "\u041D\u0430\u043A\u043B\u0430\u0434\u043D\u044B\u0435",
   "c.opt.doorMount.inset": "\u0412\u043A\u043B\u0430\u0434\u043D\u044B\u0435",
+  "c.hint.doorMount.overlay": "\u0414\u0432\u0435\u0440\u0438 \u0437\u0430\u043A\u0440\u044B\u0432\u0430\u044E\u0442 \u0432\u0435\u0441\u044C \u0444\u0430\u0441\u0430\u0434 \u0448\u043A\u0430\u0444\u0430, \u0442\u043E\u0440\u0446\u044B \u043D\u0435 \u0432\u0438\u0434\u043D\u044B",
+  "c.hint.doorMount.inset": "\u0414\u0432\u0435\u0440\u0438 \u0432\u043D\u0443\u0442\u0440\u0438 \u043A\u043E\u0440\u043F\u0443\u0441\u0430, \u0432\u043E\u043A\u0440\u0443\u0433 \u0432\u0438\u0434\u043D\u0430 \u0442\u043E\u043D\u043A\u0430\u044F \u0440\u0430\u043C\u043A\u0430",
   "c.hint.long_hang": "\u041F\u0430\u043B\u044C\u0442\u043E, \u043F\u043B\u0430\u0449\u0438, \u043F\u043B\u0430\u0442\u044C\u044F",
   "c.hint.short_hang": "\u0420\u0443\u0431\u0430\u0448\u043A\u0438, \u043F\u0438\u0434\u0436\u0430\u043A\u0438; \u0432\u043D\u0438\u0437\u0443 \u043F\u043E\u043B\u043A\u0438",
   "c.hint.short_hang_drawers": "\u041D\u0430 \u0432\u0435\u0448\u0430\u043B\u043A\u0430\u0445, \u0432\u043D\u0438\u0437\u0443 \u044F\u0449\u0438\u043A\u0438",
@@ -64245,6 +64354,8 @@ var uz = {
   "param.doorMount": "Eshik turi",
   "c.opt.doorMount.overlay": "Ustiga",
   "c.opt.doorMount.inset": "Ichiga",
+  "c.hint.doorMount.overlay": "Eshik shkafning old tomonini to'liq yopadi, chetlari ko'rinmaydi",
+  "c.hint.doorMount.inset": "Eshik shkaf ichiga kiradi, atrofida ingichka ramka ko'rinadi",
   "c.hint.long_hang": "Palto, plash, uzun ko'ylak",
   "c.hint.short_hang": "Ko'ylak, pidjak; pastda javonlar",
   "c.hint.short_hang_drawers": "Ilinadigan kiyim, pastda tortmalar",

@@ -310,6 +310,8 @@ export const ru: Messages = {
   'param.doorMount': 'Тип дверей',
   'c.opt.doorMount.overlay': 'Накладные',
   'c.opt.doorMount.inset': 'Вкладные',
+  'c.hint.doorMount.overlay': 'Двери закрывают весь фасад шкафа, торцы не видны',
+  'c.hint.doorMount.inset': 'Двери внутри корпуса, вокруг видна тонкая рамка',
   'c.hint.long_hang': 'Пальто, плащи, платья',
   'c.hint.short_hang': 'Рубашки, пиджаки; внизу полки',
   'c.hint.short_hang_drawers': 'На вешалках, внизу ящики',

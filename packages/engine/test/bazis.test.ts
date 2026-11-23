@@ -9,7 +9,7 @@ import {
   pedestalTemplate,
   regenerateApplication,
   resolveParams,
-  wardrobeTemplate as T,
+  wardrobeTemplate,
   type GenerateResult,
   type Panel,
   type Params,
@@ -20,6 +20,8 @@ import {
  * feet, full-width top and bottom with the sides between them, the back in a groove, inset
  * doors with 3 mm gaps, shelves 17 / 5 mm from the front, two edge bands.
  */
+/** D-26 values on template 0.13.0 (0.14.0: inset doors span the partitions, D-27) */
+const T = TEMPLATE_ARCHIVE['0.13.0']!;
 const gen = (over: Params = {}): GenerateResult =>
   generate(T, resolveParams(T, { ...defaultParams(T), ...over }).params);
 const panel = (r: GenerateResult, id: string) => r.panels.find((p) => p.id === id)!;
@@ -135,7 +137,7 @@ describe('D-26 wardrobe as in the Bazis models (template 0.13.0)', () => {
     const r = regenerateApplication({ ...defaultParams(v12), base: 'none' }, '0.12.0');
     if (!r.ok) throw new Error(r.code);
     const { draft, issues } = migrateOrderDraft(r.draft);
-    expect(draft?.templateVersion).toBe('0.13.0');
+    expect(draft?.templateVersion).toBe(wardrobeTemplate.templateVersion);
     expect(draft?.params.base).toBe('feet');
     expect(issues.map((i) => i.code)).toContain('MIGRATION_CONSTRUCTION_CHANGED');
   });

@@ -190,6 +190,8 @@ export const CARCASS_SPLIT_IN = '0.10.0';
 export const TOP_OVER_SIDES_IN = '0.12.0';
 /** D-26: the construction of Dafna's Bazis models from this template version on */
 export const LESTER_IN = '0.13.0';
+/** D-27: inset doors span the partitions (which stand behind them) from this version on */
+export const INSET_SPAN_IN = '0.14.0';
 
 /** Pre-0.7.0 hanging presets -> the GOST presets of template 0.7.0. */
 export const INTERIOR_MAP_07: Readonly<Record<string, string>> = {
@@ -398,9 +400,16 @@ export function migrateOrderDraft(
   const lesterNew =
     templateBefore(fromTemplate, LESTER_IN) &&
     template.constructionRules.some((r) => r.id === 'lester-carcass');
+  // D-27: inset leaves now span the partitions (leaf widths and partition depths differ)
+  const insetSpanNew =
+    templateBefore(fromTemplate, INSET_SPAN_IN) &&
+    template.constructionRules.some((r) => r.id === 'inset-doors-hide-partitions') &&
+    params.doorMount === 'inset' &&
+    result.panels.some((p) => p.role === 'partition');
   if (
     topMoved ||
     lesterNew ||
+    insetSpanNew ||
     (params.base === 'plinth' && templateBefore(fromTemplate, CONSTRUCTION_CHANGED_IN))
   ) {
     issues.push(

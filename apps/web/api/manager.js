@@ -58628,10 +58628,10 @@ function blobPutter(token, fetchImpl = fetch) {
   };
 }
 
-// ../../packages/engine/templates/wardrobe.v12.json
-var wardrobe_v12_default = {
+// ../../packages/engine/templates/wardrobe.v13.json
+var wardrobe_v13_default = {
   templateId: "wardrobe",
-  templateVersion: "0.13.0",
+  templateVersion: "0.14.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -58839,7 +58839,7 @@ var wardrobe_v12_default = {
       uiStep: "doors",
       customerVisible: true,
       unconfirmed: false,
-      note: "D-22 (Dafna technologist, confirmation table 2026-11-23): two door mountings to choose from. overlay (nakladnoy) = doors cover the carcass front; inset (vkladnoy) = doors sit inside the openings, flush with the carcass front, insetDoorGapMm all round and between leaves; the depth stack is then back + carcass (no door in front of the carcass). D-26: inset is the default (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right: every door in the Bazis models is inset)."
+      note: "D-22 (Dafna technologist, confirmation table 2026-11-23): two door mountings to choose from. overlay (nakladnoy) = doors cover the carcass front; inset (vkladnoy) = doors sit inside the openings, flush with the carcass front, insetDoorGapMm all round and between leaves; the depth stack is then back + carcass (no door in front of the carcass). D-26: inset is the default (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right: every door in the Bazis models is inset). D-27: inset leaves span the partitions between doored sections (the partitions stand behind them)."
     },
     {
       key: "doorSection1",
@@ -59314,6 +59314,12 @@ var wardrobe_v12_default = {
       unit: "mm",
       unconfirmed: false,
       note: "How far the back enters each panel (back = inner size + 2 x 8) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    insetPartitionBehindDoorMm: {
+      value: 1,
+      unit: "mm",
+      unconfirmed: false,
+      note: "A partition hidden behind inset doors: its front edge 1 mm behind the doors, as the shelves (Dafna's Bazis models (docs/production/bazis/ANALIZ.md: Offis 377.5 mm leaves, sectional pedestal 3 mm between leaves), founder 2026-11-23)."
     }
   },
   constructionRules: [
@@ -59321,6 +59327,11 @@ var wardrobe_v12_default = {
       id: "lester-carcass",
       unconfirmed: false,
       note: "D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right): top and (on feet) bottom full width, sides between them; back HDF in a groove (partitions stop at its front face); removable shelves 1 mm short each side, banded all round; two edge bands (1 mm visible, 0.4 mm others); drawer boxes 120 mm high."
+    },
+    {
+      id: "inset-doors-hide-partitions",
+      unconfirmed: false,
+      note: "D-27 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md: Offis 377.5 mm leaves, sectional pedestal 3 mm between leaves), founder 2026-11-23): inset doors close a whole run of doored sections as one opening - the leaves meet with insetDoorGapMm between them and no partition shows between them. A partition between two doored sections stands behind the doors (door thickness + insetPartitionBehindDoorMm shorter at the front); next to an open section, a books_lower section or at a carcass split it stays full depth and frames the opening. A leaf hinging on a hidden partition is half overlay on it."
     },
     {
       id: "sides-to-floor",
@@ -60125,7 +60136,7 @@ var desk_v4_default = {
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v12_default;
+var wardrobeTemplate = wardrobe_v13_default;
 var pedestalTemplate = pedestal_v5_default;
 var deskTemplate = desk_v4_default;
 var PRODUCT_TEMPLATES = {
@@ -62097,7 +62108,8 @@ var TEMPLATE_CATALOG = {
   "0.11.0": materialsV1.catalogVersion,
   "0.12.0": materialsV1.catalogVersion,
   // D-26: feet (metal_black) need catalog 1.1.0 (= 1.0.0 + more)
-  "0.13.0": materialsV1_1.catalogVersion
+  "0.13.0": materialsV1_1.catalogVersion,
+  "0.14.0": materialsV1_1.catalogVersion
 };
 
 // ../../packages/engine/catalog/hardware.v1.json
@@ -62642,6 +62654,8 @@ var uz = {
   "param.doorMount": "Eshik turi",
   "c.opt.doorMount.overlay": "Ustiga",
   "c.opt.doorMount.inset": "Ichiga",
+  "c.hint.doorMount.overlay": "Eshik shkafning old tomonini to'liq yopadi, chetlari ko'rinmaydi",
+  "c.hint.doorMount.inset": "Eshik shkaf ichiga kiradi, atrofida ingichka ramka ko'rinadi",
   "c.hint.long_hang": "Palto, plash, uzun ko'ylak",
   "c.hint.short_hang": "Ko'ylak, pidjak; pastda javonlar",
   "c.hint.short_hang_drawers": "Ilinadigan kiyim, pastda tortmalar",

@@ -314,6 +314,8 @@ export const uz = {
   'param.doorMount': 'Eshik turi',
   'c.opt.doorMount.overlay': 'Ustiga',
   'c.opt.doorMount.inset': 'Ichiga',
+  'c.hint.doorMount.overlay': "Eshik shkafning old tomonini to'liq yopadi, chetlari ko'rinmaydi",
+  'c.hint.doorMount.inset': "Eshik shkaf ichiga kiradi, atrofida ingichka ramka ko'rinadi",
   'c.hint.long_hang': "Palto, plash, uzun ko'ylak",
   'c.hint.short_hang': "Ko'ylak, pidjak; pastda javonlar",
   'c.hint.short_hang_drawers': 'Ilinadigan kiyim, pastda tortmalar',

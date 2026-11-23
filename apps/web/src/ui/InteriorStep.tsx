@@ -4,6 +4,7 @@ import { useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import type { Configurator } from '../state/useConfigurator';
 import { Button } from './Button';
+import { DoorMountPicker } from './DoorMountPicker';
 import { PresetIcon } from './icons';
 import { blockingIssue } from './optionAvailability';
 import { customerReason } from './plainText';
@@ -129,12 +130,11 @@ export function InteriorStep({ mode, config, selected, onSelect }: InteriorStepP
         {mountDef && doorsOn && (
           <div className="param" data-testid="door-mount">
             <span className="param-label">{t('param.doorMount')}</span>
-            <SelectionGrid
+            {/* D-27: picture cards, so the difference is seen, not read */}
+            <DoorMountPicker
               options={(mountDef.options ?? []).map(String)}
               value={String(config.params.doorMount ?? mountDef.default)}
               onChange={(v) => config.setParam('doorMount', v)}
-              label={(v) => t(`c.opt.doorMount.${v}`)}
-              ariaLabel={t('param.doorMount')}
             />
           </div>
         )}

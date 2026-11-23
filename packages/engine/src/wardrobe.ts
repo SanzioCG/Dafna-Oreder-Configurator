@@ -1,7 +1,13 @@
 import { catalogForTemplate, getMaterial, currentCatalog } from './catalog.js';
 import { metalBox } from './parts.js';
 import { generatorFor } from './registry.js';
-import { planDoors, planInsetDoors, type DoorLeaf, type DoorPlan } from './doors.js';
+import {
+  partitionHidden,
+  planDoors,
+  planInsetDoors,
+  type DoorLeaf,
+  type DoorPlan,
+} from './doors.js';
 import {
   resolveInterior,
   type InteriorConstants,
@@ -92,6 +98,10 @@ export interface WardrobeLayout {
   edgeBand: { bandId: string; thicknessMm: number };
   /** D-22: doors sit inside the section openings (doorMount = inset) */
   insetDoors: boolean;
+  /** D-27: the partition right of section i stands behind the inset doors */
+  hiddenPartitions: boolean[];
+  /** D-27: how far a hidden partition's front edge is behind the doors */
+  partitionBehindDoorMm: number;
   /** D-22 (template 0.12.0+, rule top-over-sides): the top lies on the side panels */
   topOverSides: boolean;
   /**
@@ -188,7 +198,19 @@ function doorPlanFor(
     gapBetween: inset ? gap : getNumberConstant(template, 'doorGapBetweenMm'),
     maxSingleLeafWidth: getNumberConstant(template, 'maxSingleLeafWidthMm'),
     rounding: getNumberConstant(template, 'doorLeafRoundingMm'),
+    // D-27 (template 0.14.0+): inset leaves span the partitions between doored sections
+    spanPartitions: inset && spansPartitions(template),
+    lowerOnly: lowerOnlyFor(params, innerWidths.length),
   });
+}
+
+function spansPartitions(template: Template): boolean {
+  return template.constructionRules.some((r) => r.id === 'inset-doors-hide-partitions');
+}
+
+/** D-27: sections whose door covers only the lower part (books_lower) */
+function lowerOnlyFor(params: Params, count: number): boolean[] {
+  return Array.from({ length: count }, (_, i) => params[`interior${i + 1}`] === 'books_lower');
 }
 
 /** True if the door plan has no DOOR_TOO_WIDE single leaf and no hinge conflict. */
@@ -396,6 +418,18 @@ export function computeLayout(
     doorLeaves: doors.leaves,
     doorHeightMm: carcassHeightMm - 2 * doorGapEdgeMm - (insetDoors ? 2 * t : 0),
     insetDoors,
+    // D-27: partitions standing behind inset doors (index = the section left of the partition)
+    hiddenPartitions: sectionInnerWidthsMm.map(
+      (_, i) =>
+        insetDoors &&
+        spansPartitions(template) &&
+        i < sectionCount - 1 &&
+        partitionHidden(i, doors.types, lowerOnlyFor(params, sectionCount), splitAfter),
+    ),
+    partitionBehindDoorMm:
+      template.constants.insetPartitionBehindDoorMm !== undefined
+        ? getNumberConstant(template, 'insetPartitionBehindDoorMm')
+        : 0,
     topOverSides: template.constructionRules.some((r) => r.id === 'top-over-sides'),
     lester,
     bottomFull: lester && !hasPlinth,
@@ -670,7 +704,11 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
     if (s.index === split) continue;
     // D-26: with the back in a groove a partition stops at the back's front face
     const pz0 = layout.backGrooveMm > 0 ? layout.interiorBackZMm : zC;
-    const pDepth = Dc - (pz0 - zC);
+    // D-27: behind inset doors the partition stops short of the doors
+    const behind = layout.hiddenPartitions[s.index]
+      ? layout.doorThicknessMm + layout.partitionBehindDoorMm
+      : 0;
+    const pDepth = Dc - (pz0 - zC) - behind;
     panels.push({
       id: `partition-${s.index + 1}`,
       role: 'partition',
