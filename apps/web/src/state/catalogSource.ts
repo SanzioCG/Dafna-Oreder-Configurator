@@ -16,7 +16,9 @@ export async function loadCatalog(
     if (!res.ok) return null;
     const ext = (await res.json()) as Partial<CatalogExtension>;
     if (!Array.isArray(ext.materials) || !Array.isArray(ext.hardware)) return null;
-    return { materials: ext.materials, hardware: ext.hardware };
+    // D-21: decor photos come with it
+    const textures = ext.textures && typeof ext.textures === 'object' ? ext.textures : {};
+    return { materials: ext.materials, hardware: ext.hardware, textures };
   } catch {
     return null;
   }
@@ -29,7 +31,12 @@ export function useCatalogExtension(): number {
     if (import.meta.env.MODE === 'test') return;
     let alive = true;
     void loadCatalog().then((ext) => {
-      if (!alive || !ext || (ext.materials.length === 0 && ext.hardware.length === 0)) return;
+      const empty =
+        !ext ||
+        (ext.materials.length === 0 &&
+          ext.hardware.length === 0 &&
+          Object.keys(ext.textures ?? {}).length === 0);
+      if (!alive || empty) return;
       applyCatalogExtension(ext);
       setRev((n) => n + 1);
     });

@@ -263,7 +263,15 @@ export interface ManagerDeps {
   /** D-20: the catalog extension (append-only) */
   catalogStore?: CatalogStore;
   catalog?: CachedCatalog;
+  /** D-21: stores a decor photo, returns its public URL; undefined = no storage configured */
+  putTexture?: (name: string, body: ArrayBuffer, contentType: string) => Promise<string>;
+  /** dev server only: decor photos as data URLs */
+  allowDataUrls?: boolean;
 }
+
+/** D-21: decor photos the manager may upload (the page shrinks them to ≤ 2048 px first) */
+export const TEXTURE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+export const TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
 
 /** "2026-11-23 14:05" (Asia/Tashkent, UTC+5) */
 export function tashkentMinute(d: Date): string {
@@ -271,7 +279,7 @@ export function tashkentMinute(d: Date): string {
 }
 
 export async function handleManager(req: Request, deps: ManagerDeps): Promise<Response> {
-  if (req.method !== 'GET' && req.method !== 'PUT')
+  if (req.method !== 'GET' && req.method !== 'PUT' && req.method !== 'POST')
     return json(405, { error: { code: 'method_not_allowed' } });
   if (!deps.managerPin || !PIN_RE.test(deps.managerPin))
     return json(503, { error: { code: 'not_configured' } });
@@ -279,6 +287,20 @@ export async function handleManager(req: Request, deps: ManagerDeps): Promise<Re
   if (!pinMatches(req.headers.get('x-manager-pin'), deps.managerPin))
     return json(401, { error: { code: 'wrong_pin' } });
 
+  if (req.method === 'POST') {
+    // D-21: POST /api/manager (x-material-id, image body) -> {url}; saved with the catalog later
+    if (!deps.putTexture) return json(503, { error: { code: 'storage_not_configured' } });
+    const id = req.headers.get('x-material-id') ?? '';
+    const type = (req.headers.get('content-type') ?? '').split(';')[0]!.trim();
+    if (!/^[a-z0-9_]{1,40}$/.test(id) || !TEXTURE_TYPES.includes(type))
+      return json(400, { error: { code: 'invalid_texture' } });
+    const body = await req.arrayBuffer();
+    if (body.byteLength === 0 || body.byteLength > TEXTURE_MAX_BYTES)
+      return json(413, { error: { code: 'too_large' } });
+    const ext = type === 'image/png' ? 'png' : type === 'image/webp' ? 'webp' : 'jpg';
+    const url = await deps.putTexture(`textures/${id}.${ext}`, body, type);
+    return json(200, { ok: true, url });
+  }
   if (req.method === 'GET') {
     const catalog = await deps.catalog?.get();
     const { list, updatedAt } = await deps.prices.get();
@@ -287,7 +309,8 @@ export async function handleManager(req: Request, deps: ManagerDeps): Promise<Re
   let body: { list?: unknown; catalog?: unknown };
   try {
     const text = await req.text();
-    if (text.length > MAX_BODY * 5) return json(413, { error: { code: 'too_large' } });
+    if (text.length > (deps.allowDataUrls ? 30_000_000 : MAX_BODY * 5))
+      return json(413, { error: { code: 'too_large' } });
     body = JSON.parse(text) as typeof body;
   } catch {
     return json(400, { error: { code: 'invalid_request' } });
@@ -297,7 +320,9 @@ export async function handleManager(req: Request, deps: ManagerDeps): Promise<Re
   if (body.catalog !== undefined) {
     if (!deps.catalogStore || !deps.catalog)
       return json(503, { error: { code: 'not_configured' } });
-    const merged = mergeCatalog(await deps.catalogStore.load(), body.catalog);
+    const merged = mergeCatalog(await deps.catalogStore.load(), body.catalog, {
+      allowDataUrls: deps.allowDataUrls,
+    });
     if (!merged.ok) return json(400, { error: { code: 'invalid_catalog', field: merged.field } });
     await deps.catalogStore.save(merged.ext);
     deps.catalog.set(merged.ext);

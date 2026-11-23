@@ -1,34 +1,76 @@
-import { getMaterial } from '@dafna/engine';
-import { Color, MeshStandardMaterial, SRGBColorSpace, TextureLoader } from 'three';
+import { getMaterial, textureFor } from '@dafna/engine';
+import {
+  Color,
+  MeshStandardMaterial,
+  RepeatWrapping,
+  SRGBColorSpace,
+  TextureLoader,
+  type Texture,
+} from 'three';
 import { CATALOG } from '../state/useConfigurator';
 import { cssToken } from '../theme/cssToken';
 
 /**
- * Catalog material id -> shared Three.js material. Today only `colorHex` is used; when the
- * catalog gets a `textureUrl`, the texture is loaded into `map` here and every panel using
- * that decor picks it up — no viewer changes needed.
+ * Catalog material id -> Three.js material. Plain decors share one material per id (colour).
+ * D-21: a decor with a photo (uploaded on the manager page) gets the photo on every board,
+ * tiled at true scale: the photo shows widthMm × heightMm of board, laid along the board's
+ * length (the grain runs along the length). One material per board size, sharing the image.
  */
 const cache = new Map<string, MeshStandardMaterial>();
 const loader = new TextureLoader();
 
-export function materialFor(id: string): MeshStandardMaterial {
-  const hit = cache.get(id);
+interface Photo {
+  base: Texture;
+  loaded: boolean;
+  /** every texture made from this photo: refreshed when the image arrives */
+  users: Texture[];
+}
+const photos = new Map<string, Photo>();
+
+function photo(url: string): Photo {
+  const hit = photos.get(url);
+  if (hit) return hit;
+  const entry: Photo = { base: undefined as unknown as Texture, loaded: false, users: [] };
+  entry.base = loader.load(url, () => {
+    entry.loaded = true;
+    for (const t of entry.users) t.needsUpdate = true;
+  });
+  photos.set(url, entry);
+  return entry;
+}
+
+export function materialFor(id: string, lengthMm = 1000, widthMm = 1000): MeshStandardMaterial {
+  const tex = textureFor(id);
+  const key = tex
+    ? `${id}|${tex.url}|${tex.widthMm}x${tex.heightMm}|${Math.round(lengthMm)}x${Math.round(widthMm)}`
+    : id;
+  const hit = cache.get(key);
   if (hit) return hit;
   const m = getMaterial(CATALOG, id);
   const mat = new MeshStandardMaterial({
-    color: new Color(m?.colorHex ?? '#ffffff'),
+    color: new Color(tex ? '#ffffff' : (m?.colorHex ?? '#ffffff')),
     roughness: 0.8,
     metalness: 0,
   });
-  if (m?.textureUrl) {
-    loader.load(m.textureUrl, (tex) => {
-      tex.colorSpace = SRGBColorSpace;
-      mat.map = tex;
+  if (tex) {
+    const src = photo(tex.url);
+    const map = src.base.clone();
+    map.colorSpace = SRGBColorSpace;
+    map.wrapS = RepeatWrapping;
+    map.wrapT = RepeatWrapping;
+    map.repeat.set(lengthMm / tex.widthMm, widthMm / tex.heightMm);
+    if (src.loaded) map.needsUpdate = true;
+    src.users.push(map);
+    mat.map = map;
+  } else if (m?.textureUrl) {
+    loader.load(m.textureUrl, (t) => {
+      t.colorSpace = SRGBColorSpace;
+      mat.map = t;
       mat.color.set('#ffffff');
       mat.needsUpdate = true;
     });
   }
-  cache.set(id, mat);
+  cache.set(key, mat);
   return mat;
 }
 

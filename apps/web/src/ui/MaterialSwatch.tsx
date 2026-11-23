@@ -1,4 +1,4 @@
-import { getMaterial, SAME_AS_CORPUS, type ParamValue } from '@dafna/engine';
+import { getMaterial, SAME_AS_CORPUS, textureFor, type ParamValue } from '@dafna/engine';
 import { useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import { CATALOG } from '../state/useConfigurator';
@@ -80,7 +80,10 @@ export function MaterialSwatch({
                       className={selected ? 'swatch selected' : 'swatch'}
                       onClick={() => onChange(m.id)}
                     >
-                      <span className="swatch-chip" style={{ background: m.colorHex }}>
+                      <span
+                        className="swatch-chip"
+                        style={{ background: chipBackground(m.id, m.colorHex) }}
+                      >
                         {selected && (
                           <span className="swatch-check">
                             <CheckIcon />
@@ -101,4 +104,10 @@ export function MaterialSwatch({
       )}
     </div>
   );
+}
+
+/** D-21: the decor photo (manager page) as the swatch, else the decor colour */
+function chipBackground(id: string, colorHex: string): string {
+  const t = textureFor(id);
+  return t ? `${colorHex} center / cover url("${t.url}")` : colorHex;
 }

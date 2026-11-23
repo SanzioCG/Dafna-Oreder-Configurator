@@ -61620,7 +61620,7 @@ var hardware_v1_default = {
 var hardwareV1 = hardware_v1_default;
 
 // ../../packages/engine/src/extension.ts
-var EMPTY_EXTENSION = { materials: [], hardware: [] };
+var EMPTY_EXTENSION = { materials: [], hardware: [], textures: {} };
 var PARAM_USAGE = {
   corpusMaterial: "corpus",
   doorMaterial: "door",
@@ -61868,6 +61868,15 @@ var CachedCatalog = class {
 };
 var USAGES = ["corpus", "door", "top"];
 var HEX = /^#[0-9a-f]{6}$/i;
+function textureUrlAllowed(url, allowDataUrls = false) {
+  if (allowDataUrls && /^data:image\/(jpeg|png|webp);base64,/.test(url)) return true;
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" && u.hostname.endsWith(".public.blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
 var CATALOG_TAB = "Katalog";
 var CATALOG_HEADER = [
   "Turi",
@@ -61919,12 +61928,22 @@ function catalogToRows(ext) {
       "",
       "",
       h.note ?? ""
+    ]),
+    ...Object.entries(ext.textures ?? {}).map(([id, t]) => [
+      "tekstura",
+      id,
+      t.url,
+      "",
+      "",
+      t.widthMm,
+      t.heightMm
     ])
   ];
 }
 function rowsToCatalog(rows) {
   const materials = [];
   const hardware = [];
+  const textures = {};
   const s = (v) => String(v ?? "").trim();
   for (const r of rows.slice(1)) {
     const c = (i) => s(r[i]);
@@ -61956,6 +61975,12 @@ function rowsToCatalog(rows) {
         moistureResistant: c(12) === "ha",
         note: c(13) || void 0
       });
+    } else if (type === "tekstura" && id && textureUrlAllowed(name)) {
+      textures[id] = {
+        url: name,
+        widthMm: Number(thick) || 1e3,
+        heightMm: Number(color) || 1e3
+      };
     } else if (type === "furnitura" && id && (kind === "hinge" || kind === "slide") && usage) {
       hardware.push({
         id,
@@ -61969,7 +61994,7 @@ function rowsToCatalog(rows) {
       });
     }
   }
-  return { materials, hardware };
+  return { materials, hardware, textures };
 }
 var GoogleSheetsCatalogStore = class {
   tab;
@@ -62019,6 +62044,9 @@ var OLD = {
   right: (0, import_pdf_lib3.rgb)(0.86, 0.87, 0.89)
 };
 var NEW = { top: (0, import_pdf_lib3.rgb)(1, 0.9, 0.7), front: (0, import_pdf_lib3.rgb)(1, 0.82, 0.52), right: (0, import_pdf_lib3.rgb)(0.95, 0.7, 0.33) };
+
+// server/prices.ts
+var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
 
 // server/config.ts
 var IP_LIMIT = { limit: 20, windowMs: 10 * 60 * 1e3 };

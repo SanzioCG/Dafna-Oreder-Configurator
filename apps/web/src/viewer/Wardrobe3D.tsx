@@ -29,7 +29,7 @@ function Board({ panel, position }: { panel: Panel; position: [number, number, n
     <mesh
       position={position}
       rotation={[rx * DEG, ry * DEG, rz * DEG]}
-      material={materialFor(panel.material)}
+      material={materialFor(panel.material, panel.lengthMm, panel.widthMm)}
       castShadow
       receiveShadow
     >

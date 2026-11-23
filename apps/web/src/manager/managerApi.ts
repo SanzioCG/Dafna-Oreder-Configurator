@@ -49,3 +49,32 @@ export const managerSave = (
   catalog: CatalogDraft,
   fetchImpl?: typeof fetch,
 ) => call(pin, { method: 'PUT', body: { list, catalog } }, fetchImpl);
+
+/** D-21: uploads a decor photo; the returned URL is saved with the catalog afterwards */
+export async function managerUploadTexture(
+  pin: string,
+  materialId: string,
+  image: Blob,
+  fetchImpl: typeof fetch = fetch,
+): Promise<{ ok: true; url: string } | { ok: false; code: string }> {
+  try {
+    const res = await fetchImpl(MANAGER_URL, {
+      method: 'POST',
+      headers: {
+        'content-type': image.type || 'image/jpeg',
+        'x-manager-pin': pin,
+        'x-material-id': materialId,
+      },
+      body: image,
+      signal: AbortSignal.timeout(60_000),
+    });
+    const data = (await res.json().catch(() => null)) as {
+      url?: string;
+      error?: { code?: string };
+    } | null;
+    if (res.ok && data?.url) return { ok: true, url: data.url };
+    return { ok: false, code: data?.error?.code ?? 'network' };
+  } catch {
+    return { ok: false, code: 'network' };
+  }
+}

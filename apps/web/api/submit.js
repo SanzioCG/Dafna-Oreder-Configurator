@@ -62709,7 +62709,7 @@ function computeBom(template, params, result, hw = hardwareV1) {
 }
 
 // ../../packages/engine/src/extension.ts
-var EMPTY_EXTENSION = { materials: [], hardware: [] };
+var EMPTY_EXTENSION = { materials: [], hardware: [], textures: {} };
 var PARAM_USAGE = {
   corpusMaterial: "corpus",
   doorMaterial: "door",
@@ -65176,6 +65176,15 @@ var CachedCatalog = class {
 };
 var USAGES = ["corpus", "door", "top"];
 var HEX = /^#[0-9a-f]{6}$/i;
+function textureUrlAllowed(url, allowDataUrls = false) {
+  if (allowDataUrls && /^data:image\/(jpeg|png|webp);base64,/.test(url)) return true;
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" && u.hostname.endsWith(".public.blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
 var CATALOG_TAB = "Katalog";
 var CATALOG_HEADER = [
   "Turi",
@@ -65227,12 +65236,22 @@ function catalogToRows(ext) {
       "",
       "",
       h.note ?? ""
+    ]),
+    ...Object.entries(ext.textures ?? {}).map(([id, t3]) => [
+      "tekstura",
+      id,
+      t3.url,
+      "",
+      "",
+      t3.widthMm,
+      t3.heightMm
     ])
   ];
 }
 function rowsToCatalog(rows) {
   const materials = [];
   const hardware = [];
+  const textures = {};
   const s = (v) => String(v ?? "").trim();
   for (const r of rows.slice(1)) {
     const c = (i) => s(r[i]);
@@ -65264,6 +65283,12 @@ function rowsToCatalog(rows) {
         moistureResistant: c(12) === "ha",
         note: c(13) || void 0
       });
+    } else if (type === "tekstura" && id && textureUrlAllowed(name)) {
+      textures[id] = {
+        url: name,
+        widthMm: Number(thick) || 1e3,
+        heightMm: Number(color) || 1e3
+      };
     } else if (type === "furnitura" && id && (kind === "hinge" || kind === "slide") && usage) {
       hardware.push({
         id,
@@ -65277,7 +65302,7 @@ function rowsToCatalog(rows) {
       });
     }
   }
-  return { materials, hardware };
+  return { materials, hardware, textures };
 }
 var GoogleSheetsCatalogStore = class {
   tab;
@@ -65291,6 +65316,9 @@ var GoogleSheetsCatalogStore = class {
     await this.tab.write(catalogToRows(ext));
   }
 };
+
+// server/prices.ts
+var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
 
 // server/rateLimit.ts
 var RateLimiter = class {

@@ -58596,6 +58596,32 @@ var require_fontkit_umd = __commonJS({
   }
 });
 
+// server/blob.ts
+var BLOB_API = "https://vercel.com/api/blob";
+var BLOB_API_VERSION = "13";
+function blobPutter(token, fetchImpl = fetch) {
+  if (!token) return void 0;
+  const storeId = token.split("_")[3] ?? "";
+  return async (name, body, contentType) => {
+    const res = await fetchImpl(`${BLOB_API}/?${new URLSearchParams({ pathname: name })}`, {
+      method: "PUT",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "x-api-version": BLOB_API_VERSION,
+        "x-vercel-blob-store-id": storeId,
+        "x-vercel-blob-access": "public",
+        "x-content-type": contentType,
+        "x-add-random-suffix": "1"
+      },
+      body,
+      signal: AbortSignal.timeout(3e4)
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.url) throw new Error(`blob put failed: ${res.status}`);
+    return data.url;
+  };
+}
+
 // ../../packages/engine/templates/wardrobe.v10.json
 var wardrobe_v10_default = {
   templateId: "wardrobe",
@@ -61655,7 +61681,7 @@ var hardwareV1 = hardware_v1_default;
 var priceListDemo = pricelist_demo_default;
 
 // ../../packages/engine/src/extension.ts
-var EMPTY_EXTENSION = { materials: [], hardware: [] };
+var EMPTY_EXTENSION = { materials: [], hardware: [], textures: {} };
 var PARAM_USAGE = {
   corpusMaterial: "corpus",
   doorMaterial: "door",
@@ -62440,7 +62466,16 @@ var THICKNESS = [16, 16.7, 18, 22, 25];
 var HEX = /^#[0-9a-f]{6}$/i;
 var text = (v, max) => typeof v === "string" ? v.trim().slice(0, max) : "";
 var slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 20) || "brand";
-function mergeCatalog(saved, incoming) {
+function textureUrlAllowed(url, allowDataUrls = false) {
+  if (allowDataUrls && /^data:image\/(jpeg|png|webp);base64,/.test(url)) return true;
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" && u.hostname.endsWith(".public.blob.vercel-storage.com");
+  } catch {
+    return false;
+  }
+}
+function mergeCatalog(saved, incoming, options = {}) {
   const inc = incoming ?? {};
   if (!Array.isArray(inc.materials ?? []) || !Array.isArray(inc.hardware ?? []))
     return { ok: false, field: "catalog" };
@@ -62514,7 +62549,25 @@ function mergeCatalog(saved, incoming) {
     while (hardware.some((h) => h.id === `x_h${nextH}`)) nextH++;
     hardware.push({ id: `x_h${nextH++}`, kind, brandKey, brand, model, softClose, visible, note });
   }
-  return { ok: true, ext: { materials, hardware } };
+  let textures = { ...saved.textures ?? {} };
+  if (inc.textures !== void 0) {
+    if (typeof inc.textures !== "object" || inc.textures === null)
+      return { ok: false, field: "textures" };
+    textures = {};
+    for (const [id, raw] of Object.entries(inc.textures)) {
+      const t = raw;
+      const known = getMaterial(allMaterials, id) !== void 0 || materials.some((m) => m.id === id);
+      const size = (n3) => typeof n3 === "number" && n3 >= 50 && n3 <= 1e4;
+      if (!known || !t || typeof t.url !== "string" || !textureUrlAllowed(t.url, options.allowDataUrls) || !size(t.widthMm) || !size(t.heightMm))
+        return { ok: false, field: `textures.${id}` };
+      textures[id] = {
+        url: t.url,
+        widthMm: Math.round(t.widthMm),
+        heightMm: Math.round(t.heightMm)
+      };
+    }
+  }
+  return { ok: true, ext: { materials, hardware, textures } };
 }
 var CATALOG_TAB = "Katalog";
 var CATALOG_HEADER = [
@@ -62567,12 +62620,22 @@ function catalogToRows(ext) {
       "",
       "",
       h.note ?? ""
+    ]),
+    ...Object.entries(ext.textures ?? {}).map(([id, t]) => [
+      "tekstura",
+      id,
+      t.url,
+      "",
+      "",
+      t.widthMm,
+      t.heightMm
     ])
   ];
 }
 function rowsToCatalog(rows) {
   const materials = [];
   const hardware = [];
+  const textures = {};
   const s = (v) => String(v ?? "").trim();
   for (const r of rows.slice(1)) {
     const c = (i) => s(r[i]);
@@ -62604,6 +62667,12 @@ function rowsToCatalog(rows) {
         moistureResistant: c(12) === "ha",
         note: c(13) || void 0
       });
+    } else if (type === "tekstura" && id && textureUrlAllowed(name)) {
+      textures[id] = {
+        url: name,
+        widthMm: Number(thick) || 1e3,
+        heightMm: Number(color) || 1e3
+      };
     } else if (type === "furnitura" && id && (kind === "hinge" || kind === "slide") && usage) {
       hardware.push({
         id,
@@ -62617,7 +62686,7 @@ function rowsToCatalog(rows) {
       });
     }
   }
-  return { materials, hardware };
+  return { materials, hardware, textures };
 }
 var GoogleSheetsCatalogStore = class {
   tab;
@@ -62762,17 +62831,32 @@ function parsePriceList(raw, version) {
     }
   };
 }
+var TEXTURE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
 function tashkentMinute(d) {
   return new Date(d.getTime() + 5 * 36e5).toISOString().slice(0, 16).replace("T", " ");
 }
 async function handleManager(req, deps2) {
-  if (req.method !== "GET" && req.method !== "PUT")
+  if (req.method !== "GET" && req.method !== "PUT" && req.method !== "POST")
     return json(405, { error: { code: "method_not_allowed" } });
   if (!deps2.managerPin || !PIN_RE.test(deps2.managerPin))
     return json(503, { error: { code: "not_configured" } });
   if (!deps2.limiter.take(clientIp(req))) return json(429, { error: { code: "rate_limited" } });
   if (!pinMatches(req.headers.get("x-manager-pin"), deps2.managerPin))
     return json(401, { error: { code: "wrong_pin" } });
+  if (req.method === "POST") {
+    if (!deps2.putTexture) return json(503, { error: { code: "storage_not_configured" } });
+    const id = req.headers.get("x-material-id") ?? "";
+    const type = (req.headers.get("content-type") ?? "").split(";")[0].trim();
+    if (!/^[a-z0-9_]{1,40}$/.test(id) || !TEXTURE_TYPES.includes(type))
+      return json(400, { error: { code: "invalid_texture" } });
+    const body2 = await req.arrayBuffer();
+    if (body2.byteLength === 0 || body2.byteLength > TEXTURE_MAX_BYTES)
+      return json(413, { error: { code: "too_large" } });
+    const ext = type === "image/png" ? "png" : type === "image/webp" ? "webp" : "jpg";
+    const url = await deps2.putTexture(`textures/${id}.${ext}`, body2, type);
+    return json(200, { ok: true, url });
+  }
   if (req.method === "GET") {
     const catalog2 = await deps2.catalog?.get();
     const { list, updatedAt: updatedAt2 } = await deps2.prices.get();
@@ -62781,7 +62865,8 @@ async function handleManager(req, deps2) {
   let body;
   try {
     const text2 = await req.text();
-    if (text2.length > MAX_BODY * 5) return json(413, { error: { code: "too_large" } });
+    if (text2.length > (deps2.allowDataUrls ? 3e7 : MAX_BODY * 5))
+      return json(413, { error: { code: "too_large" } });
     body = JSON.parse(text2);
   } catch {
     return json(400, { error: { code: "invalid_request" } });
@@ -62790,7 +62875,9 @@ async function handleManager(req, deps2) {
   if (body.catalog !== void 0) {
     if (!deps2.catalogStore || !deps2.catalog)
       return json(503, { error: { code: "not_configured" } });
-    const merged = mergeCatalog(await deps2.catalogStore.load(), body.catalog);
+    const merged = mergeCatalog(await deps2.catalogStore.load(), body.catalog, {
+      allowDataUrls: deps2.allowDataUrls
+    });
     if (!merged.ok) return json(400, { error: { code: "invalid_catalog", field: merged.field } });
     await deps2.catalogStore.save(merged.ext);
     deps2.catalog.set(merged.ext);
@@ -62881,14 +62968,17 @@ function handle(request) {
       limiter: new RateLimiter(30, 10 * 60 * 1e3),
       now: () => /* @__PURE__ */ new Date(),
       catalogStore: catalogFromEnv(process.env).store,
-      catalog: catalogFromEnv(process.env).catalog
+      catalog: catalogFromEnv(process.env).catalog,
+      putTexture: blobPutter(process.env.BLOB_READ_WRITE_TOKEN)
     };
   }
   return handleManager(request, deps);
 }
 var GET = handle;
 var PUT = handle;
+var POST = handle;
 export {
   GET,
+  POST,
   PUT
 };

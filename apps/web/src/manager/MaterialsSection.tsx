@@ -1,4 +1,4 @@
-import { allMaterials, type Material, type PriceList } from '@dafna/engine';
+import { allMaterials, type Material, type MaterialTexture, type PriceList } from '@dafna/engine';
 import { useMemo, useState } from 'react';
 import { translate } from '../i18n/I18n';
 import { Button } from '../ui/Button';
@@ -9,9 +9,12 @@ import {
   USAGE,
   defaultSheet,
   money,
+  ERRORS,
   type CatalogDraft,
   type MaterialDraft,
+  type UploadTexture,
 } from './model';
+import { shrinkImage } from './image';
 
 /**
  * D-20 "Materiallar": every board (the built-in catalog and the ones added here) with all its
@@ -97,11 +100,13 @@ export function MaterialsSection({
   edit,
   draft,
   setDraft,
+  uploadTexture,
 }: {
   list: PriceList;
   edit: (l: PriceList) => void;
   draft: CatalogDraft;
   setDraft: (d: CatalogDraft) => void;
+  uploadTexture: UploadTexture;
 }) {
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState('');
@@ -126,7 +131,22 @@ export function MaterialsSection({
       materials: draft.materials.map((m, j) => (j === i ? { ...m, ...patch } : m)),
     });
 
+  const putTexture = (id: string, t: MaterialTexture | null) => {
+    const textures = { ...draft.textures };
+    if (t) textures[id] = t;
+    else delete textures[id];
+    setDraft({ ...draft, textures });
+  };
+  /** an unsaved new material can be dropped (a saved one is never deleted, only hidden) */
+  const dropNew = (i: number) => {
+    setDraft({ ...draft, materials: draft.materials.filter((_, j) => j !== i) });
+    setOpen(null);
+  };
+
   const addNew = () => {
+    // one blank new material at a time: open it instead of adding another
+    const blank = draft.materials.findIndex((m) => m.id === undefined && !m.name.trim());
+    if (blank >= 0) return setOpen(`new-${blank}`);
     setDraft({ ...draft, materials: [{ ...NEW_MATERIAL }, ...draft.materials] });
     // the new draft takes index 0; earlier drafts move down
     setOpen('new-0');
@@ -221,7 +241,15 @@ export function MaterialsSection({
                 >
                   <td>
                     <span className="mgr-mat">
-                      <span className="mgr-swatch" style={{ background: r.colorHex }} />
+                      <span
+                        className="mgr-swatch"
+                        style={{
+                          background:
+                            r.id && draft.textures?.[r.id]
+                              ? `center / cover url(${draft.textures[r.id]!.url})`
+                              : r.colorHex,
+                        }}
+                      />
                       <span className="mgr-name">
                         {r.name}
                         <small>
@@ -264,6 +292,14 @@ export function MaterialsSection({
                         putSheet={(patch) => r.id && putSheet(r.id, patch)}
                         erp={r.id ? (list.erpCodes?.[r.id] ?? '') : ''}
                         putErp={(v) => r.id && putErp(r.id, v)}
+                        texture={r.id ? draft.textures?.[r.id] : undefined}
+                        putTexture={(t) => r.id && putTexture(r.id, t)}
+                        uploadTexture={uploadTexture}
+                        onDrop={
+                          r.draftIndex !== undefined && !r.id
+                            ? () => dropNew(r.draftIndex!)
+                            : undefined
+                        }
                       />
                     </td>
                   </tr>
@@ -285,7 +321,15 @@ function MaterialCard({
   putSheet,
   erp,
   putErp,
+  texture,
+  putTexture,
+  uploadTexture,
+  onDrop,
 }: {
+  texture?: MaterialTexture;
+  putTexture: (t: MaterialTexture | null) => void;
+  uploadTexture: UploadTexture;
+  onDrop?: () => void;
   row: Row;
   draft?: MaterialDraft;
   setDraft: (patch: Partial<MaterialDraft>) => void;
@@ -497,10 +541,127 @@ function MaterialCard({
           </>
         ) : (
           <p className="mgr-note">
-            Yangi material: avval «Saqlash» ni bosing, keyin narxi va 1C kodini kiriting.
+            Yangi material: avval «Saqlash» ni bosing, keyin narxi, 1C kodi va teksturasini
+            kiriting.
           </p>
         )}
+        {row.id && (
+          <TextureBlock
+            id={row.id}
+            texture={texture}
+            putTexture={putTexture}
+            uploadTexture={uploadTexture}
+          />
+        )}
+        {onDrop && (
+          <button
+            type="button"
+            className="mgr-del"
+            onClick={onDrop}
+            data-testid="mgr-material-drop"
+          >
+            Bekor qilish (saqlanmagan materialni olib tashlash)
+          </button>
+        )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * D-21: the decor photo: shown on the 3D model and on the kiosk swatch. The photo shows a real
+ * area of the board (width x height, mm), so the 3D view tiles it at true scale.
+ */
+function TextureBlock({
+  id,
+  texture,
+  putTexture,
+  uploadTexture,
+}: {
+  id: string;
+  texture?: MaterialTexture;
+  putTexture: (t: MaterialTexture | null) => void;
+  uploadTexture: UploadTexture;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const pick = async (file: File | undefined) => {
+    if (!file) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const image = await shrinkImage(file);
+      const r = await uploadTexture(id, image);
+      if (!r.ok) setError(ERRORS[r.code] ?? ERRORS.network!);
+      else
+        putTexture({
+          url: r.url,
+          widthMm: texture?.widthMm ?? 1000,
+          heightMm: texture?.heightMm ?? 1000,
+        });
+    } catch {
+      setError("Rasmni o'qib bo'lmadi");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="mgr-texture" data-testid="mgr-texture">
+      <h3>Tekstura (dekor rasmi)</h3>
+      <p className="mgr-note">
+        Rasm 3D ko&apos;rinishda va kioskdagi rang tanlovida chiqadi. Dekorning tekis, yorug&apos;
+        rasmini yuklang (JPG yoki PNG); katta rasm avtomatik kichraytiriladi.
+      </p>
+      {texture && (
+        <img
+          className="mgr-texture-img"
+          src={texture.url}
+          alt="Tekstura"
+          data-testid="mgr-texture-img"
+        />
+      )}
+      <label className="mgr-upload">
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          disabled={busy}
+          onChange={(e) => void pick(e.target.files?.[0])}
+          data-testid="mgr-texture-file"
+        />
+        <span>{busy ? 'Yuklanmoqda…' : texture ? 'Boshqa rasm yuklash' : 'Rasm yuklash'}</span>
+      </label>
+      {texture && (
+        <>
+          <label className="mgr-field">
+            <span>Rasm qancha joyni ko&apos;rsatadi, mm (eni × bo&apos;yi)</span>
+            <span className="mgr-size">
+              <input
+                type="number"
+                min={50}
+                value={texture.widthMm}
+                onChange={(e) => putTexture({ ...texture, widthMm: Number(e.target.value) })}
+                aria-label="Rasm eni, mm"
+              />
+              ×
+              <input
+                type="number"
+                min={50}
+                value={texture.heightMm}
+                onChange={(e) => putTexture({ ...texture, heightMm: Number(e.target.value) })}
+                aria-label="Rasm bo'yi, mm"
+              />
+            </span>
+          </label>
+          <button type="button" className="mgr-del" onClick={() => putTexture(null)}>
+            Teksturani olib tashlash
+          </button>
+        </>
+      )}
+      {error && (
+        <p className="mgr-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }

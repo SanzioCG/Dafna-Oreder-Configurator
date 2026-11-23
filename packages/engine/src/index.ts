@@ -112,10 +112,12 @@ export {
   catalogExtension,
   extensionBrand,
   extensionMaterial,
+  textureFor,
   toMaterial,
   EMPTY_EXTENSION,
   type CatalogExtension,
   type CustomHardware,
   type CustomMaterial,
+  type MaterialTexture,
   type MaterialUsage,
 } from './extension.js';

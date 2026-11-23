@@ -159,6 +159,10 @@ export function createDevManagerHandler() {
         ...devPrices,
         ...devCatalog,
         managerPin: process.env.DEV_MANAGER_PIN ?? '0000',
+        // D-21: decor photos as data URLs (dev only, never stored in a sheet)
+        allowDataUrls: true,
+        putTexture: async (_name, body, type) =>
+          `data:${type};base64,${Buffer.from(body).toString('base64')}`,
         limiter,
         now: () => new Date(),
       }),

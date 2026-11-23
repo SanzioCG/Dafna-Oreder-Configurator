@@ -3,6 +3,7 @@ import {
   getMaterial,
   type CustomHardware,
   type CustomMaterial,
+  type MaterialTexture,
   type PriceList,
   type PriceService,
 } from '@dafna/engine';
@@ -73,7 +74,15 @@ export type HardwareDraft = Omit<CustomHardware, 'id' | 'brandKey'> & {
 export interface CatalogDraft {
   materials: MaterialDraft[];
   hardware: HardwareDraft[];
+  /** D-21: material id -> decor photo */
+  textures?: Record<string, MaterialTexture>;
 }
+
+/** D-21: uploads a decor photo for a material, returns its URL or an error code */
+export type UploadTexture = (
+  materialId: string,
+  image: Blob,
+) => Promise<{ ok: true; url: string } | { ok: false; code: string }>;
 
 export const NEW_MATERIAL: MaterialDraft = {
   kind: 'ldsp',
@@ -139,6 +148,10 @@ export const ERRORS: Record<string, string> = {
   not_configured: "Menejer PIN'i serverda sozlanmagan (Vercel: MANAGER_PIN)",
   invalid_price: "Narxlardan biri noto'g'ri",
   invalid_catalog: "Yangi material yoki furnituraning majburiy maydoni to'ldirilmagan",
+  storage_not_configured:
+    'Rasm saqlash joyi ulanmagan (Vercel: Storage → Blob, BLOB_READ_WRITE_TOKEN)',
+  invalid_texture: 'Rasm JPG, PNG yoki WebP bo‘lishi kerak',
+  too_large: 'Rasm juda katta',
   network: "Server bilan aloqa yo'q",
 };
 
@@ -149,6 +162,7 @@ export function fieldText(field: string | undefined): string {
   const row = n !== undefined && /^\d+$/.test(n) ? `${Number(n) + 1}-qator` : n;
   const where: Record<string, string> = {
     services: 'Xizmatlar',
+    textures: 'Tekstura',
     materials: 'Yangi materiallar',
     hardware: 'Yangi furnitura',
     boardSheets: 'Listlar',

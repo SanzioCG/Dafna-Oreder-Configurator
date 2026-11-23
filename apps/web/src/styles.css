@@ -2432,3 +2432,54 @@ p {
 .mgr-del:focus-visible {
   outline: var(--focus-line);
 }
+
+/* D-21: decor photo in the material card */
+.mgr-texture {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.mgr-texture h3 {
+  margin: var(--space-2) 0 0;
+}
+.mgr-texture-img {
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.mgr-upload {
+  position: relative;
+  display: inline-flex;
+  align-self: flex-start;
+  cursor: pointer;
+}
+.mgr-upload input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.mgr-upload span {
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.mgr-upload:focus-within span {
+  outline: var(--focus-line);
+}
+
+/* the kiosk locks page scrolling, selection and touch gestures (html / body / #root);
+   the office page scrolls itself and allows selecting text */
+.mgr-shell,
+.mgr-login {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: auto;
+  -webkit-user-select: text;
+  user-select: text;
+}

@@ -10,7 +10,7 @@ import { HardwareSection } from './HardwareSection';
 import { MaterialsSection } from './MaterialsSection';
 import { ProfitSection } from './ProfitSection';
 import { ServicesSection } from './ServicesSection';
-import { managerLoad, managerSave, type ManagerOutcome } from './managerApi';
+import { managerLoad, managerSave, managerUploadTexture, type ManagerOutcome } from './managerApi';
 import { ERRORS, fieldText, toServiceModel, type CatalogDraft } from './model';
 
 export type { CatalogDraft } from './model';
@@ -53,7 +53,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   /** the stored catalog becomes the engine's (labels, preview) and the editable draft */
   const takeCatalog = (c: CatalogExtension) => {
     applyCatalogExtension(c);
-    setDraftState({ materials: c.materials, hardware: c.hardware });
+    setDraftState({ materials: c.materials, hardware: c.hardware, textures: c.textures ?? {} });
   };
 
   const login = async (e: FormEvent) => {
@@ -173,7 +173,13 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
           </p>
         )}
         {section === 'materials' && (
-          <MaterialsSection list={list} edit={edit} draft={draft} setDraft={setDraft} />
+          <MaterialsSection
+            list={list}
+            edit={edit}
+            draft={draft}
+            setDraft={setDraft}
+            uploadTexture={(id, image) => managerUploadTexture(pin, id, image, fetchImpl)}
+          />
         )}
         {section === 'hardware' && (
           <HardwareSection list={list} edit={edit} draft={draft} setDraft={setDraft} />

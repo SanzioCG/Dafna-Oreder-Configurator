@@ -1,6 +1,9 @@
 import {
   EMPTY_EXTENSION,
+  allMaterials,
   applyCatalogExtension,
+  getMaterial,
+  type MaterialTexture,
   type CatalogExtension,
   type CustomHardware,
   type CustomMaterial,
@@ -75,8 +78,23 @@ const slug = (s: string) =>
  * colour, swatch group, brand / model text, soft close and visibility may change. An entry
  * missing from the incoming list is kept unchanged (never deleted). New entries get new ids.
  */
-export function mergeCatalog(saved: CatalogExtension, incoming: unknown): MergeResult {
-  const inc = (incoming ?? {}) as { materials?: unknown; hardware?: unknown };
+/** D-21: where a decor photo may live (the Vercel Blob store; data URLs on the dev server) */
+export function textureUrlAllowed(url: string, allowDataUrls = false): boolean {
+  if (allowDataUrls && /^data:image\/(jpeg|png|webp);base64,/.test(url)) return true;
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' && u.hostname.endsWith('.public.blob.vercel-storage.com');
+  } catch {
+    return false;
+  }
+}
+
+export function mergeCatalog(
+  saved: CatalogExtension,
+  incoming: unknown,
+  options: { allowDataUrls?: boolean } = {},
+): MergeResult {
+  const inc = (incoming ?? {}) as { materials?: unknown; hardware?: unknown; textures?: unknown };
   if (!Array.isArray(inc.materials ?? []) || !Array.isArray(inc.hardware ?? []))
     return { ok: false, field: 'catalog' };
   const rawM = (inc.materials ?? []) as Partial<CustomMaterial>[];
@@ -154,7 +172,34 @@ export function mergeCatalog(saved: CatalogExtension, incoming: unknown): MergeR
     while (hardware.some((h) => h.id === `x_h${nextH}`)) nextH++;
     hardware.push({ id: `x_h${nextH++}`, kind, brandKey, brand, model, softClose, visible, note });
   }
-  return { ok: true, ext: { materials, hardware } };
+  // D-21: decor photos are visual only: the incoming set replaces the stored one
+  let textures: Record<string, MaterialTexture> = { ...(saved.textures ?? {}) };
+  if (inc.textures !== undefined) {
+    if (typeof inc.textures !== 'object' || inc.textures === null)
+      return { ok: false, field: 'textures' };
+    textures = {};
+    for (const [id, raw] of Object.entries(inc.textures)) {
+      const t = raw as Partial<MaterialTexture> | null;
+      const known =
+        getMaterial(allMaterials, id) !== undefined || materials.some((m) => m.id === id);
+      const size = (n: unknown) => typeof n === 'number' && n >= 50 && n <= 10000;
+      if (
+        !known ||
+        !t ||
+        typeof t.url !== 'string' ||
+        !textureUrlAllowed(t.url, options.allowDataUrls) ||
+        !size(t.widthMm) ||
+        !size(t.heightMm)
+      )
+        return { ok: false, field: `textures.${id}` };
+      textures[id] = {
+        url: t.url,
+        widthMm: Math.round(t.widthMm!),
+        heightMm: Math.round(t.heightMm!),
+      };
+    }
+  }
+  return { ok: true, ext: { materials, hardware, textures } };
 }
 
 /* ---------- the "Katalog" tab ---------- */
@@ -212,12 +257,22 @@ export function catalogToRows(ext: CatalogExtension): (string | number)[][] {
       '',
       h.note ?? '',
     ]),
+    ...Object.entries(ext.textures ?? {}).map(([id, t]) => [
+      'tekstura',
+      id,
+      t.url,
+      '',
+      '',
+      t.widthMm,
+      t.heightMm,
+    ]),
   ];
 }
 
 export function rowsToCatalog(rows: unknown[][]): CatalogExtension {
   const materials: CustomMaterial[] = [];
   const hardware: CustomHardware[] = [];
+  const textures: Record<string, MaterialTexture> = {};
   const s = (v: unknown) => String(v ?? '').trim();
   for (const r of rows.slice(1)) {
     const c = (i: number) => s(r[i]);
@@ -249,6 +304,12 @@ export function rowsToCatalog(rows: unknown[][]): CatalogExtension {
         moistureResistant: c(12) === 'ha',
         note: c(13) || undefined,
       });
+    } else if (type === 'tekstura' && id && textureUrlAllowed(name)) {
+      textures[id] = {
+        url: name,
+        widthMm: Number(thick) || 1000,
+        heightMm: Number(color) || 1000,
+      };
     } else if (type === 'furnitura' && id && (kind === 'hinge' || kind === 'slide') && usage) {
       hardware.push({
         id,
@@ -262,7 +323,7 @@ export function rowsToCatalog(rows: unknown[][]): CatalogExtension {
       });
     }
   }
-  return { materials, hardware };
+  return { materials, hardware, textures };
 }
 
 export class GoogleSheetsCatalogStore implements CatalogStore {

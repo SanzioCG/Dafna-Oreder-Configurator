@@ -43,3 +43,13 @@ the same order draft in any later engine version.
 - A new hinge / slide is shown in 3D as the built-in mechanism of its type (soft close or
   not).
 - Drilling and per-part services wait for machining data (the production confirmation table).
+
+## D-21 addendum: decor photos (textures)
+
+- Any material (built-in or added) may get a decor photo on the manager page. The photo is
+  shrunk in the browser (≤ 2048 px, JPEG) and stored in the Vercel Blob store
+  (`BLOB_READ_WRITE_TOKEN`). The extension keeps `textures[id] = {url, widthMm, heightMm}`.
+- A photo is visual only, so it may be replaced or removed at any time. Only Blob URLs are
+  accepted (data URLs on the dev server only).
+- The 3D view tiles the photo at true scale (the photo shows widthMm × heightMm of board, laid
+  along the board's length). The kiosk swatches show the photo.

@@ -57,12 +57,25 @@ export interface CustomHardware {
   note?: string;
 }
 
+/**
+ * D-21: a decor photo for the 3D view and the swatches, for any material (built-in or added).
+ * Visual only: it never changes a part, so it may be replaced or removed at any time.
+ * widthMm × heightMm = the real board area the photo shows (the 3D view tiles it at that scale).
+ */
+export interface MaterialTexture {
+  url: string;
+  widthMm: number;
+  heightMm: number;
+}
+
 export interface CatalogExtension {
   materials: CustomMaterial[];
   hardware: CustomHardware[];
+  /** D-21: material id -> its decor photo */
+  textures?: Record<string, MaterialTexture>;
 }
 
-export const EMPTY_EXTENSION: CatalogExtension = { materials: [], hardware: [] };
+export const EMPTY_EXTENSION: CatalogExtension = { materials: [], hardware: [], textures: {} };
 
 /** material parameter -> what a material must be meant for to appear there */
 const PARAM_USAGE: Record<string, MaterialUsage> = {
@@ -151,6 +164,11 @@ export function applyCatalogExtension(ext: CatalogExtension): void {
 
 export function catalogExtension(): CatalogExtension {
   return current;
+}
+
+/** D-21: the decor photo of a material, if the manager uploaded one. */
+export function textureFor(id: string): MaterialTexture | undefined {
+  return current.textures?.[id];
 }
 
 /** D-20: getMaterial() fallback for materials added on the admin page. */

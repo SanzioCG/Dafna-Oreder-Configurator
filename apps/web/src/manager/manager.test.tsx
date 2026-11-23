@@ -221,6 +221,26 @@ describe('D-20 manager adds materials, hardware and services', () => {
   });
 });
 
+describe('D-21 unsaved new materials', () => {
+  it('one blank new material at a time, and it can be dropped before saving', async () => {
+    const api = fakeManagerApi();
+    render(
+      <ThemeProvider>
+        <ManagerPage fetchImpl={api.impl} />
+      </ThemeProvider>,
+    );
+    await login('9137');
+    await screen.findByTestId('mgr-save');
+    const blanks = () => document.querySelectorAll('[data-testid^="mgr-material-row-new-"]').length;
+    fireEvent.click(screen.getByTestId('mgr-material-add'));
+    fireEvent.click(screen.getByTestId('mgr-material-add'));
+    fireEvent.click(screen.getByTestId('mgr-material-add'));
+    expect(blanks()).toBe(1);
+    fireEvent.click(screen.getByTestId('mgr-material-drop'));
+    expect(blanks()).toBe(0);
+  });
+});
+
 describe('D-19 kiosk price request', () => {
   const input = () => {
     const params = defaultParams(wardrobeTemplate);
