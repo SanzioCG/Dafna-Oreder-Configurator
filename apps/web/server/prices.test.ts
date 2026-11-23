@@ -164,8 +164,9 @@ describe('D-19 "Narxlar" sheet tab', () => {
       'Kod',
       'Nomi',
       "Narx (so'm)",
-      'Varaq uzunligi (mm)',
-      'Varaq eni (mm)',
+      'Varaq uzunligi (mm) / hisob turi',
+      'Varaq eni (mm) / mahsulotlar',
+      'ERP kodi',
     ]);
     expect(rows.find((r) => r[1] === 'ldsp_white_16')?.[2]).toContain('16 mm');
     // the sheet may hand numbers back as text with spaces ("579 600")

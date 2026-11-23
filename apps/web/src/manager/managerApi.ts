@@ -1,10 +1,11 @@
-import type { PriceList } from '@dafna/engine';
+import type { CatalogExtension, PriceList } from '@dafna/engine';
+import type { CatalogDraft } from './ManagerPage';
 
 /** D-19: client of GET / PUT /api/manager (the manager PIN travels in a header, never a URL). */
 export const MANAGER_URL = '/api/manager';
 
 export type ManagerOutcome =
-  | { ok: true; list: PriceList; updatedAt: string | null }
+  | { ok: true; list: PriceList; updatedAt: string | null; catalog?: CatalogExtension }
   | { ok: false; code: string; field?: string };
 
 async function call(
@@ -22,10 +23,16 @@ async function call(
     const data = (await res.json().catch(() => null)) as {
       list?: PriceList;
       updatedAt?: string | null;
+      catalog?: CatalogExtension;
       error?: { code?: string; field?: string };
     } | null;
     if (res.ok && data?.list)
-      return { ok: true, list: data.list, updatedAt: data.updatedAt ?? null };
+      return {
+        ok: true,
+        list: data.list,
+        updatedAt: data.updatedAt ?? null,
+        catalog: data.catalog,
+      };
     return { ok: false, code: data?.error?.code ?? 'network', field: data?.error?.field };
   } catch {
     return { ok: false, code: 'network' };
@@ -35,5 +42,10 @@ async function call(
 export const managerLoad = (pin: string, fetchImpl?: typeof fetch) =>
   call(pin, { method: 'GET' }, fetchImpl);
 
-export const managerSave = (pin: string, list: PriceList, fetchImpl?: typeof fetch) =>
-  call(pin, { method: 'PUT', body: { list } }, fetchImpl);
+/** D-20: the catalog (materials / hardware) is saved first, then the prices */
+export const managerSave = (
+  pin: string,
+  list: PriceList,
+  catalog: CatalogDraft,
+  fetchImpl?: typeof fetch,
+) => call(pin, { method: 'PUT', body: { list, catalog } }, fetchImpl);

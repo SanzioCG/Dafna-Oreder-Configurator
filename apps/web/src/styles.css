@@ -2148,3 +2148,66 @@ p {
     font-size: 13px;
   }
 }
+
+/* D-20: manager tabs, catalog tables */
+.mgr-tabs {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.mgr-tab {
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: var(--radius-pill);
+  border: var(--line-on-bg);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.mgr-tab.active {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.mgr-tab:focus-visible {
+  outline: var(--focus-line);
+}
+.mgr-page select {
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--paper);
+  border: var(--line-in-card);
+  border-radius: 10px;
+  padding: 7px 8px;
+}
+.mgr-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.mgr-checks label {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  white-space: nowrap;
+}
+.mgr-page input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  padding: 0;
+}
+.mgr-color {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.mgr-page input[type='color'] {
+  width: 44px;
+  height: 36px;
+  padding: 2px;
+}
+.mgr-page input.mgr-erp {
+  max-width: 120px;
+}

@@ -1150,7 +1150,7 @@ var require_trees = __commonJS({
       var stree = desc.stat_desc.static_tree;
       var has_stree = desc.stat_desc.has_stree;
       var extra = desc.stat_desc.extra_bits;
-      var base = desc.stat_desc.extra_base;
+      var base2 = desc.stat_desc.extra_base;
       var max_length = desc.stat_desc.max_length;
       var h;
       var n3, m;
@@ -1175,8 +1175,8 @@ var require_trees = __commonJS({
         }
         s.bl_count[bits]++;
         xbits = 0;
-        if (n3 >= base) {
-          xbits = extra[n3 - base];
+        if (n3 >= base2) {
+          xbits = extra[n3 - base2];
         }
         f = tree[n3 * 2];
         s.opt_len += f * (bits + xbits);
@@ -3510,7 +3510,7 @@ var require_inftrees = __commonJS({
       var low;
       var mask;
       var next;
-      var base = null;
+      var base2 = null;
       var base_index = 0;
       var end;
       var count = new utils.Buf16(MAXBITS + 1);
@@ -3568,16 +3568,16 @@ var require_inftrees = __commonJS({
         }
       }
       if (type === CODES) {
-        base = extra = work;
+        base2 = extra = work;
         end = 19;
       } else if (type === LENS) {
-        base = lbase;
+        base2 = lbase;
         base_index -= 257;
         extra = lext;
         extra_index -= 257;
         end = 256;
       } else {
-        base = dbase;
+        base2 = dbase;
         extra = dext;
         end = -1;
       }
@@ -3600,7 +3600,7 @@ var require_inftrees = __commonJS({
           here_val = work[sym];
         } else if (work[sym] > end) {
           here_op = extra[extra_index + work[sym]];
-          here_val = base[base_index + work[sym]];
+          here_val = base2[base_index + work[sym]];
         } else {
           here_op = 32 + 64;
           here_val = 0;
@@ -24272,26 +24272,26 @@ var require_fontkit_umd = __commonJS({
             return formatError(value);
           }
         }
-        var base = "", array = false, braces = ["{", "}"];
+        var base2 = "", array = false, braces = ["{", "}"];
         if (isArray(value)) {
           array = true;
           braces = ["[", "]"];
         }
         if (isFunction(value)) {
           var n3 = value.name ? ": " + value.name : "";
-          base = " [Function" + n3 + "]";
+          base2 = " [Function" + n3 + "]";
         }
         if (isRegExp(value)) {
-          base = " " + RegExp.prototype.toString.call(value);
+          base2 = " " + RegExp.prototype.toString.call(value);
         }
         if (isDate(value)) {
-          base = " " + Date.prototype.toUTCString.call(value);
+          base2 = " " + Date.prototype.toUTCString.call(value);
         }
         if (isError(value)) {
-          base = " " + formatError(value);
+          base2 = " " + formatError(value);
         }
         if (keys2.length === 0 && (!array || value.length == 0)) {
-          return braces[0] + base + braces[1];
+          return braces[0] + base2 + braces[1];
         }
         if (recurseTimes < 0) {
           if (isRegExp(value)) {
@@ -24310,7 +24310,7 @@ var require_fontkit_umd = __commonJS({
           });
         }
         ctx.seen.pop();
-        return reduceToSingleString(output, base, braces);
+        return reduceToSingleString(output, base2, braces);
       }
       function formatPrimitive(ctx, value) {
         if (isUndefined(value)) return ctx.stylize("undefined", "undefined");
@@ -24397,15 +24397,15 @@ var require_fontkit_umd = __commonJS({
         }
         return name + ": " + str;
       }
-      function reduceToSingleString(output, base, braces) {
+      function reduceToSingleString(output, base2, braces) {
         var length = output.reduce(function(prev, cur) {
           if (cur.indexOf("\n") >= 0) ;
           return prev + cur.replace(/\u001b\[\d\d?m/g, "").length + 1;
         }, 0);
         if (length > 60) {
-          return braces[0] + (base === "" ? "" : base + "\n ") + " " + output.join(",\n  ") + " " + braces[1];
+          return braces[0] + (base2 === "" ? "" : base2 + "\n ") + " " + output.join(",\n  ") + " " + braces[1];
         }
-        return braces[0] + base + " " + output.join(", ") + " " + braces[1];
+        return braces[0] + base2 + " " + output.join(", ") + " " + braces[1];
       }
       function isArray(ar) {
         return Array.isArray(ar);
@@ -25348,11 +25348,11 @@ var require_fontkit_umd = __commonJS({
         this.corkedRequestsFree = new CorkedRequest(this);
       }
       WritableState.prototype.getBuffer = function writableStateGetBuffer() {
-        var current = this.bufferedRequest;
+        var current2 = this.bufferedRequest;
         var out = [];
-        while (current) {
-          out.push(current);
-          current = current.next;
+        while (current2) {
+          out.push(current2);
+          current2 = current2.next;
         }
         return out;
       };
@@ -42423,7 +42423,7 @@ var require_fontkit_umd = __commonJS({
       var clcidx = new Uint8Array([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
       var code_tree = new Tree();
       var lengths = new Uint8Array(288 + 32);
-      function tinf_build_bits_base(bits2, base, delta, first) {
+      function tinf_build_bits_base(bits2, base2, delta, first) {
         var i2, sum;
         for (i2 = 0; i2 < delta; ++i2) {
           bits2[i2] = 0;
@@ -42432,7 +42432,7 @@ var require_fontkit_umd = __commonJS({
           bits2[i2 + delta] = i2 / delta | 0;
         }
         for (sum = first, i2 = 0; i2 < 30; ++i2) {
-          base[i2] = sum;
+          base2[i2] = sum;
           sum += 1 << bits2[i2];
         }
       }
@@ -42491,8 +42491,8 @@ var require_fontkit_umd = __commonJS({
         d.tag >>>= 1;
         return bit;
       }
-      function tinf_read_bits(d, num2, base) {
-        if (!num2) return base;
+      function tinf_read_bits(d, num2, base2) {
+        if (!num2) return base2;
         while (d.bitcount < 24) {
           d.tag |= d.source[d.sourceIndex++] << d.bitcount;
           d.bitcount += 8;
@@ -42500,7 +42500,7 @@ var require_fontkit_umd = __commonJS({
         var val = d.tag & 65535 >>> 16 - num2;
         d.tag >>>= num2;
         d.bitcount -= num2;
-        return val + base;
+        return val + base2;
       }
       function tinf_decode_symbol(d, t2) {
         while (d.bitcount < 24) {
@@ -42916,7 +42916,7 @@ var require_fontkit_umd = __commonJS({
         var stree = desc.stat_desc.static_tree;
         var has_stree = desc.stat_desc.has_stree;
         var extra = desc.stat_desc.extra_bits;
-        var base = desc.stat_desc.extra_base;
+        var base2 = desc.stat_desc.extra_base;
         var max_length = desc.stat_desc.max_length;
         var h;
         var n3, m;
@@ -42941,8 +42941,8 @@ var require_fontkit_umd = __commonJS({
           }
           s.bl_count[bits2]++;
           xbits = 0;
-          if (n3 >= base) {
-            xbits = extra[n3 - base];
+          if (n3 >= base2) {
+            xbits = extra[n3 - base2];
           }
           f = tree[n3 * 2];
           s.opt_len += f * (bits2 + xbits);
@@ -45224,7 +45224,7 @@ var require_fontkit_umd = __commonJS({
         var low;
         var mask;
         var next;
-        var base = null;
+        var base2 = null;
         var base_index = 0;
         var end;
         var count = new common.Buf16(MAXBITS + 1);
@@ -45282,16 +45282,16 @@ var require_fontkit_umd = __commonJS({
           }
         }
         if (type === CODES) {
-          base = extra = work;
+          base2 = extra = work;
           end = 19;
         } else if (type === LENS) {
-          base = lbase;
+          base2 = lbase;
           base_index -= 257;
           extra = lext;
           extra_index -= 257;
           end = 256;
         } else {
-          base = dbase;
+          base2 = dbase;
           extra = dext;
           end = -1;
         }
@@ -45314,7 +45314,7 @@ var require_fontkit_umd = __commonJS({
             here_val = work[sym];
           } else if (work[sym] > end) {
             here_op = extra[extra_index + work[sym]];
-            here_val = base[base_index + work[sym]];
+            here_val = base2[base_index + work[sym]];
           } else {
             here_op = 32 + 64;
             here_val = 0;
@@ -47035,10 +47035,10 @@ var require_fontkit_umd = __commonJS({
           return positions;
         };
         _proto.positionCluster = function positionCluster(glyphs, positions, clusterStart, clusterEnd) {
-          var base = glyphs[clusterStart];
-          var baseBox = base.cbox.copy();
-          if (base.codePoints.length > 1) {
-            baseBox.minX += (base.codePoints.length - 1) * baseBox.width / base.codePoints.length;
+          var base2 = glyphs[clusterStart];
+          var baseBox = base2.cbox.copy();
+          if (base2.codePoints.length > 1) {
+            baseBox.minX += (base2.codePoints.length - 1) * baseBox.width / base2.codePoints.length;
           }
           var xOffset = -positions[clusterStart].xAdvance;
           var yOffset = 0;
@@ -50450,7 +50450,7 @@ var require_fontkit_umd = __commonJS({
             glyphs.splice(_i3++, 0, g);
             end++;
           }
-          var base = end;
+          var base2 = end;
           var limit = start;
           var hasReph = false;
           if (indicConfig.rephPos !== POSITIONS.Ra_To_Become_Reph && features2.rphf && start + 3 <= end && (indicConfig.rephMode === "Implicit" && !isJoiner(glyphs[start + 2]) || indicConfig.rephMode === "Explicit" && glyphs[start + 2].shaperInfo.category === CATEGORIES.ZWJ)) {
@@ -50460,7 +50460,7 @@ var require_fontkit_umd = __commonJS({
               while (limit < end && isJoiner(glyphs[limit])) {
                 limit++;
               }
-              base = start;
+              base2 = start;
               hasReph = true;
             }
           } else if (indicConfig.rephMode === "Log_Repha" && glyphs[start].shaperInfo.category === CATEGORIES.Repha) {
@@ -50468,7 +50468,7 @@ var require_fontkit_umd = __commonJS({
             while (limit < end && isJoiner(glyphs[limit])) {
               limit++;
             }
-            base = start;
+            base2 = start;
             hasReph = true;
           }
           switch (indicConfig.basePos) {
@@ -50479,13 +50479,13 @@ var require_fontkit_umd = __commonJS({
                 var _info = glyphs[--_i4].shaperInfo;
                 if (isConsonant(glyphs[_i4])) {
                   if (_info.position !== POSITIONS.Below_C && (_info.position !== POSITIONS.Post_C || seenBelow)) {
-                    base = _i4;
+                    base2 = _i4;
                     break;
                   }
                   if (_info.position === POSITIONS.Below_C) {
                     seenBelow = true;
                   }
-                  base = _i4;
+                  base2 = _i4;
                 } else if (start < _i4 && _info.category === CATEGORIES.ZWJ && glyphs[_i4 - 1].shaperInfo.category === CATEGORIES.H) {
                   break;
                 }
@@ -50493,25 +50493,25 @@ var require_fontkit_umd = __commonJS({
               break;
             }
             case "First": {
-              base = start;
-              for (var _i5 = base + 1; _i5 < end; _i5++) {
+              base2 = start;
+              for (var _i5 = base2 + 1; _i5 < end; _i5++) {
                 if (isConsonant(glyphs[_i5])) {
                   glyphs[_i5].shaperInfo.position = POSITIONS.Below_C;
                 }
               }
             }
           }
-          if (hasReph && base === start && limit - base <= 2) {
+          if (hasReph && base2 === start && limit - base2 <= 2) {
             hasReph = false;
           }
-          for (var _i6 = start; _i6 < base; _i6++) {
+          for (var _i6 = start; _i6 < base2; _i6++) {
             var _info2 = glyphs[_i6].shaperInfo;
             _info2.position = Math.min(POSITIONS.Pre_C, _info2.position);
           }
-          if (base < end) {
-            glyphs[base].shaperInfo.position = POSITIONS.Base_C;
+          if (base2 < end) {
+            glyphs[base2].shaperInfo.position = POSITIONS.Base_C;
           }
-          for (var _i7 = base + 1; _i7 < end; _i7++) {
+          for (var _i7 = base2 + 1; _i7 < end; _i7++) {
             if (glyphs[_i7].shaperInfo.category === CATEGORIES.M) {
               for (var j = _i7 + 1; j < end; j++) {
                 if (isConsonant(glyphs[j])) {
@@ -50527,7 +50527,7 @@ var require_fontkit_umd = __commonJS({
           }
           if (plan.isOldSpec) {
             var disallowDoubleHalants = plan.unicodeScript !== "Malayalam";
-            for (var _i8 = base + 1; _i8 < end; _i8++) {
+            for (var _i8 = base2 + 1; _i8 < end; _i8++) {
               if (glyphs[_i8].shaperInfo.category === CATEGORIES.H) {
                 var _j = void 0;
                 for (_j = end - 1; _j > _i8; _j--) {
@@ -50561,8 +50561,8 @@ var require_fontkit_umd = __commonJS({
               lastPos = _info3.position;
             }
           }
-          var last = base;
-          for (var _i10 = base + 1; _i10 < end; _i10++) {
+          var last = base2;
+          for (var _i10 = base2 + 1; _i10 < end; _i10++) {
             if (isConsonant(glyphs[_i10])) {
               for (var _j3 = last + 1; _j3 < _i10; _j3++) {
                 if (glyphs[_j3].shaperInfo.position < POSITIONS.SMVD) {
@@ -50581,7 +50581,7 @@ var require_fontkit_umd = __commonJS({
           glyphs.splice.apply(glyphs, [start, arr.length].concat(arr));
           for (var _i11 = start; _i11 < end; _i11++) {
             if (glyphs[_i11].shaperInfo.position === POSITIONS.Base_C) {
-              base = _i11;
+              base2 = _i11;
               break;
             }
           }
@@ -50589,28 +50589,28 @@ var require_fontkit_umd = __commonJS({
             glyphs[_i12].features.rphf = true;
           }
           var blwf = !plan.isOldSpec && indicConfig.blwfMode === "Pre_And_Post";
-          for (var _i13 = start; _i13 < base; _i13++) {
+          for (var _i13 = start; _i13 < base2; _i13++) {
             glyphs[_i13].features.half = true;
             if (blwf) {
               glyphs[_i13].features.blwf = true;
             }
           }
-          for (var _i14 = base + 1; _i14 < end; _i14++) {
+          for (var _i14 = base2 + 1; _i14 < end; _i14++) {
             glyphs[_i14].features.abvf = true;
             glyphs[_i14].features.pstf = true;
             glyphs[_i14].features.blwf = true;
           }
           if (plan.isOldSpec && plan.unicodeScript === "Devanagari") {
-            for (var _i15 = start; _i15 + 1 < base; _i15++) {
-              if (glyphs[_i15].shaperInfo.category === CATEGORIES.Ra && glyphs[_i15 + 1].shaperInfo.category === CATEGORIES.H && (_i15 + 1 === base || glyphs[_i15 + 2].shaperInfo.category === CATEGORIES.ZWJ)) {
+            for (var _i15 = start; _i15 + 1 < base2; _i15++) {
+              if (glyphs[_i15].shaperInfo.category === CATEGORIES.Ra && glyphs[_i15 + 1].shaperInfo.category === CATEGORIES.H && (_i15 + 1 === base2 || glyphs[_i15 + 2].shaperInfo.category === CATEGORIES.ZWJ)) {
                 glyphs[_i15].features.blwf = true;
                 glyphs[_i15 + 1].features.blwf = true;
               }
             }
           }
           var prefLen = 2;
-          if (features2.pref && base + prefLen < end) {
-            for (var _i16 = base + 1; _i16 + prefLen - 1 < end; _i16++) {
+          if (features2.pref && base2 + prefLen < end) {
+            for (var _i16 = base2 + 1; _i16 + prefLen - 1 < end; _i16++) {
               var _g2 = [glyphs[_i16].copy(), glyphs[_i16 + 1].copy()];
               if (wouldSubstitute(_g2, "pref")) {
                 for (var _j4 = 0; _j4 < prefLen; _j4++) {
@@ -50644,18 +50644,18 @@ var require_fontkit_umd = __commonJS({
         var features2 = font._layoutEngine.engine.GSUBProcessor.features;
         for (var start = 0, end = nextSyllable(glyphs, 0); start < glyphs.length; start = end, end = nextSyllable(glyphs, start)) {
           var tryPref = !!features2.pref;
-          var base = start;
-          for (; base < end; base++) {
-            if (glyphs[base].shaperInfo.position >= POSITIONS.Base_C) {
-              if (tryPref && base + 1 < end) {
-                for (var i2 = base + 1; i2 < end; i2++) {
+          var base2 = start;
+          for (; base2 < end; base2++) {
+            if (glyphs[base2].shaperInfo.position >= POSITIONS.Base_C) {
+              if (tryPref && base2 + 1 < end) {
+                for (var i2 = base2 + 1; i2 < end; i2++) {
                   if (glyphs[i2].features.pref) {
                     if (!(glyphs[i2].substituted && glyphs[i2].isLigated && !glyphs[i2].isMultiplied)) {
-                      base = i2;
-                      while (base < end && isHalantOrCoeng(glyphs[base])) {
-                        base++;
+                      base2 = i2;
+                      while (base2 < end && isHalantOrCoeng(glyphs[base2])) {
+                        base2++;
                       }
-                      glyphs[base].shaperInfo.position = POSITIONS.BASE_C;
+                      glyphs[base2].shaperInfo.position = POSITIONS.BASE_C;
                       tryPref = false;
                     }
                     break;
@@ -50663,7 +50663,7 @@ var require_fontkit_umd = __commonJS({
                 }
               }
               if (plan.unicodeScript === "Malayalam") {
-                for (var _i18 = base + 1; _i18 < end; _i18++) {
+                for (var _i18 = base2 + 1; _i18 < end; _i18++) {
                   while (_i18 < end && isJoiner(glyphs[_i18])) {
                     _i18++;
                   }
@@ -50675,27 +50675,27 @@ var require_fontkit_umd = __commonJS({
                     _i18++;
                   }
                   if (_i18 < end && isConsonant(glyphs[_i18]) && glyphs[_i18].shaperInfo.position === POSITIONS.Below_C) {
-                    base = _i18;
-                    glyphs[base].shaperInfo.position = POSITIONS.Base_C;
+                    base2 = _i18;
+                    glyphs[base2].shaperInfo.position = POSITIONS.Base_C;
                   }
                 }
               }
-              if (start < base && glyphs[base].shaperInfo.position > POSITIONS.Base_C) {
-                base--;
+              if (start < base2 && glyphs[base2].shaperInfo.position > POSITIONS.Base_C) {
+                base2--;
               }
               break;
             }
           }
-          if (base === end && start < base && glyphs[base - 1].shaperInfo.category === CATEGORIES.ZWJ) {
-            base--;
+          if (base2 === end && start < base2 && glyphs[base2 - 1].shaperInfo.category === CATEGORIES.ZWJ) {
+            base2--;
           }
-          if (base < end) {
-            while (start < base && glyphs[base].shaperInfo.category & (CATEGORIES.N | HALANT_OR_COENG_FLAGS)) {
-              base--;
+          if (base2 < end) {
+            while (start < base2 && glyphs[base2].shaperInfo.category & (CATEGORIES.N | HALANT_OR_COENG_FLAGS)) {
+              base2--;
             }
           }
-          if (start + 1 < end && start < base) {
-            var newPos = base === end ? base - 2 : base - 1;
+          if (start + 1 < end && start < base2) {
+            var newPos = base2 === end ? base2 - 2 : base2 - 1;
             if (plan.unicodeScript !== "Malayalam" && plan.unicodeScript !== "Tamil") {
               while (newPos > start && !(glyphs[newPos].shaperInfo.category & (CATEGORIES.M | HALANT_OR_COENG_FLAGS))) {
                 newPos--;
@@ -50712,8 +50712,8 @@ var require_fontkit_umd = __commonJS({
               for (var _i19 = newPos; _i19 > start; _i19--) {
                 if (glyphs[_i19 - 1].shaperInfo.position === POSITIONS.Pre_M) {
                   var oldPos = _i19 - 1;
-                  if (oldPos < base && base <= newPos) {
-                    base--;
+                  if (oldPos < base2 && base2 <= newPos) {
+                    base2--;
                   }
                   var tmp = glyphs[oldPos];
                   glyphs.splice.apply(glyphs, [oldPos, 0].concat(glyphs.splice(oldPos + 1, newPos - oldPos)));
@@ -50729,24 +50729,24 @@ var require_fontkit_umd = __commonJS({
             var found = false;
             if (rephPos !== POSITIONS.After_Post) {
               newRephPos = start + 1;
-              while (newRephPos < base && !isHalantOrCoeng(glyphs[newRephPos])) {
+              while (newRephPos < base2 && !isHalantOrCoeng(glyphs[newRephPos])) {
                 newRephPos++;
               }
-              if (newRephPos < base && isHalantOrCoeng(glyphs[newRephPos])) {
-                if (newRephPos + 1 < base && isJoiner(glyphs[newRephPos + 1])) {
+              if (newRephPos < base2 && isHalantOrCoeng(glyphs[newRephPos])) {
+                if (newRephPos + 1 < base2 && isJoiner(glyphs[newRephPos + 1])) {
                   newRephPos++;
                 }
                 found = true;
               }
               if (!found && rephPos === POSITIONS.After_Main) {
-                newRephPos = base;
+                newRephPos = base2;
                 while (newRephPos + 1 < end && glyphs[newRephPos + 1].shaperInfo.position <= POSITIONS.After_Main) {
                   newRephPos++;
                 }
                 found = newRephPos < end;
               }
               if (!found && rephPos === POSITIONS.After_Sub) {
-                newRephPos = base;
+                newRephPos = base2;
                 while (newRephPos + 1 < end && !(glyphs[newRephPos + 1].shaperInfo.position & (POSITIONS.Post_C | POSITIONS.After_Post | POSITIONS.SMVD))) {
                   newRephPos++;
                 }
@@ -50755,11 +50755,11 @@ var require_fontkit_umd = __commonJS({
             }
             if (!found) {
               newRephPos = start + 1;
-              while (newRephPos < base && !isHalantOrCoeng(glyphs[newRephPos])) {
+              while (newRephPos < base2 && !isHalantOrCoeng(glyphs[newRephPos])) {
                 newRephPos++;
               }
-              if (newRephPos < base && isHalantOrCoeng(glyphs[newRephPos])) {
-                if (newRephPos + 1 < base && isJoiner(glyphs[newRephPos + 1])) {
+              if (newRephPos < base2 && isHalantOrCoeng(glyphs[newRephPos])) {
+                if (newRephPos + 1 < base2 && isJoiner(glyphs[newRephPos + 1])) {
                   newRephPos++;
                 }
                 found = true;
@@ -50771,7 +50771,7 @@ var require_fontkit_umd = __commonJS({
                 newRephPos--;
               }
               if (isHalantOrCoeng(glyphs[newRephPos])) {
-                for (var _i20 = base + 1; _i20 < newRephPos; _i20++) {
+                for (var _i20 = base2 + 1; _i20 < newRephPos; _i20++) {
                   if (glyphs[_i20].shaperInfo.category === CATEGORIES.M) {
                     newRephPos--;
                   }
@@ -50781,22 +50781,22 @@ var require_fontkit_umd = __commonJS({
             var reph = glyphs[start];
             glyphs.splice.apply(glyphs, [start, 0].concat(glyphs.splice(start + 1, newRephPos - start)));
             glyphs[newRephPos] = reph;
-            if (start < base && base <= newRephPos) {
-              base--;
+            if (start < base2 && base2 <= newRephPos) {
+              base2--;
             }
           }
-          if (tryPref && base + 1 < end) {
-            for (var _i21 = base + 1; _i21 < end; _i21++) {
+          if (tryPref && base2 + 1 < end) {
+            for (var _i21 = base2 + 1; _i21 < end; _i21++) {
               if (glyphs[_i21].features.pref) {
                 if (glyphs[_i21].isLigated && !glyphs[_i21].isMultiplied) {
-                  var _newPos = base;
+                  var _newPos = base2;
                   if (plan.unicodeScript !== "Malayalam" && plan.unicodeScript !== "Tamil") {
                     while (_newPos > start && !(glyphs[_newPos - 1].shaperInfo.category & (CATEGORIES.M | HALANT_OR_COENG_FLAGS))) {
                       _newPos--;
                     }
                     if (_newPos > start && glyphs[_newPos - 1].shaperInfo.category === CATEGORIES.M) {
                       var _oldPos2 = _i21;
-                      for (var j = base + 1; j < _oldPos2; j++) {
+                      for (var j = base2 + 1; j < _oldPos2; j++) {
                         if (glyphs[j].shaperInfo.category === CATEGORIES.M) {
                           _newPos--;
                           break;
@@ -50813,8 +50813,8 @@ var require_fontkit_umd = __commonJS({
                   var _tmp = glyphs[_oldPos];
                   glyphs.splice.apply(glyphs, [_newPos + 1, 0].concat(glyphs.splice(_newPos, _oldPos - _newPos)));
                   glyphs[_newPos] = _tmp;
-                  if (_newPos <= base && base < _oldPos) {
-                    base++;
+                  if (_newPos <= base2 && base2 < _oldPos) {
+                    base2++;
                   }
                 }
                 break;
@@ -52853,13 +52853,13 @@ var require_fontkit_umd = __commonJS({
                     var numBlends = stack.pop();
                     var numOperands = numBlends * blendVector.length;
                     var delta = stack.length - numOperands;
-                    var base = delta - numBlends;
+                    var base2 = delta - numBlends;
                     for (var i2 = 0; i2 < numBlends; i2++) {
-                      var sum = stack[base + i2];
+                      var sum = stack[base2 + i2];
                       for (var j = 0; j < blendVector.length; j++) {
                         sum += blendVector[j] * stack[delta++];
                       }
-                      stack[base + i2] = sum;
+                      stack[base2 + i2] = sum;
                     }
                     while (numOperands--) {
                       stack.pop();
@@ -54862,7 +54862,7 @@ var require_fontkit_umd = __commonJS({
       var clcidx$1 = new Uint8Array([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
       var code_tree$1 = new Tree$1();
       var lengths$1 = new Uint8Array(288 + 32);
-      function tinf_build_bits_base$1(bits2, base, delta, first) {
+      function tinf_build_bits_base$1(bits2, base2, delta, first) {
         var i2, sum;
         for (i2 = 0; i2 < delta; ++i2) {
           bits2[i2] = 0;
@@ -54871,7 +54871,7 @@ var require_fontkit_umd = __commonJS({
           bits2[i2 + delta] = i2 / delta | 0;
         }
         for (sum = first, i2 = 0; i2 < 30; ++i2) {
-          base[i2] = sum;
+          base2[i2] = sum;
           sum += 1 << bits2[i2];
         }
       }
@@ -54930,8 +54930,8 @@ var require_fontkit_umd = __commonJS({
         d.tag >>>= 1;
         return bit;
       }
-      function tinf_read_bits$1(d, num2, base) {
-        if (!num2) return base;
+      function tinf_read_bits$1(d, num2, base2) {
+        if (!num2) return base2;
         while (d.bitcount < 24) {
           d.tag |= d.source[d.sourceIndex++] << d.bitcount;
           d.bitcount += 8;
@@ -54939,7 +54939,7 @@ var require_fontkit_umd = __commonJS({
         var val = d.tag & 65535 >>> 16 - num2;
         d.tag >>>= num2;
         d.bitcount -= num2;
-        return val + base;
+        return val + base2;
       }
       function tinf_decode_symbol$1(d, t2) {
         while (d.bitcount < 24) {
@@ -59906,6 +59906,13 @@ var desk_v2_default = {
 
 // ../../packages/engine/src/template.ts
 var wardrobeTemplate = wardrobe_v10_default;
+var pedestalTemplate = pedestal_v2_default;
+var deskTemplate = desk_v2_default;
+var PRODUCT_TEMPLATES = {
+  wardrobe: wardrobeTemplate,
+  pedestal: pedestalTemplate,
+  desk: deskTemplate
+};
 function getParamDef(template, key) {
   return template.parameters.find((p) => p.key === key);
 }
@@ -60789,8 +60796,13 @@ function catalogForTemplate(template) {
   }
   return materialsV1_1;
 }
+var materialFallback = null;
+function setMaterialFallback(fn) {
+  materialFallback = fn;
+}
 function getMaterial(catalog, id) {
-  return typeof id === "string" ? catalog.materials.find((m) => m.id === id) : void 0;
+  if (typeof id !== "string") return void 0;
+  return catalog.materials.find((m) => m.id === id) ?? materialFallback?.(id);
 }
 
 // ../../packages/engine/src/params.ts
@@ -61236,9 +61248,9 @@ var ROT_VERTICAL_YZ = [0, 0, 90];
 var ROT_VERTICAL_XY = [90, 0, 0];
 var SAME_AS_CORPUS = "same_as_corpus";
 function distributeEvenly(total, n3) {
-  const base = Math.floor(total / n3);
-  const remainder = total - base * n3;
-  return Array.from({ length: n3 }, (_, i) => i < remainder ? base + 1 : base);
+  const base2 = Math.floor(total / n3);
+  const remainder = total - base2 * n3;
+  return Array.from({ length: n3 }, (_, i) => i < remainder ? base2 + 1 : base2);
 }
 function carcassSplit(template, params, widthMm) {
   if (template.constants.splitCarcassFromWidthMm === void 0) return false;
@@ -68180,8 +68192,8 @@ function layoutOf(template, p, catalog) {
   const t = getMaterial(catalog, corpus)?.thicknessMm ?? 16;
   const frontT = getMaterial(catalog, front)?.thicknessMm ?? t;
   const backT = getMaterial(catalog, back)?.thicknessMm ?? 3;
-  const base = p.base === "plinth" ? "plinth" : "castors";
-  const baseH = base === "castors" ? n2(template, "castorHeightMm") : n2(template, "plinthHeightMm");
+  const base2 = p.base === "plinth" ? "plinth" : "castors";
+  const baseH = base2 === "castors" ? n2(template, "castorHeightMm") : n2(template, "plinthHeightMm");
   const D = Number(p.depth);
   return {
     W: Number(p.width),
@@ -68191,7 +68203,7 @@ function layoutOf(template, p, catalog) {
     frontT,
     backT,
     baseH,
-    base,
+    base: base2,
     carcassDepth: D - backT - frontT - n2(template, "frontGapMm"),
     corpus,
     front,
@@ -68831,7 +68843,18 @@ function computePrice(bom, catalog, list = priceListDemo, productType) {
   const hardware = sum("hardware");
   const labor = Math.round(area * list.laborPerM2);
   const assembly = productType ? list.assembly?.[productType] ?? 0 : 0;
-  const subtotal = boards + edges + hardware + labor + assembly;
+  const edgeM = bom.filter((l) => l.kind === "edge").reduce((s, l) => s + l.qty, 0);
+  const applies = (sv) => sv.products.length === 0 || productType !== void 0 && sv.products.includes(productType);
+  const services = [];
+  for (const sv of (list.services ?? []).filter((x) => applies(x) && x.basis !== "pct")) {
+    const qty = sv.basis === "m2" ? area : sv.basis === "edge_m" ? edgeM : 1;
+    services.push({ id: sv.id, name: sv.name, cost: Math.round(qty * sv.price) });
+  }
+  const base2 = boards + edges + hardware + labor + assembly + services.reduce((s, x) => s + x.cost, 0);
+  for (const sv of (list.services ?? []).filter((x) => applies(x) && x.basis === "pct"))
+    services.push({ id: sv.id, name: sv.name, cost: Math.round(base2 * sv.price / 100) });
+  const servicesTotal = services.reduce((s, x) => s + x.cost, 0);
+  const subtotal = boards + edges + hardware + labor + assembly + servicesTotal;
   const markup = Math.round(subtotal * list.markupPct / 100);
   const total = Math.round((subtotal + markup) / list.roundTo) * list.roundTo;
   return {
@@ -68844,11 +68867,84 @@ function computePrice(bom, catalog, list = priceListDemo, productType) {
     hardware,
     labor,
     assembly,
+    services,
+    servicesTotal,
     subtotal,
     markup,
     total,
     missing
   };
+}
+
+// ../../packages/engine/src/extension.ts
+var EMPTY_EXTENSION = { materials: [], hardware: [] };
+var PARAM_USAGE = {
+  corpusMaterial: "corpus",
+  doorMaterial: "door",
+  topMaterial: "top"
+};
+var BRAND_PARAM = {
+  hinge: "hingeBrand",
+  slide: "slideBrand"
+};
+var cloneBrands = (b) => Object.fromEntries(Object.entries(b).map(([k, v]) => [k, { ...v }]));
+var current = EMPTY_EXTENSION;
+var materialById = /* @__PURE__ */ new Map();
+var baseOptions = /* @__PURE__ */ new WeakMap();
+var base = null;
+function toMaterial(m) {
+  return {
+    id: m.id,
+    kind: m.kind,
+    decorName: m.name,
+    code: m.code,
+    thicknessMm: m.thicknessMm,
+    colorHex: m.colorHex,
+    group: m.group,
+    textureUrl: null,
+    customerVisible: m.visible,
+    unconfirmed: false,
+    note: "D-20: added on the admin page"
+  };
+}
+function applyCatalogExtension(ext) {
+  current = ext;
+  materialById.clear();
+  for (const m of ext.materials) materialById.set(m.id, toMaterial(m));
+  setMaterialFallback((id) => materialById.get(id));
+  base ??= { items: hardwareV1.items.slice(), brands: cloneBrands(hardwareV1.brands) };
+  for (const template of Object.values(PRODUCT_TEMPLATES)) {
+    for (const def of template.parameters) {
+      if (def.type !== "enum" || !def.options) continue;
+      const usage = PARAM_USAGE[def.key];
+      const kind = Object.keys(BRAND_PARAM).find(
+        (k) => BRAND_PARAM[k] === def.key
+      );
+      if (!usage && !kind) continue;
+      if (!baseOptions.has(def)) baseOptions.set(def, def.options.slice());
+      const own = baseOptions.get(def);
+      const extra = usage ? ext.materials.filter((m) => m.usage.includes(usage) && (def.materialKinds ?? []).includes(m.kind)).map((m) => m.id) : ext.hardware.filter((h) => h.kind === kind).map((h) => h.brandKey);
+      def.options = [
+        ...own,
+        ...extra.filter((x) => !own.includes(x))
+      ];
+    }
+  }
+  hardwareV1.items.length = 0;
+  hardwareV1.items.push(...base.items);
+  hardwareV1.brands = cloneBrands(base.brands);
+  for (const h of ext.hardware) {
+    hardwareV1.items.push({
+      id: h.id,
+      kind: h.kind,
+      brand: h.brand,
+      nameKey: `${h.brand} ${h.model}`,
+      softClose: h.softClose,
+      unit: h.kind === "slide" ? "pair" : "pcs",
+      unconfirmed: false
+    });
+    (hardwareV1.brands[h.kind] ??= {})[h.brandKey] = h.id;
+  }
 }
 
 // server/assemblyPdf.ts
@@ -69148,6 +69244,7 @@ var uz = {
   "creason.DOOR_TOO_WIDE": "Bu kenglikda eshik juda keng bo'lib qoladi",
   "creason.default": "Bu o'lchamda mumkin emas",
   // D-9: hardware + price
+  "hw.softClose": "yumshoq yopiladi",
   "hw.title": "Mexanizmlar",
   "hw.hint3d": "Sariq rangda \u2014 tanlangan mexanizmlar. Brendni bosing yoki \xABYopilishini ko'rish\xBB \u2014 3D'da qanday yopilishini ko'rasiz.",
   "hw.demo.hinge": "Yopilishini ko'rish",
@@ -69354,8 +69451,9 @@ var PRICE_HEADER = [
   "Kod",
   "Nomi",
   "Narx (so'm)",
-  "Varaq uzunligi (mm)",
-  "Varaq eni (mm)"
+  "Varaq uzunligi (mm) / hisob turi",
+  "Varaq eni (mm) / mahsulotlar",
+  "ERP kodi"
 ];
 var boardName = (id) => {
   const m = getMaterial(allMaterials, id);
@@ -69365,15 +69463,22 @@ var boardName = (id) => {
 };
 function priceListToRows(list, updatedAt) {
   const rows = [PRICE_HEADER];
-  rows.push(["yangilangan", "", "Oxirgi saqlash (Toshkent)", updatedAt, "", ""]);
-  rows.push(["foyda_foiz", "", "Foyda, umumiy qiymatdan %", list.markupPct, "", ""]);
-  rows.push(["ish_haqi_m2", "", "Ish haqi, 1 m\xB2 plita uchun", list.laborPerM2, "", ""]);
-  rows.push(["kromka_m", "", "Kromka, 1 metr", list.edgePerM, "", ""]);
+  rows.push(["yangilangan", "", "Oxirgi saqlash (Toshkent)", updatedAt, "", "", ""]);
+  rows.push(["foyda_foiz", "", "Foyda, umumiy qiymatdan %", list.markupPct, "", "", ""]);
+  rows.push(["ish_haqi_m2", "", "Ish haqi, 1 m\xB2 plita uchun", list.laborPerM2, "", "", ""]);
+  rows.push(["kromka_m", "", "Kromka, 1 metr", list.edgePerM, "", "", ""]);
+  const erp = (id) => list.erpCodes?.[id] ?? "";
   for (const [type, v] of Object.entries(list.assembly ?? {}))
-    rows.push(["yigish", type, "Yig'ish, 1 dona mahsulot", v, "", ""]);
+    rows.push(["yigish", type, "Yig'ish, 1 dona mahsulot", v, "", "", ""]);
   for (const [id, s] of Object.entries(list.boardSheets ?? {}))
-    rows.push(["list", id, boardName(id), s.price, s.lengthMm, s.widthMm]);
-  for (const [id, v] of Object.entries(list.hardware)) rows.push(["furnitura", id, id, v, "", ""]);
+    rows.push(["list", id, boardName(id), s.price, s.lengthMm, s.widthMm, erp(id)]);
+  for (const [id, v] of Object.entries(list.hardware))
+    rows.push(["furnitura", id, id, v, "", "", erp(id)]);
+  for (const [id, code] of Object.entries(list.erpCodes ?? {}))
+    if (!list.boardSheets?.[id] && list.hardware[id] === void 0)
+      rows.push(["erp_kod", id, id, "", "", "", code]);
+  for (const sv of list.services ?? [])
+    rows.push(["xizmat", sv.id, sv.name, sv.price, sv.basis, sv.products.join(","), ""]);
   return rows;
 }
 var num = (x) => {
@@ -69387,10 +69492,14 @@ function rowsToPriceList(rows) {
     demo: false,
     boardSheets: {},
     assembly: {},
-    hardware: { ...priceListDemo.hardware }
+    hardware: { ...priceListDemo.hardware },
+    services: [],
+    erpCodes: {}
   };
+  const BASES = ["m2", "edge_m", "product", "pct"];
   for (const r of rows.slice(1)) {
-    const [type, code, , value, len, wid] = r;
+    const [type, code, name, value, len, wid, erpCode] = r;
+    if (code && erpCode) list.erpCodes[String(code)] = String(erpCode);
     const v = num(value);
     const id = String(code ?? "");
     switch (type) {
@@ -69416,6 +69525,18 @@ function rowsToPriceList(rows) {
       case "furnitura":
         if (id && v >= 0) list.hardware[id] = v;
         break;
+      case "xizmat": {
+        const basis = BASES.find((b) => b === len);
+        if (id && v >= 0 && basis)
+          list.services.push({
+            id,
+            name: String(name ?? id),
+            basis,
+            products: String(wid ?? "").split(",").map((x) => x.trim()).filter(Boolean),
+            price: v
+          });
+        break;
+      }
     }
   }
   if (!updatedAt) return null;
@@ -69424,13 +69545,15 @@ function rowsToPriceList(rows) {
 }
 var TOKEN_URL2 = "https://oauth2.googleapis.com/token";
 var API = "https://sheets.googleapis.com/v4/spreadsheets";
-var GoogleSheetsPriceStore = class {
-  constructor(config) {
+var SheetTab = class {
+  constructor(config, title) {
     this.config = config;
+    this.title = title;
     this.fetchImpl = config.fetch ?? fetch;
     this.now = config.now ?? (() => /* @__PURE__ */ new Date());
   }
   config;
+  title;
   fetchImpl;
   now;
   token = null;
@@ -69472,29 +69595,166 @@ var GoogleSheetsPriceStore = class {
     const meta = await this.api(
       "?fields=sheets(properties(title))"
     );
-    if (!meta.sheets?.some((s) => s.properties.title === PRICE_TAB)) {
+    if (!meta.sheets?.some((s) => s.properties.title === this.title)) {
       await this.api(":batchUpdate", {
         method: "POST",
-        body: { requests: [{ addSheet: { properties: { title: PRICE_TAB } } }] }
+        body: { requests: [{ addSheet: { properties: { title: this.title } } }] }
       });
     }
     this.tabReady = true;
   }
   range(a1) {
-    return encodeURIComponent(`${PRICE_TAB}!${a1}`);
+    return encodeURIComponent(`${this.title}!${a1}`);
   }
-  async load() {
+  async read() {
     await this.ensureTab();
-    const data = await this.api(`/values/${this.range("A1:F")}`);
-    return rowsToPriceList(data.values ?? []);
+    const data = await this.api(`/values/${this.range("A1:Z")}`);
+    return data.values ?? [];
   }
-  async save(list, updatedAt) {
+  async write(rows) {
     await this.ensureTab();
-    await this.api(`/values/${this.range("A1:F")}:clear`, { method: "POST", body: {} });
+    await this.api(`/values/${this.range("A1:Z")}:clear`, { method: "POST", body: {} });
     await this.api(`/values/${this.range("A1")}?valueInputOption=RAW`, {
       method: "PUT",
-      body: { values: priceListToRows(list, updatedAt) }
+      body: { values: rows }
     });
+  }
+};
+var GoogleSheetsPriceStore = class {
+  tab;
+  constructor(config) {
+    this.tab = new SheetTab(config, PRICE_TAB);
+  }
+  async load() {
+    return rowsToPriceList(await this.tab.read());
+  }
+  async save(list, updatedAt) {
+    await this.tab.write(priceListToRows(list, updatedAt));
+  }
+};
+
+// server/catalog.ts
+var CachedCatalog = class {
+  constructor(store, ttlMs = 6e4, now = Date.now) {
+    this.store = store;
+    this.ttlMs = ttlMs;
+    this.now = now;
+  }
+  store;
+  ttlMs;
+  now;
+  cached = null;
+  async get() {
+    const t = this.now();
+    if (!this.cached || t - this.cached.at >= this.ttlMs) {
+      this.cached = { ext: await this.store.load(), at: t };
+    }
+    applyCatalogExtension(this.cached.ext);
+    return this.cached.ext;
+  }
+  set(ext) {
+    this.cached = { ext, at: this.now() };
+    applyCatalogExtension(ext);
+  }
+};
+var USAGES = ["corpus", "door", "top"];
+var HEX = /^#[0-9a-f]{6}$/i;
+var CATALOG_TAB = "Katalog";
+var CATALOG_HEADER = [
+  "Turi",
+  "Kod",
+  "Nomi / brend",
+  "Dekor kodi / model",
+  "Material turi / furnitura turi",
+  "Qalinligi (mm)",
+  "Rang",
+  "Guruh / yumshoq yopiladi",
+  "Ishlatilishi / brend kaliti",
+  "Mijozga ko'rinadi"
+];
+function catalogToRows(ext) {
+  return [
+    CATALOG_HEADER,
+    ...ext.materials.map((m) => [
+      "material",
+      m.id,
+      m.name,
+      m.code ?? "",
+      m.kind,
+      m.thicknessMm,
+      m.colorHex,
+      m.group,
+      m.usage.join(","),
+      m.visible ? "ha" : "yo'q"
+    ]),
+    ...ext.hardware.map((h) => [
+      "furnitura",
+      h.id,
+      h.brand,
+      h.model,
+      h.kind,
+      "",
+      "",
+      h.softClose ? "ha" : "yo'q",
+      h.brandKey,
+      h.visible ? "ha" : "yo'q"
+    ])
+  ];
+}
+function rowsToCatalog(rows) {
+  const materials = [];
+  const hardware = [];
+  const s = (v) => String(v ?? "").trim();
+  for (const r of rows.slice(1)) {
+    const c = (i) => s(r[i]);
+    const [type, id, name, code, kind, thick, color, group, usage, visible] = [
+      c(0),
+      c(1),
+      c(2),
+      c(3),
+      c(4),
+      c(5),
+      c(6),
+      c(7),
+      c(8),
+      c(9)
+    ];
+    if (type === "material" && id && (kind === "ldsp" || kind === "mdf")) {
+      materials.push({
+        id,
+        kind,
+        name: name || id,
+        code: code || void 0,
+        thicknessMm: Number(thick.replace(",", ".")) || 16,
+        colorHex: HEX.test(color) ? color : "#cccccc",
+        group: group === "wood" ? "wood" : "plain",
+        usage: USAGES.filter((u) => usage.split(",").includes(u)),
+        visible: visible !== "yo'q"
+      });
+    } else if (type === "furnitura" && id && (kind === "hinge" || kind === "slide") && usage) {
+      hardware.push({
+        id,
+        kind,
+        brandKey: usage,
+        brand: name || id,
+        model: code,
+        softClose: group === "ha",
+        visible: visible !== "yo'q"
+      });
+    }
+  }
+  return { materials, hardware };
+}
+var GoogleSheetsCatalogStore = class {
+  tab;
+  constructor(config) {
+    this.tab = new SheetTab(config, CATALOG_TAB);
+  }
+  async load() {
+    return rowsToCatalog(await this.tab.read());
+  }
+  async save(ext) {
+    await this.tab.write(catalogToRows(ext));
   }
 };
 
@@ -69552,6 +69812,7 @@ async function handleQuote(req, deps2) {
   const template = versions && typeof templateVersion === "string" && Object.hasOwn(versions, templateVersion) ? versions[templateVersion] : void 0;
   if (!template || typeof body.params !== "object" || body.params === null)
     return json(400, { error: { code: "invalid_request" } });
+  await deps2.catalog?.get();
   const { list } = await deps2.prices.get();
   const params = body.params;
   const result = generate(template, params);
@@ -69584,6 +69845,15 @@ function pricesFromEnv(env) {
   const store = priceStoreFromEnv(env);
   return { store, prices: new CachedPrices(store) };
 }
+var catalogSingleton = null;
+function catalogFromEnv(env) {
+  if (catalogSingleton) return catalogSingleton;
+  const account = parseServiceAccount(env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  if (!account || !env.GOOGLE_SHEET_ID) throw new Error("google sheets env missing");
+  const store = new GoogleSheetsCatalogStore({ sheetId: env.GOOGLE_SHEET_ID, account });
+  catalogSingleton = { store, catalog: new CachedCatalog(store) };
+  return catalogSingleton;
+}
 
 // server/entries/quote.ts
 var deps = null;
@@ -69598,7 +69868,8 @@ async function POST(request) {
   deps ??= {
     prices: pricesFromEnv(process.env).prices,
     staffPin: process.env.STAFF_PIN,
-    managerPin: process.env.MANAGER_PIN
+    managerPin: process.env.MANAGER_PIN,
+    catalog: catalogFromEnv(process.env).catalog
   };
   return handleQuote(request, deps);
 }

@@ -15,8 +15,9 @@ export const PRICE_HEADER = [
   'Kod',
   'Nomi',
   "Narx (so'm)",
-  'Varaq uzunligi (mm)',
-  'Varaq eni (mm)',
+  'Varaq uzunligi (mm) / hisob turi',
+  'Varaq eni (mm) / mahsulotlar',
+  'ERP kodi',
 ];
 
 type Row = (string | number)[];
@@ -31,15 +32,23 @@ const boardName = (id: string) => {
 /** PriceList -> sheet rows (header first). */
 export function priceListToRows(list: PriceList, updatedAt: string): Row[] {
   const rows: Row[] = [PRICE_HEADER];
-  rows.push(['yangilangan', '', 'Oxirgi saqlash (Toshkent)', updatedAt, '', '']);
-  rows.push(['foyda_foiz', '', 'Foyda, umumiy qiymatdan %', list.markupPct, '', '']);
-  rows.push(['ish_haqi_m2', '', 'Ish haqi, 1 m² plita uchun', list.laborPerM2, '', '']);
-  rows.push(['kromka_m', '', 'Kromka, 1 metr', list.edgePerM, '', '']);
+  rows.push(['yangilangan', '', 'Oxirgi saqlash (Toshkent)', updatedAt, '', '', '']);
+  rows.push(['foyda_foiz', '', 'Foyda, umumiy qiymatdan %', list.markupPct, '', '', '']);
+  rows.push(['ish_haqi_m2', '', 'Ish haqi, 1 m² plita uchun', list.laborPerM2, '', '', '']);
+  rows.push(['kromka_m', '', 'Kromka, 1 metr', list.edgePerM, '', '', '']);
+  const erp = (id: string) => list.erpCodes?.[id] ?? '';
   for (const [type, v] of Object.entries(list.assembly ?? {}))
-    rows.push(['yigish', type, "Yig'ish, 1 dona mahsulot", v, '', '']);
+    rows.push(['yigish', type, "Yig'ish, 1 dona mahsulot", v, '', '', '']);
   for (const [id, s] of Object.entries(list.boardSheets ?? {}))
-    rows.push(['list', id, boardName(id), s.price, s.lengthMm, s.widthMm]);
-  for (const [id, v] of Object.entries(list.hardware)) rows.push(['furnitura', id, id, v, '', '']);
+    rows.push(['list', id, boardName(id), s.price, s.lengthMm, s.widthMm, erp(id)]);
+  for (const [id, v] of Object.entries(list.hardware))
+    rows.push(['furnitura', id, id, v, '', '', erp(id)]);
+  // a 1C code of an item without a price row yet
+  for (const [id, code] of Object.entries(list.erpCodes ?? {}))
+    if (!list.boardSheets?.[id] && list.hardware[id] === undefined)
+      rows.push(['erp_kod', id, id, '', '', '', code]);
+  for (const sv of list.services ?? [])
+    rows.push(['xizmat', sv.id, sv.name, sv.price, sv.basis, sv.products.join(','), '']);
   return rows;
 }
 
@@ -57,9 +66,13 @@ export function rowsToPriceList(rows: unknown[][]): { list: PriceList; updatedAt
     boardSheets: {},
     assembly: {},
     hardware: { ...priceListDemo.hardware },
+    services: [],
+    erpCodes: {},
   };
+  const BASES = ['m2', 'edge_m', 'product', 'pct'] as const;
   for (const r of rows.slice(1)) {
-    const [type, code, , value, len, wid] = r;
+    const [type, code, name, value, len, wid, erpCode] = r;
+    if (code && erpCode) list.erpCodes![String(code)] = String(erpCode);
     const v = num(value);
     const id = String(code ?? '');
     switch (type) {
@@ -85,6 +98,21 @@ export function rowsToPriceList(rows: unknown[][]): { list: PriceList; updatedAt
       case 'furnitura':
         if (id && v >= 0) list.hardware[id] = v;
         break;
+      case 'xizmat': {
+        const basis = BASES.find((b) => b === len);
+        if (id && v >= 0 && basis)
+          list.services!.push({
+            id,
+            name: String(name ?? id),
+            basis,
+            products: String(wid ?? '')
+              .split(',')
+              .map((x) => x.trim())
+              .filter(Boolean),
+            price: v,
+          });
+        break;
+      }
     }
   }
   if (!updatedAt) return null;
@@ -102,13 +130,17 @@ export interface PriceSheetConfig {
   now?: () => Date;
 }
 
-export class GoogleSheetsPriceStore implements PriceStore {
+/** One tab of the spreadsheet, read and rewritten whole (REST API v4, no SDK). */
+export class SheetTab {
   private readonly fetchImpl: typeof fetch;
   private readonly now: () => Date;
   private token: { value: string; exp: number } | null = null;
   private tabReady = false;
 
-  constructor(private readonly config: PriceSheetConfig) {
+  constructor(
+    private readonly config: PriceSheetConfig,
+    private readonly title: string,
+  ) {
     this.fetchImpl = config.fetch ?? fetch;
     this.now = config.now ?? (() => new Date());
   }
@@ -155,31 +187,44 @@ export class GoogleSheetsPriceStore implements PriceStore {
     const meta = await this.api<{ sheets?: { properties: { title: string } }[] }>(
       '?fields=sheets(properties(title))',
     );
-    if (!meta.sheets?.some((s) => s.properties.title === PRICE_TAB)) {
+    if (!meta.sheets?.some((s) => s.properties.title === this.title)) {
       await this.api(':batchUpdate', {
         method: 'POST',
-        body: { requests: [{ addSheet: { properties: { title: PRICE_TAB } } }] },
+        body: { requests: [{ addSheet: { properties: { title: this.title } } }] },
       });
     }
     this.tabReady = true;
   }
 
   private range(a1: string) {
-    return encodeURIComponent(`${PRICE_TAB}!${a1}`);
+    return encodeURIComponent(`${this.title}!${a1}`);
   }
 
-  async load() {
+  async read(): Promise<unknown[][]> {
     await this.ensureTab();
-    const data = await this.api<{ values?: unknown[][] }>(`/values/${this.range('A1:F')}`);
-    return rowsToPriceList(data.values ?? []);
+    const data = await this.api<{ values?: unknown[][] }>(`/values/${this.range('A1:Z')}`);
+    return data.values ?? [];
   }
 
-  async save(list: PriceList, updatedAt: string) {
+  async write(rows: (string | number | boolean)[][]): Promise<void> {
     await this.ensureTab();
-    await this.api(`/values/${this.range('A1:F')}:clear`, { method: 'POST', body: {} });
+    await this.api(`/values/${this.range('A1:Z')}:clear`, { method: 'POST', body: {} });
     await this.api(`/values/${this.range('A1')}?valueInputOption=RAW`, {
       method: 'PUT',
-      body: { values: priceListToRows(list, updatedAt) },
+      body: { values: rows },
     });
+  }
+}
+
+export class GoogleSheetsPriceStore implements PriceStore {
+  private readonly tab: SheetTab;
+  constructor(config: PriceSheetConfig) {
+    this.tab = new SheetTab(config, PRICE_TAB);
+  }
+  async load() {
+    return rowsToPriceList(await this.tab.read());
+  }
+  async save(list: PriceList, updatedAt: string) {
+    await this.tab.write(priceListToRows(list, updatedAt));
   }
 }

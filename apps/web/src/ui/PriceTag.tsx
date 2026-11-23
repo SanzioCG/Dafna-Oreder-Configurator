@@ -122,6 +122,13 @@ export function PriceBreakdown({ config }: { config: Configurator }) {
             <td />
             <td>{money(price.assembly)}</td>
           </tr>
+          {price.services.map((s) => (
+            <tr key={s.id}>
+              <td>{s.name}</td>
+              <td />
+              <td>{money(s.cost)}</td>
+            </tr>
+          ))}
           <tr>
             <td>{t('price.markup')}</td>
             <td />

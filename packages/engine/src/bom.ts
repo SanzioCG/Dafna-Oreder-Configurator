@@ -45,6 +45,19 @@ export interface SheetPrice {
   widthMm: number;
 }
 
+/**
+ * D-20: a priced service the manager adds (cutting, drilling, delivery, …):
+ * m2 = per m² of board, edge_m = per metre of edge band, product = per product (order),
+ * pct = % of all other costs. `products` empty = every product.
+ */
+export interface PriceService {
+  id: string;
+  name: string;
+  basis: 'm2' | 'edge_m' | 'product' | 'pct';
+  products: string[];
+  price: number;
+}
+
 export interface PriceList {
   priceListVersion: string;
   currency: string;
@@ -59,6 +72,10 @@ export interface PriceList {
   laborPerM2: number;
   /** D-19: assembly (yig'ish) per product, by product type (wardrobe / pedestal / desk) */
   assembly?: Record<string, number>;
+  /** D-20: services added by the manager */
+  services?: PriceService[];
+  /** D-20: our material / hardware id -> its ERP article (the ERP price sync matches on it) */
+  erpCodes?: Record<string, string>;
   wasteFactor: number;
   markupPct: number;
   roundTo: number;
@@ -187,6 +204,9 @@ export interface PriceResult {
   labor: number;
   /** D-19: assembly of the product */
   assembly: number;
+  /** D-20: each service that applies to this product, and their sum */
+  services: { id: string; name: string; cost: number }[];
+  servicesTotal: number;
   subtotal: number;
   markup: number;
   total: number;
@@ -239,7 +259,20 @@ export function computePrice(
   const hardware = sum('hardware');
   const labor = Math.round(area * list.laborPerM2);
   const assembly = productType ? (list.assembly?.[productType] ?? 0) : 0;
-  const subtotal = boards + edges + hardware + labor + assembly;
+  const edgeM = bom.filter((l) => l.kind === 'edge').reduce((s, l) => s + l.qty, 0);
+  const applies = (sv: PriceService) =>
+    sv.products.length === 0 || (productType !== undefined && sv.products.includes(productType));
+  const services: PriceResult['services'] = [];
+  for (const sv of (list.services ?? []).filter((x) => applies(x) && x.basis !== 'pct')) {
+    const qty = sv.basis === 'm2' ? area : sv.basis === 'edge_m' ? edgeM : 1;
+    services.push({ id: sv.id, name: sv.name, cost: Math.round(qty * sv.price) });
+  }
+  const base =
+    boards + edges + hardware + labor + assembly + services.reduce((s, x) => s + x.cost, 0);
+  for (const sv of (list.services ?? []).filter((x) => applies(x) && x.basis === 'pct'))
+    services.push({ id: sv.id, name: sv.name, cost: Math.round((base * sv.price) / 100) });
+  const servicesTotal = services.reduce((s, x) => s + x.cost, 0);
+  const subtotal = boards + edges + hardware + labor + assembly + servicesTotal;
   const markup = Math.round((subtotal * list.markupPct) / 100);
   const total = Math.round((subtotal + markup) / list.roundTo) * list.roundTo;
   return {
@@ -252,6 +285,8 @@ export function computePrice(
     hardware,
     labor,
     assembly,
+    services,
+    servicesTotal,
     subtotal,
     markup,
     total,

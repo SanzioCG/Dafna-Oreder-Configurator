@@ -2,7 +2,7 @@
  * Vercel Function entry: POST /api/submit. Bundled by scripts/build-api.mjs into api/submit.js
  * (self-contained, engine included) — edit this source, never the bundle.
  */
-import { missingEnv, submitDepsFromEnv } from '../config';
+import { applyCatalogFromEnv, missingEnv, submitDepsFromEnv } from '../config';
 import { handleSubmit, type SubmitDeps } from '../submit';
 
 let deps: SubmitDeps | null = null;
@@ -21,6 +21,7 @@ export async function POST(request: Request): Promise<Response> {
   }
   // module scope survives between invocations of a warm instance (token cache, rate limits)
   deps ??= submitDepsFromEnv(process.env);
+  await applyCatalogFromEnv(process.env);
   return handleSubmit(request, deps);
 }
 

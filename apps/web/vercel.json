@@ -6,7 +6,8 @@
     "api/assembly.js": { "maxDuration": 20 },
     "api/staff-pin.js": { "maxDuration": 10 },
     "api/quote.js": { "maxDuration": 15 },
-    "api/manager.js": { "maxDuration": 20 }
+    "api/manager.js": { "maxDuration": 20 },
+    "api/catalog.js": { "maxDuration": 10 }
   },
   "rewrites": [{ "source": "/manager", "destination": "/index.html" }],
   "crons": [{ "path": "/api/retry-telegram", "schedule": "0 4 * * *" }]

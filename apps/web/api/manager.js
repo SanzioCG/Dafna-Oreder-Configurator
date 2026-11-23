@@ -485,40 +485,40 @@ var require_strings = __commonJS({
     exports.escapeRegExp = function(str) {
       return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     };
-    exports.cleanText = function(text) {
-      return text.replace(/\t|\u0085|\u2028|\u2029/g, "    ").replace(/[\b\v]/g, "");
+    exports.cleanText = function(text2) {
+      return text2.replace(/\t|\u0085|\u2028|\u2029/g, "    ").replace(/[\b\v]/g, "");
     };
     exports.escapedNewlineChars = ["\\n", "\\f", "\\r", "\\u000B"];
     exports.newlineChars = ["\n", "\f", "\r", "\v"];
-    exports.isNewlineChar = function(text) {
-      return /^[\n\f\r\u000B]$/.test(text);
+    exports.isNewlineChar = function(text2) {
+      return /^[\n\f\r\u000B]$/.test(text2);
     };
-    exports.lineSplit = function(text) {
-      return text.split(/[\n\f\r\u000B]/);
+    exports.lineSplit = function(text2) {
+      return text2.split(/[\n\f\r\u000B]/);
     };
-    exports.mergeLines = function(text) {
-      return text.replace(/[\n\f\r\u000B]/g, " ");
+    exports.mergeLines = function(text2) {
+      return text2.replace(/[\n\f\r\u000B]/g, " ");
     };
-    exports.charAtIndex = function(text, index) {
-      var cuFirst = text.charCodeAt(index);
+    exports.charAtIndex = function(text2, index) {
+      var cuFirst = text2.charCodeAt(index);
       var cuSecond;
       var nextIndex = index + 1;
       var length = 1;
       if (
         // Check if it's the start of a surrogate pair.
         cuFirst >= 55296 && cuFirst <= 56319 && // high surrogate
-        text.length > nextIndex
+        text2.length > nextIndex
       ) {
-        cuSecond = text.charCodeAt(nextIndex);
+        cuSecond = text2.charCodeAt(nextIndex);
         if (cuSecond >= 56320 && cuSecond <= 57343)
           length = 2;
       }
-      return [text.slice(index, index + length), length];
+      return [text2.slice(index, index + length), length];
     };
-    exports.charSplit = function(text) {
+    exports.charSplit = function(text2) {
       var chars = [];
-      for (var idx = 0, len = text.length; idx < len; ) {
-        var _a = exports.charAtIndex(text, idx), c = _a[0], cLen = _a[1];
+      for (var idx = 0, len = text2.length; idx < len; ) {
+        var _a = exports.charAtIndex(text2, idx), c = _a[0], cLen = _a[1];
         chars.push(c);
         idx += cLen;
       }
@@ -537,9 +537,9 @@ var require_strings = __commonJS({
       var breakRules = escapedRules.join("|");
       return new RegExp("(" + newlineCharUnion + ")|((.*?)(" + breakRules + "))", "gm");
     };
-    exports.breakTextIntoLines = function(text, wordBreaks, maxWidth, computeWidthOfText) {
+    exports.breakTextIntoLines = function(text2, wordBreaks, maxWidth, computeWidthOfText) {
       var regex = buildWordBreakRegex(wordBreaks);
-      var words = exports.cleanText(text).match(regex);
+      var words = exports.cleanText(text2).match(regex);
       var currLine = "";
       var currWidth = 0;
       var lines = [];
@@ -1150,7 +1150,7 @@ var require_trees = __commonJS({
       var stree = desc.stat_desc.static_tree;
       var has_stree = desc.stat_desc.has_stree;
       var extra = desc.stat_desc.extra_bits;
-      var base = desc.stat_desc.extra_base;
+      var base2 = desc.stat_desc.extra_base;
       var max_length = desc.stat_desc.max_length;
       var h;
       var n3, m;
@@ -1175,8 +1175,8 @@ var require_trees = __commonJS({
         }
         s.bl_count[bits]++;
         xbits = 0;
-        if (n3 >= base) {
-          xbits = extra[n3 - base];
+        if (n3 >= base2) {
+          xbits = extra[n3 - base2];
         }
         f = tree[n3 * 2];
         s.opt_len += f * (bits + xbits);
@@ -3510,7 +3510,7 @@ var require_inftrees = __commonJS({
       var low;
       var mask;
       var next;
-      var base = null;
+      var base2 = null;
       var base_index = 0;
       var end;
       var count = new utils.Buf16(MAXBITS + 1);
@@ -3568,16 +3568,16 @@ var require_inftrees = __commonJS({
         }
       }
       if (type === CODES) {
-        base = extra = work;
+        base2 = extra = work;
         end = 19;
       } else if (type === LENS) {
-        base = lbase;
+        base2 = lbase;
         base_index -= 257;
         extra = lext;
         extra_index -= 257;
         end = 256;
       } else {
-        base = dbase;
+        base2 = dbase;
         extra = dext;
         end = -1;
       }
@@ -3600,7 +3600,7 @@ var require_inftrees = __commonJS({
           here_val = work[sym];
         } else if (work[sym] > end) {
           here_op = extra[extra_index + work[sym]];
-          here_val = base[base_index + work[sym]];
+          here_val = base2[base_index + work[sym]];
         } else {
           here_op = 32 + 64;
           here_val = 0;
@@ -8821,10 +8821,10 @@ var require_PDFHexString = __commonJS({
           return utils_1.pdfDocEncodingDecode(bytes);
         };
         PDFHexString2.prototype.decodeDate = function() {
-          var text = this.decodeText();
-          var date = utils_1.parseDate(text);
+          var text2 = this.decodeText();
+          var date = utils_1.parseDate(text2);
           if (!date)
-            throw new errors_1.InvalidPDFDateStringError(text);
+            throw new errors_1.InvalidPDFDateStringError(text2);
           return date;
         };
         PDFHexString2.prototype.asString = function() {
@@ -8881,16 +8881,16 @@ var require_StandardFontEmbedder = __commonJS({
           this.fontName = this.font.FontName;
           this.customName = customName;
         }
-        StandardFontEmbedder2.prototype.encodeText = function(text) {
-          var glyphs = this.encodeTextAsGlyphs(text);
+        StandardFontEmbedder2.prototype.encodeText = function(text2) {
+          var glyphs = this.encodeTextAsGlyphs(text2);
           var hexCodes = new Array(glyphs.length);
           for (var idx = 0, len = glyphs.length; idx < len; idx++) {
             hexCodes[idx] = utils_1.toHexString(glyphs[idx].code);
           }
           return PDFHexString_1.default.of(hexCodes.join(""));
         };
-        StandardFontEmbedder2.prototype.widthOfTextAtSize = function(text, size) {
-          var glyphs = this.encodeTextAsGlyphs(text);
+        StandardFontEmbedder2.prototype.widthOfTextAtSize = function(text2, size) {
+          var glyphs = this.encodeTextAsGlyphs(text2);
           var totalWidth = 0;
           for (var idx = 0, len = glyphs.length; idx < len; idx++) {
             var left = glyphs[idx].name;
@@ -8937,8 +8937,8 @@ var require_StandardFontEmbedder = __commonJS({
         StandardFontEmbedder2.prototype.widthOfGlyph = function(glyphName) {
           return this.font.getWidthOfGlyph(glyphName) || 250;
         };
-        StandardFontEmbedder2.prototype.encodeTextAsGlyphs = function(text) {
-          var codePoints = Array.from(text);
+        StandardFontEmbedder2.prototype.encodeTextAsGlyphs = function(text2) {
+          var codePoints = Array.from(text2);
           var glyphs = new Array(codePoints.length);
           for (var idx = 0, len = codePoints.length; idx < len; idx++) {
             var codePoint = utils_1.toCodePoint(codePoints[idx]);
@@ -9128,10 +9128,10 @@ var require_PDFString = __commonJS({
           return utils_1.pdfDocEncodingDecode(bytes);
         };
         PDFString2.prototype.decodeDate = function() {
-          var text = this.decodeText();
-          var date = utils_1.parseDate(text);
+          var text2 = this.decodeText();
+          var date = utils_1.parseDate(text2);
           if (!date)
-            throw new errors_1.InvalidPDFDateStringError(text);
+            throw new errors_1.InvalidPDFDateStringError(text2);
           return date;
         };
         PDFString2.prototype.asString = function() {
@@ -9220,16 +9220,16 @@ var require_CustomFontEmbedder = __commonJS({
             });
           });
         };
-        CustomFontEmbedder2.prototype.encodeText = function(text) {
-          var glyphs = this.font.layout(text, this.fontFeatures).glyphs;
+        CustomFontEmbedder2.prototype.encodeText = function(text2) {
+          var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
           var hexCodes = new Array(glyphs.length);
           for (var idx = 0, len = glyphs.length; idx < len; idx++) {
             hexCodes[idx] = utils_1.toHexStringOfMinLength(glyphs[idx].id, 4);
           }
           return PDFHexString_1.default.of(hexCodes.join(""));
         };
-        CustomFontEmbedder2.prototype.widthOfTextAtSize = function(text, size) {
-          var glyphs = this.font.layout(text, this.fontFeatures).glyphs;
+        CustomFontEmbedder2.prototype.widthOfTextAtSize = function(text2, size) {
+          var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
           var totalWidth = 0;
           for (var idx = 0, len = glyphs.length; idx < len; idx++) {
             totalWidth += glyphs[idx].advanceWidth * this.scale;
@@ -9451,8 +9451,8 @@ var require_CustomFontSubsetEmbedder = __commonJS({
             });
           });
         };
-        CustomFontSubsetEmbedder2.prototype.encodeText = function(text) {
-          var glyphs = this.font.layout(text, this.fontFeatures).glyphs;
+        CustomFontSubsetEmbedder2.prototype.encodeText = function(text2) {
+          var glyphs = this.font.layout(text2, this.fontFeatures).glyphs;
           var hexCodes = new Array(glyphs.length);
           for (var idx = 0, len = glyphs.length; idx < len; idx++) {
             var glyph = glyphs[idx];
@@ -9905,8 +9905,8 @@ var require_UPNG = __commonJS({
           if (out.tabs[type] == null) out.tabs[type] = {};
           var nz = bin.nextZero(data, offset);
           var keyw = bin.readASCII(data, offset, nz - offset);
-          var text = bin.readASCII(data, nz + 1, offset + len - nz - 1);
-          out.tabs[type][keyw] = text;
+          var text2 = bin.readASCII(data, nz + 1, offset + len - nz - 1);
+          out.tabs[type][keyw] = text2;
         } else if (type == "iTXt") {
           if (out.tabs[type] == null) out.tabs[type] = {};
           var nz = 0, off = offset;
@@ -9921,8 +9921,8 @@ var require_UPNG = __commonJS({
           nz = bin.nextZero(data, off);
           var tkeyw = bin.readUTF8(data, off, nz - off);
           off = nz + 1;
-          var text = bin.readUTF8(data, off, len - (off - offset));
-          out.tabs[type][keyw] = text;
+          var text2 = bin.readUTF8(data, off, len - (off - offset));
+          out.tabs[type][keyw] = text2;
         } else if (type == "PLTE") {
           out.tabs[type] = bin.readBytes(data, offset, len);
         } else if (type == "hIST") {
@@ -16487,8 +16487,8 @@ var require_operators = __commonJS({
     exports.moveText = function(x, y) {
       return core_1.PDFOperator.of(core_1.PDFOperatorNames.MoveText, [objects_1.asPDFNumber(x), objects_1.asPDFNumber(y)]);
     };
-    exports.showText = function(text) {
-      return core_1.PDFOperator.of(core_1.PDFOperatorNames.ShowText, [text]);
+    exports.showText = function(text2) {
+      return core_1.PDFOperator.of(core_1.PDFOperatorNames.ShowText, [text2]);
     };
     exports.beginText = function() {
       return core_1.PDFOperator.of(core_1.PDFOperatorNames.BeginText);
@@ -17773,9 +17773,9 @@ var require_layout = __commonJS({
         remainder: void 0
       };
     };
-    exports.layoutMultilineText = function(text, _a) {
+    exports.layoutMultilineText = function(text2, _a) {
       var alignment = _a.alignment, fontSize = _a.fontSize, font = _a.font, bounds = _a.bounds;
-      var lines = utils_1.lineSplit(utils_1.cleanText(text));
+      var lines = utils_1.lineSplit(utils_1.cleanText(text2));
       if (fontSize === void 0 || fontSize === 0) {
         fontSize = computeFontSize(lines, font, bounds, true);
       }
@@ -17817,9 +17817,9 @@ var require_layout = __commonJS({
         }
       };
     };
-    exports.layoutCombedText = function(text, _a) {
+    exports.layoutCombedText = function(text2, _a) {
       var fontSize = _a.fontSize, font = _a.font, bounds = _a.bounds, cellCount = _a.cellCount;
-      var line = utils_1.mergeLines(utils_1.cleanText(text));
+      var line = utils_1.mergeLines(utils_1.cleanText(text2));
       if (line.length > cellCount) {
         throw new errors_1.CombedTextLayoutError(line.length, cellCount);
       }
@@ -17865,9 +17865,9 @@ var require_layout = __commonJS({
         }
       };
     };
-    exports.layoutSinglelineText = function(text, _a) {
+    exports.layoutSinglelineText = function(text2, _a) {
       var alignment = _a.alignment, fontSize = _a.fontSize, font = _a.font, bounds = _a.bounds;
-      var line = utils_1.mergeLines(utils_1.cleanText(text));
+      var line = utils_1.mergeLines(utils_1.cleanText(text2));
       if (fontSize === void 0 || fontSize === 0) {
         fontSize = computeFontSize([line], font, bounds);
       }
@@ -18093,7 +18093,7 @@ var require_appearances = __commonJS({
       var rectangle = widget.getRectangle();
       var ap = widget.getAppearanceCharacteristics();
       var bs = widget.getBorderStyle();
-      var text = (_a = textField.getText()) !== null && _a !== void 0 ? _a : "";
+      var text2 = (_a = textField.getText()) !== null && _a !== void 0 ? _a : "";
       var borderWidth = (_b = bs === null || bs === void 0 ? void 0 : bs.getWidth()) !== null && _b !== void 0 ? _b : 0;
       var rotation = rotations_1.reduceRotation(ap === null || ap === void 0 ? void 0 : ap.getRotation());
       var _e = rotations_1.adjustDimsForRotation(rectangle, rotation), width = _e.width, height = _e.height;
@@ -18111,7 +18111,7 @@ var require_appearances = __commonJS({
         height: height - (borderWidth + padding) * 2
       };
       if (textField.isMultiline()) {
-        var layout = layout_1.layoutMultilineText(text, {
+        var layout = layout_1.layoutMultilineText(text2, {
           alignment: textField.getAlignment(),
           fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
           font,
@@ -18120,7 +18120,7 @@ var require_appearances = __commonJS({
         textLines = layout.lines;
         fontSize = layout.fontSize;
       } else if (textField.isCombed()) {
-        var layout = layout_1.layoutCombedText(text, {
+        var layout = layout_1.layoutCombedText(text2, {
           fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
           font,
           bounds,
@@ -18129,7 +18129,7 @@ var require_appearances = __commonJS({
         textLines = layout.cells;
         fontSize = layout.fontSize;
       } else {
-        var layout = layout_1.layoutSinglelineText(text, {
+        var layout = layout_1.layoutSinglelineText(text2, {
           alignment: textField.getAlignment(),
           fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
           font,
@@ -18169,7 +18169,7 @@ var require_appearances = __commonJS({
       var rectangle = widget.getRectangle();
       var ap = widget.getAppearanceCharacteristics();
       var bs = widget.getBorderStyle();
-      var text = (_a = dropdown.getSelected()[0]) !== null && _a !== void 0 ? _a : "";
+      var text2 = (_a = dropdown.getSelected()[0]) !== null && _a !== void 0 ? _a : "";
       var borderWidth = (_b = bs === null || bs === void 0 ? void 0 : bs.getWidth()) !== null && _b !== void 0 ? _b : 0;
       var rotation = rotations_1.reduceRotation(ap === null || ap === void 0 ? void 0 : ap.getRotation());
       var _d = rotations_1.adjustDimsForRotation(rectangle, rotation), width = _d.width, height = _d.height;
@@ -18184,7 +18184,7 @@ var require_appearances = __commonJS({
         width: width - (borderWidth + padding) * 2,
         height: height - (borderWidth + padding) * 2
       };
-      var _e = layout_1.layoutSinglelineText(text, {
+      var _e = layout_1.layoutSinglelineText(text2, {
         alignment: alignment_1.TextAlignment.Left,
         fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
         font,
@@ -18232,11 +18232,11 @@ var require_appearances = __commonJS({
       var selected = optionList.getSelected();
       if (optionList.isSorted())
         options.sort();
-      var text = "";
+      var text2 = "";
       for (var idx = 0, len = options.length; idx < len; idx++) {
-        text += options[idx];
+        text2 += options[idx];
         if (idx < len - 1)
-          text += "\n";
+          text2 += "\n";
       }
       var padding = 1;
       var bounds = {
@@ -18245,7 +18245,7 @@ var require_appearances = __commonJS({
         width: width - (borderWidth + padding) * 2,
         height: height - (borderWidth + padding) * 2
       };
-      var _d = layout_1.layoutMultilineText(text, {
+      var _d = layout_1.layoutMultilineText(text2, {
         alignment: alignment_1.TextAlignment.Left,
         fontSize: widgetFontSize !== null && widgetFontSize !== void 0 ? widgetFontSize : fieldFontSize,
         font,
@@ -18370,15 +18370,15 @@ var require_PDFFont = __commonJS({
           this.name = embedder.fontName;
           this.embedder = embedder;
         }
-        PDFFont2.prototype.encodeText = function(text) {
-          utils_1.assertIs(text, "text", ["string"]);
+        PDFFont2.prototype.encodeText = function(text2) {
+          utils_1.assertIs(text2, "text", ["string"]);
           this.modified = true;
-          return this.embedder.encodeText(text);
+          return this.embedder.encodeText(text2);
         };
-        PDFFont2.prototype.widthOfTextAtSize = function(text, size) {
-          utils_1.assertIs(text, "text", ["string"]);
+        PDFFont2.prototype.widthOfTextAtSize = function(text2, size) {
+          utils_1.assertIs(text2, "text", ["string"]);
           utils_1.assertIs(size, "size", ["number"]);
-          return this.embedder.widthOfTextAtSize(text, size);
+          return this.embedder.widthOfTextAtSize(text2, size);
         };
         PDFFont2.prototype.heightAtSize = function(size, options) {
           var _a;
@@ -19523,16 +19523,16 @@ var require_PDFTextField = __commonJS({
           }
           return value === null || value === void 0 ? void 0 : value.decodeText();
         };
-        PDFTextField2.prototype.setText = function(text) {
-          utils_1.assertOrUndefined(text, "text", ["string"]);
+        PDFTextField2.prototype.setText = function(text2) {
+          utils_1.assertOrUndefined(text2, "text", ["string"]);
           var maxLength = this.getMaxLength();
-          if (maxLength !== void 0 && text && text.length > maxLength) {
-            throw new errors_1.ExceededMaxLengthError(text.length, maxLength, this.getName());
+          if (maxLength !== void 0 && text2 && text2.length > maxLength) {
+            throw new errors_1.ExceededMaxLengthError(text2.length, maxLength, this.getName());
           }
           this.markAsDirty();
           this.disableRichFormatting();
-          if (text) {
-            this.acroField.setValue(core_1.PDFHexString.fromText(text));
+          if (text2) {
+            this.acroField.setValue(core_1.PDFHexString.fromText(text2));
           } else {
             this.acroField.removeValue();
           }
@@ -19555,9 +19555,9 @@ var require_PDFTextField = __commonJS({
           if (maxLength === void 0) {
             this.acroField.removeMaxLength();
           } else {
-            var text = this.getText();
-            if (text && text.length > maxLength) {
-              throw new errors_1.InvalidMaxLengthError(text.length, maxLength, this.getName());
+            var text2 = this.getText();
+            if (text2 && text2.length > maxLength) {
+              throw new errors_1.InvalidMaxLengthError(text2.length, maxLength, this.getName());
             }
             this.acroField.setMaxLength(maxLength);
           }
@@ -19925,10 +19925,10 @@ var require_PDFForm = __commonJS({
           utils_1.assertIs(name, "name", ["string"]);
           var nameParts = splitFieldName(name);
           var parent = this.findOrCreateNonTerminals(nameParts.nonTerminal);
-          var text = core_1.PDFAcroText.create(this.doc.context);
-          text.setPartialName(nameParts.terminal);
-          addFieldToParent(parent, [text, text.ref], nameParts.terminal);
-          return PDFTextField_1.default.of(text, text.ref, this.doc);
+          var text2 = core_1.PDFAcroText.create(this.doc.context);
+          text2.setPartialName(nameParts.terminal);
+          addFieldToParent(parent, [text2, text2.ref], nameParts.terminal);
+          return PDFTextField_1.default.of(text2, text2.ref, this.doc);
         };
         PDFForm2.prototype.flatten = function(options) {
           if (options === void 0) {
@@ -21372,12 +21372,12 @@ var require_PDFPage = __commonJS({
           var contentStream = this.getContentStream();
           contentStream.push.apply(contentStream, operator);
         };
-        PDFPage2.prototype.drawText = function(text, options) {
+        PDFPage2.prototype.drawText = function(text2, options) {
           var _a, _b, _c, _d, _e, _f, _g;
           if (options === void 0) {
             options = {};
           }
-          utils_1.assertIs(text, "text", ["string"]);
+          utils_1.assertIs(text2, "text", ["string"]);
           utils_1.assertOrUndefined(options.color, "options.color", [[Object, "Color"]]);
           utils_1.assertRangeOrUndefined(options.opacity, "opacity.opacity", 0, 1);
           utils_1.assertOrUndefined(options.font, "options.font", [[PDFFont_1.default, "PDFFont"]]);
@@ -21397,7 +21397,7 @@ var require_PDFPage = __commonJS({
           var textWidth = function(t) {
             return newFont.widthOfTextAtSize(t, fontSize);
           };
-          var lines = options.maxWidth === void 0 ? utils_1.lineSplit(utils_1.cleanText(text)) : utils_1.breakTextIntoLines(text, wordBreaks, options.maxWidth, textWidth);
+          var lines = options.maxWidth === void 0 ? utils_1.lineSplit(utils_1.cleanText(text2)) : utils_1.breakTextIntoLines(text2, wordBreaks, options.maxWidth, textWidth);
           var encodedLines = new Array(lines.length);
           for (var idx = 0, len = lines.length; idx < len; idx++) {
             encodedLines[idx] = newFont.encodeText(lines[idx]);
@@ -21833,9 +21833,9 @@ var require_PDFButton = __commonJS({
           this.acroField.setFontSize(fontSize);
           this.markAsDirty();
         };
-        PDFButton2.prototype.addToPage = function(text, page, options) {
+        PDFButton2.prototype.addToPage = function(text2, page, options) {
           var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
-          utils_1.assertOrUndefined(text, "text", ["string"]);
+          utils_1.assertOrUndefined(text2, "text", ["string"]);
           utils_1.assertOrUndefined(page, "page", [[PDFPage_1.default, "PDFPage"]]);
           PDFField_1.assertFieldAppearanceOptions(options);
           var widget = this.createWidget({
@@ -21848,7 +21848,7 @@ var require_PDFButton = __commonJS({
             borderColor: options === null || options === void 0 ? void 0 : options.borderColor,
             borderWidth: (_j = options === null || options === void 0 ? void 0 : options.borderWidth) !== null && _j !== void 0 ? _j : 0,
             rotate: (_k = options === null || options === void 0 ? void 0 : options.rotate) !== null && _k !== void 0 ? _k : rotations_1.degrees(0),
-            caption: text,
+            caption: text2,
             hidden: options === null || options === void 0 ? void 0 : options.hidden,
             page: page.ref
           });
@@ -24272,26 +24272,26 @@ var require_fontkit_umd = __commonJS({
             return formatError(value);
           }
         }
-        var base = "", array = false, braces = ["{", "}"];
+        var base2 = "", array = false, braces = ["{", "}"];
         if (isArray(value)) {
           array = true;
           braces = ["[", "]"];
         }
         if (isFunction(value)) {
           var n3 = value.name ? ": " + value.name : "";
-          base = " [Function" + n3 + "]";
+          base2 = " [Function" + n3 + "]";
         }
         if (isRegExp(value)) {
-          base = " " + RegExp.prototype.toString.call(value);
+          base2 = " " + RegExp.prototype.toString.call(value);
         }
         if (isDate(value)) {
-          base = " " + Date.prototype.toUTCString.call(value);
+          base2 = " " + Date.prototype.toUTCString.call(value);
         }
         if (isError(value)) {
-          base = " " + formatError(value);
+          base2 = " " + formatError(value);
         }
         if (keys2.length === 0 && (!array || value.length == 0)) {
-          return braces[0] + base + braces[1];
+          return braces[0] + base2 + braces[1];
         }
         if (recurseTimes < 0) {
           if (isRegExp(value)) {
@@ -24310,7 +24310,7 @@ var require_fontkit_umd = __commonJS({
           });
         }
         ctx.seen.pop();
-        return reduceToSingleString(output, base, braces);
+        return reduceToSingleString(output, base2, braces);
       }
       function formatPrimitive(ctx, value) {
         if (isUndefined(value)) return ctx.stylize("undefined", "undefined");
@@ -24397,15 +24397,15 @@ var require_fontkit_umd = __commonJS({
         }
         return name + ": " + str;
       }
-      function reduceToSingleString(output, base, braces) {
+      function reduceToSingleString(output, base2, braces) {
         var length = output.reduce(function(prev, cur) {
           if (cur.indexOf("\n") >= 0) ;
           return prev + cur.replace(/\u001b\[\d\d?m/g, "").length + 1;
         }, 0);
         if (length > 60) {
-          return braces[0] + (base === "" ? "" : base + "\n ") + " " + output.join(",\n  ") + " " + braces[1];
+          return braces[0] + (base2 === "" ? "" : base2 + "\n ") + " " + output.join(",\n  ") + " " + braces[1];
         }
-        return braces[0] + base + " " + output.join(", ") + " " + braces[1];
+        return braces[0] + base2 + " " + output.join(", ") + " " + braces[1];
       }
       function isArray(ar) {
         return Array.isArray(ar);
@@ -25348,11 +25348,11 @@ var require_fontkit_umd = __commonJS({
         this.corkedRequestsFree = new CorkedRequest(this);
       }
       WritableState.prototype.getBuffer = function writableStateGetBuffer() {
-        var current = this.bufferedRequest;
+        var current2 = this.bufferedRequest;
         var out = [];
-        while (current) {
-          out.push(current);
-          current = current.next;
+        while (current2) {
+          out.push(current2);
+          current2 = current2.next;
         }
         return out;
       };
@@ -42423,7 +42423,7 @@ var require_fontkit_umd = __commonJS({
       var clcidx = new Uint8Array([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
       var code_tree = new Tree();
       var lengths = new Uint8Array(288 + 32);
-      function tinf_build_bits_base(bits2, base, delta, first) {
+      function tinf_build_bits_base(bits2, base2, delta, first) {
         var i2, sum;
         for (i2 = 0; i2 < delta; ++i2) {
           bits2[i2] = 0;
@@ -42432,7 +42432,7 @@ var require_fontkit_umd = __commonJS({
           bits2[i2 + delta] = i2 / delta | 0;
         }
         for (sum = first, i2 = 0; i2 < 30; ++i2) {
-          base[i2] = sum;
+          base2[i2] = sum;
           sum += 1 << bits2[i2];
         }
       }
@@ -42491,8 +42491,8 @@ var require_fontkit_umd = __commonJS({
         d.tag >>>= 1;
         return bit;
       }
-      function tinf_read_bits(d, num2, base) {
-        if (!num2) return base;
+      function tinf_read_bits(d, num2, base2) {
+        if (!num2) return base2;
         while (d.bitcount < 24) {
           d.tag |= d.source[d.sourceIndex++] << d.bitcount;
           d.bitcount += 8;
@@ -42500,7 +42500,7 @@ var require_fontkit_umd = __commonJS({
         var val = d.tag & 65535 >>> 16 - num2;
         d.tag >>>= num2;
         d.bitcount -= num2;
-        return val + base;
+        return val + base2;
       }
       function tinf_decode_symbol(d, t2) {
         while (d.bitcount < 24) {
@@ -42916,7 +42916,7 @@ var require_fontkit_umd = __commonJS({
         var stree = desc.stat_desc.static_tree;
         var has_stree = desc.stat_desc.has_stree;
         var extra = desc.stat_desc.extra_bits;
-        var base = desc.stat_desc.extra_base;
+        var base2 = desc.stat_desc.extra_base;
         var max_length = desc.stat_desc.max_length;
         var h;
         var n3, m;
@@ -42941,8 +42941,8 @@ var require_fontkit_umd = __commonJS({
           }
           s.bl_count[bits2]++;
           xbits = 0;
-          if (n3 >= base) {
-            xbits = extra[n3 - base];
+          if (n3 >= base2) {
+            xbits = extra[n3 - base2];
           }
           f = tree[n3 * 2];
           s.opt_len += f * (bits2 + xbits);
@@ -45224,7 +45224,7 @@ var require_fontkit_umd = __commonJS({
         var low;
         var mask;
         var next;
-        var base = null;
+        var base2 = null;
         var base_index = 0;
         var end;
         var count = new common.Buf16(MAXBITS + 1);
@@ -45282,16 +45282,16 @@ var require_fontkit_umd = __commonJS({
           }
         }
         if (type === CODES) {
-          base = extra = work;
+          base2 = extra = work;
           end = 19;
         } else if (type === LENS) {
-          base = lbase;
+          base2 = lbase;
           base_index -= 257;
           extra = lext;
           extra_index -= 257;
           end = 256;
         } else {
-          base = dbase;
+          base2 = dbase;
           extra = dext;
           end = -1;
         }
@@ -45314,7 +45314,7 @@ var require_fontkit_umd = __commonJS({
             here_val = work[sym];
           } else if (work[sym] > end) {
             here_op = extra[extra_index + work[sym]];
-            here_val = base[base_index + work[sym]];
+            here_val = base2[base_index + work[sym]];
           } else {
             here_op = 32 + 64;
             here_val = 0;
@@ -47035,10 +47035,10 @@ var require_fontkit_umd = __commonJS({
           return positions;
         };
         _proto.positionCluster = function positionCluster(glyphs, positions, clusterStart, clusterEnd) {
-          var base = glyphs[clusterStart];
-          var baseBox = base.cbox.copy();
-          if (base.codePoints.length > 1) {
-            baseBox.minX += (base.codePoints.length - 1) * baseBox.width / base.codePoints.length;
+          var base2 = glyphs[clusterStart];
+          var baseBox = base2.cbox.copy();
+          if (base2.codePoints.length > 1) {
+            baseBox.minX += (base2.codePoints.length - 1) * baseBox.width / base2.codePoints.length;
           }
           var xOffset = -positions[clusterStart].xAdvance;
           var yOffset = 0;
@@ -50450,7 +50450,7 @@ var require_fontkit_umd = __commonJS({
             glyphs.splice(_i3++, 0, g);
             end++;
           }
-          var base = end;
+          var base2 = end;
           var limit = start;
           var hasReph = false;
           if (indicConfig.rephPos !== POSITIONS.Ra_To_Become_Reph && features2.rphf && start + 3 <= end && (indicConfig.rephMode === "Implicit" && !isJoiner(glyphs[start + 2]) || indicConfig.rephMode === "Explicit" && glyphs[start + 2].shaperInfo.category === CATEGORIES.ZWJ)) {
@@ -50460,7 +50460,7 @@ var require_fontkit_umd = __commonJS({
               while (limit < end && isJoiner(glyphs[limit])) {
                 limit++;
               }
-              base = start;
+              base2 = start;
               hasReph = true;
             }
           } else if (indicConfig.rephMode === "Log_Repha" && glyphs[start].shaperInfo.category === CATEGORIES.Repha) {
@@ -50468,7 +50468,7 @@ var require_fontkit_umd = __commonJS({
             while (limit < end && isJoiner(glyphs[limit])) {
               limit++;
             }
-            base = start;
+            base2 = start;
             hasReph = true;
           }
           switch (indicConfig.basePos) {
@@ -50479,13 +50479,13 @@ var require_fontkit_umd = __commonJS({
                 var _info = glyphs[--_i4].shaperInfo;
                 if (isConsonant(glyphs[_i4])) {
                   if (_info.position !== POSITIONS.Below_C && (_info.position !== POSITIONS.Post_C || seenBelow)) {
-                    base = _i4;
+                    base2 = _i4;
                     break;
                   }
                   if (_info.position === POSITIONS.Below_C) {
                     seenBelow = true;
                   }
-                  base = _i4;
+                  base2 = _i4;
                 } else if (start < _i4 && _info.category === CATEGORIES.ZWJ && glyphs[_i4 - 1].shaperInfo.category === CATEGORIES.H) {
                   break;
                 }
@@ -50493,25 +50493,25 @@ var require_fontkit_umd = __commonJS({
               break;
             }
             case "First": {
-              base = start;
-              for (var _i5 = base + 1; _i5 < end; _i5++) {
+              base2 = start;
+              for (var _i5 = base2 + 1; _i5 < end; _i5++) {
                 if (isConsonant(glyphs[_i5])) {
                   glyphs[_i5].shaperInfo.position = POSITIONS.Below_C;
                 }
               }
             }
           }
-          if (hasReph && base === start && limit - base <= 2) {
+          if (hasReph && base2 === start && limit - base2 <= 2) {
             hasReph = false;
           }
-          for (var _i6 = start; _i6 < base; _i6++) {
+          for (var _i6 = start; _i6 < base2; _i6++) {
             var _info2 = glyphs[_i6].shaperInfo;
             _info2.position = Math.min(POSITIONS.Pre_C, _info2.position);
           }
-          if (base < end) {
-            glyphs[base].shaperInfo.position = POSITIONS.Base_C;
+          if (base2 < end) {
+            glyphs[base2].shaperInfo.position = POSITIONS.Base_C;
           }
-          for (var _i7 = base + 1; _i7 < end; _i7++) {
+          for (var _i7 = base2 + 1; _i7 < end; _i7++) {
             if (glyphs[_i7].shaperInfo.category === CATEGORIES.M) {
               for (var j = _i7 + 1; j < end; j++) {
                 if (isConsonant(glyphs[j])) {
@@ -50527,7 +50527,7 @@ var require_fontkit_umd = __commonJS({
           }
           if (plan.isOldSpec) {
             var disallowDoubleHalants = plan.unicodeScript !== "Malayalam";
-            for (var _i8 = base + 1; _i8 < end; _i8++) {
+            for (var _i8 = base2 + 1; _i8 < end; _i8++) {
               if (glyphs[_i8].shaperInfo.category === CATEGORIES.H) {
                 var _j = void 0;
                 for (_j = end - 1; _j > _i8; _j--) {
@@ -50561,8 +50561,8 @@ var require_fontkit_umd = __commonJS({
               lastPos = _info3.position;
             }
           }
-          var last = base;
-          for (var _i10 = base + 1; _i10 < end; _i10++) {
+          var last = base2;
+          for (var _i10 = base2 + 1; _i10 < end; _i10++) {
             if (isConsonant(glyphs[_i10])) {
               for (var _j3 = last + 1; _j3 < _i10; _j3++) {
                 if (glyphs[_j3].shaperInfo.position < POSITIONS.SMVD) {
@@ -50581,7 +50581,7 @@ var require_fontkit_umd = __commonJS({
           glyphs.splice.apply(glyphs, [start, arr.length].concat(arr));
           for (var _i11 = start; _i11 < end; _i11++) {
             if (glyphs[_i11].shaperInfo.position === POSITIONS.Base_C) {
-              base = _i11;
+              base2 = _i11;
               break;
             }
           }
@@ -50589,28 +50589,28 @@ var require_fontkit_umd = __commonJS({
             glyphs[_i12].features.rphf = true;
           }
           var blwf = !plan.isOldSpec && indicConfig.blwfMode === "Pre_And_Post";
-          for (var _i13 = start; _i13 < base; _i13++) {
+          for (var _i13 = start; _i13 < base2; _i13++) {
             glyphs[_i13].features.half = true;
             if (blwf) {
               glyphs[_i13].features.blwf = true;
             }
           }
-          for (var _i14 = base + 1; _i14 < end; _i14++) {
+          for (var _i14 = base2 + 1; _i14 < end; _i14++) {
             glyphs[_i14].features.abvf = true;
             glyphs[_i14].features.pstf = true;
             glyphs[_i14].features.blwf = true;
           }
           if (plan.isOldSpec && plan.unicodeScript === "Devanagari") {
-            for (var _i15 = start; _i15 + 1 < base; _i15++) {
-              if (glyphs[_i15].shaperInfo.category === CATEGORIES.Ra && glyphs[_i15 + 1].shaperInfo.category === CATEGORIES.H && (_i15 + 1 === base || glyphs[_i15 + 2].shaperInfo.category === CATEGORIES.ZWJ)) {
+            for (var _i15 = start; _i15 + 1 < base2; _i15++) {
+              if (glyphs[_i15].shaperInfo.category === CATEGORIES.Ra && glyphs[_i15 + 1].shaperInfo.category === CATEGORIES.H && (_i15 + 1 === base2 || glyphs[_i15 + 2].shaperInfo.category === CATEGORIES.ZWJ)) {
                 glyphs[_i15].features.blwf = true;
                 glyphs[_i15 + 1].features.blwf = true;
               }
             }
           }
           var prefLen = 2;
-          if (features2.pref && base + prefLen < end) {
-            for (var _i16 = base + 1; _i16 + prefLen - 1 < end; _i16++) {
+          if (features2.pref && base2 + prefLen < end) {
+            for (var _i16 = base2 + 1; _i16 + prefLen - 1 < end; _i16++) {
               var _g2 = [glyphs[_i16].copy(), glyphs[_i16 + 1].copy()];
               if (wouldSubstitute(_g2, "pref")) {
                 for (var _j4 = 0; _j4 < prefLen; _j4++) {
@@ -50644,18 +50644,18 @@ var require_fontkit_umd = __commonJS({
         var features2 = font._layoutEngine.engine.GSUBProcessor.features;
         for (var start = 0, end = nextSyllable(glyphs, 0); start < glyphs.length; start = end, end = nextSyllable(glyphs, start)) {
           var tryPref = !!features2.pref;
-          var base = start;
-          for (; base < end; base++) {
-            if (glyphs[base].shaperInfo.position >= POSITIONS.Base_C) {
-              if (tryPref && base + 1 < end) {
-                for (var i2 = base + 1; i2 < end; i2++) {
+          var base2 = start;
+          for (; base2 < end; base2++) {
+            if (glyphs[base2].shaperInfo.position >= POSITIONS.Base_C) {
+              if (tryPref && base2 + 1 < end) {
+                for (var i2 = base2 + 1; i2 < end; i2++) {
                   if (glyphs[i2].features.pref) {
                     if (!(glyphs[i2].substituted && glyphs[i2].isLigated && !glyphs[i2].isMultiplied)) {
-                      base = i2;
-                      while (base < end && isHalantOrCoeng(glyphs[base])) {
-                        base++;
+                      base2 = i2;
+                      while (base2 < end && isHalantOrCoeng(glyphs[base2])) {
+                        base2++;
                       }
-                      glyphs[base].shaperInfo.position = POSITIONS.BASE_C;
+                      glyphs[base2].shaperInfo.position = POSITIONS.BASE_C;
                       tryPref = false;
                     }
                     break;
@@ -50663,7 +50663,7 @@ var require_fontkit_umd = __commonJS({
                 }
               }
               if (plan.unicodeScript === "Malayalam") {
-                for (var _i18 = base + 1; _i18 < end; _i18++) {
+                for (var _i18 = base2 + 1; _i18 < end; _i18++) {
                   while (_i18 < end && isJoiner(glyphs[_i18])) {
                     _i18++;
                   }
@@ -50675,27 +50675,27 @@ var require_fontkit_umd = __commonJS({
                     _i18++;
                   }
                   if (_i18 < end && isConsonant(glyphs[_i18]) && glyphs[_i18].shaperInfo.position === POSITIONS.Below_C) {
-                    base = _i18;
-                    glyphs[base].shaperInfo.position = POSITIONS.Base_C;
+                    base2 = _i18;
+                    glyphs[base2].shaperInfo.position = POSITIONS.Base_C;
                   }
                 }
               }
-              if (start < base && glyphs[base].shaperInfo.position > POSITIONS.Base_C) {
-                base--;
+              if (start < base2 && glyphs[base2].shaperInfo.position > POSITIONS.Base_C) {
+                base2--;
               }
               break;
             }
           }
-          if (base === end && start < base && glyphs[base - 1].shaperInfo.category === CATEGORIES.ZWJ) {
-            base--;
+          if (base2 === end && start < base2 && glyphs[base2 - 1].shaperInfo.category === CATEGORIES.ZWJ) {
+            base2--;
           }
-          if (base < end) {
-            while (start < base && glyphs[base].shaperInfo.category & (CATEGORIES.N | HALANT_OR_COENG_FLAGS)) {
-              base--;
+          if (base2 < end) {
+            while (start < base2 && glyphs[base2].shaperInfo.category & (CATEGORIES.N | HALANT_OR_COENG_FLAGS)) {
+              base2--;
             }
           }
-          if (start + 1 < end && start < base) {
-            var newPos = base === end ? base - 2 : base - 1;
+          if (start + 1 < end && start < base2) {
+            var newPos = base2 === end ? base2 - 2 : base2 - 1;
             if (plan.unicodeScript !== "Malayalam" && plan.unicodeScript !== "Tamil") {
               while (newPos > start && !(glyphs[newPos].shaperInfo.category & (CATEGORIES.M | HALANT_OR_COENG_FLAGS))) {
                 newPos--;
@@ -50712,8 +50712,8 @@ var require_fontkit_umd = __commonJS({
               for (var _i19 = newPos; _i19 > start; _i19--) {
                 if (glyphs[_i19 - 1].shaperInfo.position === POSITIONS.Pre_M) {
                   var oldPos = _i19 - 1;
-                  if (oldPos < base && base <= newPos) {
-                    base--;
+                  if (oldPos < base2 && base2 <= newPos) {
+                    base2--;
                   }
                   var tmp = glyphs[oldPos];
                   glyphs.splice.apply(glyphs, [oldPos, 0].concat(glyphs.splice(oldPos + 1, newPos - oldPos)));
@@ -50729,24 +50729,24 @@ var require_fontkit_umd = __commonJS({
             var found = false;
             if (rephPos !== POSITIONS.After_Post) {
               newRephPos = start + 1;
-              while (newRephPos < base && !isHalantOrCoeng(glyphs[newRephPos])) {
+              while (newRephPos < base2 && !isHalantOrCoeng(glyphs[newRephPos])) {
                 newRephPos++;
               }
-              if (newRephPos < base && isHalantOrCoeng(glyphs[newRephPos])) {
-                if (newRephPos + 1 < base && isJoiner(glyphs[newRephPos + 1])) {
+              if (newRephPos < base2 && isHalantOrCoeng(glyphs[newRephPos])) {
+                if (newRephPos + 1 < base2 && isJoiner(glyphs[newRephPos + 1])) {
                   newRephPos++;
                 }
                 found = true;
               }
               if (!found && rephPos === POSITIONS.After_Main) {
-                newRephPos = base;
+                newRephPos = base2;
                 while (newRephPos + 1 < end && glyphs[newRephPos + 1].shaperInfo.position <= POSITIONS.After_Main) {
                   newRephPos++;
                 }
                 found = newRephPos < end;
               }
               if (!found && rephPos === POSITIONS.After_Sub) {
-                newRephPos = base;
+                newRephPos = base2;
                 while (newRephPos + 1 < end && !(glyphs[newRephPos + 1].shaperInfo.position & (POSITIONS.Post_C | POSITIONS.After_Post | POSITIONS.SMVD))) {
                   newRephPos++;
                 }
@@ -50755,11 +50755,11 @@ var require_fontkit_umd = __commonJS({
             }
             if (!found) {
               newRephPos = start + 1;
-              while (newRephPos < base && !isHalantOrCoeng(glyphs[newRephPos])) {
+              while (newRephPos < base2 && !isHalantOrCoeng(glyphs[newRephPos])) {
                 newRephPos++;
               }
-              if (newRephPos < base && isHalantOrCoeng(glyphs[newRephPos])) {
-                if (newRephPos + 1 < base && isJoiner(glyphs[newRephPos + 1])) {
+              if (newRephPos < base2 && isHalantOrCoeng(glyphs[newRephPos])) {
+                if (newRephPos + 1 < base2 && isJoiner(glyphs[newRephPos + 1])) {
                   newRephPos++;
                 }
                 found = true;
@@ -50771,7 +50771,7 @@ var require_fontkit_umd = __commonJS({
                 newRephPos--;
               }
               if (isHalantOrCoeng(glyphs[newRephPos])) {
-                for (var _i20 = base + 1; _i20 < newRephPos; _i20++) {
+                for (var _i20 = base2 + 1; _i20 < newRephPos; _i20++) {
                   if (glyphs[_i20].shaperInfo.category === CATEGORIES.M) {
                     newRephPos--;
                   }
@@ -50781,22 +50781,22 @@ var require_fontkit_umd = __commonJS({
             var reph = glyphs[start];
             glyphs.splice.apply(glyphs, [start, 0].concat(glyphs.splice(start + 1, newRephPos - start)));
             glyphs[newRephPos] = reph;
-            if (start < base && base <= newRephPos) {
-              base--;
+            if (start < base2 && base2 <= newRephPos) {
+              base2--;
             }
           }
-          if (tryPref && base + 1 < end) {
-            for (var _i21 = base + 1; _i21 < end; _i21++) {
+          if (tryPref && base2 + 1 < end) {
+            for (var _i21 = base2 + 1; _i21 < end; _i21++) {
               if (glyphs[_i21].features.pref) {
                 if (glyphs[_i21].isLigated && !glyphs[_i21].isMultiplied) {
-                  var _newPos = base;
+                  var _newPos = base2;
                   if (plan.unicodeScript !== "Malayalam" && plan.unicodeScript !== "Tamil") {
                     while (_newPos > start && !(glyphs[_newPos - 1].shaperInfo.category & (CATEGORIES.M | HALANT_OR_COENG_FLAGS))) {
                       _newPos--;
                     }
                     if (_newPos > start && glyphs[_newPos - 1].shaperInfo.category === CATEGORIES.M) {
                       var _oldPos2 = _i21;
-                      for (var j = base + 1; j < _oldPos2; j++) {
+                      for (var j = base2 + 1; j < _oldPos2; j++) {
                         if (glyphs[j].shaperInfo.category === CATEGORIES.M) {
                           _newPos--;
                           break;
@@ -50813,8 +50813,8 @@ var require_fontkit_umd = __commonJS({
                   var _tmp = glyphs[_oldPos];
                   glyphs.splice.apply(glyphs, [_newPos + 1, 0].concat(glyphs.splice(_newPos, _oldPos - _newPos)));
                   glyphs[_newPos] = _tmp;
-                  if (_newPos <= base && base < _oldPos) {
-                    base++;
+                  if (_newPos <= base2 && base2 < _oldPos) {
+                    base2++;
                   }
                 }
                 break;
@@ -52853,13 +52853,13 @@ var require_fontkit_umd = __commonJS({
                     var numBlends = stack.pop();
                     var numOperands = numBlends * blendVector.length;
                     var delta = stack.length - numOperands;
-                    var base = delta - numBlends;
+                    var base2 = delta - numBlends;
                     for (var i2 = 0; i2 < numBlends; i2++) {
-                      var sum = stack[base + i2];
+                      var sum = stack[base2 + i2];
                       for (var j = 0; j < blendVector.length; j++) {
                         sum += blendVector[j] * stack[delta++];
                       }
-                      stack[base + i2] = sum;
+                      stack[base2 + i2] = sum;
                     }
                     while (numOperands--) {
                       stack.pop();
@@ -54862,7 +54862,7 @@ var require_fontkit_umd = __commonJS({
       var clcidx$1 = new Uint8Array([16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15]);
       var code_tree$1 = new Tree$1();
       var lengths$1 = new Uint8Array(288 + 32);
-      function tinf_build_bits_base$1(bits2, base, delta, first) {
+      function tinf_build_bits_base$1(bits2, base2, delta, first) {
         var i2, sum;
         for (i2 = 0; i2 < delta; ++i2) {
           bits2[i2] = 0;
@@ -54871,7 +54871,7 @@ var require_fontkit_umd = __commonJS({
           bits2[i2 + delta] = i2 / delta | 0;
         }
         for (sum = first, i2 = 0; i2 < 30; ++i2) {
-          base[i2] = sum;
+          base2[i2] = sum;
           sum += 1 << bits2[i2];
         }
       }
@@ -54930,8 +54930,8 @@ var require_fontkit_umd = __commonJS({
         d.tag >>>= 1;
         return bit;
       }
-      function tinf_read_bits$1(d, num2, base) {
-        if (!num2) return base;
+      function tinf_read_bits$1(d, num2, base2) {
+        if (!num2) return base2;
         while (d.bitcount < 24) {
           d.tag |= d.source[d.sourceIndex++] << d.bitcount;
           d.bitcount += 8;
@@ -54939,7 +54939,7 @@ var require_fontkit_umd = __commonJS({
         var val = d.tag & 65535 >>> 16 - num2;
         d.tag >>>= num2;
         d.bitcount -= num2;
-        return val + base;
+        return val + base2;
       }
       function tinf_decode_symbol$1(d, t2) {
         while (d.bitcount < 24) {
@@ -58596,7 +58596,1323 @@ var require_fontkit_umd = __commonJS({
   }
 });
 
+// ../../packages/engine/templates/wardrobe.v10.json
+var wardrobe_v10_default = {
+  templateId: "wardrobe",
+  templateVersion: "0.11.0",
+  productType: "wardrobe",
+  generator: "wardrobe-carcass-v4",
+  units: "mm",
+  parameters: [
+    {
+      key: "width",
+      type: "int",
+      default: 1500,
+      min: 600,
+      max: 2400,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.width",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "Overall product width, outer faces of the side panels. Customers choose only customerValues (staff: free min..max). Standard sizes (D-7): industry-common wardrobe sizes, unconfirmed until Dafna confirms its range.",
+      customerValues: [800, 1e3, 1200, 1500, 1600, 1800, 2e3, 2400]
+    },
+    {
+      key: "height",
+      type: "int",
+      default: 2100,
+      min: 1200,
+      max: 2200,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.height",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "Overall product height from the floor, plinth included. Customers choose only customerValues. Standard sizes (D-7): industry-common wardrobe sizes, unconfirmed until Dafna confirms its range. D-17 (founder, 2026-11-16): Dafna's maximum wardrobe height is 2200 mm; customer heights 2000 / 2100 / 2200.",
+      customerValues: [2e3, 2100, 2200]
+    },
+    {
+      key: "depth",
+      type: "int",
+      default: 600,
+      min: 350,
+      max: 650,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.depth",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Overall outer depth: back panel + carcass + front door gap + door (ADR-003). Default 600 (D-1c, unconfirmed): carcass 579 with doors, so rail presets (>= 530 inner depth) are available at the default size. Customers choose 600 (hanging clothes: inner depth >= 560, GOST 13025.1-85) or 450 (shelves / drawers only).",
+      customerValues: [450, 600]
+    },
+    {
+      key: "sections",
+      type: "enum",
+      default: "auto",
+      options: ["auto", 1, 2, 3, 4],
+      labelKey: "param.sections",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "auto = minimum section count that keeps each section inner width <= maxShelfSpanMm."
+    },
+    {
+      key: "corpusMaterial",
+      type: "enum",
+      default: "ldsp_white_16",
+      options: [
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      labelKey: "param.corpusMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp", "mdf"],
+      note: "Carcass, partition and plinth board (LDSP only). Its thickness drives all carcass geometry. Decors = Dafna price list (catalog 1.0.0), colours unconfirmed."
+    },
+    {
+      key: "doorMaterial",
+      type: "enum",
+      default: "same_as_corpus",
+      options: [
+        "same_as_corpus",
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16",
+        "lmdf_egger_h1367_st40_16",
+        "lmdf_egger_h1385_st40_16",
+        "lmdf_egger_h1344_st32_16_7",
+        "lmdf_egger_h3325_st28_16_7"
+      ],
+      labelKey: "param.doorMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp", "mdf"],
+      note: "'same_as_corpus' = door decor follows corpusMaterial. Door thickness = this material's thickness (LMDF 16 / 16.7 mm: doors only)."
+    },
+    {
+      key: "backPanel",
+      type: "enum",
+      default: "hdf_overlay",
+      options: ["none", "hdf_overlay"],
+      labelKey: "param.backPanel",
+      uiStep: "size",
+      customerVisible: false,
+      unconfirmed: true,
+      note: "Assumed: HDF back nailed over the carcass back (overlay). Material and thickness = constants.backMaterial (catalog)."
+    },
+    {
+      key: "base",
+      type: "enum",
+      default: "plinth",
+      options: ["plinth", "none"],
+      labelKey: "param.base",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Assumed default: plinth. Construction confirmed (sides to the floor, strips between the sides); 'none' = carcass bottom directly on the floor."
+    },
+    {
+      key: "plinthHeight",
+      type: "int",
+      default: 100,
+      min: 60,
+      max: 150,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.plinthHeight",
+      uiStep: "size",
+      customerVisible: false,
+      unconfirmed: true,
+      note: "Assumed plinth height range and default. Used only when base = plinth."
+    },
+    {
+      key: "plinthRecess",
+      type: "int",
+      default: 0,
+      min: 0,
+      max: 60,
+      step: 5,
+      unit: "mm",
+      labelKey: "param.plinthRecess",
+      uiStep: "size",
+      customerVisible: false,
+      unconfirmed: true,
+      note: "Assumed: setback of the front plinth strip from the carcass front edge. Back strip is never recessed."
+    },
+    {
+      key: "doors",
+      type: "enum",
+      default: "auto",
+      options: ["none", "all_single", "auto"],
+      labelKey: "param.doors",
+      uiStep: "doors",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "Preset for all sections. auto: single door if the single-leaf width (coverage minus gaps) <= maxSingleLeafWidthMm, else double. Single doors hinge toward the outer side of their half (ADR-006 rev. D-1c)."
+    },
+    {
+      key: "doorSection1",
+      type: "enum",
+      default: "preset",
+      options: ["preset", "none", "single_left", "single_right", "double"],
+      labelKey: "param.doorSection",
+      uiStep: "doors",
+      customerVisible: false,
+      unconfirmed: false,
+      appliesToSection: 1,
+      note: "Staff override for section 1. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      key: "doorSection2",
+      type: "enum",
+      default: "preset",
+      options: ["preset", "none", "single_left", "single_right", "double"],
+      labelKey: "param.doorSection",
+      uiStep: "doors",
+      customerVisible: false,
+      unconfirmed: false,
+      appliesToSection: 2,
+      note: "Staff override for section 2. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      key: "doorSection3",
+      type: "enum",
+      default: "preset",
+      options: ["preset", "none", "single_left", "single_right", "double"],
+      labelKey: "param.doorSection",
+      uiStep: "doors",
+      customerVisible: false,
+      unconfirmed: false,
+      appliesToSection: 3,
+      note: "Staff override for section 3. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      key: "doorSection4",
+      type: "enum",
+      default: "preset",
+      options: ["preset", "none", "single_left", "single_right", "double"],
+      labelKey: "param.doorSection",
+      uiStep: "doors",
+      customerVisible: false,
+      unconfirmed: false,
+      appliesToSection: 4,
+      note: "Staff override for section 4. 'preset' = follow the doors preset. Ignored if the wardrobe has fewer sections."
+    },
+    {
+      key: "interior1",
+      type: "enum",
+      default: "auto",
+      options: [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      labelKey: "param.interior",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      appliesToSection: 1,
+      control: "presetCards",
+      note: "Interior fill of section 1 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      key: "interior2",
+      type: "enum",
+      default: "auto",
+      options: [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      labelKey: "param.interior",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      appliesToSection: 2,
+      control: "presetCards",
+      note: "Interior fill of section 2 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      key: "interior3",
+      type: "enum",
+      default: "auto",
+      options: [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      labelKey: "param.interior",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      appliesToSection: 3,
+      control: "presetCards",
+      note: "Interior fill of section 3 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      key: "interior4",
+      type: "enum",
+      default: "auto",
+      options: [
+        "auto",
+        "empty",
+        "shelves",
+        "long_hang",
+        "short_hang",
+        "drawers_shelves",
+        "short_hang_drawers",
+        "books_lower"
+      ],
+      labelKey: "param.interior",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      appliesToSection: 4,
+      control: "presetCards",
+      note: "Interior fill of section 4 (D-7, GOST 13025.1-85): long_hang = long clothes, short_hang = short clothes + shelves, shelves, drawers_shelves, short_hang_drawers, empty. 'auto' = autoPresetDouble / autoPresetSingle by door type, falls back to shelves if the default would warn. Ignored if the wardrobe has fewer sections. D-14: books_lower = door over the lower part only (lowerDoorHeight), open book / A4 folder shelves above."
+    },
+    {
+      key: "hingeBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.hingeBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      key: "slideBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.slideBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      key: "lowerDoorHeight",
+      type: "int",
+      default: 800,
+      min: 400,
+      max: 1200,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.lowerDoorHeight",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [600, 800, 1e3],
+      note: "D-14: door leaf height of a books_lower section (from the door bottom edge). Only used when a section has the books_lower interior. Customer sizes 60 / 80 / 100 cm, unconfirmed until Dafna confirms."
+    },
+    {
+      key: "carcasses",
+      type: "enum",
+      default: "auto",
+      options: ["auto", "1", "2"],
+      labelKey: "param.carcasses",
+      uiStep: "size",
+      customerVisible: false,
+      unconfirmed: false,
+      note: "D-15: 'auto' = two carcasses from splitCarcassFromWidthMm on; staff may force one ('1') or two ('2'). Two carcasses need at least 2 sections."
+    }
+  ],
+  constants: {
+    maxShelfSpanMm: {
+      value: 900,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed maximum section inner width before shelves sag (SHELF_SPAN warning, sections=auto)."
+    },
+    backMaterial: {
+      value: "hdf_white_3",
+      unconfirmed: true,
+      note: "Assumed back panel material (catalog id). Its thickness is the back thickness."
+    },
+    doorGapFrontMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed gap between the carcass front edge and the back face of the overlay door."
+    },
+    doorGapBetweenMm: {
+      value: 3,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed gap between two adjacent door leaves."
+    },
+    doorGapEdgeMm: {
+      value: 1.5,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed gap between a door leaf and the outer carcass edge (left, right, top, bottom). Also used next to a section without a door."
+    },
+    maxSingleLeafWidthMm: {
+      value: 600,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed maximum width of one door leaf. Single source for doors=auto (single vs double) and DOOR_TOO_WIDE; measured on the leaf, not the section opening."
+    },
+    doorLeafRoundingMm: {
+      value: 0.5,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed rounding step for door leaf widths; the remainder goes to the leaves that lost most by rounding so leaves + gaps = covered width exactly."
+    },
+    maxDoorHeightMm: {
+      value: 2400,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed door height above which DOOR_TOO_HEIGHT warns (warping risk)."
+    },
+    shelfPitchTargetMm: {
+      value: 334,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed target pitch of removable shelves; the count is derived from the available height (compartments = round(height / pitch)), openings are equal."
+    },
+    shelfFrontSetbackMm: {
+      value: 4,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed setback of shelves from the carcass front (removable shelves); shelf depth = carcass inner depth - setback."
+    },
+    railTopShelfDropMm: {
+      value: 400,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed distance from the carcass top inner face down to the top face of the shelf above a rail (rail presets)."
+    },
+    railAxisDropMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed distance from the underside of the shelf/top above a rail down to the rail axis."
+    },
+    railDiameterMm: {
+      value: 25,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed hanging rail diameter."
+    },
+    drawerFrontHeightMm: {
+      value: 170,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed internal drawer front height."
+    },
+    drawerCountPerSection: {
+      value: 2,
+      unconfirmed: true,
+      note: "Assumed number of internal drawers per drawer preset, stacked at the bottom of the section."
+    },
+    drawerGapMm: {
+      value: 3,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed vertical gap below, between and above internal drawer fronts (drawer zone = gap + count x (front + gap))."
+    },
+    drawerFrontSetbackMm: {
+      value: 4,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed setback of internal drawer fronts behind the carcass front edge (they sit behind the doors)."
+    },
+    drawerSlideClearanceMm: {
+      value: 13,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed slide clearance per side: drawer box width = section inner width - 2 x 13. Internal fronts are as wide as the box (simplified)."
+    },
+    drawerBoxHeightReductionMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed: drawer box height = front height - 40, box centred on the front (simplified box, no slide hardware)."
+    },
+    drawerBackClearanceMm: {
+      value: 20,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed free space behind a drawer box."
+    },
+    drawerSlideMinMm: {
+      value: 250,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed shortest slide; box depth = longest slide (250..550, 50 steps) that fits."
+    },
+    drawerSlideMaxMm: {
+      value: 550,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed longest slide."
+    },
+    drawerSlideStepMm: {
+      value: 50,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed slide length step."
+    },
+    railMinDepthMm: {
+      value: 560,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawings 1-2: clothing compartment depth >= 560 mm (RAIL_DEPTH_SHORT below). Was 530 (assumed) up to template 0.6.0."
+    },
+    railMinHangingHeightMm: {
+      value: 900,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed minimum clear hanging height under a rail (RAIL_HEIGHT_SHORT warning below)."
+    },
+    drawerMaxFrontWidthMm: {
+      value: 900,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed maximum internal drawer front width (DRAWER_SECTION_TOO_WIDE warning above)."
+    },
+    edgeBandId: {
+      value: "abs_0_8_placeholder",
+      unconfirmed: true,
+      note: "Placeholder edge band id for visible front edges until Dafna sends its edge band list."
+    },
+    edgeBandThicknessMm: {
+      value: 0.8,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Assumed ABS edge band thickness on visible front edges. Panel dimensions stay finished sizes (band not subtracted)."
+    },
+    railTopMaxMm: {
+      value: 1900,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, cl. 2.3: rail top edge at most 1900 mm from the floor (higher only with a pull-down rail)."
+    },
+    railTopToShelfMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawings 1-2: >= 50 mm from the rail top to the shelf above. 60 chosen for hanger hooks (unconfirmed)."
+    },
+    longHangMinMm: {
+      value: 1400,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawing 1 (coats, dresses): >= 1400 mm from the rail top to the element below."
+    },
+    shortHangMinMm: {
+      value: 900,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, drawing 2 (suits, jackets, shirts): >= 900 mm from the rail top to the element below."
+    },
+    shortHangClearMm: {
+      value: 1e3,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Short-clothes hanging zone actually planned above the shelves (>= 900 by GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB); 1000 = margin for longer jackets (unconfirmed)."
+    },
+    drawerTopMaxMm: {
+      value: 1250,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, cl. 7: top drawer edge at most 1250 mm from the floor (DRAWER_TOO_HIGH above)."
+    },
+    minShelfGapMm: {
+      value: 170,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB, cl. 3.1: clear gap between shelves >= 170 mm; smaller leftovers get no shelf / antresol."
+    },
+    autoPresetDouble: {
+      value: "short_hang",
+      unconfirmed: true,
+      note: "'auto' fill behind a double door: short clothes + shelves (D-7, unconfirmed)."
+    },
+    autoPresetSingle: {
+      value: "shelves",
+      unconfirmed: true,
+      note: "'auto' fill behind a single door or without a door: shelves (unchanged)."
+    },
+    bookGapMinMm: {
+      value: 330,
+      unit: "mm",
+      unconfirmed: true,
+      note: "D-14: target clear gap of open book / document shelves, so an A4 folder stands upright (A4 = 297 mm, ISO 216; lever-arch files ~320 mm high). Inside the GOST 13025.1-85 table 2 range (180..390 mm)."
+    },
+    bookGapMaxMm: {
+      value: 390,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.1-85 table 2 (books): clear gap between shelves 180..390 mm; depth 140..440 mm."
+    },
+    splitCarcassFromWidthMm: {
+      value: 1600,
+      unit: "mm",
+      unconfirmed: false,
+      note: "D-15 (founder's decision, 2026-11-14): from this width the wardrobe is made as two carcasses side by side, split at the middle boundary (sections 1+1, 2+1, 2+2): each carcass has its own sides, top, bottom, back and plinth strips. Easier to carry and assemble; ~1 side panel more board."
+    }
+  },
+  constructionRules: [
+    {
+      id: "sides-to-floor",
+      unconfirmed: false,
+      note: "CONFIRMED by Dafna (D-3a.1): side panels run the full product height to the floor (base = plinth or none). The carcass bottom rests on the plinth strips at plinthHeight; carcass height (top of bottom board to top) = height - plinthHeight."
+    },
+    {
+      id: "top-bottom-between-sides",
+      unconfirmed: true,
+      note: "Top and bottom are fitted between the side panels (length = width - 2 x panelThickness)."
+    },
+    {
+      id: "equal-sections-integer-mm",
+      unconfirmed: true,
+      note: "Sections share the inner width equally in whole millimetres; any remainder (< sections mm) goes +1 mm to the leftmost sections."
+    },
+    {
+      id: "plinth-strips-between-sides",
+      unconfirmed: false,
+      note: "CONFIRMED by Dafna (D-3a.1): plinth = front and back strips BETWEEN the side panels (length = width - 2 x panelThickness, height = plinthHeight, board thickness = panelThickness). Front strip set back by plinthRecess from the carcass front, back strip flush with the carcass back. plinthHeight / plinthRecess values stay unconfirmed."
+    },
+    {
+      id: "partitions-between-top-bottom",
+      unconfirmed: true,
+      note: "Vertical partitions are fitted between top and bottom and run the full carcass depth."
+    },
+    {
+      id: "depth-definition",
+      unconfirmed: false,
+      note: "depth = back + carcass + (doors ? doorGapFront + door : 0). carcassDepth = depth - back - (doors ? door + doorGapFront : 0). Decided in D-1a (ADR-003)."
+    },
+    {
+      id: "back-overlay-covers-carcass",
+      unconfirmed: true,
+      note: "The overlay back covers the carcass only (width x carcass height), not the plinth."
+    },
+    {
+      id: "plinth-front-under-carcass",
+      unconfirmed: true,
+      note: "The front plinth strip is set back from the carcass front (not from the door) by plinthRecess."
+    },
+    {
+      id: "doors-overlay",
+      unconfirmed: true,
+      note: "Doors are overlay (nakladnye): they cover the carcass front. Height = carcass height - 2 x doorGapEdge; the plinth stays visible."
+    },
+    {
+      id: "door-split-at-partition-centre",
+      unconfirmed: true,
+      note: "Door coverage of a section ends at the centre line of its partitions (outer carcass edge for the end sections); a double door splits its coverage in two leaves. Leaf widths are rounded to doorLeafRoundingMm (ADR-006)."
+    },
+    {
+      id: "interior-default-rule",
+      unconfirmed: true,
+      note: "interior 'auto': single door -> shelves, double door -> rail_shelf, no door -> shelves; if that preset would produce a warning (e.g. rail in a shallow carcass), shelves instead."
+    },
+    {
+      id: "interior-layout",
+      unconfirmed: true,
+      note: "Drawers stack at the bottom of the section with a fixed shelf directly above; rail presets put a top shelf 400 mm below the top inner face and the rail axis 60 mm below the shelf (or the top); remaining free space without a rail gets evenly spaced removable shelves."
+    },
+    {
+      id: "edge-default-rule",
+      unconfirmed: true,
+      note: "Visible front edges are banded (sides, partitions, top, bottom, shelves: local front edge; doors and drawer fronts: all four edges); back, plinth, drawer box parts: no band."
+    },
+    {
+      id: "grain-placeholder",
+      unconfirmed: true,
+      note: "grainDirection = 'length' for LDSP/MDF parts, null for HDF; real grain rules need Dafna data (oak decors)."
+    },
+    {
+      id: "door-hinge-sides",
+      unconfirmed: true,
+      note: "Single doors hinge toward the outer side of their half of the wardrobe: 1: L, 2: L,R, 3: L,L,R, 4: L,L,R,R (middle of an odd count: left). Two leaves may hinge on the same partition (half-overlay hinges on both faces); they cannot both be fully open at once."
+    },
+    {
+      id: "door-hinge-mount",
+      unconfirmed: true,
+      note: "hingeMount per leaf: 'full_overlay' when hinged on an outer side panel, 'half_overlay' when hinged on a partition (each leaf covers half the partition). Data only, for later hardware / export."
+    },
+    {
+      id: "auto-sections-door-leaf",
+      unconfirmed: true,
+      note: "sections=auto picks the smallest count that keeps every section inner width <= maxShelfSpanMm and, unless doors=none, no single leaf wider than maxSingleLeafWidthMm (relevant for doors=all_single)."
+    },
+    {
+      id: "ergonomics-gost-13025",
+      unconfirmed: false,
+      note: "D-7: long_hang / short_hang / short_hang_drawers follow GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB: rail top <= 1900 from the floor and >= 50 below the shelf above; >= 1400 (long) / >= 900 (short) below the rail top; inner depth >= 560 for a rail; top drawer edge <= 1250; shelves >= 170 apart; space above the rail that fits a >= 170 compartment becomes an antresol (rarely used items, GOST table 6 note)."
+    }
+  ]
+};
+
+// ../../packages/engine/templates/pedestal.v2.json
+var pedestal_v2_default = {
+  templateId: "pedestal",
+  templateVersion: "0.2.0",
+  productType: "pedestal",
+  generator: "pedestal-v1",
+  units: "mm",
+  parameters: [
+    {
+      key: "width",
+      type: "int",
+      default: 430,
+      min: 300,
+      max: 600,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.width",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [430],
+      note: "Overall width. Standard 400 / 450 (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 300 / 400 / 410 wide), unconfirmed for Dafna. D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16)."
+    },
+    {
+      key: "height",
+      type: "int",
+      default: 550,
+      min: 450,
+      max: 760,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.height",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [550],
+      note: "Overall height incl. castors / plinth. \u2248 600 fits under a 740 mm desk (EN 527-1) with a 22\u201325 mm top (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): 597). D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16)."
+    },
+    {
+      key: "depth",
+      type: "int",
+      default: 550,
+      min: 400,
+      max: 650,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.depth",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [550],
+      note: "Overall depth incl. fronts. 500 (desk depth 600\u2013700) / 600 (desk depth 800); unconfirmed. D-17: Dafna's mobile pedestal 430 x 550 x 550 (founder's drawing, 2026-11-16)."
+    },
+    {
+      key: "layout",
+      type: "enum",
+      default: "drawers3",
+      options: ["drawers3", "drawers2_file", "door_shelf"],
+      labelKey: "param.layout",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "3 equal drawers; 2 small drawers + 1 A4 hanging-file drawer (box >= 330 \xD7 240, FILE_DRAWER_TOO_SMALL below); a door with one shelf."
+    },
+    {
+      key: "base",
+      type: "enum",
+      default: "castors",
+      options: ["castors", "plinth"],
+      labelKey: "param.pedestalBase",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Mobile (castors) or standing on a plinth strip (sides to the floor)."
+    },
+    {
+      key: "corpusMaterial",
+      type: "enum",
+      default: "ldsp_white_16",
+      options: [
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      labelKey: "param.corpusMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp"],
+      note: "Carcass board (LDSP), catalog 1.1.0."
+    },
+    {
+      key: "doorMaterial",
+      type: "enum",
+      default: "same_as_corpus",
+      options: [
+        "same_as_corpus",
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16",
+        "lmdf_egger_h1367_st40_16",
+        "lmdf_egger_h1385_st40_16",
+        "lmdf_egger_h1344_st32_16_7",
+        "lmdf_egger_h3325_st28_16_7"
+      ],
+      labelKey: "param.frontMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp", "mdf"],
+      note: "Drawer fronts / door. 'same_as_corpus' follows the carcass decor."
+    },
+    {
+      key: "slideBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.slideBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Drawer slide brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    },
+    {
+      key: "hingeBrand",
+      type: "enum",
+      default: "strax",
+      options: ["strax", "hettich"],
+      labelKey: "param.hingeBrand",
+      uiStep: "hardware",
+      customerVisible: true,
+      unconfirmed: true,
+      note: "Door hinge brand (D-9): Strax (standard) or Hettich (soft close). Item per brand in the hardware catalog; demo until Dafna confirms its hardware list."
+    }
+  ],
+  constants: {
+    backMaterial: {
+      value: "hdf_white_3",
+      unconfirmed: true,
+      note: "HDF back and drawer bottoms (as the wardrobe)."
+    },
+    castorHeightMm: {
+      value: 50,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Castor height incl. mounting plate (purchased part; unconfirmed)."
+    },
+    castorSizeMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Castor footprint drawn in 3D (visual only)."
+    },
+    castorMaterial: {
+      value: "metal_black",
+      unconfirmed: true,
+      note: "Castor finish (visual / BOM)."
+    },
+    plinthHeightMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Plinth strip height when standing (unconfirmed)."
+    },
+    frontGapMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Gap between the carcass front edge and the fronts (as the wardrobe doors)."
+    },
+    frontSideGapMm: {
+      value: 1.5,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Gap between a front and the outer side edge."
+    },
+    frontEdgeGapMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Gap below the lowest front and under the top."
+    },
+    drawerGapMm: {
+      value: 3,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Gap between drawer fronts (as the wardrobe)."
+    },
+    fileFrontHeightMm: {
+      value: 300,
+      unit: "mm",
+      unconfirmed: true,
+      note: "A4 hanging-file drawer front: box 260 high >= 240 (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet): file drawer \u2248 330 \xD7 440 \xD7 240)."
+    },
+    fileDrawerMinBoxWidthMm: {
+      value: 330,
+      unit: "mm",
+      unconfirmed: false,
+      note: "A4 hanging-file frame needs >= 330 mm inside the box (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet))."
+    },
+    fileDrawerMinBoxHeightMm: {
+      value: 240,
+      unit: "mm",
+      unconfirmed: false,
+      note: "A4 hanging files need >= 240 mm box height (manufacturer data of BS EN 14073-2 certified office pedestals (e.g. Flexiform pedestal datasheet))."
+    },
+    underDeskMaxHeightMm: {
+      value: 700,
+      unit: "mm",
+      unconfirmed: true,
+      note: "An under-desk pedestal must stay below the desk top underside (740 \u2212 top \u2212 clearance); PEDESTAL_TOO_HIGH above."
+    },
+    drawerSlideClearanceMm: {
+      value: 13,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Side clearance per side for ball-bearing / roller slides (as the wardrobe)."
+    },
+    drawerBoxHeightReductionMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Box height = front height \u2212 40 (as the wardrobe)."
+    },
+    drawerBoxLiftMm: {
+      value: 20,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Box bottom above the front bottom edge."
+    },
+    drawerBackClearanceMm: {
+      value: 20,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Space behind the drawer box."
+    },
+    drawerSlideMinMm: {
+      value: 250,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Shortest slide."
+    },
+    drawerSlideMaxMm: {
+      value: 550,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Longest slide."
+    },
+    drawerSlideStepMm: {
+      value: 50,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Slide length step."
+    },
+    edgeBandId: {
+      value: "abs_0_8_placeholder",
+      unconfirmed: true,
+      note: "Edge band placeholder (as the wardrobe)."
+    },
+    edgeBandThicknessMm: {
+      value: 0.8,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Edge band thickness placeholder."
+    },
+    smallFrontMinHeightMm: {
+      value: 90,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Smallest drawer front (pens, stationery) in the 2 + file layout; the file drawer shrinks only below this."
+    }
+  },
+  constructionRules: [
+    {
+      id: "pedestal-carcass",
+      unconfirmed: true,
+      note: "Top over the sides; bottom between the sides on the base; HDF back overlay; castors under the bottom corners, or sides to the floor with a plinth strip between them."
+    },
+    {
+      id: "pedestal-fronts",
+      unconfirmed: true,
+      note: "Fronts overlay the sides (full overlay), equal 3 mm gaps; drawer boxes on side slides."
+    }
+  ]
+};
+
+// ../../packages/engine/templates/desk.v2.json
+var desk_v2_default = {
+  templateId: "desk",
+  templateVersion: "0.2.0",
+  productType: "desk",
+  generator: "desk-v1",
+  units: "mm",
+  parameters: [
+    {
+      key: "width",
+      type: "int",
+      default: 1500,
+      min: 800,
+      max: 2e3,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.width",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [1100, 1500, 1700],
+      note: "Work-top width. Writing desk work surface >= 800 \xD7 500 (GOST 13025.3-85); standard sizes unconfirmed. D-17: Dafna's own desk sizes (founder's drawings, 2026-11-16): 1100 x 600, 1500 x 700, 1700 x 700, height 750."
+    },
+    {
+      key: "depth",
+      type: "int",
+      default: 700,
+      min: 500,
+      max: 900,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.depth",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: true,
+      customerValues: [600, 700],
+      note: "Work-top depth (>= 500, GOST 13025.3-85); 600 / 700 / 800 unconfirmed. D-17: Dafna's own desk sizes (founder's drawings, 2026-11-16): 1100 x 600, 1500 x 700, 1700 x 700, height 750."
+    },
+    {
+      key: "height",
+      type: "int",
+      default: 750,
+      min: 650,
+      max: 1250,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.height",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      customerValues: [750, 1100],
+      note: "Work-top height. EN 527-1: fixed-height desks 740 \xB1 20 (DESK_HEIGHT_NOT_ERGONOMIC outside, so customers can pick 1100 only with the lift frame). Lift frame: 740 sitting / 1100 standing shown to the customer (standing height unconfirmed; the frame adjusts continuously on site). D-17: Dafna's own desk sizes (founder's drawings, 2026-11-16): 1100 x 600, 1500 x 700, 1700 x 700, height 750."
+    },
+    {
+      key: "legs",
+      type: "enum",
+      default: "ldsp",
+      options: ["ldsp", "metal_lift"],
+      labelKey: "param.legs",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "Two desk types (Dafna, D-8): a board-made desk (LDSP side legs + modesty panel), or a desk on an electric height-adjustable steel frame (lift). No fixed metal legs."
+    },
+    {
+      key: "topMaterial",
+      type: "enum",
+      default: "ldsp_white_22",
+      options: [
+        "ldsp_white_22",
+        "ldsp_oak_sonoma_light_22",
+        "egger_h3700_st10_25",
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      labelKey: "param.topMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp"],
+      note: "Work top: Dafna table-top boards 22 / 25 mm, or a 16 / 18 mm decor."
+    },
+    {
+      key: "corpusMaterial",
+      type: "enum",
+      default: "ldsp_white_16",
+      options: [
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      labelKey: "param.legMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp"],
+      note: "LDSP legs and modesty panel (legs = ldsp)."
+    },
+    {
+      key: "frameColor",
+      type: "enum",
+      default: "metal_black",
+      options: ["metal_black", "metal_white"],
+      labelKey: "param.frameColor",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: true,
+      control: "swatch",
+      materialKinds: ["metal"],
+      note: "Steel frame finish (legs = metal / metal_lift)."
+    }
+  ],
+  constants: {
+    fixedHeightMinMm: {
+      value: 720,
+      unit: "mm",
+      unconfirmed: false,
+      note: "EN 527-1:2011: fixed-height desks 740 \xB1 20 mm."
+    },
+    fixedHeightMaxMm: {
+      value: 760,
+      unit: "mm",
+      unconfirmed: false,
+      note: "EN 527-1:2011: fixed-height desks 740 \xB1 20 mm."
+    },
+    minWorkWidthMm: {
+      value: 800,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.3-85: writing desk work surface at least 800 \xD7 500 mm."
+    },
+    minWorkDepthMm: {
+      value: 500,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.3-85: writing desk work surface at least 800 \xD7 500 mm."
+    },
+    legDepthInsetMm: {
+      value: 25,
+      unit: "mm",
+      unconfirmed: true,
+      note: "LDSP leg panel set back from the front and back edges of the top."
+    },
+    modestyHeightMm: {
+      value: 350,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Modesty panel height under the top (leaves knee room)."
+    },
+    modestyBackInsetMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Modesty panel distance from the back edge."
+    },
+    frameColumnMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Steel column section (visual; purchased frame)."
+    },
+    liftColumnMm: {
+      value: 80,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Lift-frame telescopic column section (visual; purchased frame)."
+    },
+    frameFootHeightMm: {
+      value: 30,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Foot bar height (visual)."
+    },
+    frameFootInsetMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Foot bar inset from the front / back edges."
+    },
+    frameArmHeightMm: {
+      value: 25,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Top arm under the work top (visual)."
+    },
+    frameEndInsetMm: {
+      value: 100,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Frame column centre from the work-top ends."
+    },
+    frameBeamMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Cross beam section (visual)."
+    },
+    edgeBandId: {
+      value: "abs_0_8_placeholder",
+      unconfirmed: true,
+      note: "Edge band placeholder (as the wardrobe)."
+    },
+    edgeBandThicknessMm: {
+      value: 0.8,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Edge band thickness placeholder."
+    }
+  },
+  constructionRules: [
+    {
+      id: "desk-ldsp-legs",
+      unconfirmed: true,
+      note: "Work top on two LDSP side legs (full top width, flush ends) with a modesty panel between them at the back."
+    },
+    {
+      id: "desk-metal-frame",
+      unconfirmed: true,
+      note: "Lift desk: purchased electric height-adjustable steel frame: per side a foot bar, a telescopic column and a top arm; one cross beam. Drawn as boxes, not cut from board."
+    }
+  ]
+};
+
 // ../../packages/engine/src/template.ts
+var wardrobeTemplate = wardrobe_v10_default;
+var pedestalTemplate = pedestal_v2_default;
+var deskTemplate = desk_v2_default;
+var PRODUCT_TEMPLATES = {
+  wardrobe: wardrobeTemplate,
+  pedestal: pedestalTemplate,
+  desk: deskTemplate
+};
 function getNumberConstant(template, name) {
   const c = template.constants[name];
   if (!c || typeof c.value !== "number") {
@@ -59464,8 +60780,13 @@ var materialsV0 = materials_v0_default;
 var materialsV1 = materials_v1_default;
 var materialsV1_1 = materials_v1_1_default;
 var allMaterials = materialsV1_1;
+var materialFallback = null;
+function setMaterialFallback(fn) {
+  materialFallback = fn;
+}
 function getMaterial(catalog, id) {
-  return typeof id === "string" ? catalog.materials.find((m) => m.id === id) : void 0;
+  if (typeof id !== "string") return void 0;
+  return catalog.materials.find((m) => m.id === id) ?? materialFallback?.(id);
 }
 
 // ../../packages/engine/src/params.ts
@@ -59798,8 +61119,8 @@ function layoutOf(template, p, catalog) {
   const t = getMaterial(catalog, corpus)?.thicknessMm ?? 16;
   const frontT = getMaterial(catalog, front)?.thicknessMm ?? t;
   const backT = getMaterial(catalog, back)?.thicknessMm ?? 3;
-  const base = p.base === "plinth" ? "plinth" : "castors";
-  const baseH = base === "castors" ? n2(template, "castorHeightMm") : n2(template, "plinthHeightMm");
+  const base2 = p.base === "plinth" ? "plinth" : "castors";
+  const baseH = base2 === "castors" ? n2(template, "castorHeightMm") : n2(template, "plinthHeightMm");
   const D = Number(p.depth);
   return {
     W: Number(p.width),
@@ -59809,7 +61130,7 @@ function layoutOf(template, p, catalog) {
     frontT,
     backT,
     baseH,
-    base,
+    base: base2,
     carcassDepth: D - backT - frontT - n2(template, "frontGapMm"),
     corpus,
     front,
@@ -60152,6 +61473,150 @@ var TEMPLATE_CATALOG = {
   "0.11.0": materialsV1.catalogVersion
 };
 
+// ../../packages/engine/catalog/hardware.v1.json
+var hardware_v1_default = {
+  hardwareVersion: "1.1.0",
+  items: [
+    {
+      id: "slide_strax_ball",
+      kind: "slide",
+      brand: "Strax",
+      nameKey: "hw.slide_strax_ball",
+      softClose: false,
+      unit: "pair",
+      unconfirmed: true,
+      note: "Ball-bearing drawer slides (pair). DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      id: "slide_hettich_quadro",
+      kind: "slide",
+      brand: "Hettich",
+      nameKey: "hw.slide_hettich_quadro",
+      softClose: true,
+      unit: "pair",
+      unconfirmed: true,
+      note: "Concealed soft-close drawer runners (pair). DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      id: "hinge_strax",
+      kind: "hinge",
+      brand: "Strax",
+      nameKey: "hw.hinge_strax",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: true,
+      note: "Cup hinge 35 mm. DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      id: "hinge_hettich_sensys",
+      kind: "hinge",
+      brand: "Hettich",
+      nameKey: "hw.hinge_hettich_sensys",
+      softClose: true,
+      unit: "pcs",
+      unconfirmed: true,
+      note: "Cup hinge with integrated soft close. DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      id: "castor_standard",
+      kind: "castor",
+      brand: "Standard",
+      nameKey: "hw.castor_standard",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: true,
+      note: "Office pedestal castor. DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      id: "lift_frame_2leg",
+      kind: "lift_frame",
+      brand: "Standard",
+      nameKey: "hw.lift_frame_2leg",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: true,
+      note: "Electric 2-leg sit-stand desk frame. DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      id: "rail_oval_25",
+      kind: "rail",
+      brand: "Standard",
+      nameKey: "hw.rail_oval_25",
+      softClose: false,
+      unit: "m",
+      unconfirmed: true,
+      note: "Wardrobe hanging rail (per metre). DEMO value until Dafna sends its hardware list (D-9)."
+    },
+    {
+      id: "rail_holder",
+      kind: "rail_holder",
+      brand: "Standard",
+      nameKey: "hw.rail_holder",
+      softClose: false,
+      unit: "pcs",
+      unconfirmed: true,
+      note: "Rail end holder (2 per rail). DEMO value until Dafna sends its hardware list (D-9)."
+    }
+  ],
+  brands: {
+    slide: {
+      strax: "slide_strax_ball",
+      hettich: "slide_hettich_quadro"
+    },
+    hinge: {
+      strax: "hinge_strax",
+      hettich: "hinge_hettich_sensys"
+    }
+  },
+  hingeRule: [
+    {
+      maxDoorHeightMm: 900,
+      count: 2
+    },
+    {
+      maxDoorHeightMm: 1600,
+      count: 3
+    },
+    {
+      maxDoorHeightMm: 2e3,
+      count: 4
+    },
+    {
+      maxDoorHeightMm: 2600,
+      count: 5
+    }
+  ],
+  hingeRuleNote: "Hinges per leaf by height (fitting makers' usual table: <=900: 2, <=1600: 3, <=2000: 4, <=2600: 5). D-15: the count is the larger of the height rule and the weight rule.",
+  hingeWeightRule: [
+    {
+      maxDoorWeightKg: 6,
+      count: 2
+    },
+    {
+      maxDoorWeightKg: 12,
+      count: 3
+    },
+    {
+      maxDoorWeightKg: 17,
+      count: 4
+    },
+    {
+      maxDoorWeightKg: 22,
+      count: 5
+    }
+  ],
+  hingeWeightRuleNote: "D-15: hinges by door weight (handles included). Blum: 4-6 kg -> 2 hinges, 6-12 kg -> 3 (blum.com 'Number of hinges'); 17 / 22 kg steps follow the usual maker diagrams; Hettich Sensys: max. 22 kg door weight per hinge family table. A guide only - Dafna to confirm.",
+  hingeExtraAboveWidthMm: 600,
+  hingeExtraNote: "Blum: the weight values apply to doors up to 600 mm wide; wider (up to 650 mm) need one more hinge.",
+  boardDensityKgM3: {
+    ldsp: 680,
+    mdf: 760,
+    hdf: 850,
+    metal: 7850
+  },
+  boardDensityNote: "Assumed board densities for the door weight (chipboard ~650-700, MDF ~750-800 kg/m3); unconfirmed until Dafna's supplier data."
+};
+
 // ../../packages/engine/catalog/pricelist.demo.json
 var pricelist_demo_default = {
   priceListVersion: "demo-2026-11",
@@ -60186,7 +61651,79 @@ var pricelist_demo_default = {
 };
 
 // ../../packages/engine/src/bom.ts
+var hardwareV1 = hardware_v1_default;
 var priceListDemo = pricelist_demo_default;
+
+// ../../packages/engine/src/extension.ts
+var EMPTY_EXTENSION = { materials: [], hardware: [] };
+var PARAM_USAGE = {
+  corpusMaterial: "corpus",
+  doorMaterial: "door",
+  topMaterial: "top"
+};
+var BRAND_PARAM = {
+  hinge: "hingeBrand",
+  slide: "slideBrand"
+};
+var cloneBrands = (b) => Object.fromEntries(Object.entries(b).map(([k, v]) => [k, { ...v }]));
+var current = EMPTY_EXTENSION;
+var materialById = /* @__PURE__ */ new Map();
+var baseOptions = /* @__PURE__ */ new WeakMap();
+var base = null;
+function toMaterial(m) {
+  return {
+    id: m.id,
+    kind: m.kind,
+    decorName: m.name,
+    code: m.code,
+    thicknessMm: m.thicknessMm,
+    colorHex: m.colorHex,
+    group: m.group,
+    textureUrl: null,
+    customerVisible: m.visible,
+    unconfirmed: false,
+    note: "D-20: added on the admin page"
+  };
+}
+function applyCatalogExtension(ext) {
+  current = ext;
+  materialById.clear();
+  for (const m of ext.materials) materialById.set(m.id, toMaterial(m));
+  setMaterialFallback((id) => materialById.get(id));
+  base ??= { items: hardwareV1.items.slice(), brands: cloneBrands(hardwareV1.brands) };
+  for (const template of Object.values(PRODUCT_TEMPLATES)) {
+    for (const def of template.parameters) {
+      if (def.type !== "enum" || !def.options) continue;
+      const usage = PARAM_USAGE[def.key];
+      const kind = Object.keys(BRAND_PARAM).find(
+        (k) => BRAND_PARAM[k] === def.key
+      );
+      if (!usage && !kind) continue;
+      if (!baseOptions.has(def)) baseOptions.set(def, def.options.slice());
+      const own = baseOptions.get(def);
+      const extra = usage ? ext.materials.filter((m) => m.usage.includes(usage) && (def.materialKinds ?? []).includes(m.kind)).map((m) => m.id) : ext.hardware.filter((h) => h.kind === kind).map((h) => h.brandKey);
+      def.options = [
+        ...own,
+        ...extra.filter((x) => !own.includes(x))
+      ];
+    }
+  }
+  hardwareV1.items.length = 0;
+  hardwareV1.items.push(...base.items);
+  hardwareV1.brands = cloneBrands(base.brands);
+  for (const h of ext.hardware) {
+    hardwareV1.items.push({
+      id: h.id,
+      kind: h.kind,
+      brand: h.brand,
+      nameKey: `${h.brand} ${h.model}`,
+      softClose: h.softClose,
+      unit: h.kind === "slide" ? "pair" : "pcs",
+      unconfirmed: false
+    });
+    (hardwareV1.brands[h.kind] ??= {})[h.brandKey] = h.id;
+  }
+}
 
 // server/assemblyPdf.ts
 var import_pdf_lib3 = __toESM(require_cjs(), 1);
@@ -60485,6 +62022,7 @@ var uz = {
   "creason.DOOR_TOO_WIDE": "Bu kenglikda eshik juda keng bo'lib qoladi",
   "creason.default": "Bu o'lchamda mumkin emas",
   // D-9: hardware + price
+  "hw.softClose": "yumshoq yopiladi",
   "hw.title": "Mexanizmlar",
   "hw.hint3d": "Sariq rangda \u2014 tanlangan mexanizmlar. Brendni bosing yoki \xABYopilishini ko'rish\xBB \u2014 3D'da qanday yopilishini ko'rasiz.",
   "hw.demo.hinge": "Yopilishini ko'rish",
@@ -60691,8 +62229,9 @@ var PRICE_HEADER = [
   "Kod",
   "Nomi",
   "Narx (so'm)",
-  "Varaq uzunligi (mm)",
-  "Varaq eni (mm)"
+  "Varaq uzunligi (mm) / hisob turi",
+  "Varaq eni (mm) / mahsulotlar",
+  "ERP kodi"
 ];
 var boardName = (id) => {
   const m = getMaterial(allMaterials, id);
@@ -60702,15 +62241,22 @@ var boardName = (id) => {
 };
 function priceListToRows(list, updatedAt) {
   const rows = [PRICE_HEADER];
-  rows.push(["yangilangan", "", "Oxirgi saqlash (Toshkent)", updatedAt, "", ""]);
-  rows.push(["foyda_foiz", "", "Foyda, umumiy qiymatdan %", list.markupPct, "", ""]);
-  rows.push(["ish_haqi_m2", "", "Ish haqi, 1 m\xB2 plita uchun", list.laborPerM2, "", ""]);
-  rows.push(["kromka_m", "", "Kromka, 1 metr", list.edgePerM, "", ""]);
+  rows.push(["yangilangan", "", "Oxirgi saqlash (Toshkent)", updatedAt, "", "", ""]);
+  rows.push(["foyda_foiz", "", "Foyda, umumiy qiymatdan %", list.markupPct, "", "", ""]);
+  rows.push(["ish_haqi_m2", "", "Ish haqi, 1 m\xB2 plita uchun", list.laborPerM2, "", "", ""]);
+  rows.push(["kromka_m", "", "Kromka, 1 metr", list.edgePerM, "", "", ""]);
+  const erp = (id) => list.erpCodes?.[id] ?? "";
   for (const [type, v] of Object.entries(list.assembly ?? {}))
-    rows.push(["yigish", type, "Yig'ish, 1 dona mahsulot", v, "", ""]);
+    rows.push(["yigish", type, "Yig'ish, 1 dona mahsulot", v, "", "", ""]);
   for (const [id, s] of Object.entries(list.boardSheets ?? {}))
-    rows.push(["list", id, boardName(id), s.price, s.lengthMm, s.widthMm]);
-  for (const [id, v] of Object.entries(list.hardware)) rows.push(["furnitura", id, id, v, "", ""]);
+    rows.push(["list", id, boardName(id), s.price, s.lengthMm, s.widthMm, erp(id)]);
+  for (const [id, v] of Object.entries(list.hardware))
+    rows.push(["furnitura", id, id, v, "", "", erp(id)]);
+  for (const [id, code] of Object.entries(list.erpCodes ?? {}))
+    if (!list.boardSheets?.[id] && list.hardware[id] === void 0)
+      rows.push(["erp_kod", id, id, "", "", "", code]);
+  for (const sv of list.services ?? [])
+    rows.push(["xizmat", sv.id, sv.name, sv.price, sv.basis, sv.products.join(","), ""]);
   return rows;
 }
 var num = (x) => {
@@ -60724,10 +62270,14 @@ function rowsToPriceList(rows) {
     demo: false,
     boardSheets: {},
     assembly: {},
-    hardware: { ...priceListDemo.hardware }
+    hardware: { ...priceListDemo.hardware },
+    services: [],
+    erpCodes: {}
   };
+  const BASES = ["m2", "edge_m", "product", "pct"];
   for (const r of rows.slice(1)) {
-    const [type, code, , value, len, wid] = r;
+    const [type, code, name, value, len, wid, erpCode] = r;
+    if (code && erpCode) list.erpCodes[String(code)] = String(erpCode);
     const v = num(value);
     const id = String(code ?? "");
     switch (type) {
@@ -60753,6 +62303,18 @@ function rowsToPriceList(rows) {
       case "furnitura":
         if (id && v >= 0) list.hardware[id] = v;
         break;
+      case "xizmat": {
+        const basis = BASES.find((b) => b === len);
+        if (id && v >= 0 && basis)
+          list.services.push({
+            id,
+            name: String(name ?? id),
+            basis,
+            products: String(wid ?? "").split(",").map((x) => x.trim()).filter(Boolean),
+            price: v
+          });
+        break;
+      }
     }
   }
   if (!updatedAt) return null;
@@ -60761,13 +62323,15 @@ function rowsToPriceList(rows) {
 }
 var TOKEN_URL2 = "https://oauth2.googleapis.com/token";
 var API = "https://sheets.googleapis.com/v4/spreadsheets";
-var GoogleSheetsPriceStore = class {
-  constructor(config) {
+var SheetTab = class {
+  constructor(config, title) {
     this.config = config;
+    this.title = title;
     this.fetchImpl = config.fetch ?? fetch;
     this.now = config.now ?? (() => /* @__PURE__ */ new Date());
   }
   config;
+  title;
   fetchImpl;
   now;
   token = null;
@@ -60809,29 +62373,230 @@ var GoogleSheetsPriceStore = class {
     const meta = await this.api(
       "?fields=sheets(properties(title))"
     );
-    if (!meta.sheets?.some((s) => s.properties.title === PRICE_TAB)) {
+    if (!meta.sheets?.some((s) => s.properties.title === this.title)) {
       await this.api(":batchUpdate", {
         method: "POST",
-        body: { requests: [{ addSheet: { properties: { title: PRICE_TAB } } }] }
+        body: { requests: [{ addSheet: { properties: { title: this.title } } }] }
       });
     }
     this.tabReady = true;
   }
   range(a1) {
-    return encodeURIComponent(`${PRICE_TAB}!${a1}`);
+    return encodeURIComponent(`${this.title}!${a1}`);
   }
-  async load() {
+  async read() {
     await this.ensureTab();
-    const data = await this.api(`/values/${this.range("A1:F")}`);
-    return rowsToPriceList(data.values ?? []);
+    const data = await this.api(`/values/${this.range("A1:Z")}`);
+    return data.values ?? [];
   }
-  async save(list, updatedAt) {
+  async write(rows) {
     await this.ensureTab();
-    await this.api(`/values/${this.range("A1:F")}:clear`, { method: "POST", body: {} });
+    await this.api(`/values/${this.range("A1:Z")}:clear`, { method: "POST", body: {} });
     await this.api(`/values/${this.range("A1")}?valueInputOption=RAW`, {
       method: "PUT",
-      body: { values: priceListToRows(list, updatedAt) }
+      body: { values: rows }
     });
+  }
+};
+var GoogleSheetsPriceStore = class {
+  tab;
+  constructor(config) {
+    this.tab = new SheetTab(config, PRICE_TAB);
+  }
+  async load() {
+    return rowsToPriceList(await this.tab.read());
+  }
+  async save(list, updatedAt) {
+    await this.tab.write(priceListToRows(list, updatedAt));
+  }
+};
+
+// server/catalog.ts
+var CachedCatalog = class {
+  constructor(store, ttlMs = 6e4, now = Date.now) {
+    this.store = store;
+    this.ttlMs = ttlMs;
+    this.now = now;
+  }
+  store;
+  ttlMs;
+  now;
+  cached = null;
+  async get() {
+    const t = this.now();
+    if (!this.cached || t - this.cached.at >= this.ttlMs) {
+      this.cached = { ext: await this.store.load(), at: t };
+    }
+    applyCatalogExtension(this.cached.ext);
+    return this.cached.ext;
+  }
+  set(ext) {
+    this.cached = { ext, at: this.now() };
+    applyCatalogExtension(ext);
+  }
+};
+var USAGES = ["corpus", "door", "top"];
+var THICKNESS = [16, 16.7, 18, 22, 25];
+var HEX = /^#[0-9a-f]{6}$/i;
+var text = (v, max) => typeof v === "string" ? v.trim().slice(0, max) : "";
+var slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 20) || "brand";
+function mergeCatalog(saved, incoming) {
+  const inc = incoming ?? {};
+  if (!Array.isArray(inc.materials ?? []) || !Array.isArray(inc.hardware ?? []))
+    return { ok: false, field: "catalog" };
+  const rawM = inc.materials ?? [];
+  const rawH = inc.hardware ?? [];
+  if (rawM.length > 500 || rawH.length > 200) return { ok: false, field: "catalog" };
+  const materials = saved.materials.map((m) => ({ ...m }));
+  let next = materials.length + 1;
+  for (const [i, x] of rawM.entries()) {
+    const name = text(x?.name, 80);
+    const colorHex = text(x?.colorHex, 7);
+    const group = x?.group === "wood" ? "wood" : "plain";
+    const code = text(x?.code, 40) || void 0;
+    const visible = x?.visible !== false;
+    if (!name || !HEX.test(colorHex)) return { ok: false, field: `materials.${i}` };
+    const old = typeof x?.id === "string" ? materials.find((m) => m.id === x.id) : void 0;
+    if (old) {
+      Object.assign(old, { name, code, colorHex: colorHex.toLowerCase(), group, visible });
+      continue;
+    }
+    const kind = x?.kind === "mdf" ? "mdf" : x?.kind === "ldsp" ? "ldsp" : null;
+    const usage = Array.isArray(x?.usage) ? USAGES.filter((u) => x.usage.includes(u)) : [];
+    if (!kind || !THICKNESS.includes(Number(x?.thicknessMm)) || usage.length === 0)
+      return { ok: false, field: `materials.${i}` };
+    while (materials.some((m) => m.id === `x_m${next}`)) next++;
+    materials.push({
+      id: `x_m${next++}`,
+      kind,
+      name,
+      code,
+      thicknessMm: Number(x.thicknessMm),
+      colorHex: colorHex.toLowerCase(),
+      group,
+      usage,
+      visible
+    });
+  }
+  const hardware = saved.hardware.map((h) => ({ ...h }));
+  let nextH = hardware.length + 1;
+  for (const [i, x] of rawH.entries()) {
+    const brand = text(x?.brand, 40);
+    const model = text(x?.model, 60);
+    const softClose = x?.softClose === true;
+    const visible = x?.visible !== false;
+    if (!brand || !model) return { ok: false, field: `hardware.${i}` };
+    const old = typeof x?.id === "string" ? hardware.find((h) => h.id === x.id) : void 0;
+    if (old) {
+      Object.assign(old, { brand, model, softClose, visible });
+      continue;
+    }
+    const kind = x?.kind === "hinge" || x?.kind === "slide" ? x.kind : null;
+    if (!kind) return { ok: false, field: `hardware.${i}` };
+    let brandKey = `x_${slug(`${brand}_${model}`)}`;
+    for (let n3 = 2; hardware.some((h) => h.kind === kind && h.brandKey === brandKey); n3++)
+      brandKey = `x_${slug(`${brand}_${model}`)}_${n3}`;
+    while (hardware.some((h) => h.id === `x_h${nextH}`)) nextH++;
+    hardware.push({ id: `x_h${nextH++}`, kind, brandKey, brand, model, softClose, visible });
+  }
+  return { ok: true, ext: { materials, hardware } };
+}
+var CATALOG_TAB = "Katalog";
+var CATALOG_HEADER = [
+  "Turi",
+  "Kod",
+  "Nomi / brend",
+  "Dekor kodi / model",
+  "Material turi / furnitura turi",
+  "Qalinligi (mm)",
+  "Rang",
+  "Guruh / yumshoq yopiladi",
+  "Ishlatilishi / brend kaliti",
+  "Mijozga ko'rinadi"
+];
+function catalogToRows(ext) {
+  return [
+    CATALOG_HEADER,
+    ...ext.materials.map((m) => [
+      "material",
+      m.id,
+      m.name,
+      m.code ?? "",
+      m.kind,
+      m.thicknessMm,
+      m.colorHex,
+      m.group,
+      m.usage.join(","),
+      m.visible ? "ha" : "yo'q"
+    ]),
+    ...ext.hardware.map((h) => [
+      "furnitura",
+      h.id,
+      h.brand,
+      h.model,
+      h.kind,
+      "",
+      "",
+      h.softClose ? "ha" : "yo'q",
+      h.brandKey,
+      h.visible ? "ha" : "yo'q"
+    ])
+  ];
+}
+function rowsToCatalog(rows) {
+  const materials = [];
+  const hardware = [];
+  const s = (v) => String(v ?? "").trim();
+  for (const r of rows.slice(1)) {
+    const c = (i) => s(r[i]);
+    const [type, id, name, code, kind, thick, color, group, usage, visible] = [
+      c(0),
+      c(1),
+      c(2),
+      c(3),
+      c(4),
+      c(5),
+      c(6),
+      c(7),
+      c(8),
+      c(9)
+    ];
+    if (type === "material" && id && (kind === "ldsp" || kind === "mdf")) {
+      materials.push({
+        id,
+        kind,
+        name: name || id,
+        code: code || void 0,
+        thicknessMm: Number(thick.replace(",", ".")) || 16,
+        colorHex: HEX.test(color) ? color : "#cccccc",
+        group: group === "wood" ? "wood" : "plain",
+        usage: USAGES.filter((u) => usage.split(",").includes(u)),
+        visible: visible !== "yo'q"
+      });
+    } else if (type === "furnitura" && id && (kind === "hinge" || kind === "slide") && usage) {
+      hardware.push({
+        id,
+        kind,
+        brandKey: usage,
+        brand: name || id,
+        model: code,
+        softClose: group === "ha",
+        visible: visible !== "yo'q"
+      });
+    }
+  }
+  return { materials, hardware };
+}
+var GoogleSheetsCatalogStore = class {
+  tab;
+  constructor(config) {
+    this.tab = new SheetTab(config, CATALOG_TAB);
+  }
+  async load() {
+    return rowsToCatalog(await this.tab.read());
+  }
+  async save(ext) {
+    await this.tab.write(catalogToRows(ext));
   }
 };
 
@@ -60912,6 +62677,37 @@ function parsePriceList(raw, version) {
   if (typeof hardware === "string") return { ok: false, field: hardware };
   const assembly = record(v.assembly, "assembly");
   if (typeof assembly === "string") return { ok: false, field: assembly };
+  const services = [];
+  if (v.services !== void 0) {
+    if (!Array.isArray(v.services) || v.services.length > 100)
+      return { ok: false, field: "services" };
+    for (const [i, raw2] of v.services.entries()) {
+      const x = raw2;
+      const name = typeof x?.name === "string" ? x.name.trim().slice(0, 80) : "";
+      const okBasis = ["m2", "edge_m", "product", "pct"].includes(String(x?.basis));
+      const products = Array.isArray(x?.products) ? x.products.filter((p) => typeof p === "string" && /^[a-z]+$/.test(p)) : [];
+      if (!x || !name || !okBasis || !money(x.price) || x.basis === "pct" && x.price > 100)
+        return { ok: false, field: `services.${i}` };
+      const id = typeof x.id === "string" && /^s_[a-z0-9]{1,12}$/.test(x.id) ? x.id : `s_${i + 1}`;
+      services.push({ id, name, basis: x.basis, products, price: Math.round(x.price) });
+    }
+    const seen = /* @__PURE__ */ new Set();
+    for (const sv of services) {
+      let n3 = 1;
+      while (seen.has(sv.id)) sv.id = `s_${n3++}`;
+      seen.add(sv.id);
+    }
+  }
+  const erpCodes = {};
+  if (v.erpCodes !== void 0) {
+    if (typeof v.erpCodes !== "object" || v.erpCodes === null)
+      return { ok: false, field: "erpCodes" };
+    for (const [id, code] of Object.entries(v.erpCodes)) {
+      if (typeof code !== "string" || code.length > 60)
+        return { ok: false, field: `erpCodes.${id}` };
+      if (code.trim()) erpCodes[id] = code.trim();
+    }
+  }
   for (const k of ["edgePerM", "laborPerM2"])
     if (!money(v[k])) return { ok: false, field: k };
   const markup = v.markupPct;
@@ -60926,6 +62722,8 @@ function parsePriceList(raw, version) {
       boardSheets: sheets,
       hardware: { ...priceListDemo.hardware, ...hardware },
       assembly,
+      services,
+      erpCodes,
       edgePerM: Math.round(v.edgePerM),
       laborPerM2: Math.round(v.laborPerM2),
       markupPct: markup
@@ -60944,23 +62742,38 @@ async function handleManager(req, deps2) {
   if (!pinMatches(req.headers.get("x-manager-pin"), deps2.managerPin))
     return json(401, { error: { code: "wrong_pin" } });
   if (req.method === "GET") {
+    const catalog2 = await deps2.catalog?.get();
     const { list, updatedAt: updatedAt2 } = await deps2.prices.get();
-    return json(200, { list, updatedAt: updatedAt2 });
+    return json(200, { list, updatedAt: updatedAt2, catalog: catalog2 });
   }
   let body;
   try {
-    const text = await req.text();
-    if (text.length > MAX_BODY * 5) return json(413, { error: { code: "too_large" } });
-    body = JSON.parse(text);
+    const text2 = await req.text();
+    if (text2.length > MAX_BODY * 5) return json(413, { error: { code: "too_large" } });
+    body = JSON.parse(text2);
   } catch {
     return json(400, { error: { code: "invalid_request" } });
+  }
+  let catalog = deps2.catalog ? await deps2.catalog.get() : void 0;
+  if (body.catalog !== void 0) {
+    if (!deps2.catalogStore || !deps2.catalog)
+      return json(503, { error: { code: "not_configured" } });
+    const merged = mergeCatalog(await deps2.catalogStore.load(), body.catalog);
+    if (!merged.ok) return json(400, { error: { code: "invalid_catalog", field: merged.field } });
+    await deps2.catalogStore.save(merged.ext);
+    deps2.catalog.set(merged.ext);
+    catalog = merged.ext;
+  }
+  if (body.list === void 0) {
+    const { list, updatedAt: updatedAt2 } = await deps2.prices.get();
+    return json(200, { ok: true, list, updatedAt: updatedAt2, catalog });
   }
   const updatedAt = tashkentMinute(deps2.now());
   const parsed = parsePriceList(body.list, `live-${updatedAt}`);
   if (!parsed.ok) return json(400, { error: { code: "invalid_price", field: parsed.field } });
   await deps2.store.save(parsed.list, updatedAt);
   deps2.prices.set(parsed.list, updatedAt);
-  return json(200, { ok: true, list: parsed.list, updatedAt });
+  return json(200, { ok: true, list: parsed.list, updatedAt, catalog });
 }
 
 // server/rateLimit.ts
@@ -61006,6 +62819,15 @@ function pricesFromEnv(env) {
   const store = priceStoreFromEnv(env);
   return { store, prices: new CachedPrices(store) };
 }
+var catalogSingleton = null;
+function catalogFromEnv(env) {
+  if (catalogSingleton) return catalogSingleton;
+  const account = parseServiceAccount(env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  if (!account || !env.GOOGLE_SHEET_ID) throw new Error("google sheets env missing");
+  const store = new GoogleSheetsCatalogStore({ sheetId: env.GOOGLE_SHEET_ID, account });
+  catalogSingleton = { store, catalog: new CachedCatalog(store) };
+  return catalogSingleton;
+}
 
 // server/entries/manager.ts
 var deps = null;
@@ -61025,7 +62847,9 @@ function handle(request) {
       prices,
       managerPin: process.env.MANAGER_PIN,
       limiter: new RateLimiter(30, 10 * 60 * 1e3),
-      now: () => /* @__PURE__ */ new Date()
+      now: () => /* @__PURE__ */ new Date(),
+      catalogStore: catalogFromEnv(process.env).store,
+      catalog: catalogFromEnv(process.env).catalog
     };
   }
   return handleManager(request, deps);

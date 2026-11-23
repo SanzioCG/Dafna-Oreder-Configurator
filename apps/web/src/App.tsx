@@ -19,6 +19,7 @@ import { StepPanel } from './ui/StepPanel';
 import type { CaptureFn } from './viewer/renderCapture';
 import type { MechanismDemo, MechanismKind } from './viewer/mechanisms';
 import { Viewer } from './viewer/Viewer';
+import { useCatalogExtension } from './state/catalogSource';
 import { STAFF_EXIT_EVENT, STAFF_REQUEST_EVENT, exitStaff } from './state/staffAccess';
 import { CUSTOMER_IDLE_S, STAFF_IDLE_S, useIdle } from './state/useIdle';
 import { IdleWarning } from './ui/IdleWarning';
@@ -247,6 +248,8 @@ export function App() {
   // D-13: staff mode needs the PIN (server-checked); `?mode=staff` asks for it, a dev build
   // opens staff mode straight away. Entering or leaving staff mode starts a fresh session.
   const wantsStaff = parseMode(window.location.search) === 'staff';
+  // D-20: materials / hardware added on the manager page (re-renders the kiosk when they arrive)
+  useCatalogExtension();
   const [mode, setMode] = useState<Mode>(wantsStaff && import.meta.env.DEV ? 'staff' : 'customer');
   const [pinOpen, setPinOpen] = useState(wantsStaff && !import.meta.env.DEV);
   const [session, setSession] = useState(0);

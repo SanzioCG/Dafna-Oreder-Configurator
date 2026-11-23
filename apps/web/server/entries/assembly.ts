@@ -3,10 +3,11 @@
  * PDF behind the QR code). Bundled by scripts/build-api.mjs into api/assembly.js.
  */
 import { handleAssembly } from '../assemblyLink';
-import { linkSecretFromEnv, missingEnv, storeFromEnv } from '../config';
+import { applyCatalogFromEnv, linkSecretFromEnv, missingEnv, storeFromEnv } from '../config';
 
 export async function GET(request: Request): Promise<Response> {
   if (missingEnv(process.env).length > 0) return new Response('misconfigured', { status: 503 });
+  await applyCatalogFromEnv(process.env);
   return handleAssembly(request, {
     store: storeFromEnv(process.env),
     secret: linkSecretFromEnv(process.env),

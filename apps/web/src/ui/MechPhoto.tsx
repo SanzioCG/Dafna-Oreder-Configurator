@@ -1,3 +1,4 @@
+import { extensionBrand } from '@dafna/engine';
 /**
  * D-10b: a picture of each mechanism on its brand option, so the customer sees what goes into the
  * cabinet. Photos live in apps/web/public/hardware/ and are listed in PHOTOS; where none is
@@ -138,7 +139,8 @@ function SlideSketch({ hidden }: { hidden: boolean }) {
 
 export function MechPhoto({ kind, brand, alt }: { kind: MechKind; brand: string; alt: string }) {
   const photo = mechPhoto(kind, brand);
-  const soft = brand === 'hettich';
+  // D-20: a brand added on the manager page draws as its soft-close flag says
+  const soft = brand === 'hettich' || extensionBrand(kind, brand)?.softClose === true;
   return (
     <span className="mech-photo" data-testid={`mech-photo-${kind}-${brand}`}>
       {photo ? (

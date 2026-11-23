@@ -4,7 +4,7 @@
  * calling this URL with the CRON_SECRET bearer). Bundled by
  * scripts/build-api.mjs into api/retry-telegram.js — edit this source, never the bundle.
  */
-import { missingEnv, notifierFromEnv, storeFromEnv } from '../config';
+import { applyCatalogFromEnv, missingEnv, notifierFromEnv, storeFromEnv } from '../config';
 import { retryNotifications } from '../retry';
 
 export async function GET(request: Request): Promise<Response> {
@@ -13,6 +13,7 @@ export async function GET(request: Request): Promise<Response> {
     return new Response('unauthorized', { status: 401 });
   }
   if (missingEnv(process.env).length > 0) return new Response('misconfigured', { status: 503 });
+  await applyCatalogFromEnv(process.env);
   try {
     const report = await retryNotifications(
       storeFromEnv(process.env),

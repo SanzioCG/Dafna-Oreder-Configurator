@@ -40,6 +40,7 @@ function devSubmitApi(): Plugin {
       for (const [path, factory] of [
         ['/api/quote', 'createDevQuoteHandler'],
         ['/api/manager', 'createDevManagerHandler'],
+        ['/api/catalog', 'createDevCatalogHandler'],
       ] as const) {
         let h: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
         server.middlewares.use(path, (req, res, next) => {

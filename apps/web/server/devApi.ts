@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { handleAssembly } from './assemblyLink';
 import { FakeNotifier, MemoryLeadStore } from './memory';
+import { CachedCatalog, MemoryCatalogStore, handleCatalog } from './catalog';
 import { CachedPrices, MemoryPriceStore, handleManager, handleQuote } from './prices';
 import { RateLimiter } from './rateLimit';
 import { handleStaffPin } from './staffPin';
@@ -107,6 +108,15 @@ const devPrices = (() => {
   const store = new MemoryPriceStore();
   return { store, prices: new CachedPrices(store, 0) };
 })();
+/** D-20: the catalog extension, in memory (dev) */
+const devCatalog = (() => {
+  const store = new MemoryCatalogStore();
+  return { catalogStore: store, catalog: new CachedCatalog(store, 0) };
+})();
+
+export function createDevCatalogHandler() {
+  return adapt((r) => handleCatalog(r, devCatalog.catalog), '/api/catalog');
+}
 
 function adapt(handler: (request: Request) => Promise<Response>, path: string) {
   return (req: IncomingMessage, res: ServerResponse) => {
@@ -135,6 +145,7 @@ export function createDevQuoteHandler() {
         staffPin: undefined,
         managerPin: undefined,
         breakdownWithoutPin: true,
+        catalog: devCatalog.catalog,
       }),
     '/api/quote',
   );
@@ -146,6 +157,7 @@ export function createDevManagerHandler() {
     (r) =>
       handleManager(r, {
         ...devPrices,
+        ...devCatalog,
         managerPin: process.env.DEV_MANAGER_PIN ?? '0000',
         limiter,
         now: () => new Date(),

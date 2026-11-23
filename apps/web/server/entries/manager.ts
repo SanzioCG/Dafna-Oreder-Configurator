@@ -2,7 +2,7 @@
  * Vercel Function entry: GET / PUT /api/manager (D-19: the manager's price list; env
  * MANAGER_PIN). Bundled by scripts/build-api.mjs into api/manager.js.
  */
-import { pricesFromEnv } from '../config';
+import { catalogFromEnv, pricesFromEnv } from '../config';
 import { handleManager, type ManagerDeps } from '../prices';
 import { RateLimiter } from '../rateLimit';
 
@@ -26,6 +26,8 @@ function handle(request: Request): Promise<Response> {
       managerPin: process.env.MANAGER_PIN,
       limiter: new RateLimiter(30, 10 * 60 * 1000),
       now: () => new Date(),
+      catalogStore: catalogFromEnv(process.env).store,
+      catalog: catalogFromEnv(process.env).catalog,
     };
   }
   return handleManager(request, deps);

@@ -1,5 +1,13 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { priceListDemo, wardrobeTemplate, defaultParams, generate } from '@dafna/engine';
+import {
+  EMPTY_EXTENSION,
+  applyCatalogExtension,
+  defaultParams,
+  generate,
+  priceListDemo,
+  wardrobeTemplate,
+  type CatalogExtension,
+} from '@dafna/engine';
 import { afterEach, describe, expect, it } from 'vitest';
 import { fetchQuote } from '../state/priceSource';
 import { forgetStaffPin, verifyStaffPin } from '../state/staffAccess';
@@ -9,6 +17,7 @@ import { ManagerPage } from './ManagerPage';
 afterEach(() => {
   cleanup();
   forgetStaffPin();
+  applyCatalogExtension(EMPTY_EXTENSION);
 });
 
 interface Call {
@@ -22,17 +31,32 @@ interface Call {
 function fakeManagerApi() {
   const calls: Call[] = [];
   let saved: { list: unknown; updatedAt: string } | null = null;
+  // the server's append-only merge, simplified: new entries get ids
+  let catalog: CatalogExtension = EMPTY_EXTENSION;
   const impl = (async (url: string, init: RequestInit) => {
     const headers = init.headers as Record<string, string>;
-    const body = init.body ? (JSON.parse(String(init.body)) as { list: unknown }) : undefined;
+    const body = init.body
+      ? (JSON.parse(String(init.body)) as { list: unknown; catalog?: CatalogExtension })
+      : undefined;
     calls.push({ url, method: String(init.method), headers, body });
     if (headers['x-manager-pin'] !== '9137')
       return new Response(JSON.stringify({ error: { code: 'wrong_pin' } }), { status: 401 });
     if (init.method === 'PUT') {
+      if (body!.catalog)
+        catalog = {
+          materials: body!.catalog.materials.map((m, i) => ({ ...m, id: m.id ?? `x_m${i + 1}` })),
+          hardware: body!.catalog.hardware.map((h, i) => ({
+            ...h,
+            id: h.id ?? `x_h${i + 1}`,
+            brandKey: h.brandKey ?? `x_${h.brand.toLowerCase()}`,
+          })),
+        };
       saved = { list: { ...(body!.list as object), demo: false }, updatedAt: '2026-11-23 14:05' };
-      return new Response(JSON.stringify({ ok: true, ...saved }));
+      return new Response(JSON.stringify({ ok: true, ...saved, catalog }));
     }
-    return new Response(JSON.stringify(saved ?? { list: priceListDemo, updatedAt: null }));
+    return new Response(
+      JSON.stringify({ ...(saved ?? { list: priceListDemo, updatedAt: null }), catalog }),
+    );
   }) as unknown as typeof fetch;
   return { calls, impl };
 }
@@ -65,8 +89,8 @@ describe('D-19 manager price page', () => {
     await login('9137');
     await screen.findByTestId('mgr-save');
     // the ERP is not connected yet: said plainly, sheet prices are typed here
-    expect(screen.getByTestId('mgr-erp-note').textContent).toContain('ERP hali ulanmagan');
-    expect(screen.getByTestId('mgr-updated').textContent).toContain('Hali saqlanmagan');
+    expect(screen.getByTestId('mgr-erp-note').textContent).toContain('1C hali ulanmagan');
+    expect(screen.getByTestId('mgr-updated').textContent).toContain('hali saqlanmagan');
     const total = () =>
       Number(screen.getByTestId('mgr-total-wardrobe').textContent?.replace(/\s/g, ''));
     const t0 = total();
@@ -97,6 +121,60 @@ describe('D-19 manager price page', () => {
       lengthMm: 2750, // Dafna chipboard (no EGGER code): the GibLab sheet size
       widthMm: 1830,
     });
+  });
+});
+
+describe('D-20 manager adds materials, hardware and services', () => {
+  it('a new board and a new hinge brand become kiosk options; a service is priced', async () => {
+    const api = fakeManagerApi();
+    render(
+      <ThemeProvider>
+        <ManagerPage fetchImpl={api.impl} />
+      </ThemeProvider>,
+    );
+    await login('9137');
+    await screen.findByTestId('mgr-save');
+    // a service: delivery 150 000 per product
+    const before = Number(screen.getByTestId('mgr-total-wardrobe').textContent?.replace(/\s/g, ''));
+    fireEvent.click(screen.getByTestId('mgr-service-add'));
+    fireEvent.change(screen.getByTestId('mgr-service-name-0'), { target: { value: 'Yetkazish' } });
+    fireEvent.change(screen.getByTestId('mgr-service-price-0'), { target: { value: '150000' } });
+    const after = Number(screen.getByTestId('mgr-total-wardrobe').textContent?.replace(/\s/g, ''));
+    expect(after).toBeGreaterThan(before);
+    // a board
+    fireEvent.click(screen.getByTestId('mgr-tab-materials'));
+    fireEvent.click(screen.getByTestId('mgr-material-add'));
+    fireEvent.change(screen.getByTestId('mgr-material-name-0'), {
+      target: { value: 'Дуб Гладстоун табак' },
+    });
+    // a hinge
+    fireEvent.click(screen.getByTestId('mgr-tab-hardware'));
+    fireEvent.click(screen.getByTestId('mgr-hw-add'));
+    fireEvent.change(screen.getByTestId('mgr-hw-brand-0'), { target: { value: 'Blum' } });
+    fireEvent.change(screen.getByTestId('mgr-hw-model-0'), {
+      target: { value: 'Clip Top Blumotion' },
+    });
+    fireEvent.click(screen.getByTestId('mgr-save'));
+    await waitFor(() => expect(screen.getByTestId('mgr-save').textContent).toBe('Saqlandi'));
+    const put = api.calls.find((c) => c.method === 'PUT')!.body as {
+      list: { services: { name: string; price: number; basis: string }[] };
+      catalog: CatalogExtension;
+    };
+    expect(put.list.services).toEqual([
+      expect.objectContaining({ name: 'Yetkazish', price: 150000, basis: 'product' }),
+    ]);
+    expect(put.catalog.materials[0]).toMatchObject({ name: 'Дуб Гладстоун табак', kind: 'ldsp' });
+    expect(put.catalog.materials[0]!.id).toBeUndefined(); // the server assigns ids
+    // the saved catalog is applied: the kiosk templates offer the new board and brand
+    const opts = (key: string) =>
+      wardrobeTemplate.parameters.find((p) => p.key === key)?.options ?? [];
+    expect(opts('corpusMaterial')).toContain('x_m1');
+    expect(opts('hingeBrand')).toContain('x_blum');
+    // its sheet price row is there now, with its 1C code field
+    fireEvent.click(screen.getByTestId('mgr-tab-prices'));
+    expect(screen.getByTestId('mgr-sheet-x_m1')).toBeTruthy();
+    expect(screen.getByTestId('mgr-erp-x_m1')).toBeTruthy();
+    expect(screen.getByTestId('mgr-hw-x_h1')).toBeTruthy();
   });
 });
 

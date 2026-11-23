@@ -1,3 +1,4 @@
+import { extensionBrand } from '@dafna/engine';
 import { useI18n } from '../i18n/I18n';
 import type { Configurator } from '../state/useConfigurator';
 import { hardwareParams } from '../steps';
@@ -57,36 +58,66 @@ export function HardwareBlock({
               aria-label={t(def.labelKey)}
               data-param={def.key}
             >
-              {(def.options ?? []).map((o) => (
-                <button
-                  key={String(o)}
-                  type="button"
-                  role="radio"
-                  aria-checked={String(o) === value}
-                  data-option={String(o)}
-                  className={String(o) === value ? 'option-row active' : 'option-row'}
-                  onClick={() => {
-                    config.setParam(def.key, o);
-                    if (kind) onDemo?.(kind, String(o));
-                  }}
-                >
-                  {kind && (
-                    <MechPhoto
-                      kind={kind}
-                      brand={String(o)}
-                      alt={t(`hw.model.${kind}.${String(o)}`)}
-                    />
-                  )}
-                  <span className="option-text">
-                    <span className="option-title">{t(`hw.brand.${String(o)}`)}</span>
-                    <span className="option-hint">{t(`hw.hint.${def.key}.${String(o)}`)}</span>
-                  </span>
-                </button>
-              ))}
+              {(def.options ?? [])
+                // D-20: a brand hidden on the manager page is offered only while it is chosen
+                .filter((o) => {
+                  const x = kind ? extensionBrand(kind, String(o)) : undefined;
+                  return !x || x.visible || String(o) === value;
+                })
+                .map((o) => (
+                  <button
+                    key={String(o)}
+                    type="button"
+                    role="radio"
+                    aria-checked={String(o) === value}
+                    data-option={String(o)}
+                    className={String(o) === value ? 'option-row active' : 'option-row'}
+                    onClick={() => {
+                      config.setParam(def.key, o);
+                      if (kind) onDemo?.(kind, String(o));
+                    }}
+                  >
+                    {kind && (
+                      <MechPhoto
+                        kind={kind}
+                        brand={String(o)}
+                        alt={brandText(t, kind, String(o)).model}
+                      />
+                    )}
+                    <span className="option-text">
+                      <span className="option-title">{brandText(t, kind, String(o)).title}</span>
+                      <span className="option-hint">
+                        {brandText(t, kind, String(o), def.key).hint}
+                      </span>
+                    </span>
+                  </button>
+                ))}
             </div>
           </div>
         );
       })}
     </section>
   );
+}
+
+/** D-20: brand texts; a brand added on the manager page shows its own brand / model (never
+ * translated), built-in brands their i18n texts. */
+function brandText(
+  t: (key: string) => string,
+  kind: 'hinge' | 'slide' | undefined,
+  brand: string,
+  paramKey = '',
+): { title: string; model: string; hint: string } {
+  const x = kind ? extensionBrand(kind, brand) : undefined;
+  if (x)
+    return {
+      title: x.brand,
+      model: `${x.brand} ${x.model}`,
+      hint: `${x.model}${x.softClose ? ` · ${t('hw.softClose')}` : ''}`,
+    };
+  return {
+    title: t(`hw.brand.${brand}`),
+    model: kind ? t(`hw.model.${kind}.${brand}`) : brand,
+    hint: t(`hw.hint.${paramKey}.${brand}`),
+  };
 }

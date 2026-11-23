@@ -8,8 +8,10 @@ import {
   priceListDemo,
   type PriceList,
   type PriceResult,
+  type PriceService,
   type SheetPrice,
 } from '@dafna/engine';
+import { mergeCatalog, type CachedCatalog, type CatalogStore } from './catalog';
 import type { RateLimiter } from './rateLimit';
 
 /**
@@ -104,6 +106,8 @@ export interface QuoteDeps {
   managerPin: string | undefined;
   /** dev server only: the breakdown without a PIN (dev staff mode has no PIN) */
   breakdownWithoutPin?: boolean;
+  /** D-20: materials / hardware added on the manager page */
+  catalog?: CachedCatalog;
 }
 
 const MAX_BODY = 20_000;
@@ -130,6 +134,7 @@ export async function handleQuote(req: Request, deps: QuoteDeps): Promise<Respon
   if (!template || typeof body.params !== 'object' || body.params === null)
     return json(400, { error: { code: 'invalid_request' } });
 
+  await deps.catalog?.get();
   const { list } = await deps.prices.get();
   const params = body.params as Record<string, unknown>;
   const result = generate(template, params);
@@ -191,6 +196,40 @@ export function parsePriceList(
   if (typeof hardware === 'string') return { ok: false, field: hardware };
   const assembly = record(v.assembly, 'assembly');
   if (typeof assembly === 'string') return { ok: false, field: assembly };
+  const services: PriceService[] = [];
+  if (v.services !== undefined) {
+    if (!Array.isArray(v.services) || v.services.length > 100)
+      return { ok: false, field: 'services' };
+    for (const [i, raw] of v.services.entries()) {
+      const x = raw as Partial<PriceService> | null;
+      const name = typeof x?.name === 'string' ? x.name.trim().slice(0, 80) : '';
+      const okBasis = ['m2', 'edge_m', 'product', 'pct'].includes(String(x?.basis));
+      const products = Array.isArray(x?.products)
+        ? x.products.filter((p): p is string => typeof p === 'string' && /^[a-z]+$/.test(p))
+        : [];
+      if (!x || !name || !okBasis || !money(x.price) || (x.basis === 'pct' && x.price! > 100))
+        return { ok: false, field: `services.${i}` };
+      const id = typeof x.id === 'string' && /^s_[a-z0-9]{1,12}$/.test(x.id) ? x.id : `s_${i + 1}`;
+      services.push({ id, name, basis: x.basis!, products, price: Math.round(x.price!) });
+    }
+    // ids unique (a new row may reuse a free number)
+    const seen = new Set<string>();
+    for (const sv of services) {
+      let n = 1;
+      while (seen.has(sv.id)) sv.id = `s_${n++}`;
+      seen.add(sv.id);
+    }
+  }
+  const erpCodes: Record<string, string> = {};
+  if (v.erpCodes !== undefined) {
+    if (typeof v.erpCodes !== 'object' || v.erpCodes === null)
+      return { ok: false, field: 'erpCodes' };
+    for (const [id, code] of Object.entries(v.erpCodes)) {
+      if (typeof code !== 'string' || code.length > 60)
+        return { ok: false, field: `erpCodes.${id}` };
+      if (code.trim()) erpCodes[id] = code.trim();
+    }
+  }
   for (const k of ['edgePerM', 'laborPerM2'] as const)
     if (!money(v[k])) return { ok: false, field: k };
   const markup = v.markupPct;
@@ -205,6 +244,8 @@ export function parsePriceList(
       boardSheets: sheets,
       hardware: { ...priceListDemo.hardware, ...hardware },
       assembly,
+      services,
+      erpCodes,
       edgePerM: Math.round(v.edgePerM as number),
       laborPerM2: Math.round(v.laborPerM2 as number),
       markupPct: markup,
@@ -219,6 +260,9 @@ export interface ManagerDeps {
   managerPin: string | undefined;
   limiter: RateLimiter;
   now: () => Date;
+  /** D-20: the catalog extension (append-only) */
+  catalogStore?: CatalogStore;
+  catalog?: CachedCatalog;
 }
 
 /** "2026-11-23 14:05" (Asia/Tashkent, UTC+5) */
@@ -236,10 +280,11 @@ export async function handleManager(req: Request, deps: ManagerDeps): Promise<Re
     return json(401, { error: { code: 'wrong_pin' } });
 
   if (req.method === 'GET') {
+    const catalog = await deps.catalog?.get();
     const { list, updatedAt } = await deps.prices.get();
-    return json(200, { list, updatedAt });
+    return json(200, { list, updatedAt, catalog });
   }
-  let body: { list?: unknown };
+  let body: { list?: unknown; catalog?: unknown };
   try {
     const text = await req.text();
     if (text.length > MAX_BODY * 5) return json(413, { error: { code: 'too_large' } });
@@ -247,10 +292,25 @@ export async function handleManager(req: Request, deps: ManagerDeps): Promise<Re
   } catch {
     return json(400, { error: { code: 'invalid_request' } });
   }
+  // D-20: the catalog first (append-only merge on the stored one), then the prices
+  let catalog = deps.catalog ? await deps.catalog.get() : undefined;
+  if (body.catalog !== undefined) {
+    if (!deps.catalogStore || !deps.catalog)
+      return json(503, { error: { code: 'not_configured' } });
+    const merged = mergeCatalog(await deps.catalogStore.load(), body.catalog);
+    if (!merged.ok) return json(400, { error: { code: 'invalid_catalog', field: merged.field } });
+    await deps.catalogStore.save(merged.ext);
+    deps.catalog.set(merged.ext);
+    catalog = merged.ext;
+  }
+  if (body.list === undefined) {
+    const { list, updatedAt } = await deps.prices.get();
+    return json(200, { ok: true, list, updatedAt, catalog });
+  }
   const updatedAt = tashkentMinute(deps.now());
   const parsed = parsePriceList(body.list, `live-${updatedAt}`);
   if (!parsed.ok) return json(400, { error: { code: 'invalid_price', field: parsed.field } });
   await deps.store.save(parsed.list, updatedAt);
   deps.prices.set(parsed.list, updatedAt);
-  return json(200, { ok: true, list: parsed.list, updatedAt });
+  return json(200, { ok: true, list: parsed.list, updatedAt, catalog });
 }

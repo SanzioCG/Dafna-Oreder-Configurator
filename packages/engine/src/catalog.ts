@@ -59,6 +59,13 @@ export const MATERIAL_MAP_V0_V1: Readonly<Record<string, string>> = {
   ldsp_white_18: 'egger_w1000_st9_18',
 };
 
+/** D-20: materials added on the admin page (extension.ts registers the lookup). */
+let materialFallback: ((id: string) => Material | undefined) | null = null;
+export function setMaterialFallback(fn: ((id: string) => Material | undefined) | null): void {
+  materialFallback = fn;
+}
+
 export function getMaterial(catalog: MaterialCatalog, id: unknown): Material | undefined {
-  return typeof id === 'string' ? catalog.materials.find((m) => m.id === id) : undefined;
+  if (typeof id !== 'string') return undefined;
+  return catalog.materials.find((m) => m.id === id) ?? materialFallback?.(id);
 }

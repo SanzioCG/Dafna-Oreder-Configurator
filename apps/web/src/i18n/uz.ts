@@ -322,6 +322,7 @@ export const uz = {
   'creason.default': "Bu o'lchamda mumkin emas",
 
   // D-9: hardware + price
+  'hw.softClose': 'yumshoq yopiladi',
   'hw.title': 'Mexanizmlar',
   'hw.hint3d':
     "Sariq rangda — tanlangan mexanizmlar. Brendni bosing yoki «Yopilishini ko'rish» — 3D'da qanday yopilishini ko'rasiz.",

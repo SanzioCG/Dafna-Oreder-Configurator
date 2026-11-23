@@ -102,7 +102,20 @@ export {
   type HardwareCatalog,
   type HardwareItem,
   type PriceList,
+  type PriceService,
   type SheetPrice,
   type PriceResult,
   type PricedLine,
 } from './bom.js';
+export {
+  applyCatalogExtension,
+  catalogExtension,
+  extensionBrand,
+  extensionMaterial,
+  toMaterial,
+  EMPTY_EXTENSION,
+  type CatalogExtension,
+  type CustomHardware,
+  type CustomMaterial,
+  type MaterialUsage,
+} from './extension.js';

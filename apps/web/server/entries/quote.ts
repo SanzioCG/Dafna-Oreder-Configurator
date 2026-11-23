@@ -2,7 +2,7 @@
  * Vercel Function entry: POST /api/quote (D-19: the price, computed on the server; customers
  * get the final number only). Bundled by scripts/build-api.mjs into api/quote.js.
  */
-import { pricesFromEnv } from '../config';
+import { catalogFromEnv, pricesFromEnv } from '../config';
 import { handleQuote, type QuoteDeps } from '../prices';
 
 let deps: QuoteDeps | null = null;
@@ -20,6 +20,7 @@ export async function POST(request: Request): Promise<Response> {
     prices: pricesFromEnv(process.env).prices,
     staffPin: process.env.STAFF_PIN,
     managerPin: process.env.MANAGER_PIN,
+    catalog: catalogFromEnv(process.env).catalog,
   };
   return handleQuote(request, deps);
 }

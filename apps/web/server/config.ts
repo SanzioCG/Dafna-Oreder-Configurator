@@ -1,6 +1,7 @@
 import { linkSecretFrom } from './assemblyLink';
 import { giblabForLead } from './giblab';
 import { buildOrderPdf, orderPdfInput } from './orderPdf';
+import { CachedCatalog, GoogleSheetsCatalogStore } from './catalog';
 import { GoogleSheetsPriceStore } from './priceSheet';
 import { CachedPrices } from './prices';
 import { RateLimiter } from './rateLimit';
@@ -86,4 +87,31 @@ export function priceStoreFromEnv(env: Env): GoogleSheetsPriceStore {
 export function pricesFromEnv(env: Env): { store: GoogleSheetsPriceStore; prices: CachedPrices } {
   const store = priceStoreFromEnv(env);
   return { store, prices: new CachedPrices(store) };
+}
+
+/** D-20: the catalog extension (tab "Katalog"); one cache per warm instance. */
+let catalogSingleton: { store: GoogleSheetsCatalogStore; catalog: CachedCatalog } | null = null;
+export function catalogFromEnv(env: Env): {
+  store: GoogleSheetsCatalogStore;
+  catalog: CachedCatalog;
+} {
+  if (catalogSingleton) return catalogSingleton;
+  const account = parseServiceAccount(env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  if (!account || !env.GOOGLE_SHEET_ID) throw new Error('google sheets env missing');
+  const store = new GoogleSheetsCatalogStore({ sheetId: env.GOOGLE_SHEET_ID, account });
+  catalogSingleton = { store, catalog: new CachedCatalog(store) };
+  return catalogSingleton;
+}
+
+/**
+ * D-20: applies the catalog extension before an entry generates anything (a product with a
+ * material / hardware added on the manager page). A failed read is logged, never fatal: built-in
+ * materials keep working.
+ */
+export async function applyCatalogFromEnv(env: Env): Promise<void> {
+  try {
+    await catalogFromEnv(env).catalog.get();
+  } catch (e) {
+    console.error(JSON.stringify({ event: 'catalog_load_failed', message: (e as Error).message }));
+  }
 }
