@@ -1,6 +1,8 @@
 import { linkSecretFrom } from './assemblyLink';
 import { giblabForLead } from './giblab';
 import { buildOrderPdf, orderPdfInput } from './orderPdf';
+import { GoogleSheetsPriceStore } from './priceSheet';
+import { CachedPrices } from './prices';
 import { RateLimiter } from './rateLimit';
 import { GoogleSheetsStore, parseServiceAccount } from './sheets';
 import type { SubmitDeps } from './submit';
@@ -11,6 +13,8 @@ import { TelegramNotifier } from './telegram';
  *   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, GOOGLE_SERVICE_ACCOUNT_JSON, GOOGLE_SHEET_ID
  * Cron: CRON_SECRET (Vercel sends it as "Authorization: Bearer …" to the cron endpoint).
  * Optional, non-production only: TELEGRAM_FORCE_FAIL=1 (simulates a Telegram outage).
+ * D-19: MANAGER_PIN (the manager price page; unset = the page is off). The price list lives in
+ * the same Google Sheet (tab "Narxlar").
  */
 export const REQUIRED_ENV = [
   'TELEGRAM_BOT_TOKEN',
@@ -70,4 +74,16 @@ export function submitDepsFromEnv(env: Env): SubmitDeps {
     linkSecret: linkSecretFromEnv(env),
     log: (event, detail) => console.error(JSON.stringify({ event, ...detail })),
   };
+}
+
+/** D-19: the price list store (same spreadsheet as the leads, tab "Narxlar"). */
+export function priceStoreFromEnv(env: Env): GoogleSheetsPriceStore {
+  const account = parseServiceAccount(env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  if (!account || !env.GOOGLE_SHEET_ID) throw new Error('google sheets env missing');
+  return new GoogleSheetsPriceStore({ sheetId: env.GOOGLE_SHEET_ID, account });
+}
+
+export function pricesFromEnv(env: Env): { store: GoogleSheetsPriceStore; prices: CachedPrices } {
+  const store = priceStoreFromEnv(env);
+  return { store, prices: new CachedPrices(store) };
 }

@@ -2023,3 +2023,128 @@ p {
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
+
+/* D-19: the manager's price page (/manager) — an office page, not the kiosk */
+.mgr-page {
+  min-height: 100vh;
+  overflow-y: auto;
+  padding: var(--space-5);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.mgr-login {
+  justify-content: center;
+  align-items: center;
+}
+.mgr-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  padding: var(--space-2) 0;
+  z-index: 1;
+}
+.mgr-head h1,
+.mgr-card h1 {
+  margin: 0;
+}
+.mgr-head p {
+  margin: 4px 0 0;
+  color: var(--text-2);
+}
+.mgr-card {
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.mgr-card h2,
+.mgr-card h3 {
+  margin: 0;
+}
+.mgr-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+.mgr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+}
+.mgr-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mgr-input em {
+  font-style: normal;
+}
+.mgr-page input {
+  font: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  background: var(--paper);
+  border: var(--line-in-card);
+  border-radius: 10px;
+  padding: 8px 10px;
+  min-width: 0;
+  width: 100%;
+  max-width: 180px;
+}
+.mgr-page input:focus-visible {
+  outline: var(--focus-line);
+  outline-offset: 1px;
+}
+.mgr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.mgr-table th,
+.mgr-table td {
+  text-align: left;
+  padding: 6px 8px;
+  vertical-align: middle;
+}
+.mgr-table tbody tr:nth-child(odd) {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.mgr-table th {
+  font-weight: 600;
+}
+.mgr-size {
+  white-space: nowrap;
+}
+.mgr-size input {
+  width: 80px;
+  margin: 0 4px;
+}
+.mgr-note {
+  margin: 0;
+}
+.mgr-error {
+  margin: 0;
+  color: var(--error);
+  font-weight: 600;
+}
+@media (max-width: 640px) {
+  .mgr-page {
+    padding: var(--space-3) 16px;
+  }
+  .mgr-table {
+    font-size: 13px;
+  }
+}

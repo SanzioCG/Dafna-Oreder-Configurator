@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { handleAssembly } from './assemblyLink';
 import { FakeNotifier, MemoryLeadStore } from './memory';
+import { CachedPrices, MemoryPriceStore, handleManager, handleQuote } from './prices';
 import { RateLimiter } from './rateLimit';
 import { handleStaffPin } from './staffPin';
 import { handleSubmit, type SubmitDeps } from './submit';
@@ -95,4 +96,60 @@ export function createDevSubmitHandler() {
       });
     });
   };
+}
+
+/**
+ * D-19 `vite dev`: /api/quote and /api/manager on one in-memory price store (the DEMO list until
+ * the manager saves). The manager PIN is DEV_MANAGER_PIN (default 0000; dev only — production
+ * reads MANAGER_PIN). Dev staff mode has no PIN, so the quote always carries the breakdown.
+ */
+const devPrices = (() => {
+  const store = new MemoryPriceStore();
+  return { store, prices: new CachedPrices(store, 0) };
+})();
+
+function adapt(handler: (request: Request) => Promise<Response>, path: string) {
+  return (req: IncomingMessage, res: ServerResponse) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (c: Buffer) => chunks.push(c));
+    req.on('end', () => {
+      const request = new Request(`http://localhost${path}`, {
+        method: req.method,
+        headers: req.headers as Record<string, string>,
+        body: req.method === 'POST' || req.method === 'PUT' ? Buffer.concat(chunks) : undefined,
+      });
+      void handler(request).then(async (response) => {
+        res.statusCode = response.status;
+        response.headers.forEach((v, k) => res.setHeader(k, v));
+        res.end(await response.text());
+      });
+    });
+  };
+}
+
+export function createDevQuoteHandler() {
+  return adapt(
+    (r) =>
+      handleQuote(r, {
+        prices: devPrices.prices,
+        staffPin: undefined,
+        managerPin: undefined,
+        breakdownWithoutPin: true,
+      }),
+    '/api/quote',
+  );
+}
+
+export function createDevManagerHandler() {
+  const limiter = new RateLimiter(100, 60_000);
+  return adapt(
+    (r) =>
+      handleManager(r, {
+        ...devPrices,
+        managerPin: process.env.DEV_MANAGER_PIN ?? '0000',
+        limiter,
+        now: () => new Date(),
+      }),
+    '/api/manager',
+  );
 }

@@ -17,6 +17,16 @@ export const LOCK_MS = 60_000;
 export type PinOutcome =
   { ok: true } | { ok: false; code: 'wrong_pin' | 'rate_limited' | 'not_configured' | 'network' };
 
+/**
+ * D-19: the consultant PIN, kept in memory only (never storage) after the server accepted it,
+ * so /api/quote returns the price breakdown to staff. Cleared when staff mode ends.
+ */
+let staffPinMemory: string | null = null;
+export const currentStaffPin = () => staffPinMemory;
+export const forgetStaffPin = () => {
+  staffPinMemory = null;
+};
+
 export async function verifyStaffPin(
   pin: string,
   fetchImpl: typeof fetch = fetch,
@@ -28,7 +38,10 @@ export async function verifyStaffPin(
       body: JSON.stringify({ pin }),
       signal: AbortSignal.timeout(10_000),
     });
-    if (res.ok) return { ok: true };
+    if (res.ok) {
+      staffPinMemory = pin;
+      return { ok: true };
+    }
     const data = (await res.json().catch(() => null)) as { error?: { code?: string } } | null;
     const code = data?.error?.code;
     if (code === 'rate_limited' || code === 'not_configured') return { ok: false, code };
@@ -40,7 +53,10 @@ export async function verifyStaffPin(
 }
 
 export const requestStaff = () => window.dispatchEvent(new Event(STAFF_REQUEST_EVENT));
-export const exitStaff = () => window.dispatchEvent(new Event(STAFF_EXIT_EVENT));
+export const exitStaff = () => {
+  forgetStaffPin();
+  window.dispatchEvent(new Event(STAFF_EXIT_EVENT));
+};
 
 /** Pointer handlers firing `onLongPress` after `ms` of holding (released early = nothing). */
 export function useLongPress(onLongPress: () => void, ms = LONG_PRESS_MS) {

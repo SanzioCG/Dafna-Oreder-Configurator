@@ -36,6 +36,25 @@ function devSubmitApi(): Plugin {
         };
         run().catch(next);
       });
+      // D-19: the server-side price and the manager's price list (in-memory store)
+      for (const [path, factory] of [
+        ['/api/quote', 'createDevQuoteHandler'],
+        ['/api/manager', 'createDevManagerHandler'],
+      ] as const) {
+        let h: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
+        server.middlewares.use(path, (req, res, next) => {
+          const run = async () => {
+            if (!h) {
+              const mod = (await server.ssrLoadModule(
+                '/server/devApi.ts',
+              )) as typeof import('./server/devApi');
+              h = mod[factory]();
+            }
+            h(req, res);
+          };
+          run().catch(next);
+        });
+      }
       // D-12: the assembly instructions PDF (same in-memory store as /api/submit)
       let assembly: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
       server.middlewares.use('/api/assembly', (req, res, next) => {

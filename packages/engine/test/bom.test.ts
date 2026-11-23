@@ -76,7 +76,8 @@ describe('D-9 price (DEMO price list)', () => {
     expect(r.demo).toBe(true);
     expect(r.currency).toBe('UZS');
     expect(r.missing).toEqual([]);
-    expect(r.subtotal).toBe(r.boards + r.edges + r.hardware + r.labor);
+    expect(r.subtotal).toBe(r.boards + r.edges + r.hardware + r.labor + r.assembly);
+    expect(r.assembly).toBe(0); // no product type given: no assembly line
     expect(r.markup).toBe(Math.round((r.subtotal * priceListDemo.markupPct) / 100));
     expect(r.total % priceListDemo.roundTo).toBe(0);
     expect(Math.abs(r.total - (r.subtotal + r.markup))).toBeLessThanOrEqual(
@@ -116,6 +117,48 @@ describe('D-9 price (DEMO price list)', () => {
     });
     expect(desk.lines.find((l) => l.ref === 'egger_h3700_st10_25')?.unitPrice).toBe(
       priceListDemo.boardPerM2ByThickness['25'],
+    );
+  });
+});
+
+describe('D-19 live price list: sheet prices, assembly, profit %', () => {
+  const list = {
+    ...priceListDemo,
+    priceListVersion: 'live-test',
+    demo: false,
+    boardSheets: { ldsp_white_16: { price: 579600, lengthMm: 2800, widthMm: 2070 } },
+    assembly: { wardrobe: 300000 },
+    markupPct: 25,
+  };
+  const run = (l: typeof list, productType?: string) => {
+    const t = wardrobeTemplate;
+    const p = defaultParams(t);
+    return computePrice(computeBom(t, p, generate(t, p)), catalogForTemplate(t), l, productType);
+  };
+
+  it('a sheet price becomes a per-m² price (sheet area), and wins over the per-m² list', () => {
+    const r = run(list, 'wardrobe');
+    // 579 600 / (2.8 × 2.07 m²) = 100 000 per m²
+    expect(r.lines.find((l) => l.ref === 'ldsp_white_16')?.unitPrice).toBe(100000);
+    expect(r.demo).toBe(false);
+  });
+
+  it('assembly is added per product; profit is the % of every cost together', () => {
+    const r = run(list, 'wardrobe');
+    expect(r.assembly).toBe(300000);
+    expect(r.subtotal).toBe(r.boards + r.edges + r.hardware + r.labor + 300000);
+    expect(r.markup).toBe(Math.round(r.subtotal * 0.25));
+    expect(run(list, 'desk').assembly).toBe(0);
+    expect(run({ ...list, markupPct: 30 }, 'wardrobe').total).toBeGreaterThan(r.total);
+  });
+
+  it('an empty sheet price (0) falls back to the per-m² list', () => {
+    const r = run({
+      ...list,
+      boardSheets: { ldsp_white_16: { price: 0, lengthMm: 2800, widthMm: 2070 } },
+    });
+    expect(r.lines.find((l) => l.ref === 'ldsp_white_16')?.unitPrice).toBe(
+      priceListDemo.boardPerM2.ldsp,
     );
   });
 });

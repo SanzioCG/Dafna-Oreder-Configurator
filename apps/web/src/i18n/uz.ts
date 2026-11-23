@@ -347,7 +347,8 @@ export const uz = {
   'price.demo': 'sinov narxi',
   'price.breakdown': 'Narx hisobi',
   'price.labor': 'Ish haqi',
-  'price.markup': 'Ustama',
+  'price.markup': 'Foyda',
+  'price.assembly': "Yig'ish",
   'price.missing': "Narxi yo'q",
   // D-8: office pedestal + desk
   'c.heightSit': "o'tirib ishlash",

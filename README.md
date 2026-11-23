@@ -35,6 +35,9 @@ The UI is in Uzbek and Russian.
 - **Submission pipeline.** Serverless functions validate the draft, assign an idempotent
   application ID, store the lead, notify the sales channel and render a PDF. A cron job
   retries failed notifications.
+- **Live prices.** The price is computed on the server from a price list a manager keeps on
+  `/manager` (own PIN): sheet prices of the boards, edge band, hardware, labour, assembly and
+  the profit %. Customers only ever receive the final number (ADR-016).
 - **Production hand-off.** A bill of materials (boards, edge banding, hardware) and a
   cutting-list export.
 - **Kiosk details.** On-screen keyboard, idle timeout with session reset, light and dark themes
@@ -101,6 +104,7 @@ pnpm dev
 
 - Customer mode: http://localhost:5173/
 - Staff mode: http://localhost:5173/?mode=staff
+- Manager price page: http://localhost:5173/manager (dev PIN `DEV_MANAGER_PIN`, default 0000)
 
 The server functions read their configuration from environment variables only. Nothing secret
 is in the repository or in the client bundle.

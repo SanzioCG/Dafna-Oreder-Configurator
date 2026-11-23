@@ -37,16 +37,28 @@ export interface HardwareCatalog {
   boardDensityKgM3?: Record<string, number>;
 }
 
+/** D-19: a board priced per sheet (from the supplier API or typed by the manager). */
+export interface SheetPrice {
+  /** price of one whole sheet */
+  price: number;
+  lengthMm: number;
+  widthMm: number;
+}
+
 export interface PriceList {
   priceListVersion: string;
   currency: string;
   demo: boolean;
+  /** D-19: per sheet, by material id; wins over every per-m² price below */
+  boardSheets?: Record<string, SheetPrice>;
   boardPerM2: Record<string, number>;
   boardPerM2ByThickness: Record<string, number>;
   boardPerM2ById: Record<string, number>;
   edgePerM: number;
   hardware: Record<string, number>;
   laborPerM2: number;
+  /** D-19: assembly (yig'ish) per product, by product type (wardrobe / pedestal / desk) */
+  assembly?: Record<string, number>;
   wasteFactor: number;
   markupPct: number;
   roundTo: number;
@@ -173,6 +185,8 @@ export interface PriceResult {
   edges: number;
   hardware: number;
   labor: number;
+  /** D-19: assembly of the product */
+  assembly: number;
   subtotal: number;
   markup: number;
   total: number;
@@ -185,6 +199,9 @@ export function boardPrice(
   catalog: MaterialCatalog,
   list: PriceList,
 ): number | undefined {
+  const sheet = list.boardSheets?.[id];
+  if (sheet && sheet.price > 0 && sheet.lengthMm > 0 && sheet.widthMm > 0)
+    return sheet.price / ((sheet.lengthMm * sheet.widthMm) / 1e6);
   if (list.boardPerM2ById[id] !== undefined) return list.boardPerM2ById[id];
   const m = getMaterial(catalog, id);
   if (!m) return undefined;
@@ -195,6 +212,8 @@ export function computePrice(
   bom: BomLine[],
   catalog: MaterialCatalog,
   list: PriceList = priceListDemo,
+  /** D-19: the product type, for its assembly price */
+  productType?: string,
 ): PriceResult {
   const missing: string[] = [];
   const lines: PricedLine[] = bom.map((l) => {
@@ -206,7 +225,11 @@ export function computePrice(
           : list.hardware[l.ref];
     if (unitPrice === undefined) missing.push(l.ref);
     const qty = l.kind === 'board' ? l.qty * list.wasteFactor : l.qty;
-    return { ...l, unitPrice: unitPrice ?? 0, cost: Math.round(qty * (unitPrice ?? 0)) };
+    return {
+      ...l,
+      unitPrice: Math.round(unitPrice ?? 0),
+      cost: Math.round(qty * (unitPrice ?? 0)),
+    };
   });
   const sum = (k: BomLine['kind']) =>
     lines.filter((l) => l.kind === k).reduce((s, l) => s + l.cost, 0);
@@ -215,7 +238,8 @@ export function computePrice(
   const edges = sum('edge');
   const hardware = sum('hardware');
   const labor = Math.round(area * list.laborPerM2);
-  const subtotal = boards + edges + hardware + labor;
+  const assembly = productType ? (list.assembly?.[productType] ?? 0) : 0;
+  const subtotal = boards + edges + hardware + labor + assembly;
   const markup = Math.round((subtotal * list.markupPct) / 100);
   const total = Math.round((subtotal + markup) / list.roundTo) * list.roundTo;
   return {
@@ -227,6 +251,7 @@ export function computePrice(
     edges,
     hardware,
     labor,
+    assembly,
     subtotal,
     markup,
     total,

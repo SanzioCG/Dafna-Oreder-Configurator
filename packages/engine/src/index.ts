@@ -102,6 +102,7 @@ export {
   type HardwareCatalog,
   type HardwareItem,
   type PriceList,
+  type SheetPrice,
   type PriceResult,
   type PricedLine,
 } from './bom.js';

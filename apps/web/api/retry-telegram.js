@@ -63017,7 +63017,8 @@ var ru = {
   "price.demo": "\u0442\u0435\u0441\u0442\u043E\u0432\u0430\u044F \u0446\u0435\u043D\u0430",
   "price.breakdown": "\u0420\u0430\u0441\u0447\u0451\u0442 \u0446\u0435\u043D\u044B",
   "price.labor": "\u0420\u0430\u0431\u043E\u0442\u0430",
-  "price.markup": "\u041D\u0430\u0446\u0435\u043D\u043A\u0430",
+  "price.markup": "\u041F\u0440\u0438\u0431\u044B\u043B\u044C",
+  "price.assembly": "\u0421\u0431\u043E\u0440\u043A\u0430",
   "price.missing": "\u041D\u0435\u0442 \u0446\u0435\u043D\u044B",
   // D-8: office pedestal + desk
   "c.heightSit": "\u0440\u0430\u0431\u043E\u0442\u0430 \u0441\u0438\u0434\u044F",
@@ -63414,7 +63415,8 @@ var uz = {
   "price.demo": "sinov narxi",
   "price.breakdown": "Narx hisobi",
   "price.labor": "Ish haqi",
-  "price.markup": "Ustama",
+  "price.markup": "Foyda",
+  "price.assembly": "Yig'ish",
   "price.missing": "Narxi yo'q",
   // D-8: office pedestal + desk
   "c.heightSit": "o'tirib ishlash",

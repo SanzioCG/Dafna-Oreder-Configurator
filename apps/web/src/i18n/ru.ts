@@ -343,7 +343,8 @@ export const ru: Messages = {
   'price.demo': 'тестовая цена',
   'price.breakdown': 'Расчёт цены',
   'price.labor': 'Работа',
-  'price.markup': 'Наценка',
+  'price.markup': 'Прибыль',
+  'price.assembly': 'Сборка',
   'price.missing': 'Нет цены',
   // D-8: office pedestal + desk
   'c.heightSit': 'работа сидя',

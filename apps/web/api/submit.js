@@ -63023,7 +63023,8 @@ var ru = {
   "price.demo": "\u0442\u0435\u0441\u0442\u043E\u0432\u0430\u044F \u0446\u0435\u043D\u0430",
   "price.breakdown": "\u0420\u0430\u0441\u0447\u0451\u0442 \u0446\u0435\u043D\u044B",
   "price.labor": "\u0420\u0430\u0431\u043E\u0442\u0430",
-  "price.markup": "\u041D\u0430\u0446\u0435\u043D\u043A\u0430",
+  "price.markup": "\u041F\u0440\u0438\u0431\u044B\u043B\u044C",
+  "price.assembly": "\u0421\u0431\u043E\u0440\u043A\u0430",
   "price.missing": "\u041D\u0435\u0442 \u0446\u0435\u043D\u044B",
   // D-8: office pedestal + desk
   "c.heightSit": "\u0440\u0430\u0431\u043E\u0442\u0430 \u0441\u0438\u0434\u044F",
@@ -63420,7 +63421,8 @@ var uz = {
   "price.demo": "sinov narxi",
   "price.breakdown": "Narx hisobi",
   "price.labor": "Ish haqi",
-  "price.markup": "Ustama",
+  "price.markup": "Foyda",
+  "price.assembly": "Yig'ish",
   "price.missing": "Narxi yo'q",
   // D-8: office pedestal + desk
   "c.heightSit": "o'tirib ishlash",
@@ -64432,37 +64434,6 @@ function giblabForLead(lead) {
   );
 }
 
-// server/rateLimit.ts
-var RateLimiter = class {
-  constructor(limit, windowMs, now = Date.now) {
-    this.limit = limit;
-    this.windowMs = windowMs;
-    this.now = now;
-  }
-  limit;
-  windowMs;
-  now;
-  hits = /* @__PURE__ */ new Map();
-  /** Records a hit; false when `key` is over the limit (the hit is then not counted). */
-  take(key) {
-    const t3 = this.now();
-    const recent = (this.hits.get(key) ?? []).filter((x) => t3 - x < this.windowMs);
-    if (recent.length >= this.limit) {
-      this.hits.set(key, recent);
-      return false;
-    }
-    recent.push(t3);
-    this.hits.set(key, recent);
-    if (this.hits.size > 5e3) this.prune(t3);
-    return true;
-  }
-  prune(t3) {
-    for (const [k, v] of this.hits) {
-      if (v.every((x) => t3 - x >= this.windowMs)) this.hits.delete(k);
-    }
-  }
-};
-
 // server/sheets.ts
 import { createSign } from "node:crypto";
 
@@ -65019,6 +64990,37 @@ var GoogleSheetsStore = class {
       return { created, headerWritten: !headerOk, formatted: false };
     }
     return { created, headerWritten: !headerOk, formatted: true };
+  }
+};
+
+// server/rateLimit.ts
+var RateLimiter = class {
+  constructor(limit, windowMs, now = Date.now) {
+    this.limit = limit;
+    this.windowMs = windowMs;
+    this.now = now;
+  }
+  limit;
+  windowMs;
+  now;
+  hits = /* @__PURE__ */ new Map();
+  /** Records a hit; false when `key` is over the limit (the hit is then not counted). */
+  take(key) {
+    const t3 = this.now();
+    const recent = (this.hits.get(key) ?? []).filter((x) => t3 - x < this.windowMs);
+    if (recent.length >= this.limit) {
+      this.hits.set(key, recent);
+      return false;
+    }
+    recent.push(t3);
+    this.hits.set(key, recent);
+    if (this.hits.size > 5e3) this.prune(t3);
+    return true;
+  }
+  prune(t3) {
+    for (const [k, v] of this.hits) {
+      if (v.every((x) => t3 - x >= this.windowMs)) this.hits.delete(k);
+    }
   }
 };
 
