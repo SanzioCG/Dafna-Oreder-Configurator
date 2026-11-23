@@ -2908,10 +2908,10 @@ p {
 .mount-icon {
   display: block;
   width: 100%;
-  height: 8rem;
+  height: 7rem;
 }
 
-.mount-icon .mount-carcass {
+.mount-icon .mount-side {
   fill: var(--paper);
 }
 
@@ -2919,26 +2919,13 @@ p {
   fill: var(--step-review);
 }
 
-.mount-icon .mount-side {
+.mount-icon .mount-label {
   fill: currentColor;
-  fill-opacity: 0.3;
+  font-weight: var(--fw-bold);
 }
 
-.mount-icon .mount-gap {
-  fill: var(--ink);
-}
-
-.mount-icon .mount-door-edge {
-  fill: var(--paper);
-}
-
-.mount-card.active .mount-icon .mount-carcass,
-.mount-card.active .mount-icon .mount-door-edge {
-  fill: var(--on-ink);
-}
-
-.mount-card.active .mount-icon .mount-gap {
-  fill: var(--text-2);
+.mount-card-caption {
+  font-size: var(--fs-xs);
 }
 
 .mount-card-name {
