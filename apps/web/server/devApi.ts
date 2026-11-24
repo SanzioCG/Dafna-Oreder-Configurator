@@ -161,6 +161,8 @@ export function createDevErpHandler() {
         erp: erpFromEnv(process.env),
         managerPin: process.env.DEV_MANAGER_PIN ?? '0000',
         limiter,
+        // D-34: no photo store in dev: pictures as data URLs
+        dataUrls: true,
       }),
     '/api/erp',
   );

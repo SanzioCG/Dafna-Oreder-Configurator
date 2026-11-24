@@ -63649,6 +63649,7 @@ function mergeCatalog(saved, incoming, options = {}) {
   if (rawM.length > 500 || rawH.length > 200) return { ok: false, field: "catalog" };
   const materials = saved.materials.map((m) => ({ ...m }));
   const links = [];
+  const newTextures = {};
   let next = materials.length + 1;
   for (const [i, x] of rawM.entries()) {
     const name = text(x?.name, 80);
@@ -63679,6 +63680,9 @@ function mergeCatalog(saved, incoming, options = {}) {
     while (materials.some((m) => m.id === `x_m${next}`)) next++;
     const link = erpLinkOf(x);
     if (link) links.push({ ...link, id: `x_m${next}`, kind: "material" });
+    const pic = x?.erpPicture;
+    if (typeof pic === "string" && textureUrlAllowed(pic, options.allowDataUrls))
+      newTextures[`x_m${next}`] = { url: pic, widthMm: 1e3, heightMm: 1e3 };
     materials.push({
       id: `x_m${next++}`,
       kind,
@@ -63759,7 +63763,11 @@ function mergeCatalog(saved, incoming, options = {}) {
       };
     }
   }
-  return { ok: true, ext: { materials, hardware, textures }, links };
+  return {
+    ok: true,
+    ext: { materials, hardware, textures: { ...textures, ...newTextures } },
+    links
+  };
 }
 var CATALOG_TAB = "Katalog";
 var CATALOG_HEADER = [

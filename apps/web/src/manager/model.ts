@@ -89,12 +89,14 @@ interface ErpFields {
   erpArticle?: string;
   erpPrice?: number;
   erpSheet?: { lengthMm: number; widthMm: number };
+  /** D-34: the eman.uz picture copied into our store (a board's decor photo) */
+  erpPicture?: string;
 }
 export type MaterialDraft = Omit<CustomMaterial, 'id'> & { id?: string } & ErpFields;
 export type HardwareDraft = Omit<CustomHardware, 'id' | 'brandKey'> & {
   id?: string;
   brandKey?: string;
-} & Omit<ErpFields, 'erpSheet'>;
+} & Omit<ErpFields, 'erpSheet' | 'erpPicture'>;
 export interface CatalogDraft {
   materials: MaterialDraft[];
   hardware: HardwareDraft[];

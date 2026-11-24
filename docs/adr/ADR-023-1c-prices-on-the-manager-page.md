@@ -110,3 +110,28 @@ the kiosk shows.
   (columns 15 and 16). The kiosk's hardware card shows them under the brand heading.
 - Some 1C items are sets with price 0 (e.g. "Комплекты SENSYS"). For those, the manager links
   the piece article or types the price.
+
+## Update (D-34, 2026-11-24): pictures from eman.uz
+
+1C has almost no pictures, but EMAN's public shop (eman.uz) has them, and every shop product
+shows the same 1C article.
+
+- **Finding a picture.** `server/emanSite.ts` searches the shop by article
+  (`/api/v1/product/search/?q=`). It opens up to five product pages (`/ru/product/<id>/`) and
+  takes the image of the page whose "Артикул" is exactly that article. The search can also
+  return the edge band of the same decor, which this check filters out. Results are cached for
+  6 hours per warm instance.
+- **Manager page.** "1C katalogi" and the "+ Yangi furnitura" search show the shop picture next
+  to each item (`/api/erp` action `pictures`). In a live check of Egger 16 мм, 31 of 50 items
+  had a picture.
+- **Adding to the kiosk.** "eman.uz dagi rasmini olish" (on by default) copies the picture into
+  our photo store (action `copyPicture`). The copy uses the Vercel Blob store when
+  `BLOB_READ_WRITE_TOKEN` is set; the dev server uses a data URL. Only
+  `https://eman.uz/media/…` images up to 3 MB are fetched.
+  - For a board, the picture becomes its decor photo, taken as 1 m × 1 m. The manager can
+    correct the scale in "Materiallar".
+  - For a mechanism, it becomes its kiosk card photo.
+
+  The kiosk and the 3D view never load from the shop directly.
+
+- Read-only: only public shop pages are fetched, and nothing is sent to the shop.

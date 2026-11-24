@@ -135,6 +135,7 @@ export function mergeCatalog(
 
   const materials = saved.materials.map((m) => ({ ...m }));
   const links: ErpLink[] = [];
+  const newTextures: Record<string, MaterialTexture> = {};
   let next = materials.length + 1;
   for (const [i, x] of rawM.entries()) {
     const name = text(x?.name, 80);
@@ -167,6 +168,10 @@ export function mergeCatalog(
     while (materials.some((m) => m.id === `x_m${next}`)) next++;
     const link = erpLinkOf(x);
     if (link) links.push({ ...link, id: `x_m${next}`, kind: 'material' });
+    // D-34: a picture taken from eman.uz becomes its decor photo (the manager sets the scale)
+    const pic = (x as { erpPicture?: unknown } | null)?.erpPicture;
+    if (typeof pic === 'string' && textureUrlAllowed(pic, options.allowDataUrls))
+      newTextures[`x_m${next}`] = { url: pic, widthMm: 1000, heightMm: 1000 };
     materials.push({
       id: `x_m${next++}`,
       kind,
@@ -259,7 +264,11 @@ export function mergeCatalog(
       };
     }
   }
-  return { ok: true, ext: { materials, hardware, textures }, links };
+  return {
+    ok: true,
+    ext: { materials, hardware, textures: { ...textures, ...newTextures } },
+    links,
+  };
 }
 
 /* ---------- the "Katalog" tab ---------- */

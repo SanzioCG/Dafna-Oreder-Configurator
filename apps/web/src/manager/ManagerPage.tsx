@@ -4,7 +4,7 @@ import {
   type CatalogExtension,
   type PriceList,
 } from '@dafna/engine';
-import { useState, type FormEvent } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Button } from '../ui/Button';
 import { HardwareSection } from './HardwareSection';
 import { MaterialsSection } from './MaterialsSection';
@@ -54,7 +54,9 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const [section, setSection] = useState<Section>('materials');
   /** D-30: the last "1C narxlarini olish" result */
   const [erpNote, setErpNote] = useState<string | null>(null);
-  const erp = erpApi(pin, fetchImpl, list?.erpKindGroups);
+  // one client while the PIN and the kind groups stay the same (effects depend on it)
+  const kindGroups = list?.erpKindGroups;
+  const erp = useMemo(() => erpApi(pin, fetchImpl, kindGroups), [pin, fetchImpl, kindGroups]);
 
   /** the stored catalog becomes the engine's (labels, preview) and the editable draft */
   const takeCatalog = (c: CatalogExtension) => {

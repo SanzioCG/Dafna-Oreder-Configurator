@@ -2,6 +2,7 @@
  * Vercel Function entry: POST /api/erp (D-30: Dafna's 1C for the manager page; env
  * EMAN_1C_TOKEN, MANAGER_PIN). Bundled by scripts/build-api.mjs into api/erp.js.
  */
+import { blobPutter, blobTokenFrom } from '../blob';
 import { erpFromEnv, handleErp } from '../erp1c';
 import { RateLimiter } from '../rateLimit';
 
@@ -13,5 +14,7 @@ export async function POST(request: Request): Promise<Response> {
     erp: erpFromEnv(process.env),
     managerPin: process.env.MANAGER_PIN,
     limiter,
+    // D-34: a picture taken from eman.uz goes into the decor photo store
+    putPicture: blobPutter(blobTokenFrom(process.env)),
   });
 }

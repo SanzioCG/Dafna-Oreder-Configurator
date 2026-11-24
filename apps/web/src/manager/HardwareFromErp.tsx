@@ -2,7 +2,15 @@ import { type PriceList } from '@dafna/engine';
 import { useContext, useState, type FormEvent } from 'react';
 import { Button } from '../ui/Button';
 import { cleanName, guessFromName, somPrice } from './ErpCatalogSection';
-import { ERP_ERRORS, ErpContext, type ErpItem, type ErpPrice } from './erp';
+import {
+  ERP_ERRORS,
+  ErpContext,
+  ErpThumb,
+  PictureChoice,
+  usePictures,
+  type ErpItem,
+  type ErpPrice,
+} from './erp';
 import { NEW_HARDWARE, money, type HardwareDraft } from './model';
 
 /**
@@ -29,6 +37,8 @@ export function HardwareFromErp({
   const [error, setError] = useState<string | null>(null);
   const [rows, setRows] = useState<(ErpItem & Partial<ErpPrice>)[] | null>(null);
   const [picked, setPicked] = useState<(ErpItem & Partial<ErpPrice>) | null>(null);
+  // D-34: eman.uz pictures of the results
+  const pics = usePictures((rows ?? []).map((r) => r.article));
 
   const find = async (e: FormEvent) => {
     e.preventDefault();
@@ -111,7 +121,10 @@ export function HardwareFromErp({
                       onClick={() => setPicked(r)}
                       data-testid={`hw-erp-item-${r.article}`}
                     >
-                      <span>{r.name}</span>
+                      <span className="mgr-erp-row">
+                        <ErpThumb src={pics[r.article]} alt="" />
+                        {r.name}
+                      </span>
                       <small>
                         {r.article ? `artikul ${r.article}` : "artikuli yo'q"}
                         {r.price != null && ` · ${money(r.price)} ${r.currency ?? ''}`}
@@ -128,6 +141,7 @@ export function HardwareFromErp({
         {picked && (
           <HardwareForm
             row={picked}
+            picture={pics[picked.article]}
             sub={sub}
             list={list}
             onBack={() => setPicked(null)}
@@ -147,12 +161,14 @@ export function HardwareFromErp({
 
 function HardwareForm({
   row,
+  picture,
   sub,
   list,
   onBack,
   onAdd,
 }: {
   row: ErpItem & Partial<ErpPrice>;
+  picture?: string | null;
   sub: 'hinge' | 'slide';
   list: PriceList;
   onBack: () => void;
@@ -163,6 +179,9 @@ function HardwareForm({
   const [model, setModel] = useState(modelOf(row.name, g.brand));
   const [softClose, setSoft] = useState(g.softClose);
   const [info, setInfo] = useState('');
+  const api = useContext(ErpContext);
+  const [take, setTake] = useState(true);
+  const [busy, setBusy] = useState(false);
   const price = somPrice(
     { price: row.price ?? null, currency: row.currency ?? null, unit: row.unit },
     list,
@@ -204,17 +223,25 @@ function HardwareForm({
           data-testid="hw-erp-info"
         />
       </label>
-      <p className="mgr-note" style={{ gridColumn: '1 / -1' }}>
-        Rasmni saqlagandan keyin ro&apos;yxatdagi «Ma&apos;lumot / rasm» tugmasi bilan yuklaysiz.
-      </p>
+      <div style={{ gridColumn: '1 / -1' }}>
+        <PictureChoice src={picture} take={take} setTake={setTake} />
+      </div>
       <div className="mgr-inline" style={{ gridColumn: '1 / -1' }}>
         <Button variant="secondary" onClick={onBack}>
           ‹ Boshqasini tanlash
         </Button>
         <Button
           variant="primary"
-          disabled={!brand.trim() || !model.trim()}
-          onClick={() =>
+          disabled={busy || !brand.trim() || !model.trim()}
+          onClick={async () => {
+            // D-34: the eman.uz picture is copied into our photo store first
+            let photoUrl: string | undefined;
+            if (take && picture && api) {
+              setBusy(true);
+              const r = await api.copyPicture(row.article);
+              setBusy(false);
+              if (r.ok) photoUrl = r.value;
+            }
             onAdd({
               ...NEW_HARDWARE,
               kind: sub,
@@ -225,8 +252,9 @@ function HardwareForm({
               note: `1C: ${row.name}`.slice(0, 200),
               erpArticle: row.article,
               erpPrice: price,
-            })
-          }
+              photoUrl,
+            });
+          }}
           data-testid="hw-erp-add"
         >
           Qo&apos;shish

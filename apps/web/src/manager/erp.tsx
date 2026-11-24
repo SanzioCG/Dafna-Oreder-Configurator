@@ -1,5 +1,5 @@
 import { hardwareV1, type PriceList } from '@dafna/engine';
-import { createContext, useContext, useState, type FormEvent } from 'react';
+import { createContext, useContext, useEffect, useState, type FormEvent } from 'react';
 import { Button } from '../ui/Button';
 import { EDGE_BAND_KEY, defaultSheet } from './model';
 
@@ -71,6 +71,10 @@ export type ErpItemRow = ErpItem & Omit<ErpPrice, 'name' | 'unit'>;
 export interface ErpApi {
   search: (q: string, scope?: SearchScope) => Promise<ErpOutcome<ErpItem[]>>;
   prices: (articles: string[]) => Promise<ErpOutcome<Record<string, ErpPrice>>>;
+  /** D-34: the eman.uz picture of each article (null = none) */
+  pictures: (articles: string[]) => Promise<ErpOutcome<Record<string, string | null>>>;
+  /** D-34: copies the eman.uz picture of an article into our photo store */
+  copyPicture: (article: string) => Promise<ErpOutcome<string>>;
   /** D-31: the kinds under a kind folder ('' = the top) */
   kinds: (parent: string) => Promise<ErpOutcome<ErpKindRow[]>>;
   /** D-31: a page of the items of a kind, with price and stock */
@@ -99,6 +103,20 @@ export function erpApi(
         pin,
         { action: 'prices', articles },
         (d) => d.prices as Record<string, ErpPrice> | undefined,
+        fetchImpl,
+      ),
+    pictures: (articles) =>
+      post(
+        pin,
+        { action: 'pictures', articles },
+        (d) => d.pictures as Record<string, string | null> | undefined,
+        fetchImpl,
+      ),
+    copyPicture: (article) =>
+      post(
+        pin,
+        { action: 'copyPicture', q: article },
+        (d) => (typeof d.url === 'string' ? d.url : undefined),
         fetchImpl,
       ),
     kinds: (parent) =>
@@ -336,4 +354,55 @@ export function applyErpPrices(
   }
   out.list = next;
   return out;
+}
+
+/** D-34: the eman.uz pictures of the shown 1C articles (loaded after the list) */
+export function usePictures(articles: string[]): Record<string, string | null> {
+  const api = useContext(ErpContext);
+  const [pics, setPics] = useState<Record<string, string | null>>({});
+  const key = articles.filter(Boolean).join('|');
+  useEffect(() => {
+    if (!api || !key) return;
+    let live = true;
+    void api.pictures(key.split('|').slice(0, 60)).then((r) => {
+      if (live && r.ok) setPics((p) => ({ ...p, ...r.value }));
+    });
+    return () => {
+      live = false;
+    };
+  }, [api, key]);
+  return pics;
+}
+
+/** D-34: a small picture of a 1C item from eman.uz (nothing when it has none) */
+export function ErpThumb({ src, alt }: { src: string | null | undefined; alt: string }) {
+  if (!src) return <span className="mgr-thumb mgr-thumb-empty" aria-hidden="true" />;
+  return <img className="mgr-thumb" src={src} alt={alt} loading="lazy" />;
+}
+
+/** D-34: "take the eman.uz picture" in the add forms; returns the stored URL or undefined */
+export function PictureChoice({
+  src,
+  take,
+  setTake,
+}: {
+  src: string | null | undefined;
+  take: boolean;
+  setTake: (v: boolean) => void;
+}) {
+  if (!src) return <p className="mgr-note">eman.uz da bu mahsulotning rasmi yo&apos;q.</p>;
+  return (
+    <label className="mgr-inline mgr-pic-choice">
+      <img className="mgr-pic" src={src} alt="" />
+      <span>
+        <input
+          type="checkbox"
+          checked={take}
+          onChange={(e) => setTake(e.target.checked)}
+          data-testid="erp-take-picture"
+        />{' '}
+        eman.uz dagi rasmini olish
+      </span>
+    </label>
+  );
 }

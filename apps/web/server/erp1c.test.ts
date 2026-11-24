@@ -138,6 +138,12 @@ describe('D-31 1C catalogue browse and links on save', () => {
     const r = await handleErp(req({ action: 'kinds' }), deps(cfg(fetchImpl)));
     const body = (await r.json()) as { kinds: { name: string; folder: boolean }[] };
     expect(body.kinds.map((k) => k.name)).toEqual(['Кромка', 'ЛДСП', 'Блоки']);
+    // D-32: the top kinds carry their default group (the Materials tab filters on it)
+    expect((body.kinds as { group?: string }[]).map((k) => k.group)).toEqual([
+      'material',
+      'material',
+      'other',
+    ]);
   });
 
   it('items of a kind: the count is asked apart ($expand and $inlinecount do not mix in 1C)', async () => {

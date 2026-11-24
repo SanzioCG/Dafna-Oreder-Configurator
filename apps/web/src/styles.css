@@ -3093,3 +3093,36 @@ p {
   font: inherit;
   cursor: pointer;
 }
+
+/* D-34: eman.uz pictures on the manager page */
+.mgr-thumb {
+  display: block;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--paper);
+}
+
+.mgr-thumb-empty {
+  border: var(--line-in-card);
+  opacity: 0.15;
+}
+
+.mgr-pic {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.mgr-pic-choice {
+  align-items: center;
+  gap: 12px;
+}
+
+.mgr-erp-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}

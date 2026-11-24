@@ -1,3 +1,4 @@
+import { copyPicture, emanPicture } from './emanSite';
 import { pinMatches } from './prices';
 import type { RateLimiter } from './rateLimit';
 
@@ -323,7 +324,9 @@ export async function erpKinds(cfg: ErpConfig, parent: string): Promise<ErpKind[
       folder: r.IsFolder === true,
     }))
     .filter((k) => k.name && !k.name.startsWith('_') && !k.name.startsWith('!'))
-    .map((k) => (GUID_RE.test(parent) ? k : { ...k, group: defaultGroup(k.name) }))
+    .map((k) =>
+      GUID_RE.test(parent) && parent !== ROOT_FOLDER ? k : { ...k, group: defaultGroup(k.name) },
+    )
     .sort((a, b) => Number(b.folder) - Number(a.folder) || a.name.localeCompare(b.name, 'ru'));
 }
 
@@ -379,6 +382,12 @@ export interface ErpDeps {
   erp: ErpConfig | null;
   managerPin: string | undefined;
   limiter: RateLimiter;
+  /** D-34: our photo store (Vercel Blob); undefined = not configured */
+  putPicture?: (name: string, body: ArrayBuffer, contentType: string) => Promise<string>;
+  /** dev server only: pictures as data URLs */
+  dataUrls?: boolean;
+  /** the shop's fetch (tests) */
+  siteFetch?: typeof fetch;
 }
 
 function clientIp(req: Request): string {
@@ -422,6 +431,45 @@ export async function handleErp(req: Request, deps: ErpDeps): Promise<Response> 
           if (GUID_RE.test(k) && (g === 'material' || g === 'hardware' || g === 'other'))
             groups[k] = g;
       return json(200, { items: await erpSearch(deps.erp, q, 30, { group, sub, groups }) });
+    }
+    // D-34: pictures from EMAN's shop (eman.uz) by 1C article
+    if (body.action === 'pictures') {
+      const articles = Array.isArray(body.articles)
+        ? body.articles.filter((a): a is string => typeof a === 'string' && a.length <= 40)
+        : null;
+      if (!articles || articles.length > 60)
+        return json(400, { error: { code: 'invalid_request' } });
+      const pictures: Record<string, string | null> = {};
+      const list = [...new Set(articles.map((a) => a.trim()).filter(Boolean))];
+      for (let i = 0; i < list.length; i += 6)
+        await Promise.all(
+          list.slice(i, i + 6).map(async (a) => {
+            pictures[a] = await emanPicture(a, deps.siteFetch).catch(() => null);
+          }),
+        );
+      return json(200, { pictures });
+    }
+    if (body.action === 'copyPicture') {
+      const article = typeof body.q === 'string' ? body.q.trim().slice(0, 40) : '';
+      if (!article) return json(400, { error: { code: 'invalid_request' } });
+      if (!deps.putPicture && !deps.dataUrls)
+        return json(503, { error: { code: 'storage_not_configured' } });
+      const src = await emanPicture(article, deps.siteFetch);
+      if (!src) return json(404, { error: { code: 'no_picture' } });
+      const slug =
+        article
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '_')
+          .slice(0, 40) || 'item';
+      const url = await copyPicture(
+        src,
+        `eman/${slug}`,
+        deps.putPicture,
+        deps.siteFetch,
+        deps.dataUrls,
+      );
+      if (!url) return json(404, { error: { code: 'no_picture' } });
+      return json(200, { url });
     }
     if (body.action === 'kinds') {
       const parent = typeof body.parent === 'string' ? body.parent : ROOT_FOLDER;

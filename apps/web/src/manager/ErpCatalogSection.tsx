@@ -1,7 +1,15 @@
 import { type PriceList } from '@dafna/engine';
 import { useContext, useEffect, useState, type FormEvent } from 'react';
 import { Button } from '../ui/Button';
-import { ERP_ERRORS, ErpContext, type ErpApi, type KindGroup } from './erp';
+import {
+  ERP_ERRORS,
+  ErpContext,
+  ErpThumb,
+  PictureChoice,
+  usePictures,
+  type ErpApi,
+  type KindGroup,
+} from './erp';
 import {
   NEW_HARDWARE,
   NEW_MATERIAL,
@@ -163,6 +171,8 @@ export function ErpCatalogSection({
   const [adding, setAdding] = useState<ErpRow | null>(null);
 
   const leaf = path.at(-1);
+  // D-34: eman.uz pictures of the rows shown
+  const pics = usePictures((rows ?? []).map((r) => r.article));
 
   useEffect(() => {
     if (!api) return;
@@ -380,6 +390,7 @@ export function ErpCatalogSection({
             <table className="mgr-table">
               <thead>
                 <tr>
+                  <th aria-label="Rasm" />
                   <th>1C dagi nomi</th>
                   <th>Artikul</th>
                   <th>Narxi</th>
@@ -392,6 +403,9 @@ export function ErpCatalogSection({
                   const l = linkOf(r.article);
                   return (
                     <tr key={r.key} data-testid={`erp-row-${r.article}`}>
+                      <td>
+                        <ErpThumb src={pics[r.article]} alt={r.name} />
+                      </td>
                       <td>
                         <span className="mgr-name">
                           {r.name}
@@ -459,6 +473,7 @@ export function ErpCatalogSection({
       {adding && (
         <AddFromErp
           row={adding}
+          picture={pics[adding.article]}
           list={list}
           onCancel={() => setAdding(null)}
           onAdd={(d) => {
@@ -478,15 +493,21 @@ type Added = { type: 'material'; item: MaterialDraft } | { type: 'hardware'; ite
 /** the form that turns a 1C item into a kiosk material / hardware brand */
 function AddFromErp({
   row,
+  picture,
   list,
   onAdd,
   onCancel,
 }: {
   row: ErpRow;
+  /** D-34: its eman.uz picture */
+  picture?: string | null;
   list: PriceList;
   onAdd: (a: Added) => void;
   onCancel: () => void;
 }) {
+  const api = useContext(ErpContext);
+  const [take, setTake] = useState(true);
+  const [busy, setBusy] = useState(false);
   const g = guessFromName(row.name);
   const [kind, setKind] = useState<AddKind>(g.kind);
   const [name, setName] = useState(cleanName(row.name));
@@ -499,7 +520,15 @@ function AddFromErp({
   const board = kind === 'ldsp' || kind === 'mdf';
   const price = somPrice(row, list, board ? g.sheet : undefined);
 
-  const add = () => {
+  const add = async () => {
+    // D-34: the eman.uz picture is copied into our photo store first
+    let pic: string | undefined;
+    if (take && picture && api) {
+      setBusy(true);
+      const r = await api.copyPicture(row.article);
+      setBusy(false);
+      if (r.ok) pic = r.value;
+    }
     const erp = { erpArticle: row.article, erpPrice: price };
     if (board)
       onAdd({
@@ -518,6 +547,7 @@ function AddFromErp({
           note: `1C: ${row.name}`.slice(0, 200),
           ...erp,
           erpSheet: g.sheet,
+          erpPicture: pic,
         } as MaterialDraft,
       });
     else
@@ -530,6 +560,7 @@ function AddFromErp({
           model: name,
           softClose,
           note: `1C: ${row.name}`.slice(0, 200),
+          photoUrl: pic,
           ...erp,
         } as HardwareDraft,
       });
@@ -548,6 +579,7 @@ function AddFromErp({
           1C: {row.name} · artikul {row.article}
           {price !== undefined && ` · ${money(price)} so'm${board ? ' / list' : ''}`}
         </p>
+        <PictureChoice src={picture} take={take} setTake={setTake} />
         <div className="mgr-grid">
           <label className="mgr-field">
             <span>Nima</span>
@@ -630,13 +662,16 @@ function AddFromErp({
             </label>
           )}
         </div>
-        <p className="mgr-note">
-          Rasm (dekor fotosi) 1C da yo&apos;q: uni «Materiallar» bo&apos;limida yuklaysiz.
-        </p>
+        {board && (
+          <p className="mgr-note">
+            Rasm dekor fotosi bo&apos;ladi (1 m × 1 m deb olinadi): o&apos;lchamini «Materiallar»
+            bo&apos;limida to&apos;g&apos;rilaysiz.
+          </p>
+        )}
         <Button
           variant="primary"
-          onClick={add}
-          disabled={!name.trim() || (board && usage.length === 0)}
+          onClick={() => void add()}
+          disabled={busy || !name.trim() || (board && usage.length === 0)}
           data-testid="erp-add-confirm"
         >
           Qo&apos;shish
