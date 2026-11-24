@@ -227,6 +227,7 @@ export const uz = {
   'pin.login': 'Login',
   'pin.password': 'Parol',
   'pin.error.wrong_login': "Login yoki parol noto'g'ri",
+  'pin.error.must_change': "Avval /manager sahifasida o'z parolingizni qo'ying",
   'pin.error.rate_limited': "Ko'p urinish. Birozdan so'ng qayta urinib ko'ring.",
   'pin.error.network': "Server bilan aloqa yo'q. Qayta urinib ko'ring.",
   'staff.exit': 'Xodim rejimidan chiqish',

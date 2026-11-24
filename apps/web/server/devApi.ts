@@ -11,7 +11,7 @@ import {
   tashkentMinute,
 } from './prices';
 import { RateLimiter } from './rateLimit';
-import { CachedStaff, MemoryStaffStore, handleAuth, sessionUser, type AuthDeps } from './staffAuth';
+import { CachedStaff, MemoryStaffStore, handleAuth, workingUser, type AuthDeps } from './staffAuth';
 import { handleSubmit, type SubmitDeps } from './submit';
 
 /**
@@ -53,8 +53,13 @@ const devAuth: AuthDeps = {
   // the dev server is plain http
   secure: false,
   stamp: () => tashkentMinute(new Date()),
+  // D-39: no e-mail service in dev - the reset link is printed to the dev server's console
+  mailer: async (mail) => {
+    console.warn('[dev api] mail to', mail.to, mail.text);
+    return true;
+  },
 };
-const devAuthOf = (req: Request) => sessionUser(req, devAuth);
+const devAuthOf = (req: Request) => workingUser(req, devAuth);
 
 export function createDevAuthHandler() {
   return adapt((r) => handleAuth(r, devAuth), '/api/auth');

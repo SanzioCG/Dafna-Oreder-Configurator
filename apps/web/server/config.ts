@@ -7,8 +7,9 @@ import { CachedPrices, tashkentMinute } from './prices';
 import {
   CachedStaff,
   GoogleSheetsStaffStore,
+  resendMailer,
   sessionSecretFrom,
-  sessionUser,
+  workingUser,
   type AuthDeps,
 } from './staffAuth';
 import { RateLimiter } from './rateLimit';
@@ -138,9 +139,19 @@ export function authFromEnv(env: Env): AuthDeps {
     now: Date.now,
     secure: true,
     stamp: () => tashkentMinute(new Date()),
+    // D-39: "Parolni unutdim" e-mails (RESEND_API_KEY + MAIL_FROM); unset = ask the admin
+    mailer:
+      env.RESEND_API_KEY && env.MAIL_FROM
+        ? resendMailer(env.RESEND_API_KEY, env.MAIL_FROM)
+        : undefined,
+    siteUrl: env.SITE_URL || undefined,
+    log: (event, detail) => console.error(JSON.stringify({ event, ...detail })),
   };
   return authSingleton;
 }
 
-/** D-38: the signed-in staff member of a request (null without a valid session) */
-export const authOfEnv = (env: Env) => (req: Request) => sessionUser(req, authFromEnv(env));
+/**
+ * D-38: the signed-in staff member of a request (null without a valid session; D-39: or while
+ * the password is still the admin's temporary one)
+ */
+export const authOfEnv = (env: Env) => (req: Request) => workingUser(req, authFromEnv(env));

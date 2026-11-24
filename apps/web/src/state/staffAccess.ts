@@ -13,7 +13,7 @@ export const STAFF_EXIT_EVENT = 'dafna:staff-exit';
 export const LONG_PRESS_MS = 3000;
 
 export type StaffSignIn =
-  { ok: true } | { ok: false; code: 'wrong_login' | 'rate_limited' | 'network' };
+  { ok: true } | { ok: false; code: 'wrong_login' | 'rate_limited' | 'must_change' | 'network' };
 
 export async function signInStaff(
   login: string,
@@ -21,6 +21,11 @@ export async function signInStaff(
   fetchImpl?: typeof fetch,
 ): Promise<StaffSignIn> {
   const r = await signIn(login, password, fetchImpl);
+  // D-39: a temporary password is changed on the manager page first
+  if (r.ok && r.value.mustChange) {
+    void signOut(fetchImpl);
+    return { ok: false, code: 'must_change' };
+  }
   if (r.ok) return { ok: true };
   if (r.code === 'wrong_login' || r.code === 'rate_limited') return { ok: false, code: r.code };
   return { ok: false, code: 'network' };

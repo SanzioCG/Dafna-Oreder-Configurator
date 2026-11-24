@@ -2537,6 +2537,15 @@ p {
 .mgr-login-card {
   width: min(420px, 100%);
 }
+/* D-39: the password forms inside the sign-in card */
+.mgr-login-card form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.mgr-login .mgr-login-card .mgr-field input:not([type='checkbox']) {
+  max-width: none;
+}
 .mgr-head {
   display: flex;
   justify-content: space-between;

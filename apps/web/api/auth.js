@@ -60760,9 +60760,11 @@ import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from
 var ROLES = ["admin", "manager"];
 var ADMIN_LOGIN = "admin";
 var LOGIN_RE = /^[a-z0-9._-]{3,32}$/;
+var EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i;
 var MIN_PASSWORD = 8;
 var SESSION_COOKIE = "dafna_staff";
 var SESSION_MS = 12 * 36e5;
+var RESET_MS = 30 * 6e4;
 var SCRYPT = { N: 16384, r: 8, p: 1 };
 var b64 = (b) => b.toString("base64url");
 function hashPassword(password) {
@@ -60778,11 +60780,12 @@ function verifyPassword(password, stored) {
   return want.length === got.length && timingSafeEqual(want, got);
 }
 var fingerprint = (s) => createHash("sha256").update(s).digest("base64url").slice(0, 12);
+var okPassword = (p) => typeof p === "string" && p.length >= MIN_PASSWORD && p.length <= 200;
 function signSession(s, secret) {
   const body = Buffer.from(JSON.stringify(s)).toString("base64url");
   return `${body}.${b64(createHmac("sha256", secret).update(body).digest())}`;
 }
-function readSession(token, secret, now) {
+function readSession(token, secret, now, purpose) {
   const [body, mac] = token.split(".");
   if (!body || !mac) return null;
   const want = createHmac("sha256", secret).update(body).digest();
@@ -60791,6 +60794,7 @@ function readSession(token, secret, now) {
   try {
     const s = JSON.parse(Buffer.from(body, "base64url").toString());
     if (typeof s.l !== "string" || typeof s.v !== "string" || typeof s.e !== "number") return null;
+    if (s.p !== purpose) return null;
     return s.e > now ? s : null;
   } catch {
     return null;
@@ -60807,17 +60811,37 @@ function sessionSecretFrom(privateKey) {
   return createHash("sha256").update(`dafna-staff-session|${privateKey}`).digest("hex");
 }
 var STAFF_TAB = "Xodimlar";
-var HEADER = ["login", "ism", "rol", "parol (xesh)", "faol", "o'zgargan"];
+var HEADER = [
+  "login",
+  "ism",
+  "rol",
+  "parol (xesh)",
+  "faol",
+  "o'zgargan",
+  "email",
+  "vaqtinchalik parol"
+];
 function staffToRows(list) {
   return [
     HEADER,
-    ...list.map((a) => [a.login, a.name, a.role, a.hash, a.active ? "ha" : "yo'q", a.updatedAt])
+    ...list.map((a) => [
+      a.login,
+      a.name,
+      a.role,
+      a.hash,
+      a.active ? "ha" : "yo'q",
+      a.updatedAt,
+      a.email,
+      a.mustChange ? "ha" : "yo'q"
+    ])
   ];
 }
 function rowsToStaff(rows) {
   const out = [];
   for (const r of rows.slice(1)) {
-    const [login, name, role, hash, active, updatedAt] = r.map((c) => String(c ?? "").trim());
+    const [login, name, role, hash, active, updatedAt, email, mustChange] = r.map(
+      (c) => String(c ?? "").trim()
+    );
     if (!login || !LOGIN_RE.test(login) || !hash) continue;
     if (!ROLES.includes(role)) continue;
     out.push({
@@ -60826,7 +60850,9 @@ function rowsToStaff(rows) {
       role,
       hash,
       active: active !== "yo'q",
-      updatedAt: updatedAt ?? ""
+      updatedAt: updatedAt ?? "",
+      email: email && EMAIL_RE.test(email) ? email.toLowerCase() : "",
+      mustChange: mustChange === "ha"
     });
   }
   return out;
@@ -60864,6 +60890,33 @@ var CachedStaff = class {
     this.cached = { list, at: this.now() };
   }
 };
+function resendMailer(apiKey, from, fetchImpl = fetch) {
+  return async (mail) => {
+    try {
+      const res = await fetchImpl("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+        body: JSON.stringify({ from, ...mail }),
+        signal: AbortSignal.timeout(1e4)
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  };
+}
+var escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+function resetMail(name, link) {
+  const text2 = `Assalomu alaykum, ${name}!
+
+Dafna boshqaruv paneli uchun parolni tiklash so'raldi. Yangi parol qo'yish uchun havolani oching (30 daqiqa amal qiladi, bir marta ishlaydi):
+
+${link}
+
+Agar buni siz so'ramagan bo'lsangiz, xatga e'tibor bermang - parolingiz o'zgarmaydi.`;
+  const html = `<p>Assalomu alaykum, ${escapeHtml(name)}!</p><p>Dafna boshqaruv paneli uchun parolni tiklash so'raldi. Yangi parol qo'yish uchun tugmani bosing (30 daqiqa amal qiladi, bir marta ishlaydi):</p><p><a href="${escapeHtml(link)}">Yangi parol qo'yish</a></p><p>Agar buni siz so'ramagan bo'lsangiz, xatga e'tibor bermang \u2014 parolingiz o'zgarmaydi.</p>`;
+  return { subject: "Dafna \u2014 parolni tiklash", text: text2, html };
+}
 var json = (status, body, cookie2) => new Response(JSON.stringify(body), {
   status,
   headers: {
@@ -60878,7 +60931,12 @@ function clientIp(req) {
 }
 var cookie = (value, maxAgeSec, secure) => `${SESSION_COOKIE}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSec}${secure ? "; Secure" : ""}`;
 var adminUser = { login: ADMIN_LOGIN, name: "Admin", role: "admin" };
-var publicOf = (a) => ({ login: a.login, name: a.name, role: a.role });
+var publicOf = (a) => ({
+  login: a.login,
+  name: a.name,
+  role: a.role,
+  ...a.mustChange ? { mustChange: true } : {}
+});
 async function sessionUser(req, deps) {
   const token = cookieOf(req, SESSION_COOKIE);
   if (!token) return null;
@@ -60890,6 +60948,16 @@ async function sessionUser(req, deps) {
   return a && a.active && fingerprint(a.hash) === s.v ? publicOf(a) : null;
 }
 var text = (v, max) => typeof v === "string" ? v.trim().slice(0, max) : "";
+var emailOf = (v) => {
+  const e = text(v, 254).toLowerCase();
+  if (e === "") return "";
+  return EMAIL_RE.test(e) ? e : null;
+};
+var sessionFor = (deps, login, v) => cookie(
+  signSession({ l: login, v, e: deps.now() + SESSION_MS }, deps.secret),
+  SESSION_MS / 1e3,
+  deps.secure
+);
 async function handleAuth(req, deps) {
   if (req.method === "GET") {
     const user = await sessionUser(req, deps);
@@ -60909,48 +60977,123 @@ async function handleAuth(req, deps) {
     if (!deps.limiter.take(clientIp(req))) return json(429, { error: { code: "rate_limited" } });
     const login = text(body.login, 40).toLowerCase();
     const password = typeof body.password === "string" ? body.password.slice(0, 200) : "";
-    let user = null;
-    let v = "";
     if (login === ADMIN_LOGIN) {
-      if (deps.adminPassword && password.length > 0 && timingSafeEqual(
+      const ok = deps.adminPassword && password.length > 0 && timingSafeEqual(
         createHash("sha256").update(password).digest(),
         createHash("sha256").update(deps.adminPassword).digest()
-      )) {
-        user = adminUser;
-        v = fingerprint(`admin|${deps.adminPassword}`);
-      }
-    } else {
-      const a = (await deps.staff.get()).find((x) => x.login === login);
-      if (a && a.active && verifyPassword(password, a.hash)) {
-        user = publicOf(a);
-        v = fingerprint(a.hash);
-      }
+      );
+      if (!ok) return json(401, { error: { code: "wrong_login" } });
+      return json(
+        200,
+        { user: adminUser },
+        sessionFor(deps, ADMIN_LOGIN, fingerprint(`admin|${deps.adminPassword}`))
+      );
     }
-    if (!user) return json(401, { error: { code: "wrong_login" } });
-    const token = signSession({ l: user.login, v, e: deps.now() + SESSION_MS }, deps.secret);
-    return json(200, { user }, cookie(token, SESSION_MS / 1e3, deps.secure));
+    const a = (await deps.staff.get()).find((x) => x.login === login);
+    if (!a || !a.active || !verifyPassword(password, a.hash))
+      return json(401, { error: { code: "wrong_login" } });
+    return json(200, { user: publicOf(a) }, sessionFor(deps, a.login, fingerprint(a.hash)));
+  }
+  if (body.action === "forgot") {
+    if (!deps.mailer) return json(503, { error: { code: "mail_not_configured" } });
+    if (!deps.limiter.take(clientIp(req))) return json(429, { error: { code: "rate_limited" } });
+    const email = emailOf(body.email);
+    if (!email) return json(400, { error: { code: "invalid_email" } });
+    const a = (await deps.staff.get()).find((x) => x.active && x.email === email);
+    if (a) {
+      const token = signSession(
+        { l: a.login, v: fingerprint(a.hash), e: deps.now() + RESET_MS, p: "reset" },
+        deps.secret
+      );
+      const site = (deps.siteUrl || new URL(req.url).origin).replace(/\/+$/, "");
+      const link = `${site}/manager?reset=${encodeURIComponent(token)}`;
+      const sent = await deps.mailer({ to: a.email, ...resetMail(a.name, link) });
+      if (!sent) deps.log?.("reset_mail_failed", { login: a.login });
+    }
+    return json(200, { ok: true });
+  }
+  if (body.action === "reset") {
+    if (!deps.limiter.take(clientIp(req))) return json(429, { error: { code: "rate_limited" } });
+    const s = readSession(text(body.token, 1e3), deps.secret, deps.now(), "reset");
+    const list2 = await deps.staff.get();
+    const i = s ? list2.findIndex((x) => x.login === s.l) : -1;
+    const a = list2[i];
+    if (!s || !a || !a.active || fingerprint(a.hash) !== s.v)
+      return json(400, { error: { code: "invalid_link" } });
+    if (!okPassword(body.password)) return json(400, { error: { code: "weak_password" } });
+    const next = {
+      ...a,
+      hash: hashPassword(body.password),
+      mustChange: false,
+      updatedAt: deps.stamp()
+    };
+    await deps.staff.save(list2.map((x, k) => k === i ? next : x));
+    return json(200, { ok: true });
   }
   const me = await sessionUser(req, deps);
   if (!me) return json(401, { error: { code: "unauthorized" } });
-  if (me.role !== "admin") return json(403, { error: { code: "forbidden" } });
+  if (body.action === "changePassword") {
+    if (me.login === ADMIN_LOGIN) return json(400, { error: { code: "admin_in_vercel" } });
+    const list2 = await deps.staff.get();
+    const i = list2.findIndex((x) => x.login === me.login);
+    const a = list2[i];
+    if (!verifyPassword(typeof body.old === "string" ? body.old.slice(0, 200) : "", a.hash))
+      return json(401, { error: { code: "wrong_old_password" } });
+    if (!okPassword(body.password)) return json(400, { error: { code: "weak_password" } });
+    if (verifyPassword(body.password, a.hash))
+      return json(400, { error: { code: "same_password" } });
+    const next = {
+      ...a,
+      hash: hashPassword(body.password),
+      mustChange: false,
+      updatedAt: deps.stamp()
+    };
+    await deps.staff.save(list2.map((x, k) => k === i ? next : x));
+    return json(
+      200,
+      { user: publicOf(next) },
+      sessionFor(deps, next.login, fingerprint(next.hash))
+    );
+  }
+  if (me.role !== "admin" || me.mustChange) return json(403, { error: { code: "forbidden" } });
   const list = await deps.staff.get();
-  const listOut = (l) => l.map((a) => ({ ...publicOf(a), active: a.active, updatedAt: a.updatedAt }));
+  const listOut = (l) => l.map((a) => ({
+    login: a.login,
+    name: a.name,
+    role: a.role,
+    active: a.active,
+    updatedAt: a.updatedAt,
+    email: a.email,
+    mustChange: a.mustChange
+  }));
   if (body.action === "staff") return json(200, { staff: listOut(list) });
   if (body.action === "addStaff") {
     const login = text(body.login, 40).toLowerCase();
     const name = text(body.name, 60);
     const role = body.role;
-    const password = typeof body.password === "string" ? body.password : "";
+    const email = emailOf(body.email);
     if (!LOGIN_RE.test(login) || login === ADMIN_LOGIN)
       return json(400, { error: { code: "invalid_login" } });
     if (list.some((a) => a.login === login)) return json(409, { error: { code: "login_taken" } });
     if (!name) return json(400, { error: { code: "invalid_name" } });
     if (!ROLES.includes(role)) return json(400, { error: { code: "invalid_role" } });
-    if (password.length < MIN_PASSWORD || password.length > 200)
-      return json(400, { error: { code: "weak_password" } });
+    if (email === null) return json(400, { error: { code: "invalid_email" } });
+    if (email && list.some((a) => a.email === email))
+      return json(409, { error: { code: "email_taken" } });
+    if (!okPassword(body.password)) return json(400, { error: { code: "weak_password" } });
     const next = [
       ...list,
-      { login, name, role, hash: hashPassword(password), active: true, updatedAt: deps.stamp() }
+      {
+        login,
+        name,
+        role,
+        hash: hashPassword(body.password),
+        active: true,
+        updatedAt: deps.stamp(),
+        email,
+        // D-39: the admin's password is temporary
+        mustChange: true
+      }
     ];
     await deps.staff.save(next);
     return json(200, { staff: listOut(next) });
@@ -60969,12 +61112,18 @@ async function handleAuth(req, deps) {
       if (!ROLES.includes(body.role)) return json(400, { error: { code: "invalid_role" } });
       a.role = body.role;
     }
+    if (body.email !== void 0) {
+      const email = emailOf(body.email);
+      if (email === null) return json(400, { error: { code: "invalid_email" } });
+      if (email && list.some((x) => x.login !== login && x.email === email))
+        return json(409, { error: { code: "email_taken" } });
+      a.email = email;
+    }
     if (body.active !== void 0) a.active = body.active === true;
     if (body.password !== void 0) {
-      const p = typeof body.password === "string" ? body.password : "";
-      if (p.length < MIN_PASSWORD || p.length > 200)
-        return json(400, { error: { code: "weak_password" } });
-      a.hash = hashPassword(p);
+      if (!okPassword(body.password)) return json(400, { error: { code: "weak_password" } });
+      a.hash = hashPassword(body.password);
+      a.mustChange = true;
     }
     a.updatedAt = deps.stamp();
     const next = list.map((x, k) => k === i ? a : x);
@@ -61031,7 +61180,11 @@ function authFromEnv(env) {
     limiter: new RateLimiter(10, 10 * 60 * 1e3),
     now: Date.now,
     secure: true,
-    stamp: () => tashkentMinute(/* @__PURE__ */ new Date())
+    stamp: () => tashkentMinute(/* @__PURE__ */ new Date()),
+    // D-39: "Parolni unutdim" e-mails (RESEND_API_KEY + MAIL_FROM); unset = ask the admin
+    mailer: env.RESEND_API_KEY && env.MAIL_FROM ? resendMailer(env.RESEND_API_KEY, env.MAIL_FROM) : void 0,
+    siteUrl: env.SITE_URL || void 0,
+    log: (event, detail) => console.error(JSON.stringify({ event, ...detail }))
   };
   return authSingleton;
 }

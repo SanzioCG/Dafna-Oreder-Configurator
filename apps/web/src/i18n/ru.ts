@@ -225,6 +225,7 @@ export const ru: Messages = {
   'pin.login': 'Логин',
   'pin.password': 'Пароль',
   'pin.error.wrong_login': 'Неверный логин или пароль',
+  'pin.error.must_change': 'Сначала задайте свой пароль на странице /manager',
   'pin.error.rate_limited': 'Слишком много попыток. Попробуйте позже.',
   'pin.error.network': 'Нет связи с сервером. Попробуйте ещё раз.',
   'staff.exit': 'Выйти из режима сотрудника',

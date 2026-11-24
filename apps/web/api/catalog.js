@@ -63122,6 +63122,7 @@ var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
 
 // server/staffAuth.ts
 var SESSION_MS = 12 * 36e5;
+var RESET_MS = 30 * 6e4;
 
 // server/config.ts
 var IP_LIMIT = { limit: 20, windowMs: 10 * 60 * 1e3 };

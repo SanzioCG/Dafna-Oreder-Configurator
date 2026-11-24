@@ -14,15 +14,18 @@ const ROLE_LABEL: Record<Role, string> = { admin: 'Admin', manager: 'Menejer' };
 /**
  * D-38 "Xodimlar" (admin only): who may sign in to this page. Accounts are never deleted, only
  * blocked; a new password ends the person's open sessions. The built-in "admin" (Vercel
- * ADMIN_PASSWORD) is not in this list.
+ * ADMIN_PASSWORD) is not in this list. D-39: the password the admin gives is temporary (the
+ * person sets their own on the first sign-in); the e-mail is for "Parolni unutdim".
  */
+const EMPTY = { login: '', name: '', role: 'manager' as Role, password: '', email: '' };
 export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const [rows, setRows] = useState<StaffRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [form, setForm] = useState({ login: '', name: '', role: 'manager' as Role, password: '' });
+  const [form, setForm] = useState(EMPTY);
   const [newPassword, setNewPassword] = useState<{ login: string; value: string } | null>(null);
+  const [newEmail, setNewEmail] = useState<{ login: string; value: string } | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -55,9 +58,13 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const add = (e: FormEvent) => {
     e.preventDefault();
     void run(
-      () => addStaff({ ...form, login: form.login.trim().toLowerCase() }, fetchImpl),
-      `${form.name} qo'shildi. Login va parolni unga o'zingiz bering.`,
-      () => setForm({ login: '', name: '', role: 'manager', password: '' }),
+      () =>
+        addStaff(
+          { ...form, login: form.login.trim().toLowerCase(), email: form.email.trim() },
+          fetchImpl,
+        ),
+      `${form.name} qo'shildi. Login va vaqtinchalik parolni unga bering — birinchi kirishda u o'z parolini qo'yadi.`,
+      () => setForm(EMPTY),
     );
   };
 
@@ -66,7 +73,8 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
       <h2>Xodimlar</h2>
       <p className="mgr-note">
         Boshqaruv paneliga kim kira oladi. Mijozlarga login kerak emas — sayt ularga ochiq. Xodim
-        o&apos;chirilmaydi, faqat bloklanadi. Yangi parol berilsa, eski kirishlar yopiladi.
+        o&apos;chirilmaydi, faqat bloklanadi. Siz bergan parol vaqtinchalik: xodim birinchi kirishda
+        o&apos;z parolini qo&apos;yadi. Email «Parolni unutdim» uchun kerak.
       </p>
       {error && (
         <p className="mgr-error" role="alert">
@@ -83,6 +91,7 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
           <tr>
             <th>Ism</th>
             <th>Login</th>
+            <th>Email</th>
             <th>Rol</th>
             <th>Holati</th>
             <th>O&apos;zgargan</th>
@@ -92,17 +101,55 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
         <tbody>
           {rows === null ? (
             <tr>
-              <td colSpan={6}>Yuklanmoqda…</td>
+              <td colSpan={7}>Yuklanmoqda…</td>
             </tr>
           ) : rows.length === 0 ? (
             <tr>
-              <td colSpan={6}>Hali xodim qo&apos;shilmagan.</td>
+              <td colSpan={7}>Hali xodim qo&apos;shilmagan.</td>
             </tr>
           ) : (
             rows.map((r) => (
               <tr key={r.login} data-testid={`staff-row-${r.login}`}>
                 <td>{r.name}</td>
                 <td>{r.login}</td>
+                <td>
+                  {newEmail?.login === r.login ? (
+                    <span className="mgr-inline">
+                      <input
+                        type="email"
+                        value={newEmail.value}
+                        onChange={(e) => setNewEmail({ login: r.login, value: e.target.value })}
+                        aria-label={`${r.name}: email`}
+                      />
+                      <Button
+                        variant="primary"
+                        disabled={busy}
+                        onClick={() =>
+                          void run(
+                            () =>
+                              updateStaff(
+                                { login: r.login, email: newEmail.value.trim() },
+                                fetchImpl,
+                              ),
+                            `${r.name}: email saqlandi`,
+                            () => setNewEmail(null),
+                          )
+                        }
+                      >
+                        Saqlash
+                      </Button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="mgr-link"
+                      onClick={() => setNewEmail({ login: r.login, value: r.email })}
+                      data-testid={`staff-email-${r.login}`}
+                    >
+                      {r.email || "Email qo'shish"}
+                    </button>
+                  )}
+                </td>
                 <td>
                   <select
                     value={r.role}
@@ -123,7 +170,7 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
                     ))}
                   </select>
                 </td>
-                <td>{r.active ? 'Faol' : 'Bloklangan'}</td>
+                <td>{!r.active ? 'Bloklangan' : r.mustChange ? 'Vaqtinchalik parol' : 'Faol'}</td>
                 <td>{r.updatedAt}</td>
                 <td className="mgr-inline">
                   <Button
@@ -144,7 +191,7 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
                       <input
                         type="password"
                         autoComplete="new-password"
-                        placeholder="Yangi parol (8+)"
+                        placeholder="Vaqtinchalik parol (8+)"
                         value={newPassword.value}
                         onChange={(e) => setNewPassword({ login: r.login, value: e.target.value })}
                         aria-label={`${r.name}: yangi parol`}
@@ -159,7 +206,7 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
                                 { login: r.login, password: newPassword.value },
                                 fetchImpl,
                               ),
-                            `${r.name}: yangi parol saqlandi`,
+                            `${r.name}: vaqtinchalik parol saqlandi — kirganda o'zinikini qo'yadi`,
                             () => setNewPassword(null),
                           )
                         }
@@ -200,6 +247,16 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
             autoComplete="off"
             onChange={(e) => setForm({ ...form, login: e.target.value })}
             maxLength={32}
+          />
+        </label>
+        <label className="mgr-field">
+          <span>Email (parolni tiklash uchun)</span>
+          <input
+            type="email"
+            value={form.email}
+            autoComplete="off"
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            maxLength={254}
           />
         </label>
         <label className="mgr-field">

@@ -63060,6 +63060,7 @@ var uz = {
   "pin.login": "Login",
   "pin.password": "Parol",
   "pin.error.wrong_login": "Login yoki parol noto'g'ri",
+  "pin.error.must_change": "Avval /manager sahifasida o'z parolingizni qo'ying",
   "pin.error.rate_limited": "Ko'p urinish. Birozdan so'ng qayta urinib ko'ring.",
   "pin.error.network": "Server bilan aloqa yo'q. Qayta urinib ko'ring.",
   "staff.exit": "Xodim rejimidan chiqish",
@@ -64134,10 +64135,12 @@ import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from
 var ROLES = ["admin", "manager"];
 var ADMIN_LOGIN = "admin";
 var LOGIN_RE = /^[a-z0-9._-]{3,32}$/;
+var EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i;
 var SESSION_COOKIE = "dafna_staff";
 var SESSION_MS = 12 * 36e5;
+var RESET_MS = 30 * 6e4;
 var fingerprint = (s) => createHash("sha256").update(s).digest("base64url").slice(0, 12);
-function readSession(token, secret, now) {
+function readSession(token, secret, now, purpose) {
   const [body, mac] = token.split(".");
   if (!body || !mac) return null;
   const want = createHmac("sha256", secret).update(body).digest();
@@ -64146,6 +64149,7 @@ function readSession(token, secret, now) {
   try {
     const s = JSON.parse(Buffer.from(body, "base64url").toString());
     if (typeof s.l !== "string" || typeof s.v !== "string" || typeof s.e !== "number") return null;
+    if (s.p !== purpose) return null;
     return s.e > now ? s : null;
   } catch {
     return null;
@@ -64162,17 +64166,37 @@ function sessionSecretFrom(privateKey) {
   return createHash("sha256").update(`dafna-staff-session|${privateKey}`).digest("hex");
 }
 var STAFF_TAB = "Xodimlar";
-var HEADER = ["login", "ism", "rol", "parol (xesh)", "faol", "o'zgargan"];
+var HEADER = [
+  "login",
+  "ism",
+  "rol",
+  "parol (xesh)",
+  "faol",
+  "o'zgargan",
+  "email",
+  "vaqtinchalik parol"
+];
 function staffToRows(list) {
   return [
     HEADER,
-    ...list.map((a) => [a.login, a.name, a.role, a.hash, a.active ? "ha" : "yo'q", a.updatedAt])
+    ...list.map((a) => [
+      a.login,
+      a.name,
+      a.role,
+      a.hash,
+      a.active ? "ha" : "yo'q",
+      a.updatedAt,
+      a.email,
+      a.mustChange ? "ha" : "yo'q"
+    ])
   ];
 }
 function rowsToStaff(rows) {
   const out = [];
   for (const r of rows.slice(1)) {
-    const [login, name, role, hash, active, updatedAt] = r.map((c) => String(c ?? "").trim());
+    const [login, name, role, hash, active, updatedAt, email, mustChange] = r.map(
+      (c) => String(c ?? "").trim()
+    );
     if (!login || !LOGIN_RE.test(login) || !hash) continue;
     if (!ROLES.includes(role)) continue;
     out.push({
@@ -64181,7 +64205,9 @@ function rowsToStaff(rows) {
       role,
       hash,
       active: active !== "yo'q",
-      updatedAt: updatedAt ?? ""
+      updatedAt: updatedAt ?? "",
+      email: email && EMAIL_RE.test(email) ? email.toLowerCase() : "",
+      mustChange: mustChange === "ha"
     });
   }
   return out;
@@ -64219,8 +64245,28 @@ var CachedStaff = class {
     this.cached = { list, at: this.now() };
   }
 };
+function resendMailer(apiKey, from, fetchImpl = fetch) {
+  return async (mail) => {
+    try {
+      const res = await fetchImpl("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+        body: JSON.stringify({ from, ...mail }),
+        signal: AbortSignal.timeout(1e4)
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  };
+}
 var adminUser = { login: ADMIN_LOGIN, name: "Admin", role: "admin" };
-var publicOf = (a) => ({ login: a.login, name: a.name, role: a.role });
+var publicOf = (a) => ({
+  login: a.login,
+  name: a.name,
+  role: a.role,
+  ...a.mustChange ? { mustChange: true } : {}
+});
 async function sessionUser(req, deps2) {
   const token = cookieOf(req, SESSION_COOKIE);
   if (!token) return null;
@@ -64230,6 +64276,10 @@ async function sessionUser(req, deps2) {
     return deps2.adminPassword && s.v === fingerprint(`admin|${deps2.adminPassword}`) ? adminUser : null;
   const a = (await deps2.staff.get()).find((x) => x.login === s.l);
   return a && a.active && fingerprint(a.hash) === s.v ? publicOf(a) : null;
+}
+async function workingUser(req, deps2) {
+  const u = await sessionUser(req, deps2);
+  return u && !u.mustChange ? u : null;
 }
 
 // server/rateLimit.ts
@@ -64297,11 +64347,15 @@ function authFromEnv(env) {
     limiter: new RateLimiter(10, 10 * 60 * 1e3),
     now: Date.now,
     secure: true,
-    stamp: () => tashkentMinute(/* @__PURE__ */ new Date())
+    stamp: () => tashkentMinute(/* @__PURE__ */ new Date()),
+    // D-39: "Parolni unutdim" e-mails (RESEND_API_KEY + MAIL_FROM); unset = ask the admin
+    mailer: env.RESEND_API_KEY && env.MAIL_FROM ? resendMailer(env.RESEND_API_KEY, env.MAIL_FROM) : void 0,
+    siteUrl: env.SITE_URL || void 0,
+    log: (event, detail) => console.error(JSON.stringify({ event, ...detail }))
   };
   return authSingleton;
 }
-var authOfEnv = (env) => (req) => sessionUser(req, authFromEnv(env));
+var authOfEnv = (env) => (req) => workingUser(req, authFromEnv(env));
 
 // server/entries/manager.ts
 var deps = null;

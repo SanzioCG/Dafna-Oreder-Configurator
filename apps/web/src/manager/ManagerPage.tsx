@@ -12,6 +12,7 @@ import { MaterialsSection } from './MaterialsSection';
 import { ProfitSection } from './ProfitSection';
 import { ServicesSection } from './ServicesSection';
 import { StaffSection } from './StaffSection';
+import { ChangePasswordForm, ForgotForm, ResetForm } from './PasswordForms';
 import { ERP_ERRORS, ErpContext, applyErpPrices, erpApi } from './erp';
 import { ErpCatalogSection } from './ErpCatalogSection';
 import { managerLoad, managerSave, managerUploadTexture, type ManagerOutcome } from './managerApi';
@@ -53,6 +54,15 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const [user, setUser] = useState<StaffUser | null>(null);
   /** the first check of an open session (no form flash) */
   const [checking, setChecking] = useState(true);
+  /** D-39: signed in with the admin's temporary password - must set their own first */
+  const [pending, setPending] = useState<StaffUser | null>(null);
+  /** D-39: "Parolni o'zgartirish" open / "Parolni unutdim" open */
+  const [changing, setChanging] = useState(false);
+  const [forgot, setForgot] = useState(false);
+  /** D-39: the e-mailed reset link (/manager?reset=…) */
+  const [resetToken, setResetToken] = useState(
+    () => new URLSearchParams(window.location.search).get('reset') ?? '',
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [list, setList] = useState<PriceList | null>(null);
@@ -75,6 +85,8 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
 
   /** the price list and catalog of a signed-in staff member */
   const load = async (who: StaffUser) => {
+    if (who.mustChange) return setPending(who);
+    setPending(null);
     const r = await managerLoad(fetchImpl);
     if (!r.ok) return setError(errorText(r));
     takeCatalog(r.catalog ?? EMPTY_EXTENSION);
@@ -113,8 +125,16 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const logout = async () => {
     await signOut(fetchImpl);
     setUser(null);
+    setPending(null);
+    setChanging(false);
     setList(null);
     setSection('materials');
+  };
+
+  /** D-39: leaves the reset page (the link is used up or not wanted) */
+  const leaveReset = () => {
+    window.history.replaceState(null, '', window.location.pathname);
+    setResetToken('');
   };
 
   const save = async () => {
@@ -167,8 +187,33 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
     setJustSaved(false);
   };
 
+  if (resetToken) return <ResetForm token={resetToken} onDone={leaveReset} fetchImpl={fetchImpl} />;
+  if (pending)
+    return (
+      <ChangePasswordForm
+        user={pending}
+        forced
+        onDone={(u) => void load(u)}
+        onCancel={() => void logout()}
+        fetchImpl={fetchImpl}
+      />
+    );
+  if (user && changing)
+    return (
+      <ChangePasswordForm
+        user={user}
+        forced={false}
+        onDone={(u) => {
+          setUser(u);
+          setChanging(false);
+        }}
+        onCancel={() => setChanging(false)}
+        fetchImpl={fetchImpl}
+      />
+    );
   if (!user || !list) {
     if (checking) return <main className="mgr-page mgr-login" aria-busy="true" />;
+    if (forgot) return <ForgotForm onBack={() => setForgot(false)} fetchImpl={fetchImpl} />;
     return (
       <main className="mgr-page mgr-login">
         <form className="mgr-card mgr-login-card" onSubmit={login}>
@@ -202,6 +247,14 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
           <Button variant="primary" type="submit" disabled={busy || !loginName.trim() || !password}>
             Kirish
           </Button>
+          <button
+            type="button"
+            className="mgr-link"
+            onClick={() => setForgot(true)}
+            data-testid="mgr-forgot"
+          >
+            Parolni unutdim
+          </button>
         </form>
       </main>
     );
@@ -240,6 +293,15 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
             <span>
               {user.name} · {user.role === 'admin' ? 'Admin' : 'Menejer'}
             </span>
+            {user.login !== 'admin' && (
+              <Button
+                variant="secondary"
+                onClick={() => setChanging(true)}
+                data-testid="mgr-change-password"
+              >
+                Parolni o&apos;zgartirish
+              </Button>
+            )}
             <Button variant="secondary" onClick={() => void logout()} data-testid="mgr-logout">
               Chiqish
             </Button>
