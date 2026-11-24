@@ -253,3 +253,35 @@ describe('D-31 an entry taken from 1C', () => {
     expect(JSON.stringify(r.ext)).not.toContain('erpArticle');
   });
 });
+
+describe('D-33 the customer text and photo of an added mechanism', () => {
+  it('kept in the Katalog tab, changeable at any time; a photo must be an allowed URL', () => {
+    const first = mergeCatalog(EMPTY_EXTENSION, {
+      hardware: [
+        {
+          ...hinge,
+          info: 'Germaniya, 110°',
+          photoUrl: 'https://x.public.blob.vercel-storage.com/textures/hw_x_h1.jpg',
+        },
+      ],
+    });
+    if (!first.ok) throw new Error(first.field);
+    const h = first.ext.hardware[0]!;
+    expect([h.info, h.photoUrl?.endsWith('hw_x_h1.jpg')]).toEqual(['Germaniya, 110°', true]);
+    const again = mergeCatalog(first.ext, {
+      hardware: [{ ...h, info: 'yangi matn', photoUrl: '' }],
+    });
+    if (!again.ok) throw new Error(again.field);
+    expect([again.ext.hardware[0]!.info, again.ext.hardware[0]!.photoUrl]).toEqual([
+      'yangi matn',
+      undefined,
+    ]);
+    expect(rowsToCatalog(catalogToRows(first.ext)).hardware[0]).toMatchObject({
+      info: 'Germaniya, 110°',
+    });
+    expect(
+      mergeCatalog(EMPTY_EXTENSION, { hardware: [{ ...hinge, photoUrl: 'javascript:alert(1)' }] })
+        .ok,
+    ).toBe(false);
+  });
+});

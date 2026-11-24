@@ -198,6 +198,8 @@ describe('D-20 manager adds materials, hardware and services', () => {
     // a hinge
     fireEvent.click(screen.getByTestId('mgr-tab-hardware'));
     fireEvent.click(screen.getByTestId('mgr-hw-add'));
+    // D-33: the new item is picked from 1C; an item 1C does not have is added by hand
+    fireEvent.click(screen.getByRole('button', { name: "Qo'lda qo'shish" }));
     fireEvent.change(screen.getByTestId('mgr-hw-brand-0'), { target: { value: 'Blum' } });
     fireEvent.change(screen.getByTestId('mgr-hw-model-0'), {
       target: { value: 'Clip Top Blumotion' },

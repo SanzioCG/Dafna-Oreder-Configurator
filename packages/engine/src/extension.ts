@@ -55,6 +55,13 @@ export interface CustomHardware {
   visible: boolean;
   /** free note for the office */
   note?: string;
+  /**
+   * D-33: what the customer reads on the kiosk card (features, guarantee, …). Visual only: may
+   * change at any time
+   */
+  info?: string;
+  /** D-33: a photo of the mechanism for the kiosk card (uploaded on the manager page) */
+  photoUrl?: string;
 }
 
 /**

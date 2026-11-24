@@ -230,7 +230,13 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
             <ErpCatalogSection list={list} edit={edit} draft={draft} setDraft={setDraft} />
           )}
           {section === 'hardware' && (
-            <HardwareSection list={list} edit={edit} draft={draft} setDraft={setDraft} />
+            <HardwareSection
+              list={list}
+              edit={edit}
+              draft={draft}
+              setDraft={setDraft}
+              uploadTexture={(id, image) => managerUploadTexture(pin, id, image, fetchImpl)}
+            />
           )}
           {section === 'services' && <ServicesSection list={list} edit={edit} />}
           {section === 'profit' && <ProfitSection list={list} edit={edit} />}

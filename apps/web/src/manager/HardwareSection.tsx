@@ -2,7 +2,10 @@ import { hardwareV1, type PriceList } from '@dafna/engine';
 import { useState } from 'react';
 import { Button } from '../ui/Button';
 import { ErpCodeInput } from './erp';
+import { HardwareFromErp } from './HardwareFromErp';
+import { shrinkImage } from './image';
 import {
+  ERRORS,
   HW_KIND,
   HW_USE,
   NEW_HARDWARE,
@@ -10,6 +13,7 @@ import {
   money,
   type CatalogDraft,
   type HardwareDraft,
+  type UploadTexture,
 } from './model';
 
 /**
@@ -22,13 +26,20 @@ export function HardwareSection({
   edit,
   draft,
   setDraft,
+  uploadTexture,
 }: {
   list: PriceList;
   edit: (l: PriceList) => void;
   draft: CatalogDraft;
   setDraft: (d: CatalogDraft) => void;
+  /** D-33: uploads a photo (the same store as the decor photos) */
+  uploadTexture?: UploadTexture;
 }) {
   const [query, setQuery] = useState('');
+  /** D-33: "+ Yangi furnitura" picks from 1C first */
+  const [fromErp, setFromErp] = useState(false);
+  /** D-33: the added item whose customer text / photo is being edited */
+  const [infoOf, setInfoOf] = useState<number | null>(null);
   const setH = (i: number, patch: Partial<HardwareDraft>) =>
     setDraft({
       ...draft,
@@ -72,11 +83,7 @@ export function HardwareSection({
             o&apos;chirilmaydi — faqat mijozdan yashiriladi.
           </p>
         </div>
-        <Button
-          variant="primary"
-          onClick={() => setDraft({ ...draft, hardware: [...draft.hardware, { ...NEW_HARDWARE }] })}
-          data-testid="mgr-hw-add"
-        >
+        <Button variant="primary" onClick={() => setFromErp(true)} data-testid="mgr-hw-add">
           + Yangi furnitura
         </Button>
       </header>
@@ -131,10 +138,25 @@ export function HardwareSection({
                   onChange={(e) => setH(i, { note: e.target.value })}
                 />
               </label>
+              <label className="mgr-field">
+                <span>Mijoz uchun ma&apos;lumot</span>
+                <input
+                  type="text"
+                  maxLength={400}
+                  value={h.info ?? ''}
+                  onChange={(e) => setH(i, { info: e.target.value })}
+                />
+              </label>
+              {h.erpArticle && (
+                <p className="mgr-note">
+                  1C: artikul {h.erpArticle}
+                  {h.erpPrice !== undefined && ` · ${money(h.erpPrice)} so'm`}
+                </p>
+              )}
             </div>
           ))}
           <p className="mgr-note">
-            Saqlangandan keyin narxi va 1C kodini quyidagi ro&apos;yxatda kiriting.
+            «Saqlash»dan keyin kioskda chiqadi (1C dan olinganlari narxi bilan).
           </p>
         </div>
       )}
@@ -232,15 +254,25 @@ export function HardwareSection({
                       </td>
                       <td>
                         {added ? (
-                          <label className="mgr-inline">
-                            <input
-                              type="checkbox"
-                              checked={added.visible}
-                              onChange={(e) => setH(di, { visible: e.target.checked })}
-                              aria-label={`${name}: sotuvda`}
-                            />
-                            {added.visible ? 'Sotuvda' : 'Yashirin'}
-                          </label>
+                          <span className="mgr-inline">
+                            <label className="mgr-inline">
+                              <input
+                                type="checkbox"
+                                checked={added.visible}
+                                onChange={(e) => setH(di, { visible: e.target.checked })}
+                                aria-label={`${name}: sotuvda`}
+                              />
+                              {added.visible ? 'Sotuvda' : 'Yashirin'}
+                            </label>
+                            <button
+                              type="button"
+                              className="mgr-erp-find"
+                              onClick={() => setInfoOf(di)}
+                              data-testid={`mgr-hw-info-${h.id}`}
+                            >
+                              Ma&apos;lumot / rasm
+                            </button>
+                          </span>
                         ) : (
                           <span className={h.use === 'kiosk' || !h.use ? 'mgr-yes' : 'mgr-sub'}>
                             {HW_USE[h.use ?? 'kiosk']}
@@ -254,6 +286,109 @@ export function HardwareSection({
           ))}
         </table>
       </div>
+
+      {fromErp && (
+        <HardwareFromErp
+          list={list}
+          onAdd={(h) => {
+            setDraft({ ...draft, hardware: [...draft.hardware, h] });
+            setFromErp(false);
+          }}
+          onManual={() => {
+            setDraft({ ...draft, hardware: [...draft.hardware, { ...NEW_HARDWARE }] });
+            setFromErp(false);
+          }}
+          onClose={() => setFromErp(false)}
+        />
+      )}
+      {infoOf !== null && draft.hardware[infoOf] && (
+        <HardwareInfo
+          item={draft.hardware[infoOf]!}
+          put={(patch) => setH(infoOf, patch)}
+          uploadTexture={uploadTexture}
+          onClose={() => setInfoOf(null)}
+        />
+      )}
     </section>
+  );
+}
+
+/** D-33: what the customer reads about an added mechanism, and its photo, on the kiosk card */
+function HardwareInfo({
+  item,
+  put,
+  uploadTexture,
+  onClose,
+}: {
+  item: HardwareDraft;
+  put: (patch: Partial<HardwareDraft>) => void;
+  uploadTexture?: UploadTexture;
+  onClose: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const pick = async (file: File | undefined) => {
+    if (!file || !uploadTexture || !item.id) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const r = await uploadTexture(`hw_${item.id}`, await shrinkImage(file, 1200));
+      if (!r.ok) setError(ERRORS[r.code] ?? ERRORS.network!);
+      else put({ photoUrl: r.url });
+    } catch {
+      setError("Rasmni o'qib bo'lmadi");
+    }
+    setBusy(false);
+  };
+  return (
+    <div className="mgr-modal" role="dialog" aria-label="Ma'lumot va rasm" data-testid="hw-info">
+      <div className="mgr-card mgr-modal-card">
+        <header className="mgr-modal-head">
+          <h3>
+            {item.brand} {item.model}
+          </h3>
+          <Button variant="secondary" onClick={onClose}>
+            Tayyor
+          </Button>
+        </header>
+        <label className="mgr-field">
+          <span>Mijoz uchun ma&apos;lumot (kioskda kartochkada chiqadi)</span>
+          <textarea
+            rows={4}
+            maxLength={400}
+            value={item.info ?? ''}
+            placeholder="Masalan: Germaniya, 110° ochiladi, yumshoq yopiladi, 20 yil kafolat"
+            onChange={(e) => put({ info: e.target.value })}
+            data-testid="hw-info-text"
+          />
+        </label>
+        <div className="mgr-field">
+          <span>Rasm</span>
+          {item.photoUrl && <img src={item.photoUrl} alt="" className="mgr-hw-photo" />}
+          {uploadTexture ? (
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={busy}
+              onChange={(e) => void pick(e.target.files?.[0])}
+              data-testid="hw-info-photo"
+            />
+          ) : (
+            <p className="mgr-note">Rasm yuklash sozlanmagan.</p>
+          )}
+          {item.photoUrl && (
+            <Button variant="secondary" onClick={() => put({ photoUrl: undefined })}>
+              Rasmni olib tashlash
+            </Button>
+          )}
+          {error && (
+            <p className="mgr-error" role="alert">
+              {error}
+            </p>
+          )}
+        </div>
+        <p className="mgr-note">O&apos;zgarishlar «Saqlash»dan keyin kioskda ko&apos;rinadi.</p>
+      </div>
+    </div>
   );
 }

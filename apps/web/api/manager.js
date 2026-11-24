@@ -63705,8 +63705,13 @@ function mergeCatalog(saved, incoming, options = {}) {
     if (!brand || !model) return { ok: false, field: `hardware.${i}` };
     const old = typeof x?.id === "string" ? hardware.find((h) => h.id === x.id) : void 0;
     const note = text(x?.note, 200) || void 0;
+    const info = text(x?.info, 400) || void 0;
+    const photo = typeof x?.photoUrl === "string" ? x.photoUrl : "";
+    if (photo && !textureUrlAllowed(photo, options.allowDataUrls))
+      return { ok: false, field: `hardware.${i}` };
+    const photoUrl = photo || void 0;
     if (old) {
-      Object.assign(old, { brand, model, softClose, visible, note });
+      Object.assign(old, { brand, model, softClose, visible, note, info, photoUrl });
       continue;
     }
     const kind = x?.kind === "hinge" || x?.kind === "slide" ? x.kind : null;
@@ -63723,7 +63728,18 @@ function mergeCatalog(saved, incoming, options = {}) {
         article: linkH.article,
         price: linkH.price
       });
-    hardware.push({ id: `x_h${nextH++}`, kind, brandKey, brand, model, softClose, visible, note });
+    hardware.push({
+      id: `x_h${nextH++}`,
+      kind,
+      brandKey,
+      brand,
+      model,
+      softClose,
+      visible,
+      note,
+      info,
+      photoUrl
+    });
   }
   let textures = { ...saved.textures ?? {} };
   if (inc.textures !== void 0) {
@@ -63760,7 +63776,10 @@ var CATALOG_HEADER = [
   "Ishlab chiqaruvchi",
   "Tekstura yo'nalishi",
   "Namlikka chidamli",
-  "Izoh"
+  "Izoh",
+  // D-33: furnitura only
+  "Mijoz uchun ma'lumot",
+  "Rasm"
 ];
 function catalogToRows(ext) {
   return [
@@ -63795,7 +63814,9 @@ function catalogToRows(ext) {
       "",
       "",
       "",
-      h.note ?? ""
+      h.note ?? "",
+      h.info ?? "",
+      h.photoUrl ?? ""
     ]),
     ...Object.entries(ext.textures ?? {}).map(([id, t]) => [
       "tekstura",
@@ -63858,7 +63879,10 @@ function rowsToCatalog(rows) {
         model: code,
         softClose: group === "ha",
         visible: visible !== "yo'q",
-        note: c(13) || void 0
+        note: c(13) || void 0,
+        // D-33: what the customer reads, and the photo
+        info: c(14) || void 0,
+        photoUrl: c(15) || void 0
       });
     }
   }

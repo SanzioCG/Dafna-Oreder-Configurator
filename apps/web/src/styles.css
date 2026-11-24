@@ -3075,3 +3075,21 @@ p {
 .mgr-tabs {
   max-width: 560px;
 }
+
+/* D-33: a mechanism photo on the manager page */
+.mgr-hw-photo {
+  max-width: 200px;
+  max-height: 160px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.mgr-link {
+  padding: 0;
+  border: 0;
+  border-bottom: var(--line-in-card);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}

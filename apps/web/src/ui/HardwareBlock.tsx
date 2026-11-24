@@ -138,7 +138,8 @@ function brandText(
     return {
       title: x.brand,
       model: `${x.brand} ${x.model}`,
-      hint: `${x.model}${x.softClose ? ` · ${t('hw.softClose')}` : ''}`,
+      // D-33: the manager's text for customers, else the model and soft close
+      hint: x.info ?? `${x.model}${x.softClose ? ` · ${t('hw.softClose')}` : ''}`,
     };
   return {
     title: t(`hw.brand.${brand}`),

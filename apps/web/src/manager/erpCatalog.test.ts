@@ -47,3 +47,15 @@ describe('D-31 guessFromName / cleanName / somPrice', () => {
     expect(somPrice({ price: null, currency: 'UZS', unit: 'шт' }, list)).toBeUndefined();
   });
 });
+
+describe('D-33 a mechanism from 1C', () => {
+  it('the kiosk model line: before "/", without the brand word', async () => {
+    const { modelOf } = await import('./HardwareFromErp');
+    expect(modelOf('Hettich Sensys 8645i, 110° вкладная, доводчик, D3', 'Hettich')).toBe(
+      'Sensys 8645i, 110° вкладная, доводчик, D3',
+    );
+    expect(modelOf('Петля Master 18ММ 48 мм/MASTER SOFT CLOSE HINGE 18MM 48AX NI', 'Samet')).toBe(
+      'Петля Master 18ММ 48 мм',
+    );
+  });
+});

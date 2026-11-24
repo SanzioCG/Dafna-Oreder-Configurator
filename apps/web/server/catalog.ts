@@ -194,8 +194,14 @@ export function mergeCatalog(
     if (!brand || !model) return { ok: false, field: `hardware.${i}` };
     const old = typeof x?.id === 'string' ? hardware.find((h) => h.id === x.id) : undefined;
     const note = text(x?.note, 200) || undefined;
+    // D-33: the customer's text and the photo are visual only: they may change at any time
+    const info = text(x?.info, 400) || undefined;
+    const photo = typeof x?.photoUrl === 'string' ? x.photoUrl : '';
+    if (photo && !textureUrlAllowed(photo, options.allowDataUrls))
+      return { ok: false, field: `hardware.${i}` };
+    const photoUrl = photo || undefined;
     if (old) {
-      Object.assign(old, { brand, model, softClose, visible, note });
+      Object.assign(old, { brand, model, softClose, visible, note, info, photoUrl });
       continue;
     }
     const kind = x?.kind === 'hinge' || x?.kind === 'slide' ? x.kind : null;
@@ -213,7 +219,18 @@ export function mergeCatalog(
         article: linkH.article,
         price: linkH.price,
       });
-    hardware.push({ id: `x_h${nextH++}`, kind, brandKey, brand, model, softClose, visible, note });
+    hardware.push({
+      id: `x_h${nextH++}`,
+      kind,
+      brandKey,
+      brand,
+      model,
+      softClose,
+      visible,
+      note,
+      info,
+      photoUrl,
+    });
   }
   // D-21: decor photos are visual only: the incoming set replaces the stored one
   let textures: Record<string, MaterialTexture> = { ...(saved.textures ?? {}) };
@@ -263,6 +280,9 @@ export const CATALOG_HEADER = [
   "Tekstura yo'nalishi",
   'Namlikka chidamli',
   'Izoh',
+  // D-33: furnitura only
+  "Mijoz uchun ma'lumot",
+  'Rasm',
 ];
 
 export function catalogToRows(ext: CatalogExtension): (string | number)[][] {
@@ -299,6 +319,8 @@ export function catalogToRows(ext: CatalogExtension): (string | number)[][] {
       '',
       '',
       h.note ?? '',
+      h.info ?? '',
+      h.photoUrl ?? '',
     ]),
     ...Object.entries(ext.textures ?? {}).map(([id, t]) => [
       'tekstura',
@@ -363,6 +385,9 @@ export function rowsToCatalog(rows: unknown[][]): CatalogExtension {
         softClose: group === 'ha',
         visible: visible !== "yo'q",
         note: c(13) || undefined,
+        // D-33: what the customer reads, and the photo
+        info: c(14) || undefined,
+        photoUrl: c(15) || undefined,
       });
     }
   }

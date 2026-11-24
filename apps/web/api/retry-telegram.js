@@ -66593,7 +66593,10 @@ var CATALOG_HEADER = [
   "Ishlab chiqaruvchi",
   "Tekstura yo'nalishi",
   "Namlikka chidamli",
-  "Izoh"
+  "Izoh",
+  // D-33: furnitura only
+  "Mijoz uchun ma'lumot",
+  "Rasm"
 ];
 function catalogToRows(ext) {
   return [
@@ -66628,7 +66631,9 @@ function catalogToRows(ext) {
       "",
       "",
       "",
-      h.note ?? ""
+      h.note ?? "",
+      h.info ?? "",
+      h.photoUrl ?? ""
     ]),
     ...Object.entries(ext.textures ?? {}).map(([id, t3]) => [
       "tekstura",
@@ -66691,7 +66696,10 @@ function rowsToCatalog(rows) {
         model: code,
         softClose: group === "ha",
         visible: visible !== "yo'q",
-        note: c(13) || void 0
+        note: c(13) || void 0,
+        // D-33: what the customer reads, and the photo
+        info: c(14) || void 0,
+        photoUrl: c(15) || void 0
       });
     }
   }

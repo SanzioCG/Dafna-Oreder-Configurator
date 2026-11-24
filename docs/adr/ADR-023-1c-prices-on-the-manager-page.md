@@ -79,3 +79,34 @@ the kiosk shows.
   published to OData either. Decor photos stay a manager upload (D-21).
 - Server: `/api/erp` gains the actions `kinds` and `items`. 1C refuses `$expand` together
   with `$inlinecount`, so the item count is a request of its own.
+
+## Update (D-32, D-33, 2026-11-24): search by section; mechanisms from 1C with customer info
+
+- **Groups.** Each top 1C item kind belongs to one group:
+  - material: ЛДСП, ЛМДФ, Кромка, Столешницы, …;
+  - hardware: INFINITY (Hettich and other brands), Yechim (Samet, Camet, Mesan, Cebi, …),
+    NUOMI, Опора;
+  - other.
+
+  The default comes from the kind's name. The manager changes it in "1C katalogi"; the choice
+  is saved with the prices (sheet rows `erp_tur`).
+
+- **Search by section.** The "1C" search beside a 1C code looks only in its section's group:
+  - the Materials page searches materials;
+  - a hinge row searches hinges, and a slide row slides (by the 1C kind path or the name).
+- **«+ Yangi furnitura»** now starts in 1C:
+  1. choose hinge or slide;
+  2. search among hardware only (each result shows its price, stock and 1C kind);
+  3. pick an item;
+  4. set the brand (the brand group in the kiosk), the model, soft close and a **text for the
+     customer**.
+
+  On "Saqlash" the item is linked to its 1C article and priced from 1C. An item 1C does not
+  have can still be added by hand.
+
+- **Customer info.** An added mechanism carries `info` (up to 400 characters) and a `photoUrl`.
+  Both are visual only and may change at any time. The photo is uploaded on the manager page
+  with "Ma'lumot / rasm" (the decor-photo store), and both are kept in the Katalog tab
+  (columns 15 and 16). The kiosk's hardware card shows them under the brand heading.
+- Some 1C items are sets with price 0 (e.g. "Комплекты SENSYS"). For those, the manager links
+  the piece article or types the price.

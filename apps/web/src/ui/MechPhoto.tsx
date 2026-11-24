@@ -138,7 +138,9 @@ function SlideSketch({ hidden }: { hidden: boolean }) {
 }
 
 export function MechPhoto({ kind, brand, alt }: { kind: MechKind; brand: string; alt: string }) {
-  const photo = mechPhoto(kind, brand);
+  // D-33: a photo the manager uploaded for a mechanism added on the manager page
+  const own = extensionBrand(kind, brand)?.photoUrl;
+  const photo = own ? { src: own } : mechPhoto(kind, brand);
   // D-20: a brand added on the manager page draws as its soft-close flag says
   // D-28: soft close / hidden slide from the hardware catalog (D-20: or the manager's own brand)
   const item = brandItem(kind, brand);
