@@ -21,6 +21,9 @@ import {
  * and slides can be added (they become brands in the kiosk's "Mexanizmlar" step); other kinds
  * (handles, legs, …) need product rules first and come later.
  */
+/** D-35: built-in parts the products add by themselves (priced here, not chosen by customers) */
+const AUTO_KINDS = ['castor', 'lift_frame', 'rail', 'rail_holder'];
+
 export function HardwareSection({
   list,
   edit,
@@ -47,8 +50,11 @@ export function HardwareSection({
     });
   const unsaved = draft.hardware.map((h, i) => ({ h, i })).filter(({ h }) => h.id === undefined);
   const q = query.trim().toLowerCase();
+  // D-35: the demo hinges / slides and the stock report's items are gone; the list holds what
+  // the manager took from 1C (or added by hand) and the parts every product adds by itself
   const items = hardwareV1.items.filter((h) => {
     const added = draft.hardware.find((x) => x.id === h.id);
+    if (!added && !AUTO_KINDS.includes(h.kind)) return false;
     const text = [
       HW_KIND[h.kind],
       h.brand,

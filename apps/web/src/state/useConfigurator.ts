@@ -4,6 +4,7 @@ import {
   defaultParams,
   generate,
   getParamDef,
+  kioskParams,
   validate,
   wardrobeTemplate,
   type GenerateResult,
@@ -128,8 +129,13 @@ export function useConfigurator(mode: Mode = 'customer'): Configurator {
   const [template, setTemplate] = useState<Template>(TEMPLATE);
   const templateRef = useRef(template);
   templateRef.current = template;
-  const [params, setParamsState] = useState<Params>(() => defaultParams(TEMPLATE));
+  const [rawParams, setParamsState] = useState<Params>(() => defaultParams(TEMPLATE));
   const [notice, setNotice] = useState<ResetNotice | null>(null);
+  // D-35: a built-in demo material / brand the kiosk no longer offers (the manager took items
+  // from 1C) is moved to an offered one; recomputed on every render, so it also follows the
+  // catalog when it arrives. Kept stable by value (the model is regenerated only on a change).
+  const kioskKey = JSON.stringify(kioskParams(template, rawParams));
+  const params = useMemo(() => JSON.parse(kioskKey) as Params, [kioskKey]);
   // Latest params for synchronous repair outside the state updater (updaters must stay pure).
   const paramsRef = useRef(params);
   paramsRef.current = params;

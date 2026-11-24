@@ -1,4 +1,4 @@
-import { brandItem, extensionBrand } from '@dafna/engine';
+import { brandItem, extensionBrand, kioskOptions } from '@dafna/engine';
 import { useState } from 'react';
 import { useI18n } from '../i18n/I18n';
 import type { Configurator } from '../state/useConfigurator';
@@ -83,7 +83,7 @@ export function HardwareBlock({
           kind={KIND[openDef.key]}
           title={t(`hw.pick.${openDef.key}`)}
           value={String(config.params[openDef.key] ?? openDef.default)}
-          choices={choicesFor(t, openDef.key, openDef.options ?? [], config)}
+          choices={choicesFor(t, openDef.key, kioskOptions(openDef), config)}
           onPick={(v) => {
             config.setParam(openDef.key, v);
             const kind = KIND[openDef.key];

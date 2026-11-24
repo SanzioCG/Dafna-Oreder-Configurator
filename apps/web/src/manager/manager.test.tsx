@@ -79,7 +79,7 @@ describe('D-19 manager price page', () => {
     expect(screen.queryByTestId('mgr-save')).toBeNull();
   });
 
-  it('materials: every board with its data; a sheet price and 1C code are saved', async () => {
+  it('materials: the back panel (HDF) and added boards only; a sheet price and 1C code are saved', async () => {
     const api = fakeManagerApi();
     render(
       <ThemeProvider>
@@ -89,15 +89,15 @@ describe('D-19 manager price page', () => {
     await login('9137');
     await screen.findByTestId('mgr-save');
     expect(screen.getByTestId('mgr-updated').textContent).toContain('hali saqlanmagan');
-    // the built-in catalog is listed (search narrows it); a row opens the full card
-    fireEvent.change(screen.getByTestId('mgr-material-search'), { target: { value: 'шагрень' } });
-    fireEvent.click(screen.getByTestId('mgr-material-row-ldsp_white_16'));
+    // D-35: the demo decors are gone; the built-in back panel (HDF) stays; a row opens its card
+    expect(screen.queryByTestId('mgr-material-row-ldsp_white_16')).toBeNull();
+    fireEvent.click(screen.getByTestId('mgr-material-row-hdf_white_3'));
     const card = screen.getByTestId('mgr-material-card');
     expect(card.textContent).toContain('Asosiy katalog');
-    fireEvent.change(screen.getByTestId('mgr-sheet-ldsp_white_16'), {
+    fireEvent.change(screen.getByTestId('mgr-sheet-hdf_white_3'), {
       target: { value: '579600' },
     });
-    fireEvent.change(screen.getByTestId('mgr-erp-ldsp_white_16'), { target: { value: 'LD-0001' } });
+    fireEvent.change(screen.getByTestId('mgr-erp-hdf_white_3'), { target: { value: 'LD-0001' } });
     fireEvent.change(screen.getByTestId('mgr-edge-price'), { target: { value: '4200' } });
     expect(screen.getByTestId('mgr-updated').textContent).toContain('Saqlanmagan');
     fireEvent.click(screen.getByTestId('mgr-save'));
@@ -112,12 +112,12 @@ describe('D-19 manager price page', () => {
       erpCodes: Record<string, string>;
       boardSheets: Record<string, { price: number; lengthMm: number; widthMm: number }>;
     };
-    expect(list.boardSheets.ldsp_white_16).toEqual({
+    expect(list.boardSheets.hdf_white_3).toEqual({
       price: 579600,
-      lengthMm: 2750, // Dafna chipboard (no EGGER code): the GibLab sheet size
-      widthMm: 1830,
+      lengthMm: 2800,
+      widthMm: 2070,
     });
-    expect(list.erpCodes.ldsp_white_16).toBe('LD-0001');
+    expect(list.erpCodes.hdf_white_3).toBe('LD-0001');
     expect(list.edgePerM).toBe(4200);
   });
 
@@ -190,7 +190,7 @@ describe('D-20 manager adds materials, hardware and services', () => {
     await login('9137');
     await screen.findByTestId('mgr-save');
     // a board: its card opens at once
-    fireEvent.click(screen.getByTestId('mgr-material-add'));
+    fireEvent.click(screen.getByTestId('mgr-material-manual'));
     fireEvent.change(screen.getByTestId('mgr-material-name'), {
       target: { value: 'Дуб Гладстоун табак' },
     });
@@ -243,9 +243,9 @@ describe('D-21 unsaved new materials', () => {
     await login('9137');
     await screen.findByTestId('mgr-save');
     const blanks = () => document.querySelectorAll('[data-testid^="mgr-material-row-new-"]').length;
-    fireEvent.click(screen.getByTestId('mgr-material-add'));
-    fireEvent.click(screen.getByTestId('mgr-material-add'));
-    fireEvent.click(screen.getByTestId('mgr-material-add'));
+    fireEvent.click(screen.getByTestId('mgr-material-manual'));
+    fireEvent.click(screen.getByTestId('mgr-material-manual'));
+    fireEvent.click(screen.getByTestId('mgr-material-manual'));
     expect(blanks()).toBe(1);
     fireEvent.click(screen.getByTestId('mgr-material-drop'));
     expect(blanks()).toBe(0);

@@ -113,6 +113,8 @@ export {
   catalogExtension,
   extensionBrand,
   extensionMaterial,
+  kioskOptions,
+  kioskParams,
   textureFor,
   toMaterial,
   EMPTY_EXTENSION,

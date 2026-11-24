@@ -1,7 +1,7 @@
 import { hardwareV1 } from './bom.js';
 import { setMaterialFallback } from './catalog.js';
 import { PRODUCT_TEMPLATES } from './template.js';
-import type { Material, MaterialKind, ParamValue } from './types.js';
+import type { Material, MaterialKind, ParamDef, ParamValue, Params, Template } from './types.js';
 
 /**
  * D-20: the catalog extension — materials and hardware the manager adds on the admin page, on
@@ -189,4 +189,43 @@ export function extensionBrand(
   brandKey: string,
 ): CustomHardware | undefined {
   return current.hardware.find((h) => h.kind === kind && h.brandKey === brandKey);
+}
+
+/**
+ * D-35: the kiosk shows what the manager took from 1C. For a material parameter (corpus, door,
+ * top) or a brand parameter (hinges, slides): once the manager has added at least one visible
+ * entry that fits it, only the added entries are offered (the built-in demo ones are hidden);
+ * until then the built-in ones stay, so the kiosk is never empty. Nothing is removed from the
+ * template: stored applications keep their built-in materials and still regenerate.
+ */
+export function kioskOptions(def: ParamDef): readonly ParamValue[] {
+  const opts = def.options ?? [];
+  const usage = PARAM_USAGE[def.key];
+  const kind = (Object.keys(BRAND_PARAM) as CustomHardware['kind'][]).find(
+    (k) => BRAND_PARAM[k] === def.key,
+  );
+  if (!usage && !kind) return opts;
+  const added = new Set<ParamValue>(
+    usage
+      ? current.materials.filter((m) => m.visible).map((m) => m.id)
+      : current.hardware.filter((h) => h.visible && h.kind === kind).map((h) => h.brandKey),
+  );
+  const own = opts.filter((o) => added.has(o));
+  if (own.length === 0) return opts;
+  return opts.filter((o) => o === 'same_as_corpus' || added.has(o));
+}
+
+/** D-35: params with every material / brand the kiosk no longer offers moved to an offered one */
+export function kioskParams(template: Template, params: Params): Params {
+  let out = params;
+  for (const def of template.parameters) {
+    if (def.type !== 'enum') continue;
+    const offered = kioskOptions(def);
+    if (offered === def.options) continue;
+    const v = out[def.key] ?? def.default;
+    if (offered.includes(v as ParamValue)) continue;
+    const first = offered.find((o) => o !== 'same_as_corpus');
+    if (first !== undefined) out = { ...out, [def.key]: first };
+  }
+  return out;
 }

@@ -135,3 +135,28 @@ shows the same 1C article.
   The kiosk and the 3D view never load from the shop directly.
 
 - Read-only: only public shop pages are fetched, and nothing is sent to the shop.
+
+## Update (D-35, 2026-11-24): demo items gone, the kiosk shows what came from 1C
+
+The founder asked to remove the demo items everywhere. Items taken from 1C bring their price,
+sheet size and thickness automatically.
+
+- **Kiosk.** The engine's `kioskOptions(def)` and `kioskParams(template, params)` work per
+  material parameter (corpus, door, top) and per brand parameter (hinges, slides):
+  - Once the manager has added at least one visible entry that fits the parameter, the kiosk
+    offers only the added entries.
+  - A value the kiosk no longer offers (a template default, a ready-made model's decor) moves
+    to the first offered one.
+  - Until something is added, the built-in options stay, so the kiosk is never empty.
+
+  The templates themselves are unchanged. Stored orders with a built-in decor or brand still
+  regenerate (ADR-011).
+
+- **Manager lists.**
+  - "Materiallar" shows the added boards and the built-in back panel (HDF).
+  - "Furnitura" shows the added mechanisms and the parts the products add by themselves:
+    castors, lift frame, rail, rail holders.
+  - The demo hinges and slides (Strax, Hettich, Samet, Camet) and the stock report's
+    connectors and screws are no longer listed.
+  - "+ Yangi material (1C dan)" opens "1C katalogi"; "Qo'lda qo'shish" stays for boards 1C
+    does not have.

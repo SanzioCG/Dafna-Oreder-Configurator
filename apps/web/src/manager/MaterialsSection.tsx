@@ -45,8 +45,10 @@ const usageOf = (m: Material) =>
   m.kind === 'hdf' ? 'Orqa devor, tortma tagi' : m.kind === 'mdf' ? 'Fasad' : 'Korpus / fasad';
 
 function rows(draft: CatalogDraft): Row[] {
+  // D-35: of the built-in boards only the back panel (HDF) stays; the demo decors are gone -
+  // the boards come from 1C ("1C katalogi")
   const builtIn: Row[] = allMaterials.materials
-    .filter((m) => m.kind !== 'metal')
+    .filter((m) => m.kind === 'hdf')
     .map((m) => ({
       key: m.id,
       id: m.id,
@@ -102,12 +104,15 @@ export function MaterialsSection({
   draft,
   setDraft,
   uploadTexture,
+  onFromErp,
 }: {
   list: PriceList;
   edit: (l: PriceList) => void;
   draft: CatalogDraft;
   setDraft: (d: CatalogDraft) => void;
   uploadTexture: UploadTexture;
+  /** D-35: "+ Yangi material" opens 1C (the materials of "1C katalogi") */
+  onFromErp?: () => void;
 }) {
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState('');
@@ -159,15 +164,19 @@ export function MaterialsSection({
         <div>
           <h2>Materiallar</h2>
           <p className="mgr-note">
-            Barcha plitalar: asosiy katalog va shu yerda qo&apos;shilganlar. Qatorni bosing —
-            materialning to&apos;liq kartochkasi ochiladi. Narx 1 list uchun kiritiladi, 1 m² narxi
-            o&apos;zi hisoblanadi. «1C kodi» — 1C&apos;dagi artikul (narxlar shu kod bo&apos;yicha
-            olinadi). Narxi 0 bo&apos;lsa, sinov narxi ishlatiladi.
+            Kioskdagi plitalar: 1C dan qo&apos;shilganlar (narxi, list o&apos;lchami va qalinligi 1C
+            dan o&apos;zi keladi) va orqa devor uchun HDF. Qatorni bosing — materialning to&apos;liq
+            kartochkasi ochiladi.
           </p>
         </div>
-        <Button variant="primary" onClick={addNew} data-testid="mgr-material-add">
-          + Yangi material
-        </Button>
+        <span className="mgr-inline">
+          <Button variant="secondary" onClick={addNew} data-testid="mgr-material-manual">
+            Qo&apos;lda qo&apos;shish
+          </Button>
+          <Button variant="primary" onClick={onFromErp ?? addNew} data-testid="mgr-material-add">
+            + Yangi material (1C dan)
+          </Button>
+        </span>
       </header>
 
       <div className="mgr-card mgr-edge" data-testid="mgr-edge-band">

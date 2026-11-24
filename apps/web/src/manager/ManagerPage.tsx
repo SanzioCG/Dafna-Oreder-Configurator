@@ -226,6 +226,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               draft={draft}
               setDraft={setDraft}
               uploadTexture={(id, image) => managerUploadTexture(pin, id, image, fetchImpl)}
+              onFromErp={() => setSection('erp')}
             />
           )}
           {section === 'erp' && <ErpCatalogSection list={list} draft={draft} setDraft={setDraft} />}

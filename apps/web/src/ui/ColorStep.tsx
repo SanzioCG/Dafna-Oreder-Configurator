@@ -1,4 +1,4 @@
-import { SAME_AS_CORPUS, getParamDef } from '@dafna/engine';
+import { SAME_AS_CORPUS, getParamDef, kioskOptions } from '@dafna/engine';
 import { useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
 import type { Configurator } from '../state/useConfigurator';
@@ -47,7 +47,8 @@ export function ColorStep({ mode, config }: { mode: Mode; config: Configurator }
           const value = config.params[def.key] ?? def.default;
           if (def.key === 'doorMaterial') {
             const different = value !== SAME_AS_CORPUS;
-            const options = (def.options ?? []).filter((o) => o !== SAME_AS_CORPUS);
+            // D-35: only what the manager took from 1C, once there is any
+            const options = kioskOptions(def).filter((o) => o !== SAME_AS_CORPUS);
             return (
               <div className="param" data-param="doorMaterial" key={def.key}>
                 <Toggle
@@ -76,7 +77,7 @@ export function ColorStep({ mode, config }: { mode: Mode; config: Configurator }
             <div className="param" data-param={def.key} key={def.key}>
               <span className="param-label">{t(def.labelKey)}</span>
               <MaterialSwatch
-                options={def.options ?? []}
+                options={kioskOptions(def)}
                 value={value}
                 corpusValue={value}
                 mode={mode}
