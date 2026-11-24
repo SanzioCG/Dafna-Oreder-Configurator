@@ -3067,11 +3067,6 @@ p {
   gap: 4px;
 }
 
-.mgr-kind-group {
-  font: inherit;
-  font-size: 12px;
-}
-
 .mgr-tabs {
   max-width: 560px;
 }

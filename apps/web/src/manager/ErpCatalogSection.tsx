@@ -137,20 +137,13 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'other', label: 'Boshqa' },
   { id: 'all', label: 'Hammasi' },
 ];
-const GROUP_LABEL: Record<KindGroup, string> = {
-  material: 'Material',
-  hardware: 'Furnitura',
-  other: 'Boshqa',
-};
 
 export function ErpCatalogSection({
   list,
-  edit,
   draft,
   setDraft,
 }: {
   list: PriceList;
-  edit: (l: PriceList) => void;
   draft: CatalogDraft;
   setDraft: (d: CatalogDraft) => void;
 }) {
@@ -158,8 +151,6 @@ export function ErpCatalogSection({
   /** D-32: the root kinds by group (materials first: that is what Dafna takes most) */
   const [tab, setTab] = useState<Tab>('material');
   const groupOfKind = (k: ErpKind): KindGroup => list.erpKindGroups?.[k.key] ?? k.group ?? 'other';
-  const setGroup = (k: ErpKind, g: KindGroup) =>
-    edit({ ...list, erpKindGroups: { ...list.erpKindGroups, [k.key]: g } });
   const [path, setPath] = useState<ErpKind[]>([]);
   const [kinds, setKinds] = useState<ErpKind[] | null>(null);
   const [rows, setRows] = useState<ErpRow[] | null>(null);
@@ -362,22 +353,6 @@ export function ErpCatalogSection({
                   {k.folder ? '📁 ' : ''}
                   {k.name}
                 </button>
-                {/* D-32: the group of a top kind, the manager's to change */}
-                {path.length === 0 && (
-                  <select
-                    className="mgr-kind-group"
-                    value={groupOfKind(k)}
-                    onChange={(e) => setGroup(k, e.target.value as KindGroup)}
-                    aria-label={`${k.name}: guruh`}
-                    data-testid={`erp-kind-group-${k.name}`}
-                  >
-                    {(Object.keys(GROUP_LABEL) as KindGroup[]).map((g) => (
-                      <option key={g} value={g}>
-                        {GROUP_LABEL[g]}
-                      </option>
-                    ))}
-                  </select>
-                )}
               </div>
             ))}
           {kinds.length === 0 && <p className="mgr-note">Bu yerda bo&apos;lim yo&apos;q.</p>}
