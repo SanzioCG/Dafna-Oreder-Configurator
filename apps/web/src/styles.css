@@ -2947,3 +2947,80 @@ p {
   font-size: var(--fs-sm);
   line-height: var(--lh-snug);
 }
+
+/* ---------- D-30: 1C search on the manager page ---------- */
+
+.mgr-erp-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mgr-erp-find {
+  min-height: 32px;
+  padding: 0 10px;
+  border: var(--line-in-card);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mgr-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--ink) 45%, transparent);
+}
+
+.mgr-modal-card {
+  width: min(720px, 100%);
+  max-height: 85vh;
+  overflow: auto;
+}
+
+.mgr-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mgr-erp-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mgr-erp-list button {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: var(--line-in-card);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mgr-erp-list button:disabled {
+  opacity: var(--disabled-opacity);
+  cursor: default;
+}
+
+.mgr-erp-list small {
+  opacity: 0.7;
+}

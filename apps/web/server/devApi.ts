@@ -2,6 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { handleAssembly } from './assemblyLink';
 import { FakeNotifier, MemoryLeadStore } from './memory';
 import { CachedCatalog, MemoryCatalogStore, handleCatalog } from './catalog';
+import { erpFromEnv, handleErp } from './erp1c';
 import { CachedPrices, MemoryPriceStore, handleManager, handleQuote } from './prices';
 import { RateLimiter } from './rateLimit';
 import { handleStaffPin } from './staffPin';
@@ -148,6 +149,20 @@ export function createDevQuoteHandler() {
         catalog: devCatalog.catalog,
       }),
     '/api/quote',
+  );
+}
+
+/** D-30 `vite dev`: /api/erp with the dev manager PIN; 1C only when EMAN_1C_TOKEN is set */
+export function createDevErpHandler() {
+  const limiter = new RateLimiter(100, 60_000);
+  return adapt(
+    (r) =>
+      handleErp(r, {
+        erp: erpFromEnv(process.env),
+        managerPin: process.env.DEV_MANAGER_PIN ?? '0000',
+        limiter,
+      }),
+    '/api/erp',
   );
 }
 

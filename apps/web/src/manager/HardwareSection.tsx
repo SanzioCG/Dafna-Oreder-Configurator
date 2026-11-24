@@ -1,6 +1,7 @@
 import { hardwareV1, type PriceList } from '@dafna/engine';
 import { useState } from 'react';
 import { Button } from '../ui/Button';
+import { ErpCodeInput } from './erp';
 import {
   HW_KIND,
   HW_USE,
@@ -199,19 +200,13 @@ export function HardwareSection({
                       <td>{UNIT_LABEL[h.unit] ?? h.unit}</td>
                       <td>{h.softClose ? 'Ha' : "Yo'q"}</td>
                       <td>
-                        <input
-                          type="text"
-                          className="mgr-erp"
+                        <ErpCodeInput
                           value={list.erpCodes?.[h.id] ?? ''}
-                          placeholder="—"
-                          onChange={(e) =>
-                            edit({
-                              ...list,
-                              erpCodes: { ...list.erpCodes, [h.id]: e.target.value },
-                            })
+                          onChange={(v) =>
+                            edit({ ...list, erpCodes: { ...list.erpCodes, [h.id]: v } })
                           }
-                          aria-label={`${name}: 1C kodi`}
-                          data-testid={`mgr-erp-${h.id}`}
+                          label={`${name}: 1C kodi`}
+                          testId={`mgr-erp-${h.id}`}
                         />
                       </td>
                       <td>

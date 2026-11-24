@@ -10,6 +10,7 @@ import { HardwareSection } from './HardwareSection';
 import { MaterialsSection } from './MaterialsSection';
 import { ProfitSection } from './ProfitSection';
 import { ServicesSection } from './ServicesSection';
+import { ERP_ERRORS, ErpContext, applyErpPrices, erpApi } from './erp';
 import { managerLoad, managerSave, managerUploadTexture, type ManagerOutcome } from './managerApi';
 import { ERRORS, fieldText, toServiceModel, type CatalogDraft } from './model';
 
@@ -49,6 +50,9 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const [dirty, setDirty] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const [section, setSection] = useState<Section>('materials');
+  /** D-30: the last "1C narxlarini olish" result */
+  const [erpNote, setErpNote] = useState<string | null>(null);
+  const erp = erpApi(pin, fetchImpl);
 
   /** the stored catalog becomes the engine's (labels, preview) and the editable draft */
   const takeCatalog = (c: CatalogExtension) => {
@@ -81,6 +85,31 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
     setUpdatedAt(r.updatedAt);
     setDirty(false);
     setJustSaved(true);
+  };
+
+  /** D-30: the current 1C price of every linked item into the fields (saved with "Saqlash") */
+  const pullErp = async () => {
+    if (!list) return;
+    const articles = Object.values(list.erpCodes ?? {}).filter(Boolean);
+    if (articles.length === 0)
+      return setErpNote(
+        "Hali hech narsa 1C ga bog'lanmagan: «1C kodi» yonidagi «1C» tugmasi bilan toping",
+      );
+    setBusy(true);
+    setErpNote(null);
+    const r = await erp.prices(articles);
+    setBusy(false);
+    if (!r.ok) return setErpNote(ERP_ERRORS[r.code] ?? ERP_ERRORS.network!);
+    const a = applyErpPrices(list, r.value);
+    if (a.updated.length > 0) edit(a.list);
+    const parts = [`1C dan ${a.updated.length} ta narx olindi`];
+    if (a.notFound.length)
+      parts.push(`${a.notFound.length} ta artikul 1C da topilmadi (${a.notFound.join(', ')})`);
+    if (a.noPrice.length)
+      parts.push(`${a.noPrice.length} tasining narxi yo'q (${a.noPrice.join(', ')})`);
+    if (a.currency.length)
+      parts.push(`${a.currency.length} tasining valyutasi so'm emas (${a.currency.join(', ')})`);
+    setErpNote(`${parts.join('; ')}.${a.updated.length ? ' Tekshirib, «Saqlash»ni bosing.' : ''}`);
   };
 
   const edit = (next: PriceList) => {
@@ -131,62 +160,77 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
       : `Oxirgi saqlash: ${updatedAt}`;
 
   return (
-    <div className="mgr-shell">
-      <aside className="mgr-side">
-        <div className="mgr-brand">
-          <strong>Dafna</strong>
-          <span>boshqaruv paneli</span>
-        </div>
-        <nav aria-label="Bo'limlar">
-          {SECTIONS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={section === s.id ? 'mgr-nav active' : 'mgr-nav'}
-              aria-current={section === s.id ? 'page' : undefined}
-              onClick={() => setSection(s.id)}
-              data-testid={`mgr-tab-${s.id}`}
+    <ErpContext.Provider value={erp}>
+      <div className="mgr-shell">
+        <aside className="mgr-side">
+          <div className="mgr-brand">
+            <strong>Dafna</strong>
+            <span>boshqaruv paneli</span>
+          </div>
+          <nav aria-label="Bo'limlar">
+            {SECTIONS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className={section === s.id ? 'mgr-nav active' : 'mgr-nav'}
+                aria-current={section === s.id ? 'page' : undefined}
+                onClick={() => setSection(s.id)}
+                data-testid={`mgr-tab-${s.id}`}
+              >
+                <span>{s.label}</span>
+                <small>{s.hint}</small>
+              </button>
+            ))}
+          </nav>
+        </aside>
+        <main className="mgr-page">
+          <header className="mgr-head">
+            <p className={dirty ? 'mgr-status dirty' : 'mgr-status'} data-testid="mgr-updated">
+              {status}
+            </p>
+            <Button
+              variant="secondary"
+              onClick={() => void pullErp()}
+              disabled={busy}
+              data-testid="mgr-erp-pull"
             >
-              <span>{s.label}</span>
-              <small>{s.hint}</small>
-            </button>
-          ))}
-        </nav>
-      </aside>
-      <main className="mgr-page">
-        <header className="mgr-head">
-          <p className={dirty ? 'mgr-status dirty' : 'mgr-status'} data-testid="mgr-updated">
-            {status}
-          </p>
-          <Button
-            variant="success"
-            onClick={() => void save()}
-            disabled={busy || (!dirty && !list.demo)}
-            data-testid="mgr-save"
-          >
-            {busy ? 'Saqlanmoqda…' : justSaved ? 'Saqlandi' : 'Saqlash'}
-          </Button>
-        </header>
-        {error && (
-          <p className="mgr-error" role="alert">
-            {error}
-          </p>
-        )}
-        {section === 'materials' && (
-          <MaterialsSection
-            list={list}
-            edit={edit}
-            draft={draft}
-            setDraft={setDraft}
-            uploadTexture={(id, image) => managerUploadTexture(pin, id, image, fetchImpl)}
-          />
-        )}
-        {section === 'hardware' && (
-          <HardwareSection list={list} edit={edit} draft={draft} setDraft={setDraft} />
-        )}
-        {section === 'services' && <ServicesSection list={list} edit={edit} />}
-        {section === 'profit' && <ProfitSection list={list} edit={edit} />}
-      </main>
-    </div>
+              1C narxlarini olish
+            </Button>
+            <Button
+              variant="success"
+              onClick={() => void save()}
+              disabled={busy || (!dirty && !list.demo)}
+              data-testid="mgr-save"
+            >
+              {busy ? 'Saqlanmoqda…' : justSaved ? 'Saqlandi' : 'Saqlash'}
+            </Button>
+          </header>
+          {error && (
+            <p className="mgr-error" role="alert">
+              {error}
+            </p>
+          )}
+          {erpNote && (
+            <p className="mgr-note mgr-erp-note" role="status" data-testid="mgr-erp-note">
+              {erpNote}
+            </p>
+          )}
+          {section === 'materials' && (
+            <MaterialsSection
+              list={list}
+              edit={edit}
+              draft={draft}
+              setDraft={setDraft}
+              uploadTexture={(id, image) => managerUploadTexture(pin, id, image, fetchImpl)}
+            />
+          )}
+          {section === 'hardware' && (
+            <HardwareSection list={list} edit={edit} draft={draft} setDraft={setDraft} />
+          )}
+          {section === 'services' && <ServicesSection list={list} edit={edit} />}
+          {section === 'profit' && <ProfitSection list={list} edit={edit} />}
+        </main>
+      </div>
+    </ErpContext.Provider>
   );
 }

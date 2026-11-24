@@ -2,6 +2,7 @@ import { allMaterials, type Material, type MaterialTexture, type PriceList } fro
 import { useMemo, useState } from 'react';
 import { translate } from '../i18n/I18n';
 import { Button } from '../ui/Button';
+import { ErpCodeInput } from './erp';
 import {
   EDGE_BAND_KEY,
   KIND_LABEL,
@@ -184,11 +185,11 @@ export function MaterialsSection({
           </span>
         </Field>
         <Field label="1C kodi">
-          <input
-            type="text"
-            className="mgr-erp"
+          <ErpCodeInput
             value={list.erpCodes?.[EDGE_BAND_KEY] ?? ''}
-            onChange={(e) => putErp(EDGE_BAND_KEY, e.target.value)}
+            onChange={(v) => putErp(EDGE_BAND_KEY, v)}
+            label="Kromka: 1C kodi"
+            testId="mgr-erp-edge"
           />
         </Field>
         <p className="mgr-note">Kromkalash ishi «Xizmatlar» bo&apos;limida (1 metr uchun).</p>
@@ -497,11 +498,11 @@ function MaterialCard({
         {sheet ? (
           <>
             <Field label="1C kodi (artikul)">
-              <input
-                type="text"
+              <ErpCodeInput
                 value={erp}
-                onChange={(e) => putErp(e.target.value)}
-                data-testid={`mgr-erp-${row.id}`}
+                onChange={putErp}
+                label="1C kodi"
+                testId={`mgr-erp-${row.id}`}
               />
             </Field>
             <Field label="1 list narxi">
