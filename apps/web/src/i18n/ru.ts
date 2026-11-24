@@ -93,6 +93,12 @@ export const ru: Messages = {
   'submitted.finish': 'Завершить',
   'submitted.countdown': 'Через {s} с вернёмся на главный экран',
 
+  'site.contact': 'Связаться',
+  'site.contactTitle': 'Свяжитесь с нами',
+  'site.contactText': 'Если есть вопросы, менеджер поможет. Ваша конфигурация сохранится.',
+  'site.call': 'Позвонить',
+  'site.telegram': 'Написать в Telegram',
+  'nav.nextLabel': 'Далее: {label}',
   'nav.back': 'Назад',
   'nav.next': 'Далее',
   'nav.nextSoon': 'Следующие шаги скоро',

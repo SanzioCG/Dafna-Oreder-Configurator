@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { I18nProvider } from './i18n/I18n';
+import { isKioskDevice } from './site';
+import { SiteHeader } from './ui/SiteHeader';
 import { CartSheet } from './cart/CartSheet';
 import { MAX_ORDER_ITEMS, clampQuantity, newCartUid, orderItems, type CartItem } from './cart/cart';
 import { ContactScreen } from './contact/ContactScreen';
@@ -16,7 +18,7 @@ import { nextFlow, type FlowEvent, type FlowState } from './state/flow';
 import { useConfigurator } from './state/useConfigurator';
 import { TemplateContext } from './state/templateContext';
 import { modelParams } from './state/presets';
-import { usePrice } from './ui/PriceTag';
+import { priceVisible, usePrice } from './ui/PriceTag';
 import { PRODUCT_TEMPLATES } from '@dafna/engine';
 import { ThemeProvider, useTheme } from './theme/ThemeProvider';
 import { StepPanel } from './ui/StepPanel';
@@ -39,7 +41,18 @@ export function prefersReducedMotion(): boolean {
 /** The step the configurator returns to from the presentation (last configurator step). */
 const EDIT_STEP = 'interior';
 
-function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) {
+function Configurator({
+  mode,
+  onFinish,
+  kiosk = true,
+}: {
+  mode: Mode;
+  onFinish: () => void;
+  /** D-43: a shop kiosk (its own header, idle reset); false = the website */
+  kiosk?: boolean;
+}) {
+  // D-43: the website lays the product screen out without the 3D view
+  const [startProduct, setStartProduct] = useState<string | null>(null);
   const config = useConfigurator(mode);
   const { t, lang } = useI18n();
   // PNG capture of the 3D view, taken when the application is submitted (D-5)
@@ -150,7 +163,7 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
   // D-13: idle reset. Customers: 2 min (20 s warning), never on the untouched start screen and
   // not on the submitted screen (it has its own countdown). Staff: 5 min, then back to customer.
   const idle = useIdle({
-    enabled: flow !== 'submitted' && !(mode === 'customer' && step === 'start'),
+    enabled: kiosk && flow !== 'submitted' && !(mode === 'customer' && step === 'start'),
     timeoutS: mode === 'staff' ? STAFF_IDLE_S : CUSTOMER_IDLE_S,
     onIdle: mode === 'staff' ? exitStaff : onFinish,
   });
@@ -163,7 +176,12 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
   };
   return (
     <TemplateContext.Provider value={config.template}>
-      <div className={`app mode-${mode}${inPresentation ? ' presenting' : ''}`} data-flow={flow}>
+      <div
+        className={`app mode-${mode} ${kiosk ? 'kiosk' : 'site'}${inPresentation ? ' presenting' : ''}`}
+        data-flow={flow}
+        data-start={step === 'start' ? (startProduct ? 'models' : 'products') : undefined}
+      >
+        {!kiosk && <SiteHeader />}
         <Viewer
           view={config.view}
           mode={mode}
@@ -184,6 +202,16 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
           presentationContent={
             flow === 'ready_to_confirm' ? (
               <div className="present-actions" data-testid="present-actions">
+                {/* D-43: the price before "Tasdiqlash" (Figma "Ko'rib chiqish") */}
+                {price && priceVisible(mode, price) && !config.hasErrors && (
+                  <p className="present-price" data-testid="present-price">
+                    <span>{t('price.total')}</span>
+                    <strong>
+                      {String(Math.round(price.total)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}{' '}
+                      {t('price.currency')}
+                    </strong>
+                  </p>
+                )}
                 {cart.length > 0 && (
                   <p className="present-cart-note" data-testid="present-cart-note">
                     {t('cart.note', { count: cart.length })}
@@ -231,6 +259,8 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
           }}
           cartCount={cart.reduce((n, c) => n + c.quantity, 0)}
           onOpenCart={() => setCartOpen(true)}
+          site={!kiosk}
+          onStartProduct={setStartProduct}
         />
         {cartOpen && flow === 'configurator' && (
           <CartSheet
@@ -267,6 +297,7 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
             product={config.product}
             params={config.params}
             kioskId={kioskId()}
+            nativeKeyboard={!kiosk}
             cart={cart}
             includeCurrent={checkoutFrom === 'review'}
             onBack={() => dispatch(checkoutFrom === 'cart' ? 'cancel' : 'back')}
@@ -309,7 +340,7 @@ function Configurator({ mode, onFinish }: { mode: Mode; onFinish: () => void }) 
             onFinish={onFinish}
           />
         )}
-        {mode === 'customer' && inPresentation && (
+        {mode === 'customer' && inPresentation && kiosk && (
           <ConsultantButton className="present-consultant" onCall={callConsultant} />
         )}
         {consultantOpen && <ConsultantModal onClose={() => setConsultantOpen(false)} />}
@@ -330,9 +361,11 @@ function Session({
   mode,
   onEnd,
   pin,
+  kiosk,
 }: {
   mode: Mode;
   onEnd: () => void;
+  kiosk: boolean;
   /** D-13 / D-38: the staff sign-in is open */
   pin: { onSuccess: () => void; onCancel: () => void } | null;
 }) {
@@ -341,6 +374,7 @@ function Session({
     <I18nProvider initial="uz">
       <Configurator
         mode={mode}
+        kiosk={kiosk}
         onFinish={() => {
           resetTheme();
           onEnd();
@@ -360,7 +394,9 @@ export function App() {
   const [mode, setMode] = useState<Mode>(wantsStaff && import.meta.env.DEV ? 'staff' : 'customer');
   const [pinOpen, setPinOpen] = useState(wantsStaff && !import.meta.env.DEV);
   const [session, setSession] = useState(0);
-  useEffect(() => installKioskGuards(), []);
+  // D-43: a shop kiosk (opened once with ?kiosk=1) or the website
+  const [kiosk] = useState(() => isKioskDevice());
+  useEffect(() => (kiosk ? installKioskGuards() : undefined), [kiosk]);
   useEffect(() => {
     const ask = () => setPinOpen(true);
     const leave = () => {
@@ -376,10 +412,11 @@ export function App() {
     };
   }, []);
   return (
-    <ThemeProvider>
+    <ThemeProvider fallback={kiosk ? undefined : 'light'}>
       <Session
         key={session}
         mode={mode}
+        kiosk={kiosk}
         onEnd={() => setSession((n) => n + 1)}
         pin={
           pinOpen && mode === 'customer'

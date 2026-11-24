@@ -63,10 +63,16 @@ const ThemeContext = createContext<ThemeValue | null>(null);
  * Light (default) / dark theme via `<html data-theme>`; every colour comes from the tokens files.
  * Initial theme = stored device choice, else the kiosk default (see kioskDefaultTheme).
  */
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() =>
-    applyTheme(readStoredTheme() ?? kioskDefaultTheme()),
-  );
+export function ThemeProvider({
+  children,
+  fallback,
+}: {
+  children: ReactNode;
+  /** D-43: the theme without a stored choice (the website: light); default = the kiosk's */
+  fallback?: Theme;
+}) {
+  const initial = () => fallback ?? kioskDefaultTheme();
+  const [theme, setThemeState] = useState<Theme>(() => applyTheme(readStoredTheme() ?? initial()));
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -82,8 +88,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
   const resetTheme = useCallback(() => {
     writeStoredTheme(null);
-    setThemeState(applyTheme(kioskDefaultTheme()));
-  }, []);
+    setThemeState(applyTheme(fallback ?? kioskDefaultTheme()));
+  }, [fallback]);
 
   const value = useMemo<ThemeValue>(
     () => ({ theme, setTheme, toggleTheme, resetTheme, logoUrl: LOGO_URL[theme] }),

@@ -22,6 +22,9 @@ const { App } = await import('../App');
 // D-37: the colour tests run against the built-in decors, offered as if added from 1C
 beforeEach(offerBuiltInBoards);
 
+// D-43: these tests drive the kiosk (its own header, idle reset)
+beforeEach(() => window.localStorage.setItem('dafna.kiosk', '1'));
+
 afterEach(() => {
   clearBoards();
   cleanup();

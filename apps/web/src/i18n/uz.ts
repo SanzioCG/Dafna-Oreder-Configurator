@@ -88,6 +88,13 @@ export const uz = {
   'submitted.qrHint': 'Telefon kamerasi bilan skanerlang — PDF ochiladi.',
   'submitted.countdown': "{s} soniyadan so'ng bosh ekranga qaytamiz",
 
+  'site.contact': "Bog'lanish",
+  'site.contactTitle': "Biz bilan bog'laning",
+  'site.contactText':
+    "Savolingiz bo'lsa, menejerimiz yordam beradi. Konfiguratsiyangiz saqlanib qoladi.",
+  'site.call': "Qo'ng'iroq qilish",
+  'site.telegram': "Telegram'da yozish",
+  'nav.nextLabel': 'Keyingi: {label}',
   'nav.back': 'Orqaga',
   'nav.readyReview': "Tayyor — ko'rib chiqish",
   'consultant.call': 'Konsultant chaqirish',

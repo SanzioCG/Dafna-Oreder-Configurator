@@ -70,6 +70,10 @@ interface StepPanelProps {
   onScratch?: (product: ProductId) => void;
   /** D-10: play a mechanism's closing demo in 3D */
   onMechanismDemo?: (kind: 'hinge' | 'slide', brand: string) => void;
+  /** D-43: the website (site header above; phone step progress; "Tayyor — ko'rib chiqish") */
+  site?: boolean;
+  /** D-43: the start screen shows the products (null) or a product's models */
+  onStartProduct?: (product: ProductId | null) => void;
 }
 
 /**
@@ -92,6 +96,8 @@ export function StepPanel({
   onMechanismDemo,
   cartCount = 0,
   onOpenCart,
+  site = false,
+  onStartProduct,
 }: StepPanelProps) {
   const { t, lang, setLang } = useI18n();
   const { theme, toggleTheme, logoUrl } = useTheme();
@@ -102,6 +108,10 @@ export function StepPanel({
   const prev = neighbourStep(step, -1, steps);
   const next = neighbourStep(step, 1, steps);
   const stepDef = steps.find((s) => s.key === step);
+  const stepLabel = (s: { key: string; labelKey: string }) =>
+    s.key === 'interior' && config.product !== 'wardrobe'
+      ? t(`step.interior.${config.product}`)
+      : t(s.labelKey);
   const [staffOpen, setStaffOpen] = useState(false);
   const missingStep = step !== 'start' && !stepDef;
   useEffect(() => {
@@ -178,7 +188,7 @@ export function StepPanel({
           onClick={toggleTheme}
           icon={theme === 'dark' ? <MoonIcon /> : <SunIcon />}
         />
-        {!staff && onCallConsultant && <ConsultantButton onCall={onCallConsultant} />}
+        {!staff && !site && onCallConsultant && <ConsultantButton onCall={onCallConsultant} />}
         <div className="lang-switch" role="group" aria-label={t('lang.label')}>
           {LANGS.map((l) => (
             <button
@@ -211,6 +221,26 @@ export function StepPanel({
       )}
 
       <StepNavigation step={step} onStepChange={setStep} product={config.product} steps={steps} />
+      {/* D-43: on a phone the pills give way to "2 / 5 · Rang — Keyingi: Ichki" */}
+      {site && stepDef && (
+        <div className="step-progress" data-testid="step-progress">
+          <p>
+            <strong>
+              {steps.indexOf(stepDef) + 1} / {steps.length} · {stepLabel(stepDef)}
+            </strong>
+            {next && <span>{t('nav.nextLabel', { label: stepLabel(next) })}</span>}
+          </p>
+          <div className="step-progress-bars" aria-hidden="true">
+            {steps.map((s, i) => (
+              <span
+                key={s.key}
+                className={i <= steps.indexOf(stepDef) ? 'on' : undefined}
+                style={{ '--step': s.color } as React.CSSProperties}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {step === 'start' && (
         <div className="panel-body">
@@ -218,6 +248,7 @@ export function StepPanel({
             mode={mode}
             onPick={(m) => onPickModel?.(m)}
             onScratch={(p) => onScratch?.(p)}
+            onProductChange={onStartProduct}
           />
         </div>
       )}
@@ -290,7 +321,19 @@ export function StepPanel({
         >
           {t('nav.back')}
         </Button>
-        <div className="footer-center" />
+        <div className="footer-center">
+          {/* D-43: the website jumps to the review from any step (the kiosk uses the pill) */}
+          {site && next && step !== 'review' && (
+            <Button
+              variant="text"
+              className="btn-to-review"
+              onClick={() => setStep('review')}
+              data-testid="to-review"
+            >
+              {t('nav.readyReview')}
+            </Button>
+          )}
+        </div>
         <Button
           variant="primary"
           disabled={!next}

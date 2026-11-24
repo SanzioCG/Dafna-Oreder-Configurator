@@ -1,5 +1,5 @@
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ru } from '../i18n/ru';
 import { uz } from '../i18n/uz';
 import type { SceneProps } from '../viewer/Scene';
@@ -30,6 +30,9 @@ const ok =
   () =>
     Promise.resolve(new Response(JSON.stringify({ id, status: 'submitted' }), { status: 200 }));
 const down = () => () => Promise.reject(new TypeError('Failed to fetch'));
+
+// D-43: these tests drive the kiosk (its own header, idle reset)
+beforeEach(() => window.localStorage.setItem('dafna.kiosk', '1'));
 
 afterEach(() => {
   cleanup();

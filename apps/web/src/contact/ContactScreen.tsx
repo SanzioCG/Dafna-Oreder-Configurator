@@ -24,12 +24,20 @@ import { autoCapitalize, backspace, insertText, type KeyboardLayout } from './ke
 
 type TextField = 'firstName' | 'lastName' | 'phone';
 const FIELD_ORDER: ContactField[] = ['firstName', 'lastName', 'phone', 'consent'];
+/** D-43: the browser may fill the name and number on the website */
+const AUTOCOMPLETE: Record<TextField, string> = {
+  firstName: 'given-name',
+  lastName: 'family-name',
+  phone: 'tel-national',
+};
 
 export interface ContactScreenProps {
   /** D-8: the product being ordered (templateId) */
   product?: string;
   params: Params;
   kioskId?: string;
+  /** D-43: the website - the phone's / computer's own keyboard, no on-screen one */
+  nativeKeyboard?: boolean;
   /**
    * D-25: the cart. Empty = the product on screen alone (single form). Otherwise the whole
    * order is sent as `items`: the cart, plus the product on screen when `includeCurrent`.
@@ -64,6 +72,7 @@ const failKey = (code: SubmitErrorCode) =>
  * Typing happens on the on-screen keyboard; the OS keyboard is suppressed (inputMode="none").
  */
 export function ContactScreen({
+  nativeKeyboard = false,
   product = 'wardrobe',
   params,
   kioskId,
@@ -194,8 +203,12 @@ export function ContactScreen({
   const fieldProps = (f: TextField) => ({
     ref: refs[f],
     id: `contact-${f}`,
-    inputMode: 'none' as const,
-    autoComplete: 'off',
+    inputMode: nativeKeyboard
+      ? f === 'phone'
+        ? ('tel' as const)
+        : ('text' as const)
+      : ('none' as const),
+    autoComplete: nativeKeyboard ? AUTOCOMPLETE[f] : 'off',
     autoCorrect: 'off',
     spellCheck: false,
     disabled: locked,
@@ -343,7 +356,7 @@ export function ContactScreen({
         </div>
       </form>
 
-      {layout && (
+      {layout && !nativeKeyboard && (
         <OnScreenKeyboard
           layout={layout}
           onInsert={typeText}

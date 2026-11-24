@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PriceResult } from '@dafna/engine';
 import { uz } from '../i18n/uz';
 import { priceVisible } from './PriceTag';
@@ -11,6 +11,9 @@ vi.mock('../viewer/Scene', () => ({
 }));
 
 const { App } = await import('../App');
+
+// D-43: these tests drive the kiosk (its own header, idle reset)
+beforeEach(() => window.localStorage.setItem('dafna.kiosk', '1'));
 
 afterEach(() => {
   cleanup();

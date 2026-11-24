@@ -2499,3 +2499,349 @@ p {
   font-size: var(--fs-sm);
   line-height: var(--lh-snug);
 }
+
+/* ---------- D-43: the website (Figma "Web — desktop / mobile"); a kiosk keeps the layout above ---------- */
+
+.app.site {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.app.site.presenting {
+  grid-template-columns: 1fr;
+}
+.app.site .site-header {
+  grid-column: 1 / -1;
+}
+.app.site.mode-customer .panel-header {
+  display: none;
+}
+.app.site .panel {
+  padding-top: var(--space-3);
+}
+.step-progress {
+  display: none;
+}
+.site-header {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 4rem;
+  padding: 0 var(--space-5);
+  background: var(--bg);
+  color: var(--text);
+}
+.site-logo {
+  display: block;
+  height: 2.25rem;
+  width: auto;
+  margin-right: auto;
+  -webkit-user-drag: none;
+}
+.site-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.lang-short {
+  display: none;
+}
+.site-contact-wrap {
+  position: relative;
+}
+.site-contact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding: 0 var(--space-4);
+  border: var(--line-on-bg);
+  border-radius: var(--radius-pill);
+  background: var(--accent-peach);
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  cursor: pointer;
+}
+.site-contact-btn:focus-visible {
+  outline: var(--focus-line);
+  outline-offset: 2px;
+}
+.site-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 59;
+}
+.site-contact-card {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  z-index: 60;
+  width: 21rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--line-in-card);
+  border-radius: 1.25rem;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+}
+.site-contact-card .muted {
+  margin: 0;
+  color: color-mix(in srgb, var(--ink) 65%, transparent);
+  font-size: var(--fs-sm);
+}
+.site-contact-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.site-contact-head h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+.site-contact-card .btn {
+  text-decoration: none;
+}
+/* the product screen: no 3D, the three products side by side */
+.app.site[data-start='products'] {
+  grid-template-columns: 1fr;
+}
+.app.site[data-start='products'] .viewer {
+  display: none;
+}
+.app.site[data-start='products'] .panel-body {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+}
+.app.site[data-start='products'] .product-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.app.site[data-start='products'] .steps {
+  display: none;
+}
+.app.site .btn-to-review {
+  font-weight: var(--fw-bold);
+}
+
+/* phones: header, the 3D view on top (260 px), the step card below, buttons at the bottom */
+@media (max-width: 768px) {
+  .app.site {
+    display: flex;
+    flex-direction: column;
+  }
+  .site-header {
+    flex: none;
+    height: 3.5rem;
+    padding: 0 var(--space-4);
+  }
+  .site-logo {
+    height: 1.75rem;
+  }
+  .lang-long,
+  .site-theme {
+    display: none;
+  }
+  .lang-short {
+    display: inline;
+  }
+  .site-header .lang {
+    min-width: 2.5rem;
+    min-height: 2rem;
+    padding: 0 var(--space-2);
+  }
+  .site-contact-btn {
+    width: 2.75rem;
+    padding: 0;
+    justify-content: center;
+  }
+  .site-contact-btn span {
+    display: none;
+  }
+  .site-sheet-backdrop {
+    background: rgb(0 0 0 / 0.4);
+  }
+  .site-contact-card {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    border-radius: 1.5rem 1.5rem 0 0;
+    padding: var(--space-5) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom));
+  }
+  .app.site .viewer {
+    flex: none;
+    height: 16.25rem;
+  }
+  .app.site.presenting .viewer {
+    flex: 1;
+    height: auto;
+  }
+  .app.site .panel {
+    flex: 1;
+    padding-top: 0;
+    border-radius: 1.5rem 1.5rem 0 0;
+  }
+  .app.site .steps {
+    display: none;
+  }
+  .app.site .step-progress {
+    display: block;
+    padding: var(--space-3) var(--space-4) var(--space-1);
+  }
+  .step-progress p {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-2);
+    font-size: var(--fs-xs);
+  }
+  .step-progress p span {
+    color: var(--text-2);
+  }
+  .step-progress-bars {
+    display: flex;
+    gap: 4px;
+  }
+  .step-progress-bars span {
+    flex: 1;
+    height: 4px;
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--text) 15%, transparent);
+  }
+  .step-progress-bars span.on {
+    background: var(--step);
+  }
+  .app.site .panel-body {
+    padding: var(--space-3) var(--space-4) var(--space-4);
+  }
+  .app.site .panel-footer {
+    padding: var(--space-2) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
+  }
+  .app.site .footer-center {
+    display: none;
+  }
+  .app.site .panel-footer .btn-primary {
+    margin-left: auto;
+    flex: 1;
+    max-width: 12rem;
+  }
+  /* the product screen: compact rows (picture, name, hint, models, →) */
+  .app.site[data-start='products'] .product-grid,
+  .app.site .product-grid {
+    grid-template-columns: 1fr;
+  }
+  .app.site .product-card {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: var(--space-3);
+    row-gap: 2px;
+    padding: var(--space-3);
+  }
+  .app.site .product-card .product-icon {
+    grid-row: 1 / span 2;
+    height: 4.5rem;
+  }
+  .app.site .product-card-name {
+    font-size: var(--fs-lg);
+  }
+  .app.site .product-card-hint {
+    font-size: var(--fs-xs);
+  }
+  .app.site .product-card-choose {
+    display: none;
+  }
+  .app.site .model-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+}
+.site-contact-head .icon-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+}
+@media (max-width: 1100px) {
+  .app.site .footer-center {
+    display: none;
+  }
+}
+@media (max-width: 768px) {
+  .app.site .viewer-hint {
+    display: none;
+  }
+  .app.site .viewer-actions {
+    left: 50%;
+    bottom: var(--space-3);
+    transform: translateX(-50%);
+    gap: var(--space-2);
+  }
+  .app.site .viewer-actions .btn {
+    min-height: 2.25rem;
+    padding: 0 var(--space-3);
+    font-size: var(--fs-xs);
+    white-space: nowrap;
+  }
+}
+
+/* D-43: the price in the review (Figma "Ko'rib chiqish") */
+.present-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--primary);
+  color: var(--on-primary);
+  font-variant-numeric: tabular-nums;
+}
+.present-price span {
+  font-size: var(--fs-sm);
+}
+.present-price strong {
+  font-size: var(--fs-xl);
+}
+.app.site .present-logo {
+  display: none;
+}
+@media (max-width: 768px) {
+  .app.site .present-head {
+    top: var(--space-3);
+    width: calc(100% - 2rem);
+  }
+  .app.site .present-head h2 {
+    font-size: var(--fs-2xl);
+  }
+  .app.site .present-sub,
+  .app.site .present-line {
+    font-size: var(--fs-xs);
+  }
+  .app.site .present-actions {
+    bottom: var(--space-4);
+    width: calc(100% - 2rem);
+    align-items: stretch;
+  }
+  .app.site .present-actions .btn,
+  .app.site .present-actions .btn-success {
+    min-width: 0;
+    width: 100%;
+  }
+  .app.site .present-price {
+    align-self: center;
+  }
+  .app.site .present-skip {
+    right: var(--space-4);
+    bottom: var(--space-3);
+  }
+}

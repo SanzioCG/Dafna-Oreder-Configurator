@@ -34,13 +34,20 @@ export function StartScreen({
   mode,
   onPick,
   onScratch,
+  onProductChange,
 }: {
   mode: Mode;
   onPick: (model: ReadyModel) => void;
   onScratch: (product: ProductId) => void;
+  /** D-43: the product screen (null) or a product's models - the website lays them out differently */
+  onProductChange?: (product: ProductId | null) => void;
 }) {
   const { t } = useI18n();
-  const [product, setProduct] = useState<ProductId | null>(null);
+  const [product, setProductState] = useState<ProductId | null>(null);
+  const setProduct = (p: ProductId | null) => {
+    setProductState(p);
+    onProductChange?.(p);
+  };
   const units = unitSystemFor(mode);
   const unit = t(units === 'cm' ? 'unit.cm' : 'unit.mm');
 
