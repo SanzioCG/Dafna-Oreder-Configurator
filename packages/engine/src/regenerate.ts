@@ -23,6 +23,7 @@ import deskV1Json from '../templates/desk.v1.json' with { type: 'json' };
 import deskV2Json from '../templates/desk.v2.json' with { type: 'json' };
 import deskV3Json from '../templates/desk.v3.json' with { type: 'json' };
 import deskV4Json from '../templates/desk.v4.json' with { type: 'json' };
+import deskV5Json from '../templates/desk.v5.json' with { type: 'json' };
 import { catalogForTemplate, materialsV0, materialsV1, materialsV1_1 } from './catalog.js';
 // D-8: the pedestal and desk generators register themselves on import
 import './desk.js';
@@ -79,6 +80,7 @@ export const PRODUCT_ARCHIVE: Readonly<Record<string, Readonly<Record<string, Te
     '0.2.0': deskV2Json as Template,
     '0.3.0': deskV3Json as Template,
     '0.4.0': deskV4Json as Template,
+    '0.5.0': deskV5Json as Template,
   },
 };
 

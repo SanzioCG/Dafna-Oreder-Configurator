@@ -7,6 +7,7 @@ import {
   getParamDef,
   kioskOptions,
   kioskParams,
+  deskTemplate,
   regenerateApplication,
   wardrobeTemplate as T,
   type CatalogExtension,
@@ -57,6 +58,15 @@ describe('D-35 kiosk options', () => {
     expect(kioskOptions(getParamDef(T, 'corpusMaterial')!)).toEqual(
       getParamDef(T, 'corpusMaterial')!.options,
     );
+  });
+
+  it('D-36: a carcass board also fits the desk top - the desk shows no demo decors', () => {
+    applyCatalogExtension({ materials: [board], hardware: [], textures: {} });
+    expect(kioskOptions(getParamDef(deskTemplate, 'topMaterial')!)).toEqual(['x_m1']);
+    expect(kioskOptions(getParamDef(deskTemplate, 'corpusMaterial')!)).toEqual(['x_m1']);
+    const p = kioskParams(deskTemplate, defaultParams(deskTemplate));
+    expect([p.topMaterial, p.corpusMaterial]).toEqual(['x_m1', 'x_m1']);
+    expect(generate(deskTemplate, p).issues.filter((i) => i.severity === 'error')).toEqual([]);
   });
 
   it('a stored order with a built-in decor still regenerates', () => {

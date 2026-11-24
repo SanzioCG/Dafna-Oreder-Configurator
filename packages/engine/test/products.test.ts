@@ -28,6 +28,7 @@ import ped5Default from './fixtures/applications/pedestal.0.5.0.default.json' wi
 // D-28: Samet slides
 import ped6Default from './fixtures/applications/pedestal.0.6.0.default.json' with { type: 'json' };
 import desk4 from './fixtures/applications/desk.0.4.0.w1500-bazis.json' with { type: 'json' };
+import desk5 from './fixtures/applications/desk.0.5.0.w1500-modesty-front.json' with { type: 'json' };
 
 /** pedestal 0.2.0: the last template with the A4 hanging-file drawer */
 const PED_V2 = PRODUCT_ARCHIVE.pedestal!['0.2.0']!;
@@ -245,7 +246,7 @@ describe('D-8 desk (stol)', () => {
     const draft = toOrderDraft(defaultParams(DESK), r, { template: DESK, now: () => new Date(0) });
     expect([draft.productType, draft.templateVersion, draft.catalogVersion]).toEqual([
       'desk',
-      '0.4.0',
+      '0.5.0',
       '1.1.0',
     ]);
   });
@@ -265,6 +266,7 @@ describe('D-8 reproducibility per product', () => {
     'pedestal 0.5.0 default (Bazis)': ['pedestal', ped5Default],
     'pedestal 0.6.0 default (Samet)': ['pedestal', ped6Default],
     'desk 0.4.0 1500 (Bazis)': ['desk', desk4],
+    'desk 0.5.0 1500 (modesty panel on the front)': ['desk', desk5],
   } as const;
   for (const [name, [templateId, fx]] of Object.entries(FIXTURES)) {
     it(`${name}: regenerated draft deep-equals the stored one`, () => {

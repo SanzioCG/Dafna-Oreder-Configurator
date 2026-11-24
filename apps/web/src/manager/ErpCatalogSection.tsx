@@ -490,7 +490,7 @@ function AddFromErp({
   const [thicknessMm, setThickness] = useState(g.thicknessMm);
   const [colorHex, setColor] = useState(NEW_MATERIAL.colorHex);
   const [group, setGroup] = useState<'wood' | 'plain'>(g.group);
-  const [usage, setUsage] = useState<MaterialDraft['usage']>(['corpus', 'door']);
+  const [usage, setUsage] = useState<MaterialDraft['usage']>(['corpus', 'door', 'top']);
   const [softClose, setSoft] = useState(g.softClose);
   const board = kind === 'ldsp' || kind === 'mdf';
   const price = somPrice(row, list, board ? g.sheet : undefined);

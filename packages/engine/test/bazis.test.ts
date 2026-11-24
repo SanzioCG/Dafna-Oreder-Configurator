@@ -179,7 +179,7 @@ describe('D-26 mobile pedestal as in "Tum mobil" (template 0.5.0)', () => {
   });
 });
 
-describe('D-26 desk as in "stol 1500" (template 0.4.0)', () => {
+describe('D-26 / D-36 desk as in "stol 1500" (template 0.5.0)', () => {
   const r = generate(deskTemplate, { ...defaultParams(deskTemplate), width: 1500 });
   const by = (id: string) => r.panels.find((p) => p.id === id)!;
 
@@ -203,6 +203,12 @@ describe('D-26 desk as in "stol 1500" (template 0.4.0)', () => {
       [1426, 466, 718],
       [1426, 316, 718],
       [1426, 166, 718],
+    ]);
+    // D-36: on the front side as in Bazis (Z 617..665), the shortest layer outermost
+    expect(m.map((x) => [x.widthMm, x.position[2] - 8, x.position[2] + 8])).toEqual([
+      [466, 617, 633],
+      [316, 633, 649],
+      [166, 649, 665],
     ]);
   });
 });

@@ -59802,10 +59802,10 @@ var pedestal_v6_default = {
   ]
 };
 
-// ../../packages/engine/templates/desk.v4.json
-var desk_v4_default = {
+// ../../packages/engine/templates/desk.v5.json
+var desk_v5_default = {
   templateId: "desk",
-  templateVersion: "0.4.0",
+  templateVersion: "0.5.0",
   productType: "desk",
   generator: "desk-v1",
   units: "mm",
@@ -60091,6 +60091,11 @@ var desk_v4_default = {
       note: `D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right, "stol 1500"): the work top is two full sheets (16 + 16 mm), banded once over both with PVC 1 x 35 mm; each LDSP leg is two boards (32 mm), 5 mm in from the ends, front and back, on 5 mm pads, the band over both on the inner board; the modesty panel is three stepped layers (466 / 316 / 166 mm) hanging under the top, 35 mm from the back edge. Replaces desk-worktop-frame (0.3.0).`
     },
     {
+      id: "desk-modesty-front",
+      unconfirmed: false,
+      note: `D-36 (Dafna's Bazis model "stol 1500" re-read, founder 2026-11-24: the modesty panel was at the back): the modesty panel is on the FRONT side (Bazis Z max, the side the desk is shown from; the cable grommet is on that side too), its outer face modestyBackInsetMm from the front edge; the SHORTEST layer (166) is outermost, then 316, the tallest (466) innermost - so the three layers show as stripes from the front. Template 0.4.0 had it at the back edge with the tallest layer outermost.`
+    },
+    {
       id: "desk-ldsp-legs",
       unconfirmed: true,
       note: "Work top on two LDSP side legs (full top width, flush ends) with a modesty panel between them at the back."
@@ -60106,7 +60111,7 @@ var desk_v4_default = {
 // ../../packages/engine/src/template.ts
 var wardrobeTemplate = wardrobe_v14_default;
 var pedestalTemplate = pedestal_v6_default;
-var deskTemplate = desk_v4_default;
+var deskTemplate = desk_v5_default;
 var PRODUCT_TEMPLATES = {
   wardrobe: wardrobeTemplate,
   pedestal: pedestalTemplate,
@@ -61342,6 +61347,8 @@ function lesterLegs(template, W, D, t, under, corpus) {
   const x0 = inset + 2 * t;
   const width = W - 2 * x0;
   const back = n(template, "modestyBackInsetMm");
+  const front = template.constructionRules.some((r) => r.id === "desk-modesty-front");
+  const layers = 3;
   [
     n(template, "modestyLayer1Mm"),
     n(template, "modestyLayer2Mm"),
@@ -61355,7 +61362,11 @@ function lesterLegs(template, W, D, t, under, corpus) {
         widthMm: h,
         thicknessMm: t,
         material: corpus,
-        position: [W / 2, under - h / 2, back + i * t + t / 2],
+        position: [
+          W / 2,
+          under - h / 2,
+          front ? D - back - (layers - 1 - i) * t - t / 2 : back + i * t + t / 2
+        ],
         rotation: ROT_FRONT,
         banding: "front",
         band: thin,
@@ -62674,6 +62685,7 @@ var PARAM_USAGE = {
   doorMaterial: "door",
   topMaterial: "top"
 };
+var fitsUsage = (m, usage) => m.usage.includes(usage) || usage === "top" && m.usage.includes("corpus");
 var BRAND_PARAM = {
   hinge: "hingeBrand",
   slide: "slideBrand"
@@ -62714,7 +62726,7 @@ function applyCatalogExtension(ext) {
       if (!usage && !kind) continue;
       if (!baseOptions.has(def)) baseOptions.set(def, def.options.slice());
       const own = baseOptions.get(def);
-      const extra = usage ? ext.materials.filter((m) => m.usage.includes(usage) && (def.materialKinds ?? []).includes(m.kind)).map((m) => m.id) : ext.hardware.filter((h) => h.kind === kind).map((h) => h.brandKey);
+      const extra = usage ? ext.materials.filter((m) => fitsUsage(m, usage) && (def.materialKinds ?? []).includes(m.kind)).map((m) => m.id) : ext.hardware.filter((h) => h.kind === kind).map((h) => h.brandKey);
       def.options = [
         ...own,
         ...extra.filter((x) => !own.includes(x))

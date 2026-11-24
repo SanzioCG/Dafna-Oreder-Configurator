@@ -59802,10 +59802,10 @@ var pedestal_v6_default = {
   ]
 };
 
-// ../../packages/engine/templates/desk.v4.json
-var desk_v4_default = {
+// ../../packages/engine/templates/desk.v5.json
+var desk_v5_default = {
   templateId: "desk",
-  templateVersion: "0.4.0",
+  templateVersion: "0.5.0",
   productType: "desk",
   generator: "desk-v1",
   units: "mm",
@@ -60091,6 +60091,11 @@ var desk_v4_default = {
       note: `D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right, "stol 1500"): the work top is two full sheets (16 + 16 mm), banded once over both with PVC 1 x 35 mm; each LDSP leg is two boards (32 mm), 5 mm in from the ends, front and back, on 5 mm pads, the band over both on the inner board; the modesty panel is three stepped layers (466 / 316 / 166 mm) hanging under the top, 35 mm from the back edge. Replaces desk-worktop-frame (0.3.0).`
     },
     {
+      id: "desk-modesty-front",
+      unconfirmed: false,
+      note: `D-36 (Dafna's Bazis model "stol 1500" re-read, founder 2026-11-24: the modesty panel was at the back): the modesty panel is on the FRONT side (Bazis Z max, the side the desk is shown from; the cable grommet is on that side too), its outer face modestyBackInsetMm from the front edge; the SHORTEST layer (166) is outermost, then 316, the tallest (466) innermost - so the three layers show as stripes from the front. Template 0.4.0 had it at the back edge with the tallest layer outermost.`
+    },
+    {
       id: "desk-ldsp-legs",
       unconfirmed: true,
       note: "Work top on two LDSP side legs (full top width, flush ends) with a modesty panel between them at the back."
@@ -60106,7 +60111,7 @@ var desk_v4_default = {
 // ../../packages/engine/src/template.ts
 var wardrobeTemplate = wardrobe_v14_default;
 var pedestalTemplate = pedestal_v6_default;
-var deskTemplate = desk_v4_default;
+var deskTemplate = desk_v5_default;
 var PRODUCT_TEMPLATES = {
   wardrobe: wardrobeTemplate,
   pedestal: pedestalTemplate,
@@ -73401,6 +73406,307 @@ var desk_v3_default = {
   ]
 };
 
+// ../../packages/engine/templates/desk.v4.json
+var desk_v4_default = {
+  templateId: "desk",
+  templateVersion: "0.4.0",
+  productType: "desk",
+  generator: "desk-v1",
+  units: "mm",
+  parameters: [
+    {
+      key: "width",
+      type: "int",
+      default: 1500,
+      min: 800,
+      max: 2e3,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.width",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      customerValues: [1100, 1500, 1700],
+      note: "Work-top width. Writing desk work surface >= 800 \xD7 500 (GOST 13025.3-85); standard sizes unconfirmed. D-17: Dafna's own desk sizes (founder's drawings, 2026-11-16): 1100 x 600, 1500 x 700, 1700 x 700, height 750. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      key: "depth",
+      type: "int",
+      default: 700,
+      min: 500,
+      max: 900,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.depth",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      customerValues: [600, 700],
+      note: "Work-top depth (>= 500, GOST 13025.3-85); 600 / 700 / 800 unconfirmed. D-17: Dafna's own desk sizes (founder's drawings, 2026-11-16): 1100 x 600, 1500 x 700, 1700 x 700, height 750. CONFIRMED (Dafna technologist, confirmation table 2026-11-23)."
+    },
+    {
+      key: "height",
+      type: "int",
+      default: 750,
+      min: 650,
+      max: 1250,
+      step: 10,
+      unit: "mm",
+      labelKey: "param.height",
+      uiStep: "size",
+      customerVisible: true,
+      unconfirmed: false,
+      customerValues: [750, 1100],
+      note: "Work-top height. EN 527-1: fixed-height desks 740 \xB1 20 (DESK_HEIGHT_NOT_ERGONOMIC outside, so customers can pick 1100 only with the lift frame). Lift frame: 740 sitting / 1100 standing shown to the customer (standing height unconfirmed; the frame adjusts continuously on site). D-17: Dafna's own desk sizes (founder's drawings, 2026-11-16): 1100 x 600, 1500 x 700, 1700 x 700, height 750."
+    },
+    {
+      key: "legs",
+      type: "enum",
+      default: "ldsp",
+      options: ["ldsp", "metal_lift"],
+      labelKey: "param.legs",
+      uiStep: "interior",
+      customerVisible: true,
+      unconfirmed: false,
+      note: "Two desk types (Dafna, D-8): a board-made desk (LDSP side legs + modesty panel), or a desk on an electric height-adjustable steel frame (lift). No fixed metal legs."
+    },
+    {
+      key: "topMaterial",
+      type: "enum",
+      default: "ldsp_white_16",
+      options: [
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      labelKey: "param.topMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp"],
+      note: "D-22 (Dafna technologist, confirmation table 2026-11-23): Dafna has no table-top boards now - the work top is a 16 / 18 mm laminated board, doubled underneath with a frame of strips (worktopFrameStripMm) and banded on the outer edges. Was: 22 / 25 mm table-top boards (up to 0.2.0). D-26: doubled with a full second sheet (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    {
+      key: "corpusMaterial",
+      type: "enum",
+      default: "ldsp_white_16",
+      options: [
+        "ldsp_white_16",
+        "ldsp_white_moisture_16",
+        "egger_w1000_st9_18",
+        "egger_u104_st9_16",
+        "egger_u702_st9_16",
+        "egger_u707_st9_16",
+        "egger_u727_st9_16",
+        "egger_u788_st9_16",
+        "egger_f765_st20_16",
+        "ldsp_aluminium_16",
+        "egger_u963_st9_16",
+        "egger_u502_st9_16",
+        "egger_u665_st9_16",
+        "egger_u335_st9_16",
+        "ldsp_red_16",
+        "egger_h3860_st9_16",
+        "egger_h3730_st10_16",
+        "ldsp_oak_wotan_16",
+        "egger_h3710_st12_16",
+        "egger_h3133_st12_16",
+        "egger_h2033_st10_16",
+        "egger_h1199_st12_16"
+      ],
+      labelKey: "param.legMaterial",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: false,
+      control: "swatch",
+      materialKinds: ["ldsp"],
+      note: "LDSP legs and modesty panel (legs = ldsp)."
+    },
+    {
+      key: "frameColor",
+      type: "enum",
+      default: "metal_black",
+      options: ["metal_black", "metal_white"],
+      labelKey: "param.frameColor",
+      uiStep: "color",
+      customerVisible: true,
+      unconfirmed: true,
+      control: "swatch",
+      materialKinds: ["metal"],
+      note: "Steel frame finish (legs = metal / metal_lift)."
+    }
+  ],
+  constants: {
+    fixedHeightMinMm: {
+      value: 720,
+      unit: "mm",
+      unconfirmed: false,
+      note: "EN 527-1:2011: fixed-height desks 740 \xB1 20 mm."
+    },
+    fixedHeightMaxMm: {
+      value: 760,
+      unit: "mm",
+      unconfirmed: false,
+      note: "EN 527-1:2011: fixed-height desks 740 \xB1 20 mm."
+    },
+    minWorkWidthMm: {
+      value: 800,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.3-85: writing desk work surface at least 800 \xD7 500 mm."
+    },
+    minWorkDepthMm: {
+      value: 500,
+      unit: "mm",
+      unconfirmed: false,
+      note: "GOST 13025.3-85: writing desk work surface at least 800 \xD7 500 mm."
+    },
+    legDepthInsetMm: {
+      value: 5,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Legs in from the ends, front and back (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    modestyHeightMm: {
+      value: 350,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Modesty panel height under the top (leaves knee room)."
+    },
+    modestyBackInsetMm: {
+      value: 35,
+      unit: "mm",
+      unconfirmed: false,
+      note: "The tallest modesty layer from the back edge (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    frameColumnMm: {
+      value: 60,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Steel column section (visual; purchased frame)."
+    },
+    liftColumnMm: {
+      value: 80,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Lift-frame telescopic column section (visual; purchased frame)."
+    },
+    frameFootHeightMm: {
+      value: 30,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Foot bar height (visual)."
+    },
+    frameFootInsetMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Foot bar inset from the front / back edges."
+    },
+    frameArmHeightMm: {
+      value: 25,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Top arm under the work top (visual)."
+    },
+    frameEndInsetMm: {
+      value: 100,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Frame column centre from the work-top ends."
+    },
+    frameBeamMm: {
+      value: 40,
+      unit: "mm",
+      unconfirmed: true,
+      note: "Cross beam section (visual)."
+    },
+    edgeBandId: {
+      value: "pvc_1_35",
+      unconfirmed: false,
+      note: `PVC 1 x 35 mm ("\u041A\u0440\u043E\u043C\u043A\u0430 35,1") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    edgeBandThicknessMm: {
+      value: 1,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Work top: one 1 mm band over both sheets (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    edgeBandThinMm: {
+      value: 0.4,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Less visible edges: 0.4 mm (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    footPadMm: {
+      value: 5,
+      unit: "mm",
+      unconfirmed: false,
+      note: `Pads under the legs ("\u041F\u043E\u0434\u043F\u044F\u0442\u043D\u0438\u043A") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    modestyLayer1Mm: {
+      value: 466,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Modesty layer 1 (outermost) height (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    modestyLayer2Mm: {
+      value: 316,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Modesty layer 2 height (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    modestyLayer3Mm: {
+      value: 166,
+      unit: "mm",
+      unconfirmed: false,
+      note: "Modesty layer 3 (innermost) height (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
+    },
+    edgeBandThinId: {
+      value: "pvc_0_4_19",
+      unconfirmed: false,
+      note: `0.4 mm x 19 ("\u041A\u0440\u043E\u043C\u043A\u0430 19,04") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    }
+  },
+  constructionRules: [
+    {
+      id: "lester-desk",
+      unconfirmed: false,
+      note: `D-26 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right, "stol 1500"): the work top is two full sheets (16 + 16 mm), banded once over both with PVC 1 x 35 mm; each LDSP leg is two boards (32 mm), 5 mm in from the ends, front and back, on 5 mm pads, the band over both on the inner board; the modesty panel is three stepped layers (466 / 316 / 166 mm) hanging under the top, 35 mm from the back edge. Replaces desk-worktop-frame (0.3.0).`
+    },
+    {
+      id: "desk-ldsp-legs",
+      unconfirmed: true,
+      note: "Work top on two LDSP side legs (full top width, flush ends) with a modesty panel between them at the back."
+    },
+    {
+      id: "desk-metal-frame",
+      unconfirmed: true,
+      note: "Lift desk: purchased electric height-adjustable steel frame: per side a foot bar, a telescopic column and a top arm; one cross beam. Drawn as boxes, not cut from board."
+    }
+  ]
+};
+
 // ../../packages/engine/src/desk.ts
 var DESK_GENERATOR = "desk-v1";
 function n(template, name) {
@@ -73625,6 +73931,8 @@ function lesterLegs(template, W, D, t, under, corpus) {
   const x0 = inset + 2 * t;
   const width = W - 2 * x0;
   const back = n(template, "modestyBackInsetMm");
+  const front = template.constructionRules.some((r) => r.id === "desk-modesty-front");
+  const layers = 3;
   [
     n(template, "modestyLayer1Mm"),
     n(template, "modestyLayer2Mm"),
@@ -73638,7 +73946,11 @@ function lesterLegs(template, W, D, t, under, corpus) {
         widthMm: h,
         thicknessMm: t,
         material: corpus,
-        position: [W / 2, under - h / 2, back + i * t + t / 2],
+        position: [
+          W / 2,
+          under - h / 2,
+          front ? D - back - (layers - 1 - i) * t - t / 2 : back + i * t + t / 2
+        ],
         rotation: ROT_FRONT,
         banding: "front",
         band: thin,
@@ -74375,7 +74687,8 @@ var PRODUCT_ARCHIVE = {
     "0.1.0": desk_v1_default,
     "0.2.0": desk_v2_default,
     "0.3.0": desk_v3_default,
-    "0.4.0": desk_v4_default
+    "0.4.0": desk_v4_default,
+    "0.5.0": desk_v5_default
   }
 };
 var TEMPLATE_CATALOG = {
@@ -75196,6 +75509,7 @@ var PARAM_USAGE = {
   doorMaterial: "door",
   topMaterial: "top"
 };
+var fitsUsage = (m, usage) => m.usage.includes(usage) || usage === "top" && m.usage.includes("corpus");
 var BRAND_PARAM = {
   hinge: "hingeBrand",
   slide: "slideBrand"
@@ -75236,7 +75550,7 @@ function applyCatalogExtension(ext) {
       if (!usage && !kind) continue;
       if (!baseOptions.has(def)) baseOptions.set(def, def.options.slice());
       const own = baseOptions.get(def);
-      const extra = usage ? ext.materials.filter((m) => m.usage.includes(usage) && (def.materialKinds ?? []).includes(m.kind)).map((m) => m.id) : ext.hardware.filter((h) => h.kind === kind).map((h) => h.brandKey);
+      const extra = usage ? ext.materials.filter((m) => fitsUsage(m, usage) && (def.materialKinds ?? []).includes(m.kind)).map((m) => m.id) : ext.hardware.filter((h) => h.kind === kind).map((h) => h.brandKey);
       def.options = [
         ...own,
         ...extra.filter((x) => !own.includes(x))

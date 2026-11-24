@@ -71,7 +71,8 @@ describe('D-20 catalog extension (materials / hardware added on the admin page)'
     );
     expect(opts(wardrobeTemplate, 'corpusMaterial')).not.toContain('x_lmdf_2');
     expect(opts(pedestalTemplate, 'doorMaterial')).toContain('x_lmdf_2');
-    expect(opts(deskTemplate, 'topMaterial')).not.toContain('x_ldsp_1');
+    // D-36: a carcass board also fits the desk top (a 16 mm LDSP, doubled)
+    expect(opts(deskTemplate, 'topMaterial')).toContain('x_ldsp_1');
     // the pedestal carcass takes chipboard only: an MDF board never becomes its carcass option
     expect(opts(pedestalTemplate, 'corpusMaterial')).toContain('x_ldsp_1');
     // idempotent: applying again adds nothing twice; the empty extension restores the templates

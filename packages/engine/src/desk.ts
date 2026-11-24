@@ -273,6 +273,9 @@ function lesterLegs(
   const x0 = inset + 2 * t;
   const width = W - 2 * x0;
   const back = n(template, 'modestyBackInsetMm');
+  // D-36 (template 0.5.0+): as in Bazis - on the front side, the shortest layer outermost
+  const front = template.constructionRules.some((r) => r.id === 'desk-modesty-front');
+  const layers = 3;
   [
     n(template, 'modestyLayer1Mm'),
     n(template, 'modestyLayer2Mm'),
@@ -286,7 +289,11 @@ function lesterLegs(
         widthMm: h,
         thicknessMm: t,
         material: corpus,
-        position: [W / 2, under - h / 2, back + i * t + t / 2],
+        position: [
+          W / 2,
+          under - h / 2,
+          front ? D - back - (layers - 1 - i) * t - t / 2 : back + i * t + t / 2,
+        ],
         rotation: ROT_FRONT,
         banding: 'front',
         band: thin,

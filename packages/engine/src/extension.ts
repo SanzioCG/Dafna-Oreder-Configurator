@@ -90,6 +90,12 @@ const PARAM_USAGE: Record<string, MaterialUsage> = {
   doorMaterial: 'door',
   topMaterial: 'top',
 };
+/**
+ * D-36: a board added for carcasses also fits a desk top (Dafna's desk top is a 16 mm LDSP
+ * doubled, D-22 / D-26), so the desk offers the manager's boards, not the demo decors.
+ */
+const fitsUsage = (m: CustomMaterial, usage: MaterialUsage) =>
+  m.usage.includes(usage) || (usage === 'top' && m.usage.includes('corpus'));
 const BRAND_PARAM: Record<CustomHardware['kind'], string> = {
   hinge: 'hingeBrand',
   slide: 'slideBrand',
@@ -142,7 +148,7 @@ export function applyCatalogExtension(ext: CatalogExtension): void {
       const extra = usage
         ? ext.materials
             // the parameter's own kind rule stays (e.g. no MDF carcass on the pedestal)
-            .filter((m) => m.usage.includes(usage) && (def.materialKinds ?? []).includes(m.kind))
+            .filter((m) => fitsUsage(m, usage) && (def.materialKinds ?? []).includes(m.kind))
             .map((m) => m.id)
         : ext.hardware.filter((h) => h.kind === kind).map((h) => h.brandKey);
       (def as { options: ParamValue[] }).options = [

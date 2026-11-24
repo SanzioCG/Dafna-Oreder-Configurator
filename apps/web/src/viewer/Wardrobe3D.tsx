@@ -110,6 +110,82 @@ function DoorLeaf({
   );
 }
 
+// D-36: a twin-wheel castor (like a "Kelly PL" plate castor) and a round foot ("Bingo") drawn
+// inside the box the engine gives them - only the look; the engine keeps the plain box
+const zincMaterial = new MeshStandardMaterial({ color: '#c3c7cc', metalness: 0.8, roughness: 0.3 });
+const wheelMaterial = new MeshStandardMaterial({
+  color: '#1d1f22',
+  metalness: 0.1,
+  roughness: 0.55,
+});
+const hoodMaterial = new MeshStandardMaterial({
+  color: '#2a2d31',
+  metalness: 0.15,
+  roughness: 0.4,
+});
+
+function Castor({ panel }: { panel: Panel }) {
+  const [x, y, z] = panel.position;
+  const size = panel.lengthMm; // plan size (x = z)
+  const h = panel.thicknessMm; // its height
+  const plate = Math.min(3, h * 0.06);
+  const stem = Math.min(5, h * 0.1);
+  const r = (h - plate - stem) / 2; // wheel radius: the wheels stand on the floor
+  const wheelW = size * 0.3;
+  const gap = size * 0.14;
+  const offset = size * 0.12; // the wheels trail the swivel axis
+  const top = y + h / 2;
+  const axleY = y - h / 2 + r;
+  return (
+    <group>
+      <mesh position={[x, top - plate / 2, z]} material={zincMaterial} castShadow>
+        <boxGeometry args={[size, plate, size]} />
+      </mesh>
+      <mesh position={[x, top - plate - stem / 2, z]} material={zincMaterial}>
+        <cylinderGeometry args={[size * 0.18, size * 0.18, stem, 20]} />
+      </mesh>
+      {[-1, 1].map((s) => (
+        <mesh
+          key={s}
+          position={[x + s * (gap / 2 + wheelW / 2), axleY, z + offset]}
+          rotation={[0, 0, Math.PI / 2]}
+          material={wheelMaterial}
+          castShadow
+        >
+          <cylinderGeometry args={[r, r, wheelW, 28]} />
+        </mesh>
+      ))}
+      {/* the hood over the wheels (half a ring between and over them) */}
+      <mesh
+        position={[x, axleY, z + offset]}
+        rotation={[0, 0, Math.PI / 2]}
+        material={hoodMaterial}
+        castShadow
+      >
+        <cylinderGeometry
+          args={[r * 1.08, r * 1.08, gap + wheelW * 0.6, 28, 1, false, 0, Math.PI]}
+        />
+      </mesh>
+      <mesh
+        position={[x, axleY, z + offset]}
+        rotation={[0, 0, Math.PI / 2]}
+        material={zincMaterial}
+      >
+        <cylinderGeometry args={[r * 0.22, r * 0.22, gap + 2 * wheelW + 1, 12]} />
+      </mesh>
+    </group>
+  );
+}
+
+function Foot({ panel }: { panel: Panel }) {
+  const r = Math.min(panel.lengthMm, panel.widthMm) / 2;
+  return (
+    <mesh position={panel.position} material={wheelMaterial} castShadow>
+      <cylinderGeometry args={[r * 0.85, r, panel.thicknessMm, 24]} />
+    </mesh>
+  );
+}
+
 /** Hanging rail: a metal cylinder along X. */
 function RailMesh({ rail }: { rail: Rail }) {
   return (
@@ -400,6 +476,8 @@ export function Wardrobe3D({
         if (inDrawer.has(p.id)) return null;
         // Re-mount on size/material change so geometry and edges are rebuilt together.
         const key = `${p.id}:${p.lengthMm}:${p.widthMm}:${p.thicknessMm}:${p.material}`;
+        if (p.role === 'frame' && p.id.startsWith('castor-')) return <Castor key={key} panel={p} />;
+        if (p.role === 'frame' && p.id.startsWith('foot-')) return <Foot key={key} panel={p} />;
         return p.role === 'door' ? (
           <DoorLeaf
             key={key}
