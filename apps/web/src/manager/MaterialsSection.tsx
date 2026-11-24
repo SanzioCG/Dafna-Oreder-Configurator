@@ -1,4 +1,5 @@
 import { allMaterials, type Material, type MaterialTexture, type PriceList } from '@dafna/engine';
+import { X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { translate } from '../i18n/I18n';
 import { Button } from '../ui/Button';
@@ -158,6 +159,8 @@ export function MaterialsSection({
     setOpen('new-0');
   };
 
+  const openRow = open === null ? undefined : shown.find((r) => r.key === open);
+
   return (
     <section className="mgr-section" data-testid="mgr-materials">
       <header className="mgr-section-head">
@@ -288,38 +291,73 @@ export function MaterialsSection({
                     )}
                   </td>
                 </tr>,
-                isOpen && (
-                  <tr key={`${r.key}-card`} className="mgr-card-row">
-                    <td colSpan={9}>
-                      <MaterialCard
-                        row={r}
-                        draft={
-                          r.draftIndex !== undefined ? draft.materials[r.draftIndex] : undefined
-                        }
-                        setDraft={(patch) =>
-                          r.draftIndex !== undefined && setM(r.draftIndex, patch)
-                        }
-                        sheet={r.id ? sheet(r.id) : null}
-                        putSheet={(patch) => r.id && putSheet(r.id, patch)}
-                        erp={r.id ? (list.erpCodes?.[r.id] ?? '') : ''}
-                        putErp={(v) => r.id && putErp(r.id, v)}
-                        texture={r.id ? draft.textures?.[r.id] : undefined}
-                        putTexture={(t) => r.id && putTexture(r.id, t)}
-                        uploadTexture={uploadTexture}
-                        onDrop={
-                          r.draftIndex !== undefined && !r.id
-                            ? () => dropNew(r.draftIndex!)
-                            : undefined
-                        }
-                      />
-                    </td>
-                  </tr>
-                ),
               ];
             })}
           </tbody>
         </table>
       </div>
+      {/* D-42: the open material on the right (Figma "Materiallar — tahrirlash (drawer)") */}
+      {openRow && (
+        <>
+          <div className="mgr-drawer-backdrop" onClick={() => setOpen(null)} aria-hidden="true" />
+          <aside className="mgr-drawer" role="dialog" aria-label={openRow.name || 'Yangi material'}>
+            <header className="mgr-drawer-head">
+              <div>
+                <h2>{openRow.name || 'Yangi material'}</h2>
+                <small>
+                  {[
+                    openRow.brand,
+                    openRow.code,
+                    openRow.id && list.erpCodes?.[openRow.id]
+                      ? `1C: ${list.erpCodes[openRow.id]}`
+                      : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </small>
+              </div>
+              <button
+                type="button"
+                className="mgr-close"
+                onClick={() => setOpen(null)}
+                aria-label="Yopish"
+                data-testid="mgr-drawer-close"
+              >
+                <X className="mgr-icon" aria-hidden />
+              </button>
+            </header>
+            <div className="mgr-drawer-body">
+              <MaterialCard
+                row={openRow}
+                draft={
+                  openRow.draftIndex !== undefined ? draft.materials[openRow.draftIndex] : undefined
+                }
+                setDraft={(patch) =>
+                  openRow.draftIndex !== undefined && setM(openRow.draftIndex, patch)
+                }
+                sheet={openRow.id ? sheet(openRow.id) : null}
+                putSheet={(patch) => openRow.id && putSheet(openRow.id, patch)}
+                erp={openRow.id ? (list.erpCodes?.[openRow.id] ?? '') : ''}
+                putErp={(v) => openRow.id && putErp(openRow.id, v)}
+                texture={openRow.id ? draft.textures?.[openRow.id] : undefined}
+                putTexture={(t) => openRow.id && putTexture(openRow.id, t)}
+                uploadTexture={uploadTexture}
+                onDrop={
+                  openRow.draftIndex !== undefined && !openRow.id
+                    ? () => dropNew(openRow.draftIndex!)
+                    : undefined
+                }
+              />
+            </div>
+            <footer className="mgr-drawer-foot">
+              <p className="mgr-note">«Saqlash» bosilganda saytga chiqadi</p>
+              <Button variant="primary" onClick={() => setOpen(null)} data-testid="mgr-drawer-done">
+                Tayyor
+              </Button>
+            </footer>
+          </aside>
+        </>
+      )}
     </section>
   );
 }

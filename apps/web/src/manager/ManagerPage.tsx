@@ -6,7 +6,21 @@ import {
 } from '@dafna/engine';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { authError, getMe, signIn, signOut, type StaffUser } from '../auth/staffSession';
+import {
+  Database,
+  Layers,
+  Lock,
+  LogOut,
+  Percent,
+  RefreshCw,
+  Scissors,
+  Users,
+  Wrench,
+  type LucideIcon,
+} from 'lucide-react';
+import { useTheme } from '../theme/ThemeProvider';
 import { Button } from '../ui/Button';
+import './admin.css';
 import { HardwareSection } from './HardwareSection';
 import { MaterialsSection } from './MaterialsSection';
 import { ProfitSection } from './ProfitSection';
@@ -34,20 +48,53 @@ export type { CatalogDraft } from './model';
  * An internal page for Dafna's office: Uzbek only.
  */
 type Section = 'erp' | 'materials' | 'hardware' | 'services' | 'profit' | 'staff';
-const SECTIONS: { id: Section; label: string; hint: string }[] = [
-  { id: 'erp', label: '1C katalogi', hint: 'Saytda nima chiqadi' },
-  { id: 'materials', label: 'Materiallar', hint: 'Plitalar, kromka' },
-  { id: 'hardware', label: 'Furnitura', hint: "Petlya, yo'naltiruvchi…" },
-  { id: 'services', label: 'Xizmatlar', hint: 'm², metr, dona' },
-  { id: 'profit', label: 'Foyda va narx', hint: 'Umumiy %' },
+interface NavItem {
+  id: Section;
+  label: string;
+  icon: LucideIcon;
+  /** D-38: the admin only */
+  adminOnly?: boolean;
+}
+/** D-42: the admin panel's menu (Figma "Admin"): catalogue, then settings */
+const NAV: { group: string; items: NavItem[] }[] = [
+  {
+    group: 'Katalog',
+    items: [
+      { id: 'erp', label: '1C katalogi', icon: Database },
+      { id: 'materials', label: 'Materiallar', icon: Layers },
+      { id: 'hardware', label: 'Furnitura', icon: Wrench },
+      { id: 'services', label: 'Xizmatlar', icon: Scissors },
+    ],
+  },
+  {
+    group: 'Sozlamalar',
+    items: [
+      { id: 'profit', label: 'Foyda va narx', icon: Percent },
+      { id: 'staff', label: 'Xodimlar', icon: Users, adminOnly: true },
+    ],
+  },
 ];
-/** D-38: the admin only */
-const STAFF_SECTION = { id: 'staff' as const, label: 'Xodimlar', hint: 'Kim kira oladi' };
+const LABEL: Record<Section, string> = Object.fromEntries(
+  NAV.flatMap((g) => g.items.map((i) => [i.id, i.label])),
+) as Record<Section, string>;
+const GROUP: Record<Section, string> = Object.fromEntries(
+  NAV.flatMap((g) => g.items.map((i) => [i.id, g.group])),
+) as Record<Section, string>;
+
+/** "Aziza Karimova" -> "AK" */
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join('');
 
 const errorText = (o: Extract<ManagerOutcome, { ok: false }>) =>
   (ERRORS[o.code] ?? ERRORS.network!) + fieldText(o.field);
 
 export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
+  const { logoUrl } = useTheme();
   const [loginName, setLoginName] = useState('');
   const [password, setPassword] = useState('');
   /** D-38: the signed-in staff member (null = the sign-in form) */
@@ -217,7 +264,8 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
     return (
       <main className="mgr-page mgr-login">
         <form className="mgr-card mgr-login-card" onSubmit={login}>
-          <h1>Dafna — xodimlar uchun</h1>
+          <img className="mgr-login-logo" src={logoUrl} alt="Dafna" draggable={false} />
+          <h1>Xodimlar uchun kirish</h1>
           <p className="mgr-note">Materiallar, furnitura, xizmatlar va narxlar</p>
           <label className="mgr-field">
             <span>Login</span>
@@ -271,49 +319,76 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
       <div className="mgr-shell">
         <aside className="mgr-side">
           <div className="mgr-brand">
-            <strong>Dafna</strong>
-            <span>boshqaruv paneli</span>
+            <img src={logoUrl} alt="Dafna" draggable={false} />
+            <span>Admin</span>
           </div>
           <nav aria-label="Bo'limlar">
-            {(user.role === 'admin' ? [...SECTIONS, STAFF_SECTION] : SECTIONS).map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                className={section === s.id ? 'mgr-nav active' : 'mgr-nav'}
-                aria-current={section === s.id ? 'page' : undefined}
-                onClick={() => setSection(s.id)}
-                data-testid={`mgr-tab-${s.id}`}
-              >
-                <span>{s.label}</span>
-                <small>{s.hint}</small>
-              </button>
+            {NAV.map((g) => (
+              <div className="mgr-nav-group" key={g.group}>
+                <p className="mgr-nav-title">{g.group}</p>
+                {g.items
+                  .filter((i) => !i.adminOnly || user.role === 'admin')
+                  .map(({ id, label, icon: Icon }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      className={section === id ? 'mgr-nav active' : 'mgr-nav'}
+                      aria-current={section === id ? 'page' : undefined}
+                      onClick={() => setSection(id)}
+                      data-testid={`mgr-tab-${id}`}
+                    >
+                      <Icon className="mgr-icon" aria-hidden />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+              </div>
             ))}
           </nav>
           <div className="mgr-user" data-testid="mgr-user">
-            <span>
-              {user.name} · {user.role === 'admin' ? 'Admin' : 'Menejer'}
-            </span>
+            <div className="mgr-user-who">
+              <span className="mgr-avatar" aria-hidden="true">
+                {initials(user.name)}
+              </span>
+              <span>
+                <strong>{user.name}</strong>
+                <small>{user.role === 'admin' ? 'Admin' : 'Menejer'}</small>
+              </span>
+            </div>
             {user.login !== 'admin' && (
-              <Button
-                variant="secondary"
+              <button
+                type="button"
+                className="mgr-nav"
                 onClick={() => setChanging(true)}
                 data-testid="mgr-change-password"
               >
-                Parolni o&apos;zgartirish
-              </Button>
+                <Lock className="mgr-icon" aria-hidden />
+                <span>Parolni o&apos;zgartirish</span>
+              </button>
             )}
-            <Button variant="secondary" onClick={() => void logout()} data-testid="mgr-logout">
-              Chiqish
-            </Button>
+            <button
+              type="button"
+              className="mgr-nav"
+              onClick={() => void logout()}
+              data-testid="mgr-logout"
+            >
+              <LogOut className="mgr-icon" aria-hidden />
+              <span>Chiqish</span>
+            </button>
           </div>
         </aside>
-        <main className="mgr-page">
+        <div className="mgr-main">
           <header className="mgr-head">
+            <nav className="mgr-breadcrumb" aria-label="Yo'l">
+              <span>{GROUP[section]}</span>
+              <span aria-hidden="true">›</span>
+              <strong>{LABEL[section]}</strong>
+            </nav>
             <p className={dirty ? 'mgr-status dirty' : 'mgr-status'} data-testid="mgr-updated">
               {status}
             </p>
             <Button
               variant="secondary"
+              icon={<RefreshCw className="mgr-icon" aria-hidden />}
               onClick={() => void pullErp()}
               disabled={busy}
               data-testid="mgr-erp-pull"
@@ -321,7 +396,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               1C narxlarini olish
             </Button>
             <Button
-              variant="success"
+              variant="primary"
               onClick={() => void save()}
               disabled={busy || (!dirty && !list.demo)}
               data-testid="mgr-save"
@@ -329,40 +404,44 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               {busy ? 'Saqlanmoqda…' : justSaved ? 'Saqlandi' : 'Saqlash'}
             </Button>
           </header>
-          {error && (
-            <p className="mgr-error" role="alert">
-              {error}
-            </p>
-          )}
-          {erpNote && (
-            <p className="mgr-note mgr-erp-note" role="status" data-testid="mgr-erp-note">
-              {erpNote}
-            </p>
-          )}
-          {section === 'materials' && (
-            <MaterialsSection
-              list={list}
-              edit={edit}
-              draft={draft}
-              setDraft={setDraft}
-              uploadTexture={(id, image) => managerUploadTexture(id, image, fetchImpl)}
-              onFromErp={() => setSection('erp')}
-            />
-          )}
-          {section === 'erp' && <ErpCatalogSection list={list} draft={draft} setDraft={setDraft} />}
-          {section === 'hardware' && (
-            <HardwareSection
-              list={list}
-              edit={edit}
-              draft={draft}
-              setDraft={setDraft}
-              uploadTexture={(id, image) => managerUploadTexture(id, image, fetchImpl)}
-            />
-          )}
-          {section === 'services' && <ServicesSection list={list} edit={edit} />}
-          {section === 'profit' && <ProfitSection list={list} edit={edit} />}
-          {section === 'staff' && user.role === 'admin' && <StaffSection fetchImpl={fetchImpl} />}
-        </main>
+          <main className="mgr-page">
+            {error && (
+              <p className="mgr-error" role="alert">
+                {error}
+              </p>
+            )}
+            {erpNote && (
+              <p className="mgr-note mgr-erp-note" role="status" data-testid="mgr-erp-note">
+                {erpNote}
+              </p>
+            )}
+            {section === 'materials' && (
+              <MaterialsSection
+                list={list}
+                edit={edit}
+                draft={draft}
+                setDraft={setDraft}
+                uploadTexture={(id, image) => managerUploadTexture(id, image, fetchImpl)}
+                onFromErp={() => setSection('erp')}
+              />
+            )}
+            {section === 'erp' && (
+              <ErpCatalogSection list={list} draft={draft} setDraft={setDraft} />
+            )}
+            {section === 'hardware' && (
+              <HardwareSection
+                list={list}
+                edit={edit}
+                draft={draft}
+                setDraft={setDraft}
+                uploadTexture={(id, image) => managerUploadTexture(id, image, fetchImpl)}
+              />
+            )}
+            {section === 'services' && <ServicesSection list={list} edit={edit} />}
+            {section === 'profit' && <ProfitSection list={list} edit={edit} />}
+            {section === 'staff' && user.role === 'admin' && <StaffSection fetchImpl={fetchImpl} />}
+          </main>
+        </div>
       </div>
     </ErpContext.Provider>
   );

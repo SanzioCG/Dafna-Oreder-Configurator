@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import {
   addStaff,
@@ -26,6 +27,8 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const [form, setForm] = useState(EMPTY);
   const [newPassword, setNewPassword] = useState<{ login: string; value: string } | null>(null);
   const [newEmail, setNewEmail] = useState<{ login: string; value: string } | null>(null);
+  /** D-42: "Yangi xodim" opens a modal */
+  const [adding, setAdding] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -64,18 +67,28 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
           fetchImpl,
         ),
       `${form.name} qo'shildi. Login va vaqtinchalik parolni unga bering — birinchi kirishda u o'z parolini qo'yadi.`,
-      () => setForm(EMPTY),
+      () => {
+        setForm(EMPTY);
+        setAdding(false);
+      },
     );
   };
 
   return (
-    <section className="mgr-card" data-testid="mgr-staff">
-      <h2>Xodimlar</h2>
-      <p className="mgr-note">
-        Boshqaruv paneliga kim kira oladi. Mijozlarga login kerak emas — sayt ularga ochiq. Xodim
-        o&apos;chirilmaydi, faqat bloklanadi. Siz bergan parol vaqtinchalik: xodim birinchi kirishda
-        o&apos;z parolini qo&apos;yadi. Email «Parolni unutdim» uchun kerak.
-      </p>
+    <section className="mgr-section" data-testid="mgr-staff">
+      <header className="mgr-section-head">
+        <div>
+          <h2>Xodimlar</h2>
+          <p className="mgr-note">
+            Boshqaruv paneliga kim kira oladi. Mijozlarga login kerak emas — sayt ularga ochiq.
+            Xodim o&apos;chirilmaydi, faqat bloklanadi. Siz bergan parol vaqtinchalik: xodim
+            birinchi kirishda o&apos;z parolini qo&apos;yadi. Email «Parolni unutdim» uchun kerak.
+          </p>
+        </div>
+        <Button variant="primary" onClick={() => setAdding(true)} data-testid="staff-new">
+          + Yangi xodim
+        </Button>
+      </header>
       {error && (
         <p className="mgr-error" role="alert">
           {error}
@@ -86,209 +99,234 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
           {note}
         </p>
       )}
-      <table className="mgr-table">
-        <thead>
-          <tr>
-            <th>Ism</th>
-            <th>Login</th>
-            <th>Email</th>
-            <th>Rol</th>
-            <th>Holati</th>
-            <th>O&apos;zgargan</th>
-            <th aria-label="Amallar" />
-          </tr>
-        </thead>
-        <tbody>
-          {rows === null ? (
+      <div className="mgr-card mgr-table-wrap">
+        <table className="mgr-table">
+          <thead>
             <tr>
-              <td colSpan={7}>Yuklanmoqda…</td>
+              <th>Ism</th>
+              <th>Login</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Holati</th>
+              <th>O&apos;zgargan</th>
+              <th aria-label="Amallar" />
             </tr>
-          ) : rows.length === 0 ? (
-            <tr>
-              <td colSpan={7}>Hali xodim qo&apos;shilmagan.</td>
-            </tr>
-          ) : (
-            rows.map((r) => (
-              <tr key={r.login} data-testid={`staff-row-${r.login}`}>
-                <td>{r.name}</td>
-                <td>{r.login}</td>
-                <td>
-                  {newEmail?.login === r.login ? (
-                    <span className="mgr-inline">
-                      <input
-                        type="email"
-                        value={newEmail.value}
-                        onChange={(e) => setNewEmail({ login: r.login, value: e.target.value })}
-                        aria-label={`${r.name}: email`}
-                      />
-                      <Button
-                        variant="primary"
-                        disabled={busy}
-                        onClick={() =>
-                          void run(
-                            () =>
-                              updateStaff(
-                                { login: r.login, email: newEmail.value.trim() },
-                                fetchImpl,
-                              ),
-                            `${r.name}: email saqlandi`,
-                            () => setNewEmail(null),
-                          )
-                        }
+          </thead>
+          <tbody>
+            {rows === null ? (
+              <tr>
+                <td colSpan={7}>Yuklanmoqda…</td>
+              </tr>
+            ) : rows.length === 0 ? (
+              <tr>
+                <td colSpan={7}>Hali xodim qo&apos;shilmagan.</td>
+              </tr>
+            ) : (
+              rows.map((r) => (
+                <tr key={r.login} data-testid={`staff-row-${r.login}`}>
+                  <td>{r.name}</td>
+                  <td>{r.login}</td>
+                  <td>
+                    {newEmail?.login === r.login ? (
+                      <span className="mgr-inline">
+                        <input
+                          type="email"
+                          value={newEmail.value}
+                          onChange={(e) => setNewEmail({ login: r.login, value: e.target.value })}
+                          aria-label={`${r.name}: email`}
+                        />
+                        <Button
+                          variant="primary"
+                          disabled={busy}
+                          onClick={() =>
+                            void run(
+                              () =>
+                                updateStaff(
+                                  { login: r.login, email: newEmail.value.trim() },
+                                  fetchImpl,
+                                ),
+                              `${r.name}: email saqlandi`,
+                              () => setNewEmail(null),
+                            )
+                          }
+                        >
+                          Saqlash
+                        </Button>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="mgr-link"
+                        onClick={() => setNewEmail({ login: r.login, value: r.email })}
+                        data-testid={`staff-email-${r.login}`}
                       >
-                        Saqlash
-                      </Button>
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="mgr-link"
-                      onClick={() => setNewEmail({ login: r.login, value: r.email })}
-                      data-testid={`staff-email-${r.login}`}
+                        {r.email || "Email qo'shish"}
+                      </button>
+                    )}
+                  </td>
+                  <td>
+                    <select
+                      value={r.role}
+                      disabled={busy}
+                      aria-label={`${r.name}: rol`}
+                      onChange={(e) =>
+                        void run(
+                          () =>
+                            updateStaff(
+                              { login: r.login, role: e.target.value as Role },
+                              fetchImpl,
+                            ),
+                          `${r.name}: rol o'zgardi`,
+                        )
+                      }
                     >
-                      {r.email || "Email qo'shish"}
-                    </button>
-                  )}
-                </td>
-                <td>
-                  <select
-                    value={r.role}
-                    disabled={busy}
-                    aria-label={`${r.name}: rol`}
-                    onChange={(e) =>
-                      void run(
-                        () =>
-                          updateStaff({ login: r.login, role: e.target.value as Role }, fetchImpl),
-                        `${r.name}: rol o'zgardi`,
-                      )
-                    }
-                  >
-                    {(Object.keys(ROLE_LABEL) as Role[]).map((k) => (
-                      <option key={k} value={k}>
-                        {ROLE_LABEL[k]}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-                <td>{!r.active ? 'Bloklangan' : r.mustChange ? 'Vaqtinchalik parol' : 'Faol'}</td>
-                <td>{r.updatedAt}</td>
-                <td className="mgr-inline">
-                  <Button
-                    variant="secondary"
-                    disabled={busy}
-                    onClick={() =>
-                      void run(
-                        () => updateStaff({ login: r.login, active: !r.active }, fetchImpl),
-                        r.active ? `${r.name} bloklandi` : `${r.name} qayta faol`,
-                      )
-                    }
-                    data-testid={`staff-toggle-${r.login}`}
-                  >
-                    {r.active ? 'Bloklash' : 'Faollashtirish'}
-                  </Button>
-                  {newPassword?.login === r.login ? (
-                    <span className="mgr-inline">
-                      <input
-                        type="password"
-                        autoComplete="new-password"
-                        placeholder="Vaqtinchalik parol (8+)"
-                        value={newPassword.value}
-                        onChange={(e) => setNewPassword({ login: r.login, value: e.target.value })}
-                        aria-label={`${r.name}: yangi parol`}
-                      />
-                      <Button
-                        variant="primary"
-                        disabled={busy || newPassword.value.length < 8}
-                        onClick={() =>
-                          void run(
-                            () =>
-                              updateStaff(
-                                { login: r.login, password: newPassword.value },
-                                fetchImpl,
-                              ),
-                            `${r.name}: vaqtinchalik parol saqlandi — kirganda o'zinikini qo'yadi`,
-                            () => setNewPassword(null),
-                          )
-                        }
-                      >
-                        Saqlash
-                      </Button>
-                    </span>
-                  ) : (
+                      {(Object.keys(ROLE_LABEL) as Role[]).map((k) => (
+                        <option key={k} value={k}>
+                          {ROLE_LABEL[k]}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>{!r.active ? 'Bloklangan' : r.mustChange ? 'Vaqtinchalik parol' : 'Faol'}</td>
+                  <td>{r.updatedAt}</td>
+                  <td className="mgr-inline">
                     <Button
                       variant="secondary"
                       disabled={busy}
-                      onClick={() => setNewPassword({ login: r.login, value: '' })}
+                      onClick={() =>
+                        void run(
+                          () => updateStaff({ login: r.login, active: !r.active }, fetchImpl),
+                          r.active ? `${r.name} bloklandi` : `${r.name} qayta faol`,
+                        )
+                      }
+                      data-testid={`staff-toggle-${r.login}`}
                     >
-                      Yangi parol
+                      {r.active ? 'Bloklash' : 'Faollashtirish'}
                     </Button>
-                  )}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+                    {newPassword?.login === r.login ? (
+                      <span className="mgr-inline">
+                        <input
+                          type="password"
+                          autoComplete="new-password"
+                          placeholder="Vaqtinchalik parol (8+)"
+                          value={newPassword.value}
+                          onChange={(e) =>
+                            setNewPassword({ login: r.login, value: e.target.value })
+                          }
+                          aria-label={`${r.name}: yangi parol`}
+                        />
+                        <Button
+                          variant="primary"
+                          disabled={busy || newPassword.value.length < 8}
+                          onClick={() =>
+                            void run(
+                              () =>
+                                updateStaff(
+                                  { login: r.login, password: newPassword.value },
+                                  fetchImpl,
+                                ),
+                              `${r.name}: vaqtinchalik parol saqlandi — kirganda o'zinikini qo'yadi`,
+                              () => setNewPassword(null),
+                            )
+                          }
+                        >
+                          Saqlash
+                        </Button>
+                      </span>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        disabled={busy}
+                        onClick={() => setNewPassword({ login: r.login, value: '' })}
+                      >
+                        Yangi parol
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
-      <form className="mgr-form" onSubmit={add} data-testid="staff-add">
-        <h3>Yangi xodim</h3>
-        <label className="mgr-field">
-          <span>Ism</span>
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            maxLength={60}
-          />
-        </label>
-        <label className="mgr-field">
-          <span>Login (lotincha)</span>
-          <input
-            value={form.login}
-            autoComplete="off"
-            onChange={(e) => setForm({ ...form, login: e.target.value })}
-            maxLength={32}
-          />
-        </label>
-        <label className="mgr-field">
-          <span>Email (parolni tiklash uchun)</span>
-          <input
-            type="email"
-            value={form.email}
-            autoComplete="off"
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            maxLength={254}
-          />
-        </label>
-        <label className="mgr-field">
-          <span>Rol</span>
-          <select
-            value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value as Role })}
+      {adding && (
+        <div className="mgr-modal" role="dialog" aria-label="Yangi xodim">
+          <form
+            className="mgr-card mgr-modal-card mgr-staff-form"
+            onSubmit={add}
+            data-testid="staff-add"
           >
-            {(Object.keys(ROLE_LABEL) as Role[]).map((k) => (
-              <option key={k} value={k}>
-                {ROLE_LABEL[k]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="mgr-field">
-          <span>Vaqtinchalik parol (kamida 8 belgi)</span>
-          <input
-            type="password"
-            autoComplete="new-password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-        </label>
-        <Button
-          variant="primary"
-          type="submit"
-          disabled={busy || !form.name.trim() || !form.login.trim() || form.password.length < 8}
-        >
-          Qo&apos;shish
-        </Button>
-      </form>
+            <header className="mgr-modal-head">
+              <h3>Yangi xodim</h3>
+              <button
+                type="button"
+                className="mgr-close"
+                onClick={() => setAdding(false)}
+                aria-label="Yopish"
+              >
+                <X className="mgr-icon" aria-hidden />
+              </button>
+            </header>
+            <label className="mgr-field">
+              <span>Ism</span>
+              <input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                maxLength={60}
+              />
+            </label>
+            <label className="mgr-field">
+              <span>Login (lotincha)</span>
+              <input
+                value={form.login}
+                autoComplete="off"
+                onChange={(e) => setForm({ ...form, login: e.target.value })}
+                maxLength={32}
+              />
+            </label>
+            <label className="mgr-field">
+              <span>Email (parolni tiklash uchun)</span>
+              <input
+                type="email"
+                value={form.email}
+                autoComplete="off"
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                maxLength={254}
+              />
+            </label>
+            <label className="mgr-field">
+              <span>Rol</span>
+              <select
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value as Role })}
+              >
+                {(Object.keys(ROLE_LABEL) as Role[]).map((k) => (
+                  <option key={k} value={k}>
+                    {ROLE_LABEL[k]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="mgr-field">
+              <span>Vaqtinchalik parol (kamida 8 belgi)</span>
+              <input
+                type="password"
+                autoComplete="new-password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+              />
+            </label>
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={busy || !form.name.trim() || !form.login.trim() || form.password.length < 8}
+            >
+              Qo&apos;shish
+            </Button>
+          </form>
+        </div>
+      )}
     </section>
   );
 }
