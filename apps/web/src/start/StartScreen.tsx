@@ -1,4 +1,4 @@
-import { PRODUCT_TEMPLATES } from '@dafna/engine';
+import { PRODUCT_TEMPLATES, generate } from '@dafna/engine';
 import { useState } from 'react';
 import { useI18n } from '../i18n/I18n';
 import type { Mode } from '../mode';
@@ -13,7 +13,6 @@ import { Button } from '../ui/Button';
 import { ArrowLeftIcon, ArrowRightIcon } from '../ui/icons';
 import { formatLength, unitSystemFor } from '../viewer/dimensions';
 import { ModelThumbnail } from './ModelThumbnail';
-import { ProductIcon } from './ProductIcon';
 
 /** D-24: card colour of each product on the first start screen */
 const PRODUCT_FILL: Record<ProductId, string> = {
@@ -66,18 +65,26 @@ export function StartScreen({
                 key={p}
                 type="button"
                 className="card product-card"
-                style={{ '--card-fill': PRODUCT_FILL[p] } as React.CSSProperties}
                 data-product={p}
                 aria-label={`${t(`product.${p}`)}: ${t('start.choose')}`}
                 onClick={() => setProduct(p)}
               >
-                <ProductIcon product={p} />
-                <span className="product-card-name">{t(`product.${p}`)}</span>
-                <span className="product-card-hint">
-                  {t(`start.productHint.${p}`)}
-                  <br />
-                  <strong>{t('start.models', { count })}</strong>
+                {/* D-43: the designer's flat illustration on the product's pastel (Figma "Product Card") */}
+                <span
+                  className="product-illus"
+                  style={{ background: PRODUCT_FILL[p] }}
+                  aria-hidden="true"
+                >
+                  <img
+                    className="product-icon"
+                    src={`/illustrations/${p}.svg`}
+                    alt=""
+                    draggable={false}
+                  />
                 </span>
+                <span className="product-card-name">{t(`product.${p}`)}</span>
+                <span className="product-card-hint">{t(`start.productHint.${p}`)}</span>
+                <strong className="product-card-count">{t('start.models', { count })}</strong>
                 <span className="btn btn-secondary btn-wide product-card-choose" aria-hidden="true">
                   {t('start.choose')}
                 </span>
@@ -106,6 +113,11 @@ export function StartScreen({
         {READY_MODELS.filter((m) => m.product === product).map((m) => {
           const params = modelParams(m);
           const name = t(m.nameKey);
+          // D-43: "100 sm · 2 qism" (the wardrobe's sections, Figma "Model Card")
+          const parts =
+            m.product === 'wardrobe'
+              ? generate(PRODUCT_TEMPLATES[m.product]!, params).sections.length
+              : 0;
           return (
             <section
               key={m.id}
@@ -120,8 +132,13 @@ export function StartScreen({
               />
               <div className="model-meta">
                 <h2>{name}</h2>
-                <span className="model-width">
-                  {formatLength(Number(params.width), units, unit)}
+                <span className="model-line">
+                  <span className="model-width">
+                    {formatLength(Number(params.width), units, unit)}
+                  </span>
+                  {parts > 0 && (
+                    <span className="model-parts">{t('c.parts', { count: parts })}</span>
+                  )}
                 </span>
               </div>
               <Button
@@ -136,7 +153,12 @@ export function StartScreen({
           );
         })}
       </div>
-      <Button variant="text" iconAfter={<ArrowRightIcon />} onClick={() => onScratch(product)}>
+      <Button
+        variant="text"
+        className="start-scratch"
+        iconAfter={<ArrowRightIcon />}
+        onClick={() => onScratch(product)}
+      >
         {t('start.scratch')}
       </Button>
     </div>

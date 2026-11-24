@@ -43,13 +43,28 @@ export function SiteHeader() {
             </button>
           ))}
         </div>
-        <IconButton
-          className="site-theme"
-          label={t('theme.dark')}
-          aria-pressed={theme === 'dark'}
-          onClick={toggleTheme}
-          icon={theme === 'dark' ? <MoonIcon /> : <SunIcon />}
-        />
+        {/* D-43: light / dark as a two-part pill (Figma "Theme Toggle") */}
+        <div className="site-theme" role="group" aria-label={t('theme.dark')}>
+          <button
+            type="button"
+            className={theme === 'light' ? 'active' : undefined}
+            aria-pressed={theme === 'light'}
+            aria-label="Light"
+            onClick={() => theme !== 'light' && toggleTheme()}
+          >
+            <SunIcon />
+          </button>
+          <button
+            type="button"
+            className={theme === 'dark' ? 'active' : undefined}
+            aria-pressed={theme === 'dark'}
+            aria-label={t('theme.dark')}
+            onClick={() => theme !== 'dark' && toggleTheme()}
+            data-testid="theme-toggle"
+          >
+            <MoonIcon />
+          </button>
+        </div>
         <div className="site-contact-wrap">
           <button
             type="button"
@@ -59,8 +74,10 @@ export function SiteHeader() {
             onClick={() => setOpen((o) => !o)}
             data-testid="site-contact"
           >
-            <Phone className="icon" aria-hidden />
-            <span>{t('site.contact')}</span>
+            <span className="site-contact-badge" aria-hidden="true">
+              <Phone className="icon" />
+            </span>
+            <span className="site-contact-label">{t('site.contact')}</span>
           </button>
           {open && (
             <>

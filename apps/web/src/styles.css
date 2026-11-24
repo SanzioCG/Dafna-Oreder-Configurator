@@ -2660,9 +2660,7 @@ p {
     padding: 0;
     justify-content: center;
   }
-  .site-contact-btn span {
-    display: none;
-  }
+
   .site-sheet-backdrop {
     background: rgb(0 0 0 / 0.4);
   }
@@ -2844,4 +2842,254 @@ p {
     right: var(--space-4);
     bottom: var(--space-3);
   }
+}
+
+/* D-43: the product cards as designed (Figma "Product Card"): a white card, the flat
+   illustration on the product's pastel, the name, hint and model count centred */
+.product-card {
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--paper);
+  text-align: center;
+}
+.product-illus {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 10.625rem;
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+.product-illus .product-icon {
+  display: block;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  -webkit-user-drag: none;
+}
+.product-card .product-card-name {
+  font-size: var(--fs-2xl);
+  letter-spacing: -0.3px;
+}
+.product-card .product-card-hint {
+  flex: none;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium, 500);
+}
+.product-card-count {
+  font-size: var(--fs-sm);
+}
+@media (max-width: 768px) {
+  .app.site .product-card {
+    text-align: left;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+    align-items: start;
+  }
+  .app.site .product-card .product-illus {
+    grid-row: 1 / span 3;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: 1rem;
+  }
+  .app.site .product-card .product-illus .product-icon {
+    width: 100%;
+    height: auto;
+  }
+  .app.site .product-card .product-card-name {
+    font-size: var(--fs-lg);
+  }
+  .app.site .product-card-count {
+    font-size: var(--fs-xs);
+  }
+}
+
+/* D-43: the header as designed (Figma "Desktop Top Nav") */
+.site-theme {
+  display: flex;
+  padding: 0.16rem;
+  border: var(--line-on-bg);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+}
+.site-theme button {
+  display: grid;
+  place-items: center;
+  width: 2.125rem;
+  height: 1.9rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.site-theme button.active {
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.site-theme button:focus-visible {
+  outline: var(--focus-line);
+  outline-offset: 1px;
+}
+.site-theme .icon {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+.site-contact-btn {
+  min-height: 2.5rem;
+  padding: 0 var(--space-3) 0 0.2rem;
+  font-size: 0.73rem;
+}
+.site-contact-badge {
+  display: grid;
+  place-items: center;
+  width: 2.08rem;
+  height: 2.08rem;
+  border-radius: var(--radius-pill);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.site-contact-badge .icon {
+  width: 1.04rem;
+  height: 1.04rem;
+}
+.site-header .lang {
+  min-width: 2.34rem;
+  min-height: 1.9rem;
+  padding: 0 var(--space-2);
+  font-size: 0.75rem;
+}
+.site-header .lang-switch {
+  padding: 0.16rem;
+}
+.site-header .lang-long {
+  display: none;
+}
+.site-header .lang-short {
+  display: inline;
+}
+.app.site[data-start='products'] .panel-body {
+  max-width: 81rem;
+  padding-top: 4rem;
+  align-items: center;
+}
+.app.site[data-start='products'] .step-intro {
+  text-align: center;
+}
+.app.site[data-start='products'] .step-intro h1 {
+  font-size: 2.25rem;
+  letter-spacing: -0.4px;
+}
+.app.site[data-start='products'] .product-grid {
+  width: 100%;
+  max-width: 78rem;
+  gap: var(--space-5);
+}
+@media (max-width: 768px) {
+  .site-contact-btn {
+    width: auto;
+    padding: 0.2rem;
+  }
+  .site-contact-label {
+    display: none;
+  }
+  .app.site[data-start='products'] .panel-body {
+    padding-top: var(--space-4);
+    align-items: stretch;
+  }
+  .app.site[data-start='products'] .step-intro {
+    text-align: left;
+  }
+  .app.site[data-start='products'] .step-intro h1 {
+    font-size: var(--fs-2xl);
+  }
+}
+.app.site[data-start='products'] .start {
+  align-items: center;
+  width: 100%;
+  gap: var(--space-6);
+}
+.app.site[data-start='products'] .step-intro .muted {
+  font-size: var(--fs-md);
+}
+@media (max-width: 768px) {
+  .app.site[data-start='products'] .start {
+    align-items: stretch;
+    gap: var(--space-4);
+  }
+}
+
+/* D-43: the model cards as designed (Figma "Model Card"): white card, the front view on a grey
+   tile, the name and "100 sm · 2 qism" centred, a dark "Tanlash"; no step pills before a model */
+.app.site[data-start] .steps {
+  display: none;
+}
+.model-parts {
+  display: none;
+}
+.app.site .model-parts {
+  display: inline;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+}
+.app.site .model-parts::before {
+  content: '· ';
+}
+.app.site .model-card {
+  align-items: stretch;
+  gap: var(--space-3);
+  background: var(--paper);
+  text-align: center;
+}
+.app.site .model-card .model-thumb {
+  width: 100%;
+  height: 8.75rem;
+  padding: var(--space-3);
+  border-radius: 1.25rem;
+  background: var(--viewport);
+}
+.app.site .model-card .model-meta {
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+.app.site .model-card .model-meta h2 {
+  font-size: var(--fs-xl);
+}
+.app.site .model-card .model-width {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+}
+.app.site .model-card .btn {
+  border: var(--line-in-card);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.app.site .start-scratch {
+  align-self: center;
+  min-height: 2.75rem;
+  padding: 0 var(--space-5);
+  border: var(--line-in-card);
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  color: var(--ink);
+}
+@media (max-width: 768px) {
+  .site-header .site-theme {
+    display: none;
+  }
+  .app.site .product-grid {
+    gap: var(--space-2);
+  }
+}
+.app.site .model-card .model-meta {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.app.site .model-line {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
 }
