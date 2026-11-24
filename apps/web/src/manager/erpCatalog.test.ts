@@ -1,6 +1,6 @@
 import { priceListDemo } from '@dafna/engine';
 import { describe, expect, it } from 'vitest';
-import { cleanName, guessFromName, somPrice } from './ErpCatalogSection';
+import { cleanName, guessFromName, quickDraft, somPrice } from './ErpCatalogSection';
 
 /** D-31: a 1C item read into a kiosk material / hardware brand */
 describe('D-31 guessFromName / cleanName / somPrice', () => {
@@ -61,5 +61,50 @@ describe('D-33 a mechanism from 1C', () => {
     expect(modelOf('Петля Master 18ММ 48 мм/MASTER SOFT CLOSE HINGE 18MM 48AX NI', 'Samet')).toBe(
       'Петля Master 18ММ 48 мм',
     );
+  });
+});
+
+describe("D-42 one-click take from 1C (the switch, Saytda ko'rsatish)", () => {
+  const row = (name: string, article = 'A1', price: number | null = 685000) => ({
+    key: article,
+    name,
+    article,
+    unit: 'шт',
+    price,
+    currency: 'сум',
+    stock: 3,
+  });
+
+  it('a board from the materials folder: name, sheet, price per sheet, all usages', () => {
+    const d = quickDraft(
+      row('ЛДСП Эггер 5,796 Дуб Барония светлый 16мм ST12'),
+      'material',
+      priceListDemo,
+      'https://x/p.webp',
+    );
+    expect(d?.type).toBe('material');
+    if (d?.type !== 'material') return;
+    expect(d.item).toMatchObject({
+      kind: 'ldsp',
+      name: 'Эггер Дуб Барония светлый 16мм ST12',
+      thicknessMm: 16,
+      group: 'wood',
+      grain: true,
+      usage: ['corpus', 'door', 'top'],
+      erpArticle: 'A1',
+      erpPrice: 685000,
+      erpSheet: { lengthMm: 2800, widthMm: 2070 },
+      erpPicture: 'https://x/p.webp',
+    });
+  });
+
+  it('a hinge / slide by its name; unknown things and boards outside materials need the form', () => {
+    const h = quickDraft(row('Петля Samet Sensomatic с доводчиком'), 'hardware', priceListDemo);
+    expect(h?.type).toBe('hardware');
+    if (h?.type === 'hardware') expect([h.item.kind, h.item.softClose]).toEqual(['hinge', true]);
+    // a name with no kind in it would otherwise become a "board"
+    expect(quickDraft(row('Стяжка Бочонок 90мм'), 'hardware', priceListDemo)).toBeNull();
+    expect(quickDraft(row('Кромка ПВХ 19/1'), 'other', priceListDemo)).toBeNull();
+    expect(quickDraft(row('ЛДСП Кроноспан 16мм', ''), 'material', priceListDemo)).toBeNull();
   });
 });

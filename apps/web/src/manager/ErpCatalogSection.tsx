@@ -1,4 +1,5 @@
 import { type PriceList } from '@dafna/engine';
+import { ChevronRight, Folder, FolderOpen, Search } from 'lucide-react';
 import { useContext, useEffect, useState, type FormEvent } from 'react';
 import { Button } from '../ui/Button';
 import {
@@ -132,13 +133,68 @@ export function somPrice(
   return Math.round(v);
 }
 
-type Tab = 'all' | KindGroup;
-const TABS: { id: Tab; label: string }[] = [
+type Tab = KindGroup;
+const GROUPS: { id: KindGroup; label: string }[] = [
   { id: 'material', label: 'Materiallar' },
   { id: 'hardware', label: 'Furnitura' },
   { id: 'other', label: 'Boshqa' },
-  { id: 'all', label: 'Hammasi' },
 ];
+
+/**
+ * D-42: a 1C item taken in one click (the switch or "Saytda ko'rsatish" for several): its kind,
+ * name, brand, thickness and sheet guessed from the 1C name, price from 1C. A board only from
+ * the materials group, a hinge / slide only when the name says so; anything else needs the form.
+ */
+export function quickDraft(
+  row: ErpRow,
+  group: KindGroup | null,
+  list: PriceList,
+  picture?: string,
+): Added | null {
+  if (!row.article) return null;
+  const g = guessFromName(row.name);
+  const board = g.kind === 'ldsp' || g.kind === 'mdf';
+  if (board && group !== 'material') return null;
+  if (!board && group === 'other') return null;
+  const price = somPrice(row, list, board ? g.sheet : undefined);
+  const erp = { erpArticle: row.article, erpPrice: price };
+  const note = `1C: ${row.name}`.slice(0, 200);
+  if (board)
+    return {
+      type: 'material',
+      item: {
+        ...NEW_MATERIAL,
+        kind: g.kind,
+        name: cleanName(row.name),
+        brand: g.brand,
+        code: '',
+        thicknessMm: g.thicknessMm,
+        group: g.group,
+        grain: g.group === 'wood',
+        usage: ['corpus', 'door', 'top'],
+        note,
+        ...erp,
+        erpSheet: g.sheet,
+        erpPicture: picture,
+      } as MaterialDraft,
+    };
+  return {
+    type: 'hardware',
+    item: {
+      ...NEW_HARDWARE,
+      kind: g.kind,
+      brand: g.brand || '—',
+      model: cleanName(row.name),
+      softClose: g.softClose,
+      note,
+      photoUrl: picture,
+      ...erp,
+    } as HardwareDraft,
+  };
+}
+
+/** D-42: a folder of the 1C tree (a group of top kinds, or a kind) */
+type Node = { id: string; name: string; kind?: ErpKind; group?: KindGroup };
 
 export function ErpCatalogSection({
   list,
@@ -150,52 +206,64 @@ export function ErpCatalogSection({
   setDraft: (d: CatalogDraft) => void;
 }) {
   const api = useContext(ErpContext);
-  /** D-32: the root kinds by group (materials first: that is what Dafna takes most) */
-  const [tab, setTab] = useState<Tab>('material');
   const groupOfKind = (k: ErpKind): KindGroup => list.erpKindGroups?.[k.key] ?? k.group ?? 'other';
-  const [path, setPath] = useState<ErpKind[]>([]);
-  const [kinds, setKinds] = useState<ErpKind[] | null>(null);
+  /** the tree: kinds under each loaded kind ('' = the top), which folders are open */
+  const [children, setChildren] = useState<Record<string, ErpKind[]>>({});
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(['g:material']));
+  const [loadingKind, setLoadingKind] = useState<string | null>(null);
+  /** the kind whose items are shown (or a search) */
+  const [selected, setSelected] = useState<{
+    kind: ErpKind | null;
+    group: Tab | null;
+    label: string;
+  } | null>(null);
   const [rows, setRows] = useState<ErpRow[] | null>(null);
   const [total, setTotal] = useState(0);
   const [skip, setSkip] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [adding, setAdding] = useState<ErpRow | null>(null);
+  const [checked, setChecked] = useState<Set<string>>(() => new Set());
 
-  const leaf = path.at(-1);
   // D-34: eman.uz pictures of the rows shown
   const pics = usePictures((rows ?? []).map((r) => r.article));
 
+  /** loads the kinds under a kind ('' = the top) once */
+  const loadKinds = async (parent: string) => {
+    if (!api || children[parent]) return;
+    setLoadingKind(parent);
+    const r = await api.kinds(parent);
+    setLoadingKind(null);
+    if (!r.ok) return setError(ERP_ERRORS[r.code] ?? ERP_ERRORS.network!);
+    setChildren((c) => ({ ...c, [parent]: r.value }));
+  };
+
   useEffect(() => {
-    if (!api) return;
-    // a search result has no kind to load
-    if (leaf && !leaf.folder && !leaf.key) return;
+    void loadKinds('');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [api]);
+
+  // the items of the selected kind (a search fills the rows itself)
+  useEffect(() => {
+    const kind = selected?.kind;
+    if (!api || !kind) return;
     let live = true;
     void (async () => {
       setBusy(true);
       setError(null);
-      if (!leaf || leaf.folder) {
-        const r = await api.kinds(leaf?.key ?? '');
-        if (!live) return;
-        setBusy(false);
-        if (!r.ok) return setError(ERP_ERRORS[r.code] ?? ERP_ERRORS.network!);
-        setKinds(r.value);
-        setRows(null);
-      } else {
-        const r = await api.items(leaf.key, skip);
-        if (!live) return;
-        setBusy(false);
-        if (!r.ok) return setError(ERP_ERRORS[r.code] ?? ERP_ERRORS.network!);
-        setRows(r.value.items);
-        setTotal(r.value.total);
-      }
+      const r = await api.items(kind.key, skip);
+      if (!live) return;
+      setBusy(false);
+      if (!r.ok) return setError(ERP_ERRORS[r.code] ?? ERP_ERRORS.network!);
+      setRows(r.value.items);
+      setTotal(r.value.total);
     })();
     return () => {
       live = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [api, leaf?.key, skip]);
+  }, [api, selected?.kind, skip]);
 
   if (!api)
     return (
@@ -209,9 +277,11 @@ export function ErpCatalogSection({
     if (query.trim().length < 2) return;
     setBusy(true);
     setError(null);
+    setChecked(new Set());
+    const group = selected?.group ?? null;
     const r = await api.search(
       query.trim(),
-      tab === 'material' || tab === 'hardware' ? { group: tab } : undefined,
+      group === 'material' || group === 'hardware' ? { group } : undefined,
     );
     if (!r.ok) {
       setBusy(false);
@@ -219,7 +289,8 @@ export function ErpCatalogSection({
     }
     const prices = await api.prices(r.value.map((i) => i.article).filter(Boolean));
     setBusy(false);
-    setPath([{ key: '', name: `Qidiruv: «${query.trim()}»`, folder: false }]);
+    setSelected({ kind: null, group, label: `Qidiruv: «${query.trim()}»` });
+    setSkip(0);
     setRows(
       r.value.map((i) => {
         const p = prices.ok ? prices.value[i.article] : undefined;
@@ -246,18 +317,134 @@ export function ErpCatalogSection({
     return id ? { type: 'builtin' as const, index: -1, visible: true } : null;
   };
 
-  const setVisible = (l: NonNullable<ReturnType<typeof linkOf>>, visible: boolean) => {
-    if (l.type === 'material')
-      setDraft({
-        ...draft,
-        materials: draft.materials.map((m, i) => (i === l.index ? { ...m, visible } : m)),
-      });
-    if (l.type === 'hardware')
-      setDraft({
-        ...draft,
-        hardware: draft.hardware.map((h, i) => (i === l.index ? { ...h, visible } : h)),
-      });
+  /** shows / hides linked items, and takes the unlinked ones in one click (quickDraft) */
+  const showOnSite = async (targets: ErpRow[], visible: boolean) => {
+    let next = draft;
+    const skipped: string[] = [];
+    let taken = 0;
+    setBusy(true);
+    for (const r of targets) {
+      const l = linkOf(r.article);
+      if (l?.type === 'material')
+        next = {
+          ...next,
+          materials: next.materials.map((m, i) => (i === l.index ? { ...m, visible } : m)),
+        };
+      else if (l?.type === 'hardware')
+        next = {
+          ...next,
+          hardware: next.hardware.map((h, i) => (i === l.index ? { ...h, visible } : h)),
+        };
+      else if (!l && visible) {
+        // D-34: the eman.uz picture goes into our photo store first
+        let pic: string | undefined;
+        if (pics[r.article]) {
+          const c = await api.copyPicture(r.article);
+          if (c.ok) pic = c.value;
+        }
+        const d = quickDraft(r, selected?.group ?? null, list, pic);
+        if (!d) skipped.push(r.name);
+        else if (d.type === 'material') next = { ...next, materials: [...next.materials, d.item] };
+        else next = { ...next, hardware: [...next.hardware, d.item] };
+        if (d) taken++;
+      }
+    }
+    setBusy(false);
+    setDraft(next);
+    setChecked(new Set());
+    const parts = [];
+    if (taken) parts.push(`${taken} ta mahsulot saytga qo'shildi`);
+    if (skipped.length)
+      parts.push(
+        `${skipped.length} tasini avtomatik qo'shib bo'lmadi (turini aniqlab bo'lmadi) — ularni bittalab «Saytga qo'shish» formasi bilan qo'shing`,
+      );
+    setNote(parts.length ? `${parts.join('; ')}. «Saqlash»ni bosing.` : null);
   };
+
+  /** one row's switch: a known item flips, a new one opens the form */
+  const toggle = (r: ErpRow) => {
+    const l = linkOf(r.article);
+    if (!l) return setAdding(r);
+    if (l.type !== 'builtin') void showOnSite([r], !l.visible);
+  };
+
+  const nodeKids = (n: Node): Node[] => {
+    if (n.group)
+      return (children[''] ?? [])
+        .filter((k) => groupOfKind(k) === n.group)
+        .map((k) => ({ id: k.key, name: k.name, kind: k }));
+    if (n.kind?.folder)
+      return (children[n.kind.key] ?? []).map((k) => ({ id: k.key, name: k.name, kind: k }));
+    return [];
+  };
+  const groupOfNode = (path: Node[]) => path.find((p) => p.group)?.group ?? null;
+
+  const open = (n: Node, path: Node[]) => {
+    const isOpen = expanded.has(n.id);
+    if (n.group || n.kind?.folder) {
+      const next = new Set(expanded);
+      if (isOpen) next.delete(n.id);
+      else next.add(n.id);
+      setExpanded(next);
+      if (n.kind?.folder && !isOpen) void loadKinds(n.kind.key);
+      if (n.group) setSelected({ kind: null, group: n.group, label: n.name });
+      return;
+    }
+    if (n.kind) {
+      setSelected({ kind: n.kind, group: groupOfNode(path), label: n.name });
+      setSkip(0);
+      setChecked(new Set());
+      setRows(null);
+    }
+  };
+
+  const renderNode = (n: Node, path: Node[], depth: number) => {
+    const isFolder = !!(n.group || n.kind?.folder);
+    const isOpen = expanded.has(n.id);
+    const active = selected?.kind ? selected.kind.key === n.kind?.key : false;
+    const kids = isOpen ? nodeKids(n) : [];
+    return (
+      <li key={n.id}>
+        <button
+          type="button"
+          className={active ? 'mgr-tree-item active' : 'mgr-tree-item'}
+          style={{ paddingLeft: 8 + depth * 16 }}
+          onClick={() => open(n, [...path, n])}
+          aria-expanded={isFolder ? isOpen : undefined}
+          data-testid={`erp-kind-${n.name}`}
+        >
+          {isFolder ? (
+            <ChevronRight
+              className={isOpen ? 'mgr-icon mgr-chev open' : 'mgr-icon mgr-chev'}
+              aria-hidden
+            />
+          ) : (
+            <span className="mgr-chev-space" aria-hidden="true" />
+          )}
+          {isFolder && isOpen ? (
+            <FolderOpen className="mgr-icon" aria-hidden />
+          ) : (
+            <Folder className="mgr-icon" aria-hidden />
+          )}
+          <span className="mgr-tree-name">{n.name}</span>
+        </button>
+        {isOpen && (
+          <ul>
+            {n.kind && loadingKind === n.kind.key && (
+              <li className="mgr-tree-note" style={{ paddingLeft: 32 + depth * 16 }}>
+                Yuklanmoqda…
+              </li>
+            )}
+            {kids.map((k) => renderNode(k, [...path, n], depth + 1))}
+          </ul>
+        )}
+      </li>
+    );
+  };
+
+  const shownRows = rows ?? [];
+  const allChecked = shownRows.length > 0 && shownRows.every((r) => checked.has(r.article));
+  const checkedRows = shownRows.filter((r) => checked.has(r.article));
 
   return (
     <section className="mgr-section" data-testid="mgr-erp-catalog">
@@ -265,187 +452,209 @@ export function ErpCatalogSection({
         <div>
           <h2>1C katalogi</h2>
           <p className="mgr-note">
-            EMAN 1C dagi hamma mahsulot (narxi va qoldig&apos;i bilan). Saytda chiqishi kerak
-            bo&apos;lgan plita, petlya yoki yo&apos;naltiruvchini «Saytga qo&apos;shish» bilan
-            belgilang — u 1C artikuli va narxi bilan qo&apos;shiladi. «Saqlash»ni bosishni unutmang.
+            EMAN 1C dagi hamma mahsulot (narxi va qoldig&apos;i bilan). Saytda faqat «Saytda
+            ko&apos;rinadi» yoqilganlari chiqadi. «Saqlash»ni bosishni unutmang.
           </p>
         </div>
       </header>
 
-      {/* D-32: materials / hardware / other, as the manager grouped the 1C kinds */}
-      <div className="segmented mgr-tabs" role="tablist" aria-label="1C guruhlari">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            className={tab === t.id ? 'segment active' : 'segment'}
-            onClick={() => {
-              setTab(t.id);
-              setPath([]);
-              setSkip(0);
-            }}
-            data-testid={`erp-tab-${t.id}`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <div className="mgr-erp-layout">
+        <nav className="mgr-card mgr-tree" aria-label="1C papkalari" data-testid="erp-kinds">
+          <p className="mgr-tree-title">Papkalar</p>
+          {!children[''] && loadingKind === '' && <p className="mgr-tree-note">Yuklanmoqda…</p>}
+          <ul>
+            {GROUPS.map((g) => renderNode({ id: `g:${g.id}`, name: g.label, group: g.id }, [], 0))}
+          </ul>
+        </nav>
 
-      <form className="mgr-toolbar" onSubmit={search}>
-        <input
-          type="search"
-          placeholder="1C dan qidirish: nomi yoki artikul"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          data-testid="erp-cat-q"
-        />
-        <Button variant="secondary" type="submit" disabled={busy || query.trim().length < 2}>
-          Qidirish
-        </Button>
-      </form>
-
-      <nav className="mgr-crumbs" aria-label="1C turlari">
-        <button
-          type="button"
-          onClick={() => {
-            setPath([]);
-            setSkip(0);
-          }}
-        >
-          Hammasi
-        </button>
-        {path.map((k, i) => (
-          <button
-            key={`${k.key}-${i}`}
-            type="button"
-            onClick={() => {
-              setPath(path.slice(0, i + 1));
-              setSkip(0);
-            }}
-          >
-            › {k.name}
-          </button>
-        ))}
-      </nav>
-
-      {error && (
-        <p className="mgr-error" role="alert">
-          {error}
-        </p>
-      )}
-      {busy && <p className="mgr-note">Yuklanmoqda…</p>}
-
-      {!busy && kinds && (!leaf || leaf.folder) && (
-        <div className="mgr-kinds" data-testid="erp-kinds">
-          {kinds
-            .filter((k) => path.length > 0 || tab === 'all' || groupOfKind(k) === tab)
-            .map((k) => (
-              <div key={k.key} className="mgr-kind-wrap">
-                <button
-                  type="button"
-                  className="mgr-kind"
-                  onClick={() => {
-                    setPath([...path, k]);
-                    setSkip(0);
-                  }}
-                  data-testid={`erp-kind-${k.name}`}
-                >
-                  {k.folder ? '📁 ' : ''}
-                  {k.name}
-                </button>
-              </div>
-            ))}
-          {kinds.length === 0 && <p className="mgr-note">Bu yerda bo&apos;lim yo&apos;q.</p>}
-        </div>
-      )}
-
-      {!busy && rows && leaf && !leaf.folder && (
-        <>
-          <div className="mgr-card mgr-table-wrap">
-            <table className="mgr-table">
-              <thead>
-                <tr>
-                  <th aria-label="Rasm" />
-                  <th>1C dagi nomi</th>
-                  <th>Artikul</th>
-                  <th>Narxi</th>
-                  <th>Qoldiq</th>
-                  <th>Saytda</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r) => {
-                  const l = linkOf(r.article);
-                  return (
-                    <tr key={r.key} data-testid={`erp-row-${r.article}`}>
-                      <td>
-                        <ErpThumb src={pics[r.article]} alt={r.name} />
-                      </td>
-                      <td>
-                        <span className="mgr-name">
-                          {r.name}
-                          <small>{r.unit}</small>
-                        </span>
-                      </td>
-                      <td>{r.article || '—'}</td>
-                      <td>{r.price !== null ? `${money(r.price)} ${r.currency ?? ''}` : '—'}</td>
-                      <td>{r.stock ?? '—'}</td>
-                      <td>
-                        {l && l.visible ? (
-                          <span className="mgr-inline">
-                            <b className="mgr-yes">Saytda ko&apos;rinadi</b>
-                            {l.type !== 'builtin' && (
-                              <Button variant="secondary" onClick={() => setVisible(l, false)}>
-                                Saytdan olish
-                              </Button>
-                            )}
-                          </span>
-                        ) : l ? (
-                          <Button variant="secondary" onClick={() => setVisible(l, true)}>
-                            Qaytarish
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="primary"
-                            disabled={!r.article}
-                            onClick={() => setAdding(r)}
-                            data-testid={`erp-add-${r.article}`}
-                          >
-                            Saytga qo&apos;shish
-                          </Button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {leaf.key && total > PAGE && (
-            <div className="mgr-toolbar">
-              <Button
-                variant="secondary"
-                disabled={skip === 0}
-                onClick={() => setSkip(Math.max(0, skip - PAGE))}
-              >
-                ‹ Oldingi
-              </Button>
-              <span className="mgr-count">
-                {skip + 1}–{Math.min(skip + PAGE, total)} / {total}
+        <div className="mgr-erp-main">
+          <form className="mgr-toolbar" onSubmit={search}>
+            <span className="mgr-search">
+              <Search className="mgr-icon" aria-hidden />
+              <input
+                type="search"
+                placeholder="Qidirish: nomi yoki artikul"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                data-testid="erp-cat-q"
+              />
+            </span>
+            <Button variant="secondary" type="submit" disabled={busy || query.trim().length < 2}>
+              Qidirish
+            </Button>
+            {selected && rows && (
+              <span className="mgr-count mgr-push">
+                {selected.label}: {total} ta
               </span>
+            )}
+          </form>
+
+          {checkedRows.length > 0 && (
+            <div className="mgr-bulk" data-testid="erp-bulk">
+              <strong>{checkedRows.length} ta tanlandi</strong>
               <Button
                 variant="secondary"
-                disabled={skip + PAGE >= total}
-                onClick={() => setSkip(skip + PAGE)}
+                disabled={busy}
+                onClick={() => void showOnSite(checkedRows, true)}
+                data-testid="erp-bulk-show"
               >
-                Keyingi ›
+                Saytda ko&apos;rsatish
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={busy}
+                onClick={() => void showOnSite(checkedRows, false)}
+              >
+                Yashirish
+              </Button>
+              <Button variant="secondary" onClick={() => setChecked(new Set())}>
+                Bekor qilish
               </Button>
             </div>
           )}
-        </>
-      )}
+
+          {error && (
+            <p className="mgr-error" role="alert">
+              {error}
+            </p>
+          )}
+          {note && (
+            <p className="mgr-note mgr-erp-note" role="status" data-testid="erp-note">
+              {note}
+            </p>
+          )}
+
+          <div className="mgr-card mgr-table-wrap">
+            {busy && !rows ? (
+              <p className="mgr-empty">Yuklanmoqda…</p>
+            ) : !rows ? (
+              <p className="mgr-empty">Chapdagi papkadan bo&apos;limni tanlang yoki qidiring.</p>
+            ) : rows.length === 0 ? (
+              <p className="mgr-empty">Hech narsa topilmadi.</p>
+            ) : (
+              <table className="mgr-table">
+                <thead>
+                  <tr>
+                    <th className="mgr-col-check">
+                      <input
+                        type="checkbox"
+                        aria-label="Hammasini tanlash"
+                        checked={allChecked}
+                        onChange={(e) =>
+                          setChecked(
+                            e.target.checked
+                              ? new Set(shownRows.filter((r) => r.article).map((r) => r.article))
+                              : new Set(),
+                          )
+                        }
+                      />
+                    </th>
+                    <th>Nomi (1C)</th>
+                    <th>Artikul</th>
+                    <th className="mgr-num">Narxi</th>
+                    <th className="mgr-num">Qoldiq</th>
+                    <th>Saytda ko&apos;rinadi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => {
+                    const l = linkOf(r.article);
+                    const on = !!l?.visible;
+                    return (
+                      <tr
+                        key={r.key}
+                        className={checked.has(r.article) ? 'checked' : undefined}
+                        data-testid={`erp-row-${r.article}`}
+                      >
+                        <td className="mgr-col-check">
+                          <input
+                            type="checkbox"
+                            aria-label={`${r.name}: tanlash`}
+                            disabled={!r.article}
+                            checked={checked.has(r.article)}
+                            onChange={(e) => {
+                              const next = new Set(checked);
+                              if (e.target.checked) next.add(r.article);
+                              else next.delete(r.article);
+                              setChecked(next);
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <span className="mgr-erp-row">
+                            <ErpThumb src={pics[r.article]} alt={r.name} />
+                            <span className="mgr-name">
+                              {r.name}
+                              <small>{r.unit}</small>
+                            </span>
+                          </span>
+                        </td>
+                        <td>{r.article || '—'}</td>
+                        <td className="mgr-num">
+                          {r.price !== null ? `${money(r.price)} ${r.currency ?? ''}` : '—'}
+                        </td>
+                        <td className="mgr-num">{r.stock ?? '—'}</td>
+                        <td>
+                          <span className="mgr-inline">
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={on}
+                              aria-label={`${r.name}: saytda ko'rinadi`}
+                              className="mgr-switch"
+                              disabled={!r.article || busy || l?.type === 'builtin'}
+                              onClick={() => toggle(r)}
+                              data-testid={`erp-add-${r.article}`}
+                            />
+                            {!l && (
+                              <button
+                                type="button"
+                                className="mgr-link"
+                                disabled={!r.article}
+                                onClick={() => setAdding(r)}
+                              >
+                                Batafsil
+                              </button>
+                            )}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+            {selected?.kind && rows && total > PAGE && (
+              <footer className="mgr-pager">
+                <span className="mgr-count">
+                  {skip + 1}–{Math.min(skip + PAGE, total)} / {total} ta
+                </span>
+                <span className="mgr-inline">
+                  <Button
+                    variant="secondary"
+                    disabled={skip === 0 || busy}
+                    onClick={() => setSkip(Math.max(0, skip - PAGE))}
+                    aria-label="Oldingi sahifa"
+                  >
+                    ‹
+                  </Button>
+                  <span className="mgr-count">
+                    {Math.floor(skip / PAGE) + 1} / {Math.ceil(total / PAGE)}
+                  </span>
+                  <Button
+                    variant="secondary"
+                    disabled={skip + PAGE >= total || busy}
+                    onClick={() => setSkip(skip + PAGE)}
+                    aria-label="Keyingi sahifa"
+                  >
+                    ›
+                  </Button>
+                </span>
+              </footer>
+            )}
+          </div>
+        </div>
+      </div>
 
       {adding && (
         <AddFromErp
@@ -465,7 +674,8 @@ export function ErpCatalogSection({
   );
 }
 
-type Added = { type: 'material'; item: MaterialDraft } | { type: 'hardware'; item: HardwareDraft };
+export type Added =
+  { type: 'material'; item: MaterialDraft } | { type: 'hardware'; item: HardwareDraft };
 
 /** the form that turns a 1C item into a kiosk material / hardware brand */
 function AddFromErp({
