@@ -143,10 +143,17 @@ describe('D-19 manager price page', () => {
       [...document.querySelectorAll('[data-testid^="mgr-service-name-"]')].map(
         (x) => (x as HTMLInputElement).value,
       );
-    expect(names()).toEqual(['Ish haqi (kesish, ishlov berish)', 'Kromkalash', "Yig'ish"]);
+    // D-29: Rover per m², the oval edge by hand
+    expect(names()).toEqual([
+      'Ish haqi (kesish, ishlov berish)',
+      'Kromkalash',
+      "Yig'ish",
+      'Rover (CNC ishlov)',
+      'Ovalniy kromka',
+    ]);
     const basis = (i: number) =>
       (screen.getByTestId(`mgr-service-basis-${i}`) as HTMLSelectElement).value;
-    expect([basis(0), basis(1), basis(2)]).toEqual(['m2', 'edge_m', 'm2']);
+    expect([0, 1, 2, 3, 4].map(basis)).toEqual(['m2', 'edge_m', 'm2', 'm2', 'manual_m']);
     fireEvent.change(screen.getByTestId('mgr-service-price-1'), { target: { value: '1500' } });
     fireEvent.change(screen.getByTestId('mgr-service-price-2'), { target: { value: '20000' } });
     fireEvent.click(screen.getByTestId('mgr-tab-profit'));
@@ -160,6 +167,8 @@ describe('D-19 manager price page', () => {
       ['Ish haqi (kesish, ishlov berish)', 'm2', priceListDemo.laborPerM2],
       ['Kromkalash', 'edge_m', 1500],
       ["Yig'ish", 'm2', 20000],
+      ['Rover (CNC ishlov)', 'm2', 0],
+      ['Ovalniy kromka', 'manual_m', 0],
     ]);
   });
 });

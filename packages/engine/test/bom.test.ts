@@ -106,7 +106,7 @@ describe('D-9 BOM', () => {
     for (const id of ['hinge_strax', 'hinge_hettich_sensys', 'slide_strax_ball'])
       expect(items.find((i) => i.id === id)?.use).toBe('legacy');
     const report = items.filter((i) => i.erpName);
-    expect(new Set(report.map((i) => i.brand))).toEqual(new Set(['Samet', 'Mesan', '']));
+    expect(new Set(report.map((i) => i.brand))).toEqual(new Set(['Samet', 'Camet', 'Mesan', '']));
     for (const i of items.filter((x) => x.use === 'kiosk'))
       expect(priceListDemo.hardware[i.id], i.id).toBeGreaterThan(0);
   });
@@ -163,6 +163,22 @@ describe('D-9 price (DEMO price list)', () => {
       ball,
     );
     expect(price(wardrobeTemplate, { ...now, width: 2200 }).total).toBeGreaterThan(ball);
+  });
+
+  it('D-29 services: Rover per m2; the oval edge (typed by hand) is never counted', () => {
+    const t = pedestalTemplate;
+    const p = defaultParams(t);
+    const bom = computeBom(t, p, generate(t, p));
+    const area = bom.filter((l) => l.kind === 'board').reduce((s, l) => s + l.qty, 0);
+    const list = {
+      ...priceListDemo,
+      services: [
+        { id: 's_rover', name: 'Rover', basis: 'm2' as const, products: [], price: 10000 },
+        { id: 's_oval', name: 'Oval', basis: 'manual_m' as const, products: [], price: 9000 },
+      ],
+    };
+    const r = computePrice(bom, catalogForTemplate(t), list, 'pedestal');
+    expect(r.services).toEqual([{ id: 's_rover', name: 'Rover', cost: Math.round(area * 10000) }]);
   });
 
   it('every product prices without missing items; table tops use the thickness price', () => {

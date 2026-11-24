@@ -77,3 +77,9 @@ and the sketches read soft close and hidden mounting from the catalog (`softClos
 - Which mounting plate goes with which hinge. The 5 mm plate is assumed.
 - The unit of the screw lines (the costs look like per pack).
 - Slide lengths: the BOM counts one pair per drawer of the chosen series, not its length.
+
+## Update (D-29, 2026-11-24)
+
+The founder corrected the slide brand: the drawer slides and their locks are **Camet**, not
+Samet. The kiosk and the manager page show Camet (hardware catalog 1.2.1). The item ids and the
+option keys keep `samet_`, so stored applications still regenerate.

@@ -203,7 +203,7 @@ export function parsePriceList(
     for (const [i, raw] of v.services.entries()) {
       const x = raw as Partial<PriceService> | null;
       const name = typeof x?.name === 'string' ? x.name.trim().slice(0, 80) : '';
-      const okBasis = ['m2', 'edge_m', 'product', 'pct'].includes(String(x?.basis));
+      const okBasis = ['m2', 'edge_m', 'product', 'pct', 'manual_m'].includes(String(x?.basis));
       const products = Array.isArray(x?.products)
         ? x.products.filter((p): p is string => typeof p === 'string' && /^[a-z]+$/.test(p))
         : [];

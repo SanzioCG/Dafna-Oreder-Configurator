@@ -21,6 +21,8 @@ export const BASIS: { value: PriceService['basis']; label: string; unit: string 
   { value: 'edge_m', label: '1 metr kromka', unit: "so'm / m" },
   { value: 'product', label: '1 dona mahsulot', unit: "so'm / dona" },
   { value: 'pct', label: 'Xarajatlardan %', unit: '%' },
+  // D-29: a per-metre job typed by hand (oval edge of curved parts)
+  { value: 'manual_m', label: "1 metr — qo'lda (avtomatik hisoblanmaydi)", unit: "so'm / m" },
 ];
 
 export const KIND_LABEL: Record<string, string> = {
@@ -126,6 +128,15 @@ export const NEW_HARDWARE: HardwareDraft = {
  * list saved before D-20 (labour per m², assembly per product) is turned into services, the same
  * price. A list never saved (DEMO) also gets the usual services to fill in.
  */
+/**
+ * D-29: Rover (CNC) per m²; oval edge per metre - only for curved (not straight, not radial)
+ * parts, typed by hand, never counted. Drilling (prisadka) is left as it is for now.
+ */
+export const D29_SERVICES: PriceService[] = [
+  { id: 's_rover', name: 'Rover (CNC ishlov)', basis: 'm2', products: [], price: 0 },
+  { id: 's_oval', name: 'Ovalniy kromka', basis: 'manual_m', products: [], price: 0 },
+];
+
 export function toServiceModel(list: PriceList): PriceList {
   const services = [...(list.services ?? [])];
   const has = (id: string) => services.some((s) => s.id === id);
@@ -152,6 +163,8 @@ export function toServiceModel(list: PriceList): PriceList {
     if (!has('s_assembly'))
       services.push({ id: 's_assembly', name: "Yig'ish", basis: 'm2', products: [], price: 0 });
   }
+  // D-29: the services the founder listed (2026-11-24); prices are the manager's to fill in
+  for (const sv of D29_SERVICES) if (!has(sv.id)) services.push({ ...sv });
   return { ...list, laborPerM2: 0, assembly: {}, services };
 }
 

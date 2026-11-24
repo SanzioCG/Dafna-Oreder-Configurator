@@ -20,6 +20,13 @@ describe('D-28 manager hardware list', () => {
       g.getAttribute('data-testid')!.replace('mgr-hw-brand-', ''),
     );
     expect(groups.indexOf('Mesan')).toBeLessThan(groups.indexOf('Samet'));
+    // D-29: the slides are Camet
+    expect(groups.indexOf('Camet')).toBeLessThan(groups.indexOf('Mesan'));
+    expect(
+      screen
+        .getByTestId('mgr-hw-brand-Camet')
+        .querySelector('[data-testid="mgr-hw-row-slide_samet_smart"]'),
+    ).toBeTruthy();
     expect(groups.at(-1)).toBe('Brendsiz');
     const samet = screen.getByTestId('mgr-hw-brand-Samet');
     const hinge = within(samet).getByTestId('mgr-hw-row-hinge_samet_master_18');

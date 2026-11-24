@@ -74399,7 +74399,7 @@ var TEMPLATE_CATALOG = {
 
 // ../../packages/engine/catalog/hardware.v1.json
 var hardware_v1_default = {
-  hardwareVersion: "1.2.0",
+  hardwareVersion: "1.2.1",
   items: [
     {
       id: "slide_strax_ball",
@@ -74591,8 +74591,8 @@ var hardware_v1_default = {
     {
       id: "slide_samet_so_ball",
       kind: "slide",
-      brand: "Samet",
-      nameKey: "Samet SO Class",
+      brand: "Camet",
+      nameKey: "Camet SO Class",
       model: "SO Class",
       erpName: "\u0428\u0430\u0440\u0438\u043A. \u043D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435 SO CLASS/ZINC COATED 46-300\u2026450",
       softClose: false,
@@ -74600,14 +74600,14 @@ var hardware_v1_default = {
       unconfirmed: false,
       use: "kiosk",
       costUsd: 4.45,
-      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Ball bearing, 300-450 mm (cost of the 400 mm pair).",
+      note: `D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Ball bearing, 300-450 mm (cost of the 400 mm pair). D-29: the slides are the Camet brand (founder 2026-11-24); ids keep "samet" (stored applications).`,
       slideMount: "side"
     },
     {
       id: "slide_samet_so_soft",
       kind: "slide",
-      brand: "Samet",
-      nameKey: "Samet SO Class Soft Close",
+      brand: "Camet",
+      nameKey: "Camet SO Class Soft Close",
       model: "SO Class Soft Close",
       erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0438\u0435 SO CLASS/ZINC COATED SOFT CLOSE 46-300\u2026450",
       softClose: true,
@@ -74615,14 +74615,14 @@ var hardware_v1_default = {
       unconfirmed: false,
       use: "kiosk",
       costUsd: 6.56,
-      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Ball bearing with soft close, 300-450 mm (cost of the 400 mm pair).",
+      note: `D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Ball bearing with soft close, 300-450 mm (cost of the 400 mm pair). D-29: the slides are the Camet brand (founder 2026-11-24); ids keep "samet" (stored applications).`,
       slideMount: "side"
     },
     {
       id: "slide_samet_smart",
       kind: "slide",
-      brand: "Samet",
-      nameKey: "Samet Smart Slide",
+      brand: "Camet",
+      nameKey: "Camet Smart Slide",
       model: "Smart Slide",
       erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0430\u044F \u043F\u043E\u043B\u043D\u043E\u0433\u043E \u0432\u044B\u0434\u0432\u0438\u0436\u0435\u043D\u0438\u044F Smart Slide \u0441 \u0434\u043E\u0432\u043E\u0434\u0447\u0438\u043A\u043E\u043C 350/400\u043C\u043C/SMSLD FULL OILB FULL EXTENSION SY",
       softClose: true,
@@ -74630,14 +74630,14 @@ var hardware_v1_default = {
       unconfirmed: false,
       use: "kiosk",
       costUsd: 11.288,
-      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Hidden, full extension, soft close, 350 / 400 mm; with the SmartLock left + right per drawer.",
+      note: `D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Hidden, full extension, soft close, 350 / 400 mm; with the SmartLock left + right per drawer. D-29: the slides are the Camet brand (founder 2026-11-24); ids keep "samet" (stored applications).`,
       slideMount: "under"
     },
     {
       id: "slide_samet_slidea",
       kind: "slide",
-      brand: "Samet",
-      nameKey: "Samet Slidea",
+      brand: "Camet",
+      nameKey: "Camet Slidea",
       model: "Slidea",
       erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0430\u044F LOCK FIX (18 \u043C\u043C) Slidea 450 \u043C\u043C/SLIDEA 450 MM SINGLE EXTENSION SOFT CLOSE LOCK-FIX 18MM",
       softClose: true,
@@ -74645,14 +74645,14 @@ var hardware_v1_default = {
       unconfirmed: false,
       use: "kiosk",
       costUsd: 4.663,
-      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Hidden, single extension, soft close, 435 / 450 mm; with the LOCK FIX left + right per drawer.",
+      note: `D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). Hidden, single extension, soft close, 435 / 450 mm; with the LOCK FIX left + right per drawer. D-29: the slides are the Camet brand (founder 2026-11-24); ids keep "samet" (stored applications).`,
       slideMount: "under"
     },
     {
       id: "slide_samet_slidea_pin",
       kind: "slide",
-      brand: "Samet",
-      nameKey: "Samet Slidea Pin Fix 435",
+      brand: "Camet",
+      nameKey: "Camet Slidea Pin Fix 435",
       model: "Slidea Pin Fix 435",
       erpName: "\u041D\u0430\u043F\u0440\u0430\u0432\u043B\u044F\u044E\u0449\u0430\u044F PIN FIX (18 \u043C\u043C) Slidea 435 \u043C\u043C/SLIDEA 435 MM SINGLE EXTENSION SOFT CLOSE PIN-FIX 18MM",
       softClose: true,
@@ -74660,14 +74660,14 @@ var hardware_v1_default = {
       unconfirmed: false,
       use: "production",
       costUsd: 4.765,
-      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23).",
+      note: `D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). D-29: the slides are the Camet brand (founder 2026-11-24); ids keep "samet" (stored applications).`,
       slideMount: "under"
     },
     {
       id: "smartlock_left",
       kind: "slide_lock",
-      brand: "Samet",
-      nameKey: "Samet SmartLock chap",
+      brand: "Camet",
+      nameKey: "Camet SmartLock chap",
       model: "SmartLock chap",
       erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F SmartLock, \u043B\u0435\u0432\u0430\u044F/SMARTSLIDE NEW LOCK, LEFT (120)",
       softClose: false,
@@ -74675,13 +74675,13 @@ var hardware_v1_default = {
       unconfirmed: false,
       use: "kiosk",
       costUsd: 0.47,
-      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+      note: `D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). D-29: the slides are the Camet brand (founder 2026-11-24); ids keep "samet" (stored applications).`
     },
     {
       id: "smartlock_right",
       kind: "slide_lock",
-      brand: "Samet",
-      nameKey: "Samet SmartLock o'ng",
+      brand: "Camet",
+      nameKey: "Camet SmartLock o'ng",
       model: "SmartLock o'ng",
       erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F SmartLock, \u043F\u0440\u0430\u0432\u0430\u044F/SMARTSLIDE NEW LOCK, RIGHT (120)",
       softClose: false,
@@ -74689,13 +74689,13 @@ var hardware_v1_default = {
       unconfirmed: false,
       use: "kiosk",
       costUsd: 0.47,
-      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+      note: `D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). D-29: the slides are the Camet brand (founder 2026-11-24); ids keep "samet" (stored applications).`
     },
     {
       id: "slidea_lock_left",
       kind: "slide_lock",
-      brand: "Samet",
-      nameKey: "Samet Lock Fix chap",
+      brand: "Camet",
+      nameKey: "Camet Lock Fix chap",
       model: "Lock Fix chap",
       erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F \u0441 \u0444\u0438\u043A\u0441\u0430\u0442\u043E\u0440\u0430\u043C\u0438 LOCK FIX, \u043B\u0435\u0432\u0430\u044F/SLIDEA LOCK L",
       softClose: false,
@@ -74703,13 +74703,13 @@ var hardware_v1_default = {
       unconfirmed: false,
       use: "kiosk",
       costUsd: 0.355,
-      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+      note: `D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). D-29: the slides are the Camet brand (founder 2026-11-24); ids keep "samet" (stored applications).`
     },
     {
       id: "slidea_lock_right",
       kind: "slide_lock",
-      brand: "Samet",
-      nameKey: "Samet Lock Fix o'ng",
+      brand: "Camet",
+      nameKey: "Camet Lock Fix o'ng",
       model: "Lock Fix o'ng",
       erpName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430 \u043A\u0440\u0435\u043F\u043B\u0435\u043D\u0438\u044F \u0441 \u0444\u0438\u043A\u0441\u0430\u0442\u043E\u0440\u0430\u043C\u0438 LOCK FIX, \u043F\u0440\u0430\u0432\u0430\u044F/SLIDEA LOCK R",
       softClose: false,
@@ -74717,7 +74717,7 @@ var hardware_v1_default = {
       unconfirmed: false,
       use: "kiosk",
       costUsd: 0.355,
-      note: "D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23)."
+      note: `D-28: Dafna's stock report (Furniture.docx, founder 2026-11-23). D-29: the slides are the Camet brand (founder 2026-11-24); ids keep "samet" (stored applications).`
     },
     {
       id: "sliding_samet_smt75_roller",
@@ -74978,7 +74978,7 @@ var hardware_v1_default = {
     samet_smart: ["smartlock_left", "smartlock_right"],
     samet_slidea: ["slidea_lock_left", "slidea_lock_right"]
   },
-  hardwareNote: "D-28: real items from Dafna's stock report (Furniture.docx, founder 2026-11-23), sorted by brand (Samet, Mesan, screws). costUsd = cost of one unit in USD as in the report (stock counts are not kept: they change daily). Strax / Hettich (use = legacy) stay for applications made before; the kiosk offers Samet. Connectors, screws and sliding-door parts are listed for the office only (no product rule counts them yet)."
+  hardwareNote: `D-28: real items from Dafna's stock report (Furniture.docx, founder 2026-11-23), sorted by brand (Samet, Mesan, screws). costUsd = cost of one unit in USD as in the report (stock counts are not kept: they change daily). Strax / Hettich (use = legacy) stay for applications made before; the kiosk offers Samet. Connectors, screws and sliding-door parts are listed for the office only (no product rule counts them yet). D-29: slides and their locks are Camet (founder 2026-11-24); their ids and option keys keep "samet_" so stored applications regenerate.`
 };
 
 // ../../packages/engine/catalog/pricelist.demo.json
@@ -75157,7 +75157,9 @@ function computePrice(bom, catalog, list = priceListDemo, productType) {
   const edgeM = bom.filter((l) => l.kind === "edge").reduce((s, l) => s + l.qty, 0);
   const applies = (sv) => sv.products.length === 0 || productType !== void 0 && sv.products.includes(productType);
   const services = [];
-  for (const sv of (list.services ?? []).filter((x) => applies(x) && x.basis !== "pct")) {
+  for (const sv of (list.services ?? []).filter(
+    (x) => applies(x) && x.basis !== "pct" && x.basis !== "manual_m"
+  )) {
     const qty = sv.basis === "m2" ? area : sv.basis === "edge_m" ? edgeM : 1;
     services.push({ id: sv.id, name: sv.name, cost: Math.round(qty * sv.price) });
   }
@@ -75593,15 +75595,15 @@ var uz = {
   "hw.hint.slideBrand.strax": "Sharikli yo'naltiruvchilar, standart",
   "hw.hint.slideBrand.hettich": "Yashirin, yumshoq yopiladi (Quadro)",
   "hw.model.hinge.samet": "Samet Master",
-  "hw.model.slide.samet_ball": "Samet SO Class",
-  "hw.model.slide.samet_soft": "Samet SO Class Soft Close",
-  "hw.model.slide.samet_smart": "Samet Smart Slide",
-  "hw.model.slide.samet_slidea": "Samet Slidea",
+  "hw.model.slide.samet_ball": "Camet SO Class",
+  "hw.model.slide.samet_soft": "Camet SO Class Soft Close",
+  "hw.model.slide.samet_smart": "Camet Smart Slide",
+  "hw.model.slide.samet_slidea": "Camet Slidea",
   "hw.brand.samet": "Samet",
-  "hw.brand.samet_ball": "Samet",
-  "hw.brand.samet_soft": "Samet",
-  "hw.brand.samet_smart": "Samet",
-  "hw.brand.samet_slidea": "Samet",
+  "hw.brand.samet_ball": "Camet",
+  "hw.brand.samet_soft": "Camet",
+  "hw.brand.samet_smart": "Camet",
+  "hw.brand.samet_slidea": "Camet",
   "hw.hint.hingeBrand.samet": "Master, yumshoq yopiladi",
   "hw.hint.slideBrand.samet_ball": "SO Class, sharikli, yon tomonda",
   "hw.hint.slideBrand.samet_soft": "SO Class, sharikli, yumshoq yopiladi",
@@ -75869,7 +75871,7 @@ function rowsToPriceList(rows) {
     services: [],
     erpCodes: {}
   };
-  const BASES = ["m2", "edge_m", "product", "pct"];
+  const BASES = ["m2", "edge_m", "product", "pct", "manual_m"];
   for (const r of rows.slice(1)) {
     const [type, code, name, value, len, wid, erpCode] = r;
     if (code && erpCode) list.erpCodes[String(code)] = String(erpCode);

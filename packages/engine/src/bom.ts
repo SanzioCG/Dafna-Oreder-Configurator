@@ -73,7 +73,12 @@ export interface SheetPrice {
 export interface PriceService {
   id: string;
   name: string;
-  basis: 'm2' | 'edge_m' | 'product' | 'pct';
+  /**
+   * m2 = board area, edge_m = edge band metres, product = once, pct = % of the costs;
+   * D-29: manual_m = per metre entered by hand for the order (the oval edge of a curved part),
+   * never counted automatically
+   */
+  basis: 'm2' | 'edge_m' | 'product' | 'pct' | 'manual_m';
   products: string[];
   price: number;
 }
@@ -304,7 +309,10 @@ export function computePrice(
   const applies = (sv: PriceService) =>
     sv.products.length === 0 || (productType !== undefined && sv.products.includes(productType));
   const services: PriceResult['services'] = [];
-  for (const sv of (list.services ?? []).filter((x) => applies(x) && x.basis !== 'pct')) {
+  // D-29: a per-metre service entered by hand is not counted automatically
+  for (const sv of (list.services ?? []).filter(
+    (x) => applies(x) && x.basis !== 'pct' && x.basis !== 'manual_m',
+  )) {
     const qty = sv.basis === 'm2' ? area : sv.basis === 'edge_m' ? edgeM : 1;
     services.push({ id: sv.id, name: sv.name, cost: Math.round(qty * sv.price) });
   }

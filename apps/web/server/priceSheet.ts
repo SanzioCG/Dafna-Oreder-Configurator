@@ -69,7 +69,7 @@ export function rowsToPriceList(rows: unknown[][]): { list: PriceList; updatedAt
     services: [],
     erpCodes: {},
   };
-  const BASES = ['m2', 'edge_m', 'product', 'pct'] as const;
+  const BASES = ['m2', 'edge_m', 'product', 'pct', 'manual_m'] as const;
   for (const r of rows.slice(1)) {
     const [type, code, name, value, len, wid, erpCode] = r;
     if (code && erpCode) list.erpCodes![String(code)] = String(erpCode);
