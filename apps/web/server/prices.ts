@@ -230,6 +230,19 @@ export function parsePriceList(
       if (code.trim()) erpCodes[id] = code.trim();
     }
   }
+  // D-32: the manager's group of each top 1C kind
+  const erpKindGroups: Record<string, 'material' | 'hardware' | 'other'> = {};
+  if (v.erpKindGroups !== undefined) {
+    if (typeof v.erpKindGroups !== 'object' || v.erpKindGroups === null)
+      return { ok: false, field: 'erpKindGroups' };
+    const entries = Object.entries(v.erpKindGroups);
+    if (entries.length > 300) return { ok: false, field: 'erpKindGroups' };
+    for (const [key, g] of entries) {
+      if (!/^[0-9a-f-]{36}$/i.test(key) || !['material', 'hardware', 'other'].includes(String(g)))
+        return { ok: false, field: `erpKindGroups.${key}` };
+      erpKindGroups[key] = g as 'material' | 'hardware' | 'other';
+    }
+  }
   for (const k of ['edgePerM', 'laborPerM2'] as const)
     if (!money(v[k])) return { ok: false, field: k };
   const markup = v.markupPct;
@@ -246,6 +259,7 @@ export function parsePriceList(
       assembly,
       services,
       erpCodes,
+      erpKindGroups,
       edgePerM: Math.round(v.edgePerM as number),
       laborPerM2: Math.round(v.laborPerM2 as number),
       markupPct: markup,

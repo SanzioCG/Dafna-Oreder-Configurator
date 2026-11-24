@@ -207,6 +207,11 @@ export function HardwareSection({
                           }
                           label={`${name}: 1C kodi`}
                           testId={`mgr-erp-${h.id}`}
+                          scope={{
+                            group: 'hardware',
+                            // D-32: a hinge row looks among hinges, a slide row among slides
+                            sub: h.kind === 'hinge' || h.kind === 'slide' ? h.kind : undefined,
+                          }}
                         />
                       </td>
                       <td>

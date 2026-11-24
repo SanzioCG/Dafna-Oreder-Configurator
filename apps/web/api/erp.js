@@ -2058,17 +2058,81 @@ var toItem = (r) => ({
   article: (r.\u0410\u0440\u0442\u0438\u043A\u0443\u043B ?? "").trim(),
   unit: (r.\u0415\u0434\u0438\u043D\u0438\u0446\u0430\u0418\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F?.Description ?? "").trim()
 });
-async function erpSearch(cfg, q, top = 30) {
+async function erpSearch(cfg, q, top = 30, only) {
   const words = q.trim().split(/\s+/).filter(Boolean).slice(0, 4);
   if (words.length === 0) return [];
   const byName = words.map((w) => `substringof(${lit(w)}, Description)`).join(" and ");
   const rows = await odata(cfg, "Catalog_\u041D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u0430", {
     $filter: `(${byName}) or \u0410\u0440\u0442\u0438\u043A\u0443\u043B eq ${lit(q.trim())}`,
-    $select: ITEM_SELECT,
+    $select: `${ITEM_SELECT},\u0412\u0438\u0434\u041D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u044B_Key`,
     $expand: "\u0415\u0434\u0438\u043D\u0438\u0446\u0430\u0418\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F",
-    $top: String(top)
+    $top: String(only?.group ? 200 : top)
   });
-  return rows.filter((r) => !r.IsFolder && !r.DeletionMark).map(toItem);
+  const tree = only?.group ? await kindTree(cfg) : null;
+  const out = [];
+  for (const r of rows) {
+    if (r.IsFolder || r.DeletionMark) continue;
+    const item = toItem(r);
+    if (tree && only?.group) {
+      const info = tree.info(r.\u0412\u0438\u0434\u041D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u044B_Key ?? "");
+      item.kind = info.path;
+      if (groupOf(info.top, only.groups) !== only.group) continue;
+      if (only.sub && !SUB[only.sub].test(`${info.path} ${item.name}`)) continue;
+    }
+    out.push(item);
+    if (out.length >= top) break;
+  }
+  return out;
+}
+function defaultGroup(name) {
+  if (/^(infinity|yechim|nuomi|опора)(\s|$)/i.test(name.trim())) return "hardware";
+  if (/лдсп|лмдф|лхдф|дсп|мдф|хдф|двп|кромк|столешниц|hpl|акрил|perfect\s*sense|осп|плен|шаттдекор|термопласт|ультрадекор|frente|agt/i.test(
+    name
+  ))
+    return "material";
+  return "other";
+}
+function groupOf(top, groups = {}) {
+  if (!top) return "other";
+  return groups[top.key] ?? defaultGroup(top.name);
+}
+var SUB = {
+  hinge: /петл|hinge|sensys|intermat/i,
+  slide: /направляющ|slide|quadro|actro|ящик|innotech|arcitech|avantech/i
+};
+var treeCache = null;
+async function kindTree(cfg, now = Date.now()) {
+  if (!treeCache || treeCache.url !== cfg.url || now - treeCache.at > 10 * 6e4) {
+    const rows = await odata(
+      cfg,
+      "Catalog_\u0412\u0438\u0434\u044B\u041D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u044B",
+      { $select: "Ref_Key,Description,Parent_Key" }
+    );
+    treeCache = {
+      at: now,
+      url: cfg.url,
+      nodes: new Map(
+        rows.map((r) => [
+          r.Ref_Key,
+          { key: r.Ref_Key, name: (r.Description ?? "").trim(), parent: r.Parent_Key ?? "" }
+        ])
+      )
+    };
+  }
+  const nodes = treeCache.nodes;
+  return {
+    info(key) {
+      const names = [];
+      let top = null;
+      for (let k = key, n3 = 0; nodes.has(k) && n3 < 20; n3++) {
+        const node = nodes.get(k);
+        names.unshift(node.name);
+        top = node;
+        k = node.parent;
+      }
+      return { top: top ? { key: top.key, name: top.name } : null, path: names.join(" \u203A ") };
+    }
+  };
 }
 var chunks = (xs, n3) => Array.from({ length: Math.ceil(xs.length / n3) }, (_, i) => xs.slice(i * n3, i * n3 + n3));
 async function erpPrices(cfg, articles) {
@@ -2156,7 +2220,7 @@ async function erpKinds(cfg, parent) {
     key: r.Ref_Key,
     name: (r.Description ?? "").trim(),
     folder: r.IsFolder === true
-  })).filter((k) => k.name && !k.name.startsWith("_") && !k.name.startsWith("!")).sort((a, b) => Number(b.folder) - Number(a.folder) || a.name.localeCompare(b.name, "ru"));
+  })).filter((k) => k.name && !k.name.startsWith("_") && !k.name.startsWith("!")).map((k) => GUID_RE.test(parent) ? k : { ...k, group: defaultGroup(k.name) }).sort((a, b) => Number(b.folder) - Number(a.folder) || a.name.localeCompare(b.name, "ru"));
 }
 async function erpItemsOfKind(cfg, kind, skip = 0, top = 50) {
   if (!GUID_RE.test(kind)) return { items: [], total: 0 };
@@ -2216,7 +2280,16 @@ async function handleErp(req, deps) {
     if (body.action === "search") {
       const q = typeof body.q === "string" ? body.q.slice(0, 80) : "";
       if (q.trim().length < 2) return json(400, { error: { code: "invalid_request" } });
-      return json(200, { items: await erpSearch(deps.erp, q) });
+      const b = body;
+      const group = b.group === "material" || b.group === "hardware" ? b.group : void 0;
+      const sub = b.sub === "hinge" || b.sub === "slide" ? b.sub : void 0;
+      const groups = {};
+      if (b.groups && typeof b.groups === "object") {
+        for (const [k, g] of Object.entries(b.groups).slice(0, 300))
+          if (GUID_RE.test(k) && (g === "material" || g === "hardware" || g === "other"))
+            groups[k] = g;
+      }
+      return json(200, { items: await erpSearch(deps.erp, q, 30, { group, sub, groups }) });
     }
     if (body.action === "kinds") {
       const parent = typeof body.parent === "string" ? body.parent : ROOT_FOLDER;

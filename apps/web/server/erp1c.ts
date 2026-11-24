@@ -21,6 +21,8 @@ export interface ErpItem {
   name: string;
   article: string;
   unit: string;
+  /** D-32: the item's kind path in 1C (search within a group only) */
+  kind?: string;
 }
 
 export interface ErpPrice {
@@ -80,6 +82,7 @@ interface RawItem {
   ЕдиницаИзмерения?: { Description?: string };
   DeletionMark?: boolean;
   IsFolder?: boolean;
+  ВидНоменклатуры_Key?: string;
 }
 
 const ITEM_SELECT =
@@ -93,17 +96,118 @@ const toItem = (r: RawItem): ErpItem => ({
 });
 
 /** search by a word of the name or an exact article; folders and deleted items left out */
-export async function erpSearch(cfg: ErpConfig, q: string, top = 30): Promise<ErpItem[]> {
+export async function erpSearch(
+  cfg: ErpConfig,
+  q: string,
+  top = 30,
+  only?: { group?: KindGroup; sub?: 'hinge' | 'slide'; groups?: Record<string, KindGroup> },
+): Promise<ErpItem[]> {
   const words = q.trim().split(/\s+/).filter(Boolean).slice(0, 4);
   if (words.length === 0) return [];
   const byName = words.map((w) => `substringof(${lit(w)}, Description)`).join(' and ');
+  // D-32: within a group, ask for more and keep the items of that group
   const rows = await odata<RawItem>(cfg, 'Catalog_Номенклатура', {
     $filter: `(${byName}) or Артикул eq ${lit(q.trim())}`,
-    $select: ITEM_SELECT,
+    $select: `${ITEM_SELECT},ВидНоменклатуры_Key`,
     $expand: 'ЕдиницаИзмерения',
-    $top: String(top),
+    $top: String(only?.group ? 200 : top),
   });
-  return rows.filter((r) => !r.IsFolder && !r.DeletionMark).map(toItem);
+  const tree = only?.group ? await kindTree(cfg) : null;
+  const out: ErpItem[] = [];
+  for (const r of rows) {
+    if (r.IsFolder || r.DeletionMark) continue;
+    const item = toItem(r);
+    if (tree && only?.group) {
+      const info = tree.info(r.ВидНоменклатуры_Key ?? '');
+      item.kind = info.path;
+      if (groupOf(info.top, only.groups) !== only.group) continue;
+      if (only.sub && !SUB[only.sub].test(`${info.path} ${item.name}`)) continue;
+    }
+    out.push(item);
+    if (out.length >= top) break;
+  }
+  return out;
+}
+
+export type KindGroup = 'material' | 'hardware' | 'other';
+
+/**
+ * D-32: the default group of a top 1C kind by its name (the manager can change any of them):
+ * boards, edge bands and work tops are materials; INFINITY (Hettich, Blum, …), Yechim (Samet,
+ * Camet, Mesan, Cebi, …), NUOMI and Опора are hardware; the rest (glue, lamps, services, …) other.
+ */
+export function defaultGroup(name: string): KindGroup {
+  // (\b does not work for Cyrillic in JS)
+  if (/^(infinity|yechim|nuomi|опора)(\s|$)/i.test(name.trim())) return 'hardware';
+  if (
+    /лдсп|лмдф|лхдф|дсп|мдф|хдф|двп|кромк|столешниц|hpl|акрил|perfect\s*sense|осп|плен|шаттдекор|термопласт|ультрадекор|frente|agt/i.test(
+      name,
+    )
+  )
+    return 'material';
+  return 'other';
+}
+
+export function groupOf(
+  top: { key: string; name: string } | null,
+  groups: Record<string, KindGroup> = {},
+): KindGroup {
+  if (!top) return 'other';
+  return groups[top.key] ?? defaultGroup(top.name);
+}
+
+/** D-32: hinges / slides inside the hardware group, by the kind path or the name */
+const SUB = {
+  hinge: /петл|hinge|sensys|intermat/i,
+  slide: /направляющ|slide|quadro|actro|ящик|innotech|arcitech|avantech/i,
+};
+
+interface KindNode {
+  key: string;
+  name: string;
+  parent: string;
+}
+
+/** D-32: the whole kind tree (about 1500 kinds), kept per warm instance for 10 minutes */
+let treeCache: { at: number; url: string; nodes: Map<string, KindNode> } | null = null;
+
+export async function kindTree(cfg: ErpConfig, now = Date.now()) {
+  if (!treeCache || treeCache.url !== cfg.url || now - treeCache.at > 10 * 60_000) {
+    const rows = await odata<{ Ref_Key: string; Description?: string; Parent_Key?: string }>(
+      cfg,
+      'Catalog_ВидыНоменклатуры',
+      { $select: 'Ref_Key,Description,Parent_Key' },
+    );
+    treeCache = {
+      at: now,
+      url: cfg.url,
+      nodes: new Map(
+        rows.map((r) => [
+          r.Ref_Key,
+          { key: r.Ref_Key, name: (r.Description ?? '').trim(), parent: r.Parent_Key ?? '' },
+        ]),
+      ),
+    };
+  }
+  const nodes = treeCache.nodes;
+  return {
+    info(key: string): { top: { key: string; name: string } | null; path: string } {
+      const names: string[] = [];
+      let top: KindNode | null = null;
+      for (let k = key, n = 0; nodes.has(k) && n < 20; n++) {
+        const node = nodes.get(k)!;
+        names.unshift(node.name);
+        top = node;
+        k = node.parent;
+      }
+      return { top: top ? { key: top.key, name: top.name } : null, path: names.join(' › ') };
+    },
+  };
+}
+
+/** test hook */
+export function resetKindTree() {
+  treeCache = null;
 }
 
 const chunks = <T>(xs: T[], n: number) =>
@@ -193,6 +297,8 @@ export interface ErpKind {
   name: string;
   /** a group of kinds (opens to its sub-kinds) */
   folder: boolean;
+  /** D-32: top kinds only - their default group (the manager's choice is kept on the page) */
+  group?: KindGroup;
 }
 export type ErpRow = ErpItem & Omit<ErpPrice, 'name' | 'unit'>;
 
@@ -217,6 +323,7 @@ export async function erpKinds(cfg: ErpConfig, parent: string): Promise<ErpKind[
       folder: r.IsFolder === true,
     }))
     .filter((k) => k.name && !k.name.startsWith('_') && !k.name.startsWith('!'))
+    .map((k) => (GUID_RE.test(parent) ? k : { ...k, group: defaultGroup(k.name) }))
     .sort((a, b) => Number(b.folder) - Number(a.folder) || a.name.localeCompare(b.name, 'ru'));
 }
 
@@ -305,7 +412,16 @@ export async function handleErp(req: Request, deps: ErpDeps): Promise<Response> 
     if (body.action === 'search') {
       const q = typeof body.q === 'string' ? body.q.slice(0, 80) : '';
       if (q.trim().length < 2) return json(400, { error: { code: 'invalid_request' } });
-      return json(200, { items: await erpSearch(deps.erp, q) });
+      // D-32: search within a group (materials / hardware), the manager's groups sent along
+      const b = body as { group?: unknown; sub?: unknown; groups?: unknown };
+      const group = b.group === 'material' || b.group === 'hardware' ? b.group : undefined;
+      const sub = b.sub === 'hinge' || b.sub === 'slide' ? b.sub : undefined;
+      const groups: Record<string, KindGroup> = {};
+      if (b.groups && typeof b.groups === 'object')
+        for (const [k, g] of Object.entries(b.groups as Record<string, unknown>).slice(0, 300))
+          if (GUID_RE.test(k) && (g === 'material' || g === 'hardware' || g === 'other'))
+            groups[k] = g;
+      return json(200, { items: await erpSearch(deps.erp, q, 30, { group, sub, groups }) });
     }
     if (body.action === 'kinds') {
       const parent = typeof body.parent === 'string' ? body.parent : ROOT_FOLDER;

@@ -1,7 +1,7 @@
 import { type PriceList } from '@dafna/engine';
 import { useContext, useEffect, useState, type FormEvent } from 'react';
 import { Button } from '../ui/Button';
-import { ERP_ERRORS, ErpContext, type ErpApi } from './erp';
+import { ERP_ERRORS, ErpContext, type ErpApi, type KindGroup } from './erp';
 import {
   NEW_HARDWARE,
   NEW_MATERIAL,
@@ -22,6 +22,8 @@ export interface ErpKind {
   key: string;
   name: string;
   folder: boolean;
+  /** D-32: top kinds only - the default group by name */
+  group?: KindGroup;
 }
 export interface ErpRow {
   key: string;
@@ -120,16 +122,36 @@ export function somPrice(
   return Math.round(v);
 }
 
+type Tab = 'all' | KindGroup;
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'material', label: 'Materiallar' },
+  { id: 'hardware', label: 'Furnitura' },
+  { id: 'other', label: 'Boshqa' },
+  { id: 'all', label: 'Hammasi' },
+];
+const GROUP_LABEL: Record<KindGroup, string> = {
+  material: 'Material',
+  hardware: 'Furnitura',
+  other: 'Boshqa',
+};
+
 export function ErpCatalogSection({
   list,
+  edit,
   draft,
   setDraft,
 }: {
   list: PriceList;
+  edit: (l: PriceList) => void;
   draft: CatalogDraft;
   setDraft: (d: CatalogDraft) => void;
 }) {
   const api = useContext(ErpContext);
+  /** D-32: the root kinds by group (materials first: that is what Dafna takes most) */
+  const [tab, setTab] = useState<Tab>('material');
+  const groupOfKind = (k: ErpKind): KindGroup => list.erpKindGroups?.[k.key] ?? k.group ?? 'other';
+  const setGroup = (k: ErpKind, g: KindGroup) =>
+    edit({ ...list, erpKindGroups: { ...list.erpKindGroups, [k.key]: g } });
   const [path, setPath] = useState<ErpKind[]>([]);
   const [kinds, setKinds] = useState<ErpKind[] | null>(null);
   const [rows, setRows] = useState<ErpRow[] | null>(null);
@@ -184,7 +206,10 @@ export function ErpCatalogSection({
     if (query.trim().length < 2) return;
     setBusy(true);
     setError(null);
-    const r = await api.search(query.trim());
+    const r = await api.search(
+      query.trim(),
+      tab === 'material' || tab === 'hardware' ? { group: tab } : undefined,
+    );
     if (!r.ok) {
       setBusy(false);
       return setError(ERP_ERRORS[r.code] ?? ERP_ERRORS.network!);
@@ -244,6 +269,27 @@ export function ErpCatalogSection({
         </div>
       </header>
 
+      {/* D-32: materials / hardware / other, as the manager grouped the 1C kinds */}
+      <div className="segmented mgr-tabs" role="tablist" aria-label="1C guruhlari">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.id}
+            className={tab === t.id ? 'segment active' : 'segment'}
+            onClick={() => {
+              setTab(t.id);
+              setPath([]);
+              setSkip(0);
+            }}
+            data-testid={`erp-tab-${t.id}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <form className="mgr-toolbar" onSubmit={search}>
         <input
           type="search"
@@ -290,21 +336,40 @@ export function ErpCatalogSection({
 
       {!busy && kinds && (!leaf || leaf.folder) && (
         <div className="mgr-kinds" data-testid="erp-kinds">
-          {kinds.map((k) => (
-            <button
-              key={k.key}
-              type="button"
-              className="mgr-kind"
-              onClick={() => {
-                setPath([...path, k]);
-                setSkip(0);
-              }}
-              data-testid={`erp-kind-${k.name}`}
-            >
-              {k.folder ? '📁 ' : ''}
-              {k.name}
-            </button>
-          ))}
+          {kinds
+            .filter((k) => path.length > 0 || tab === 'all' || groupOfKind(k) === tab)
+            .map((k) => (
+              <div key={k.key} className="mgr-kind-wrap">
+                <button
+                  type="button"
+                  className="mgr-kind"
+                  onClick={() => {
+                    setPath([...path, k]);
+                    setSkip(0);
+                  }}
+                  data-testid={`erp-kind-${k.name}`}
+                >
+                  {k.folder ? '📁 ' : ''}
+                  {k.name}
+                </button>
+                {/* D-32: the group of a top kind, the manager's to change */}
+                {path.length === 0 && (
+                  <select
+                    className="mgr-kind-group"
+                    value={groupOfKind(k)}
+                    onChange={(e) => setGroup(k, e.target.value as KindGroup)}
+                    aria-label={`${k.name}: guruh`}
+                    data-testid={`erp-kind-group-${k.name}`}
+                  >
+                    {(Object.keys(GROUP_LABEL) as KindGroup[]).map((g) => (
+                      <option key={g} value={g}>
+                        {GROUP_LABEL[g]}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            ))}
           {kinds.length === 0 && <p className="mgr-note">Bu yerda bo&apos;lim yo&apos;q.</p>}
         </div>
       )}

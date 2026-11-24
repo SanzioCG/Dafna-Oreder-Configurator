@@ -195,6 +195,8 @@ describe('D-20 the kiosk path: manager saves, catalog and quote use it', () => {
           { name: 'Kafolat', basis: 'pct', products: ['desk', 'wardrobe'], price: 5 },
         ],
         erpCodes: { ldsp_white_16: ' LD-1 ', hinge_strax: '' },
+        // D-32: the manager's group of a 1C kind
+        erpKindGroups: { 'b7e7d14a-0000-0000-0000-000000000000': 'other' },
       },
       'live-x',
     );
@@ -203,6 +205,7 @@ describe('D-20 the kiosk path: manager saves, catalog and quote use it', () => {
     const back = rowsToPriceList(priceListToRows(parsed.list, 'x'));
     expect(back?.list.services).toEqual(parsed.list.services);
     expect(back?.list.erpCodes).toEqual(parsed.list.erpCodes);
+    expect(back?.list.erpKindGroups).toEqual({ 'b7e7d14a-0000-0000-0000-000000000000': 'other' });
   });
 
   it('a service of more than 100 % or without a name is refused', () => {

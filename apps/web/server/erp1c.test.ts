@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_ERP_URL, erpFromEnv, handleErp, type ErpConfig } from './erp1c';
+import {
+  DEFAULT_ERP_URL,
+  ROOT_FOLDER,
+  defaultGroup,
+  erpFromEnv,
+  handleErp,
+  resetKindTree,
+  type ErpConfig,
+} from './erp1c';
 import { RateLimiter } from './rateLimit';
 
 /** D-30: Dafna's 1C (OData, read-only) for the manager page, with a fake 1C */
@@ -140,5 +148,84 @@ describe('D-31 1C catalogue browse and links on save', () => {
     const page = urls.find((u) => u.includes('$skip=50'))!;
     expect(page).toContain('$expand');
     expect(page).not.toContain('$inlinecount');
+  });
+});
+
+describe('D-32 materials / hardware groups of the 1C kinds', () => {
+  it('default group by the top kind name', () => {
+    expect(['ЛДСП', 'ЛМДФ', 'Кромка', 'Столешницы Slim Line'].map(defaultGroup)).toEqual([
+      'material',
+      'material',
+      'material',
+      'material',
+    ]);
+    expect(['INFINITY', 'Yechim', 'NUOMI', 'Опора'].map(defaultGroup)).toEqual([
+      'hardware',
+      'hardware',
+      'hardware',
+      'hardware',
+    ]);
+    expect(['Клей', 'Светильники', 'Услуги'].map(defaultGroup)).toEqual([
+      'other',
+      'other',
+      'other',
+    ]);
+  });
+
+  it('a search within hardware (hinges only) keeps those items; the manager can regroup a kind', async () => {
+    resetKindTree();
+    const LDSP = '11111111-1111-1111-1111-111111111111';
+    const YECHIM = '22222222-2222-2222-2222-222222222222';
+    const SAMET = '33333333-3333-3333-3333-333333333333';
+    const PETLI = '44444444-4444-4444-4444-444444444444';
+    const fetchImpl = (async (input: RequestInfo | URL) => {
+      const url = decodeURIComponent(String(input));
+      const value = url.includes('Catalog_ВидыНоменклатуры')
+        ? [
+            { Ref_Key: LDSP, Description: 'ЛДСП', Parent_Key: ROOT_FOLDER },
+            { Ref_Key: YECHIM, Description: 'Yechim', Parent_Key: ROOT_FOLDER },
+            { Ref_Key: SAMET, Description: 'Samet', Parent_Key: YECHIM },
+            { Ref_Key: PETLI, Description: 'Петли', Parent_Key: SAMET },
+          ]
+        : [
+            {
+              Ref_Key: 'a',
+              Description: 'ЛДСП Master белый',
+              Артикул: 'L1',
+              ВидНоменклатуры_Key: LDSP,
+            },
+            {
+              Ref_Key: 'b',
+              Description: 'Петля Master 18ММ',
+              Артикул: 'H1',
+              ВидНоменклатуры_Key: PETLI,
+            },
+            {
+              Ref_Key: 'c',
+              Description: 'Master подъёмник',
+              Артикул: 'X1',
+              ВидНоменклатуры_Key: SAMET,
+            },
+          ];
+      return new Response(JSON.stringify({ value }));
+    }) as typeof fetch;
+    const search = async (body: Record<string, unknown>) =>
+      (
+        (await (
+          await handleErp(req({ action: 'search', q: 'Master', ...body }), deps(cfg(fetchImpl)))
+        ).json()) as { items: { article: string; kind?: string }[] }
+      ).items;
+    expect((await search({ group: 'hardware' })).map((i) => i.article)).toEqual(['H1', 'X1']);
+    expect((await search({ group: 'hardware', sub: 'hinge' })).map((i) => i.article)).toEqual([
+      'H1',
+    ]);
+    expect((await search({ group: 'material' })).map((i) => i.article)).toEqual(['L1']);
+    expect((await search({ group: 'hardware', sub: 'hinge' }))[0]!.kind).toBe(
+      'Yechim › Samet › Петли',
+    );
+    // the manager moved Yechim to "other": no hardware left
+    expect(await search({ group: 'hardware', groups: { [YECHIM]: 'other' } })).toEqual([]);
+    // no group: the plain search
+    expect((await search({})).map((i) => i.article)).toEqual(['L1', 'H1', 'X1']);
   });
 });

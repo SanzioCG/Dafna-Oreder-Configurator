@@ -54,7 +54,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const [section, setSection] = useState<Section>('materials');
   /** D-30: the last "1C narxlarini olish" result */
   const [erpNote, setErpNote] = useState<string | null>(null);
-  const erp = erpApi(pin, fetchImpl);
+  const erp = erpApi(pin, fetchImpl, list?.erpKindGroups);
 
   /** the stored catalog becomes the engine's (labels, preview) and the editable draft */
   const takeCatalog = (c: CatalogExtension) => {
@@ -226,7 +226,9 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               uploadTexture={(id, image) => managerUploadTexture(pin, id, image, fetchImpl)}
             />
           )}
-          {section === 'erp' && <ErpCatalogSection list={list} draft={draft} setDraft={setDraft} />}
+          {section === 'erp' && (
+            <ErpCatalogSection list={list} edit={edit} draft={draft} setDraft={setDraft} />
+          )}
           {section === 'hardware' && (
             <HardwareSection list={list} edit={edit} draft={draft} setDraft={setDraft} />
           )}

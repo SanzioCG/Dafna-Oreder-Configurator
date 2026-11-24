@@ -16,6 +16,15 @@ export interface ErpItem {
   name: string;
   article: string;
   unit: string;
+  /** D-32: the item's kind path in 1C (a search within a group) */
+  kind?: string;
+}
+
+/** D-32: what a search looks for: materials or hardware (hinges / slides only) */
+export type KindGroup = 'material' | 'hardware' | 'other';
+export interface SearchScope {
+  group?: 'material' | 'hardware';
+  sub?: 'hinge' | 'slide';
 }
 export interface ErpPrice {
   name: string;
@@ -54,11 +63,13 @@ export interface ErpKindRow {
   key: string;
   name: string;
   folder: boolean;
+  /** D-32: top kinds only - the default group by name */
+  group?: KindGroup;
 }
 export type ErpItemRow = ErpItem & Omit<ErpPrice, 'name' | 'unit'>;
 
 export interface ErpApi {
-  search: (q: string) => Promise<ErpOutcome<ErpItem[]>>;
+  search: (q: string, scope?: SearchScope) => Promise<ErpOutcome<ErpItem[]>>;
   prices: (articles: string[]) => Promise<ErpOutcome<Record<string, ErpPrice>>>;
   /** D-31: the kinds under a kind folder ('' = the top) */
   kinds: (parent: string) => Promise<ErpOutcome<ErpKindRow[]>>;
@@ -69,10 +80,20 @@ export interface ErpApi {
   ) => Promise<ErpOutcome<{ items: ErpItemRow[]; total: number }>>;
 }
 
-export function erpApi(pin: string, fetchImpl?: typeof fetch): ErpApi {
+export function erpApi(
+  pin: string,
+  fetchImpl?: typeof fetch,
+  /** D-32: the manager's group of each top 1C kind */
+  groups: Record<string, KindGroup> = {},
+): ErpApi {
   return {
-    search: (q) =>
-      post(pin, { action: 'search', q }, (d) => d.items as ErpItem[] | undefined, fetchImpl),
+    search: (q, scope) =>
+      post(
+        pin,
+        scope?.group ? { action: 'search', q, ...scope, groups } : { action: 'search', q },
+        (d) => d.items as ErpItem[] | undefined,
+        fetchImpl,
+      ),
     prices: (articles) =>
       post(
         pin,
@@ -111,17 +132,27 @@ export const ERP_ERRORS: Record<string, string> = {
 };
 const errText = (code: string) => ERP_ERRORS[code] ?? ERP_ERRORS.network!;
 
+const SCOPE_LABEL: Record<string, string> = {
+  material: 'materiallar',
+  hardware: 'furnitura',
+  hinge: 'petlyalar',
+  slide: "yo'naltiruvchilar",
+};
+
 /** "1C kodi" field with a "1C dan topish" button (a search over 1C's items) */
 export function ErpCodeInput({
   value,
   onChange,
   testId,
   label,
+  scope,
 }: {
   value: string;
   onChange: (article: string) => void;
   testId?: string;
   label?: string;
+  /** D-32: the search looks only here (the Materials page: materials, …) */
+  scope?: SearchScope;
 }) {
   const api = useContext(ErpContext);
   const [open, setOpen] = useState(false);
@@ -149,6 +180,7 @@ export function ErpCodeInput({
       {open && api && (
         <ErpPicker
           api={api}
+          scope={scope}
           onPick={(a) => {
             onChange(a);
             setOpen(false);
@@ -162,10 +194,12 @@ export function ErpCodeInput({
 
 function ErpPicker({
   api,
+  scope,
   onPick,
   onClose,
 }: {
   api: ErpApi;
+  scope?: SearchScope;
   onPick: (article: string) => void;
   onClose: () => void;
 }) {
@@ -178,7 +212,7 @@ function ErpPicker({
     if (q.trim().length < 2) return;
     setBusy(true);
     setError(null);
-    const r = await api.search(q.trim());
+    const r = await api.search(q.trim(), scope);
     setBusy(false);
     if (!r.ok) return setError(errText(r.code));
     setItems(r.value);
@@ -187,7 +221,15 @@ function ErpPicker({
     <div className="mgr-modal" role="dialog" aria-label="1C dan topish" data-testid="erp-picker">
       <div className="mgr-card mgr-modal-card">
         <header className="mgr-modal-head">
-          <h3>1C dan topish</h3>
+          <h3>
+            1C dan topish
+            {scope?.group && (
+              <small className="mgr-sub" data-testid="erp-scope">
+                {' '}
+                · faqat {SCOPE_LABEL[scope.sub ?? scope.group]}
+              </small>
+            )}
+          </h3>
           <Button variant="secondary" onClick={onClose}>
             Yopish
           </Button>
@@ -225,6 +267,7 @@ function ErpPicker({
                   <small>
                     {it.article ? `artikul ${it.article}` : "artikuli yo'q"}
                     {it.unit && ` · ${it.unit}`}
+                    {it.kind && ` · ${it.kind}`}
                   </small>
                 </button>
               </li>

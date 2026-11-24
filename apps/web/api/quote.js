@@ -75854,6 +75854,8 @@ function priceListToRows(list, updatedAt) {
       rows.push(["erp_kod", id, id, "", "", "", code]);
   for (const sv of list.services ?? [])
     rows.push(["xizmat", sv.id, sv.name, sv.price, sv.basis, sv.products.join(","), ""]);
+  for (const [key, g] of Object.entries(list.erpKindGroups ?? {}))
+    rows.push(["erp_tur", key, "1C turi guruhi", g, "", "", ""]);
   return rows;
 }
 var num = (x) => {
@@ -75869,7 +75871,8 @@ function rowsToPriceList(rows) {
     assembly: {},
     hardware: { ...priceListDemo.hardware },
     services: [],
-    erpCodes: {}
+    erpCodes: {},
+    erpKindGroups: {}
   };
   const BASES = ["m2", "edge_m", "product", "pct", "manual_m"];
   for (const r of rows.slice(1)) {
@@ -75900,6 +75903,12 @@ function rowsToPriceList(rows) {
       case "furnitura":
         if (id && v >= 0) list.hardware[id] = v;
         break;
+      case "erp_tur": {
+        const g = String(value ?? "").trim();
+        if (id && (g === "material" || g === "hardware" || g === "other"))
+          list.erpKindGroups[id] = g;
+        break;
+      }
       case "xizmat": {
         const basis = BASES.find((b) => b === len);
         if (id && v >= 0 && basis)

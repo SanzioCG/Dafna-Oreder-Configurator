@@ -190,6 +190,7 @@ export function MaterialsSection({
             onChange={(v) => putErp(EDGE_BAND_KEY, v)}
             label="Kromka: 1C kodi"
             testId="mgr-erp-edge"
+            scope={{ group: 'material' }}
           />
         </Field>
         <p className="mgr-note">Kromkalash ishi «Xizmatlar» bo&apos;limida (1 metr uchun).</p>
@@ -503,6 +504,7 @@ function MaterialCard({
                 onChange={putErp}
                 label="1C kodi"
                 testId={`mgr-erp-${row.id}`}
+                scope={{ group: 'material' }}
               />
             </Field>
             <Field label="1 list narxi">

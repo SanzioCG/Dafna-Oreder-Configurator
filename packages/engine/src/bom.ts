@@ -101,6 +101,11 @@ export interface PriceList {
   services?: PriceService[];
   /** D-20: our material / hardware id -> its ERP article (the ERP price sync matches on it) */
   erpCodes?: Record<string, string>;
+  /**
+   * D-32: the manager's group of each top 1C item kind (its key): material / hardware / other;
+   * a kind not listed takes the default group of its name (apps/web/server/erp1c.ts)
+   */
+  erpKindGroups?: Record<string, 'material' | 'hardware' | 'other'>;
   /** D-28: USD -> so'm rate the demo hardware prices were made with */
   usdRate?: number;
   wasteFactor: number;
