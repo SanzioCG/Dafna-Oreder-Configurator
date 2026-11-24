@@ -23,6 +23,10 @@ describe('D-31 guessFromName / cleanName / somPrice', () => {
     expect(cleanName('ЛДСП Эггер 5,796  Дуб Барония светлый 16мм ST12')).toBe(
       'Эггер Дуб Барония светлый 16мм ST12',
     );
+    // D-37: the same decor as LDSP and LMDF in 1C - the MDF one keeps its type in the name
+    expect(cleanName('ЛМДФ Ультрадекор 5,796 Железный камень 16мм')).toBe(
+      'ЛМДФ Ультрадекор Железный камень 16мм',
+    );
   });
 
   it('a 1C hinge / slide: kind and soft close', () => {

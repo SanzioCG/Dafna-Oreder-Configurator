@@ -107,8 +107,10 @@ export function guessFromName(name: string): {
 
 /** the 1C name without the sheet area / size noise, for the kiosk */
 export function cleanName(name: string): string {
+  // D-37: "ЛДСП" (the usual board) is dropped; "ЛМДФ" / "МДФ" stay - 1C has the same decor as
+  // both (e.g. Ультрадекор Железный камень), and an MDF board is not a pedestal / desk carcass
   return name
-    .replace(/^(лдсп|лмдф|мдф|дсп)\s+/i, '')
+    .replace(/^(лдсп|дсп)\s+/i, '')
     .replace(/\s*\d[.,]\d{2,4}(\s*кв)?\s*/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
