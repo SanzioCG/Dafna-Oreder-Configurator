@@ -1,7 +1,8 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { uz } from '../i18n/uz';
 import type { SceneProps } from '../viewer/Scene';
+import { offerBuiltInBoards, clearBoards } from '../testBoards';
 
 // WebGL is not available in jsdom: a stub scene that exposes the generated parts.
 vi.mock('../viewer/Scene', () => ({
@@ -18,7 +19,11 @@ vi.mock('../viewer/Scene', () => ({
 
 const { App } = await import('../App');
 
+// D-37: the colour tests run against the built-in decors, offered as if added from 1C
+beforeEach(offerBuiltInBoards);
+
 afterEach(() => {
+  clearBoards();
   cleanup();
   window.localStorage.clear();
 });

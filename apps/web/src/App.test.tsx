@@ -1,9 +1,10 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ru } from './i18n/ru';
 import { uz } from './i18n/uz';
 import { CUSTOMER_BANNED_WORDS } from './ui/plainText';
 import type { SceneProps } from './viewer/Scene';
+import { offerBuiltInBoards, clearBoards } from './testBoards';
 
 // WebGL is not available in jsdom: replace only the 3D scene with a stub that exposes what it
 // receives. The viewer shell (buttons, dimension labels, banners) is the real one.
@@ -64,7 +65,11 @@ function setUrl(search: string) {
   window.history.replaceState(null, '', `/${search}`);
 }
 
+// D-37: the colour tests run against the built-in decors, offered as if added from 1C
+beforeEach(offerBuiltInBoards);
+
 afterEach(() => {
+  clearBoards();
   cleanup();
   setUrl('');
   window.localStorage.clear();
@@ -256,6 +261,15 @@ describe('step 2 "Rang"', () => {
     fireEvent.click(corpus().querySelector('[data-material="egger_u963_st9_16"]') as HTMLElement);
     expect(stub().dataset.corpus).toBe('egger_u963_st9_16');
     expect(stub().dataset.doors).toBe('egger_u963_st9_16');
+  });
+
+  it('D-37 no board added from 1C: no demo decors, a note instead; no door colour toggle', () => {
+    clearBoards();
+    renderApp();
+    fireEvent.click(tab(uz['step.color']));
+    expect(document.querySelectorAll('.swatch').length).toBe(0);
+    expect(screen.getByTestId('no-materials-corpusMaterial').textContent).toBe(uz['c.noMaterials']);
+    expect(screen.queryByRole('switch', { name: uz['c.doorsOther'] })).toBeNull();
   });
 
   it('"Eshiklar boshqa rangda" OFF hides door swatches (doors follow the corpus); ON shows them', () => {

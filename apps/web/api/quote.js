@@ -75834,6 +75834,7 @@ var uz = {
   "c.details": "Batafsil",
   "c.base": "Pastki yopiq taglik",
   "c.doorsOther": "Eshiklar boshqa rangda",
+  "c.noMaterials": "Ranglar hali qo'shilmagan \u2014 konsultantga murojaat qiling",
   "c.withDoors": "Eshikli shkaf",
   "c.part": "Qism",
   "c.partN": "{n}-qism",

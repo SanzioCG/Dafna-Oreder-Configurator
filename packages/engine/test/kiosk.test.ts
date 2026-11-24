@@ -37,10 +37,12 @@ const hinge = {
 afterEach(() => applyCatalogExtension(EMPTY_EXTENSION));
 
 describe('D-35 kiosk options', () => {
-  it('nothing added: the built-in options stay (the kiosk is never empty)', () => {
+  it('D-37 nothing added: no board is offered (no demo decors); brands keep the built-ins', () => {
     applyCatalogExtension(EMPTY_EXTENSION);
-    const def = getParamDef(T, 'corpusMaterial')!;
-    expect(kioskOptions(def)).toEqual(def.options);
+    expect(kioskOptions(getParamDef(T, 'corpusMaterial')!)).toEqual([]);
+    expect(kioskOptions(getParamDef(T, 'doorMaterial')!)).toEqual(['same_as_corpus']);
+    const hinge = getParamDef(T, 'hingeBrand')!;
+    expect(kioskOptions(hinge)).toEqual(hinge.options);
     expect(kioskParams(T, defaultParams(T))).toEqual(defaultParams(T));
   });
 
@@ -55,9 +57,7 @@ describe('D-35 kiosk options', () => {
     expect(generate(T, p).issues.filter((i) => i.severity === 'error')).toEqual([]);
     // a hidden added entry does not count
     applyCatalogExtension({ ...ext, materials: [{ ...board, visible: false }] });
-    expect(kioskOptions(getParamDef(T, 'corpusMaterial')!)).toEqual(
-      getParamDef(T, 'corpusMaterial')!.options,
-    );
+    expect(kioskOptions(getParamDef(T, 'corpusMaterial')!)).toEqual([]);
   });
 
   it('D-36: a carcass board also fits the desk top - the desk shows no demo decors', () => {

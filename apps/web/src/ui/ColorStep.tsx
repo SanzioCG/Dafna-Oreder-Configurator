@@ -49,6 +49,8 @@ export function ColorStep({ mode, config }: { mode: Mode; config: Configurator }
             const different = value !== SAME_AS_CORPUS;
             // D-35: only what the manager took from 1C, once there is any
             const options = kioskOptions(def).filter((o) => o !== SAME_AS_CORPUS);
+            // D-37: no board added for doors - the doors follow the corpus, no toggle
+            if (options.length === 0) return null;
             return (
               <div className="param" data-param="doorMaterial" key={def.key}>
                 <Toggle
@@ -73,17 +75,25 @@ export function ColorStep({ mode, config }: { mode: Mode; config: Configurator }
               </div>
             );
           }
+          const options = kioskOptions(def);
           return (
             <div className="param" data-param={def.key} key={def.key}>
               <span className="param-label">{t(def.labelKey)}</span>
-              <MaterialSwatch
-                options={kioskOptions(def)}
-                value={value}
-                corpusValue={value}
-                mode={mode}
-                label={t(def.labelKey)}
-                onChange={(v) => config.setParam(def.key, v)}
-              />
+              {/* D-37: boards come only from the manager's 1C list */}
+              {def.materialKinds && options.length === 0 ? (
+                <p className="muted" data-testid={`no-materials-${def.key}`}>
+                  {t('c.noMaterials')}
+                </p>
+              ) : (
+                <MaterialSwatch
+                  options={options}
+                  value={value}
+                  corpusValue={value}
+                  mode={mode}
+                  label={t(def.labelKey)}
+                  onChange={(v) => config.setParam(def.key, v)}
+                />
+              )}
             </div>
           );
         })}

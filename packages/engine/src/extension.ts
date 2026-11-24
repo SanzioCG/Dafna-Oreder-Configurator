@@ -198,11 +198,11 @@ export function extensionBrand(
 }
 
 /**
- * D-35: the kiosk shows what the manager took from 1C. For a material parameter (corpus, door,
- * top) or a brand parameter (hinges, slides): once the manager has added at least one visible
- * entry that fits it, only the added entries are offered (the built-in demo ones are hidden);
- * until then the built-in ones stay, so the kiosk is never empty. Nothing is removed from the
- * template: stored applications keep their built-in materials and still regenerate.
+ * D-35 / D-37: the kiosk shows what the manager took from 1C. A material parameter (corpus,
+ * door, top) offers ONLY the visible boards the manager added (none added = an empty list, the
+ * kiosk says so); a brand parameter (hinges, slides) offers the added brands once there is one,
+ * until then the built-in ones. Nothing is removed from the template: stored applications keep
+ * their built-in materials and still regenerate.
  */
 export function kioskOptions(def: ParamDef): readonly ParamValue[] {
   const opts = def.options ?? [];
@@ -217,7 +217,9 @@ export function kioskOptions(def: ParamDef): readonly ParamValue[] {
       : current.hardware.filter((h) => h.visible && h.kind === kind).map((h) => h.brandKey),
   );
   const own = opts.filter((o) => added.has(o));
-  if (own.length === 0) return opts;
+  // D-37: boards come ONLY from what the manager took from 1C - no demo decor is ever offered
+  // (an empty list = "not added yet"); hinge / slide brands keep the built-ins until one is added
+  if (own.length === 0 && !usage) return opts;
   return opts.filter((o) => o === 'same_as_corpus' || added.has(o));
 }
 
