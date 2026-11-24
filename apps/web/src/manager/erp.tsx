@@ -50,9 +50,23 @@ async function post<T>(
   }
 }
 
+export interface ErpKindRow {
+  key: string;
+  name: string;
+  folder: boolean;
+}
+export type ErpItemRow = ErpItem & Omit<ErpPrice, 'name' | 'unit'>;
+
 export interface ErpApi {
   search: (q: string) => Promise<ErpOutcome<ErpItem[]>>;
   prices: (articles: string[]) => Promise<ErpOutcome<Record<string, ErpPrice>>>;
+  /** D-31: the kinds under a kind folder ('' = the top) */
+  kinds: (parent: string) => Promise<ErpOutcome<ErpKindRow[]>>;
+  /** D-31: a page of the items of a kind, with price and stock */
+  items: (
+    kind: string,
+    skip: number,
+  ) => Promise<ErpOutcome<{ items: ErpItemRow[]; total: number }>>;
 }
 
 export function erpApi(pin: string, fetchImpl?: typeof fetch): ErpApi {
@@ -64,6 +78,23 @@ export function erpApi(pin: string, fetchImpl?: typeof fetch): ErpApi {
         pin,
         { action: 'prices', articles },
         (d) => d.prices as Record<string, ErpPrice> | undefined,
+        fetchImpl,
+      ),
+    kinds: (parent) =>
+      post(
+        pin,
+        parent ? { action: 'kinds', parent } : { action: 'kinds' },
+        (d) => d.kinds as ErpKindRow[] | undefined,
+        fetchImpl,
+      ),
+    items: (kind, skip) =>
+      post(
+        pin,
+        { action: 'items', kind, skip },
+        (d) =>
+          Array.isArray(d.items)
+            ? { items: d.items as ErpItemRow[], total: Number(d.total ?? 0) }
+            : undefined,
         fetchImpl,
       ),
   };

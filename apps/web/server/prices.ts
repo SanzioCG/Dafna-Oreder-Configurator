@@ -11,7 +11,7 @@ import {
   type PriceService,
   type SheetPrice,
 } from '@dafna/engine';
-import { mergeCatalog, type CachedCatalog, type CatalogStore } from './catalog';
+import { mergeCatalog, type CachedCatalog, type CatalogStore, type ErpLink } from './catalog';
 import type { RateLimiter } from './rateLimit';
 
 /**
@@ -317,6 +317,7 @@ export async function handleManager(req: Request, deps: ManagerDeps): Promise<Re
   }
   // D-20: the catalog first (append-only merge on the stored one), then the prices
   let catalog = deps.catalog ? await deps.catalog.get() : undefined;
+  let links: ErpLink[] = [];
   if (body.catalog !== undefined) {
     if (!deps.catalogStore || !deps.catalog)
       return json(503, { error: { code: 'not_configured' } });
@@ -327,6 +328,7 @@ export async function handleManager(req: Request, deps: ManagerDeps): Promise<Re
     await deps.catalogStore.save(merged.ext);
     deps.catalog.set(merged.ext);
     catalog = merged.ext;
+    links = merged.links;
   }
   if (body.list === undefined) {
     const { list, updatedAt } = await deps.prices.get();
@@ -335,6 +337,17 @@ export async function handleManager(req: Request, deps: ManagerDeps): Promise<Re
   const updatedAt = tashkentMinute(deps.now());
   const parsed = parsePriceList(body.list, `live-${updatedAt}`);
   if (!parsed.ok) return json(400, { error: { code: 'invalid_price', field: parsed.field } });
+  // D-31: an item just taken from 1C keeps its 1C article and price under its new id
+  for (const l of links) {
+    parsed.list.erpCodes = { ...parsed.list.erpCodes, [l.id]: l.article };
+    if (l.price === undefined) continue;
+    if (l.kind === 'hardware') parsed.list.hardware[l.id] = l.price;
+    else if (l.sheet)
+      parsed.list.boardSheets = {
+        ...parsed.list.boardSheets,
+        [l.id]: { price: l.price, lengthMm: l.sheet.lengthMm, widthMm: l.sheet.widthMm },
+      };
+  }
   await deps.store.save(parsed.list, updatedAt);
   deps.prices.set(parsed.list, updatedAt);
   return json(200, { ok: true, list: parsed.list, updatedAt, catalog });

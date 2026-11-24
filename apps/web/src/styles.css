@@ -3024,3 +3024,38 @@ p {
 .mgr-erp-list small {
   opacity: 0.7;
 }
+
+/* ---------- D-31: 1C catalogue browser ---------- */
+
+.mgr-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.mgr-crumbs button {
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mgr-kinds {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.mgr-kind {
+  padding: 12px 14px;
+  border: var(--line-in-card);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}

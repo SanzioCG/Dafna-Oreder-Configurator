@@ -11,6 +11,7 @@ import { MaterialsSection } from './MaterialsSection';
 import { ProfitSection } from './ProfitSection';
 import { ServicesSection } from './ServicesSection';
 import { ERP_ERRORS, ErpContext, applyErpPrices, erpApi } from './erp';
+import { ErpCatalogSection } from './ErpCatalogSection';
 import { managerLoad, managerSave, managerUploadTexture, type ManagerOutcome } from './managerApi';
 import { ERRORS, fieldText, toServiceModel, type CatalogDraft } from './model';
 
@@ -28,8 +29,9 @@ export type { CatalogDraft } from './model';
  * Board prices will come from Dafna's 1C (by the 1C code); until then they are typed here.
  * An internal page for Dafna's office: Uzbek only.
  */
-type Section = 'materials' | 'hardware' | 'services' | 'profit';
+type Section = 'erp' | 'materials' | 'hardware' | 'services' | 'profit';
 const SECTIONS: { id: Section; label: string; hint: string }[] = [
+  { id: 'erp', label: '1C katalogi', hint: 'Kioskda nima chiqadi' },
   { id: 'materials', label: 'Materiallar', hint: 'Plitalar, kromka' },
   { id: 'hardware', label: 'Furnitura', hint: "Petlya, yo'naltiruvchi…" },
   { id: 'services', label: 'Xizmatlar', hint: 'm², metr, dona' },
@@ -224,6 +226,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               uploadTexture={(id, image) => managerUploadTexture(pin, id, image, fetchImpl)}
             />
           )}
+          {section === 'erp' && <ErpCatalogSection list={list} draft={draft} setDraft={setDraft} />}
           {section === 'hardware' && (
             <HardwareSection list={list} edit={edit} draft={draft} setDraft={setDraft} />
           )}

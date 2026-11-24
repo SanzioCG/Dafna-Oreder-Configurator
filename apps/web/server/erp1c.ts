@@ -53,6 +53,14 @@ const lit = (s: string) => `'${s.replace(/'/g, "''")}'`;
 const GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function odata<T>(cfg: ErpConfig, path: string, query: Record<string, string>): Promise<T[]> {
+  return (await odataPage<T>(cfg, path, query)).value;
+}
+
+async function odataPage<T>(
+  cfg: ErpConfig,
+  path: string,
+  query: Record<string, string>,
+): Promise<{ value: T[]; count: number | null }> {
   const q = new URLSearchParams({ $format: 'json', ...query }).toString().replace(/\+/g, '%20');
   const url = `${cfg.url}${encodeURI(path)}?${q}`;
   const res = await (cfg.fetchImpl ?? fetch)(url, {
@@ -60,8 +68,9 @@ async function odata<T>(cfg: ErpConfig, path: string, query: Record<string, stri
     signal: AbortSignal.timeout(15_000),
   });
   if (!res.ok) throw new Error(`erp_${res.status}`);
-  const data = (await res.json()) as { value?: T[] };
-  return data.value ?? [];
+  const data = (await res.json()) as { value?: T[]; 'odata.count'?: string };
+  const count = data['odata.count'] !== undefined ? Number(data['odata.count']) : null;
+  return { value: data.value ?? [], count };
 }
 
 interface RawItem {
@@ -117,7 +126,16 @@ export async function erpPrices(
       if (!r.IsFolder && !r.DeletionMark && r.Артикул && !items.has(r.Артикул.trim()))
         items.set(r.Артикул.trim(), toItem(r));
   }
-  const keys = [...items.values()].map((i) => i.key).filter((k) => GUID_RE.test(k));
+  const byKey = await pricesOf(cfg, [...items.values()]);
+  const out: Record<string, ErpPrice> = {};
+  for (const [article, item] of items) out[article] = byKey.get(item.key)!;
+  return out;
+}
+
+/** D-30: price, currency and free stock of 1C items, by their key */
+async function pricesOf(cfg: ErpConfig, list: ErpItem[]): Promise<Map<string, ErpPrice>> {
+  const items = new Map(list.map((i) => [i.key, i]));
+  const keys = [...items.keys()].filter((k) => GUID_RE.test(k));
   const price = new Map<string, { price: number; currency: string }>();
   const stock = new Map<string, number>();
   const currencies = new Map<string, string>();
@@ -154,18 +172,94 @@ export async function erpPrices(
     });
     for (const r of rows) currencies.set(r.Ref_Key, (r.Description ?? '').trim());
   }
-  const out: Record<string, ErpPrice> = {};
-  for (const [article, item] of items) {
-    const p = price.get(item.key);
-    out[article] = {
+  const out = new Map<string, ErpPrice>();
+  for (const [key, item] of items) {
+    const p = price.get(key);
+    out.set(key, {
       name: item.name,
       unit: item.unit,
       price: p ? p.price : null,
       currency: p ? (currencies.get(p.currency) ?? null) : null,
-      stock: stock.has(item.key) ? stock.get(item.key)! : null,
-    };
+      stock: stock.has(key) ? stock.get(key)! : null,
+    });
   }
   return out;
+}
+
+export const ROOT_FOLDER = '00000000-0000-0000-0000-000000000000';
+
+export interface ErpKind {
+  key: string;
+  name: string;
+  /** a group of kinds (opens to its sub-kinds) */
+  folder: boolean;
+}
+export type ErpRow = ErpItem & Omit<ErpPrice, 'name' | 'unit'>;
+
+/**
+ * D-31: 1C groups its items by kind (ВидыНоменклатуры: ЛДСП, ЛМДФ, Кромка, …; a tree). The
+ * manager browses the whole list this way and marks what the kiosk shows.
+ */
+export async function erpKinds(cfg: ErpConfig, parent: string): Promise<ErpKind[]> {
+  const rows = await odata<{ Ref_Key: string; Description?: string; IsFolder?: boolean }>(
+    cfg,
+    'Catalog_ВидыНоменклатуры',
+    {
+      $filter: `Parent_Key eq guid'${GUID_RE.test(parent) ? parent : ROOT_FOLDER}' and DeletionMark eq false`,
+      $select: 'Ref_Key,Description,IsFolder',
+      $top: '500',
+    },
+  );
+  return rows
+    .map((r) => ({
+      key: r.Ref_Key,
+      name: (r.Description ?? '').trim(),
+      folder: r.IsFolder === true,
+    }))
+    .filter((k) => k.name && !k.name.startsWith('_') && !k.name.startsWith('!'))
+    .sort((a, b) => Number(b.folder) - Number(a.folder) || a.name.localeCompare(b.name, 'ru'));
+}
+
+/** one page of the items of a kind, with price and stock */
+export async function erpItemsOfKind(
+  cfg: ErpConfig,
+  kind: string,
+  skip = 0,
+  top = 50,
+): Promise<{ items: ErpRow[]; total: number }> {
+  if (!GUID_RE.test(kind)) return { items: [], total: 0 };
+  const filter = `ВидНоменклатуры_Key eq guid'${kind}' and IsFolder eq false and DeletionMark eq false`;
+  // 1C refuses $expand together with $inlinecount: the count is a request of its own
+  const count = await odataPage<RawItem>(cfg, 'Catalog_Номенклатура', {
+    $filter: filter,
+    $select: 'Ref_Key',
+    $top: '1',
+    $inlinecount: 'allpages',
+  });
+  const res = await odataPage<RawItem>(cfg, 'Catalog_Номенклатура', {
+    $filter: filter,
+    $select: ITEM_SELECT,
+    $expand: 'ЕдиницаИзмерения',
+    $top: String(top),
+    $skip: String(skip),
+  });
+  const items = res.value
+    .filter((r) => !r.IsFolder && !r.DeletionMark)
+    .map(toItem)
+    .sort((a, b) => a.name.localeCompare(b.name, 'ru'));
+  const prices = await pricesOf(cfg, items);
+  return {
+    items: items.map((i) => {
+      const p = prices.get(i.key);
+      return {
+        ...i,
+        price: p?.price ?? null,
+        currency: p?.currency ?? null,
+        stock: p?.stock ?? null,
+      };
+    }),
+    total: count.count ?? items.length,
+  };
 }
 
 const json = (status: number, body: unknown) =>
@@ -192,7 +286,14 @@ export async function handleErp(req: Request, deps: ErpDeps): Promise<Response> 
   if (!pinMatches(req.headers.get('x-manager-pin'), deps.managerPin))
     return json(401, { error: { code: 'wrong_pin' } });
   if (!deps.erp) return json(503, { error: { code: 'erp_not_configured' } });
-  let body: { action?: unknown; q?: unknown; articles?: unknown };
+  let body: {
+    action?: unknown;
+    q?: unknown;
+    articles?: unknown;
+    parent?: unknown;
+    kind?: unknown;
+    skip?: unknown;
+  };
   try {
     const text = await req.text();
     if (text.length > 20_000) return json(413, { error: { code: 'too_large' } });
@@ -206,6 +307,16 @@ export async function handleErp(req: Request, deps: ErpDeps): Promise<Response> 
       if (q.trim().length < 2) return json(400, { error: { code: 'invalid_request' } });
       return json(200, { items: await erpSearch(deps.erp, q) });
     }
+    if (body.action === 'kinds') {
+      const parent = typeof body.parent === 'string' ? body.parent : ROOT_FOLDER;
+      return json(200, { kinds: await erpKinds(deps.erp, parent) });
+    }
+    if (body.action === 'items') {
+      const b = body as { kind?: unknown; skip?: unknown };
+      const skip = Number.isInteger(b.skip) && (b.skip as number) >= 0 ? (b.skip as number) : 0;
+      const kind = typeof b.kind === 'string' ? b.kind : '';
+      return json(200, await erpItemsOfKind(deps.erp, kind, Math.min(skip, 100_000)));
+    }
     if (body.action === 'prices') {
       const articles = Array.isArray(body.articles)
         ? body.articles.filter((a): a is string => typeof a === 'string' && a.length <= 40)
@@ -215,8 +326,9 @@ export async function handleErp(req: Request, deps: ErpDeps): Promise<Response> 
       return json(200, { prices: await erpPrices(deps.erp, articles) });
     }
     return json(400, { error: { code: 'invalid_request' } });
-  } catch {
-    // never echo 1C's answer (it may name internal hosts)
+  } catch (e) {
+    // never echo 1C's answer (it may name internal hosts); the log keeps only the status
+    console.warn('erp:', e instanceof Error ? e.message.slice(0, 40) : 'error');
     return json(502, { error: { code: 'erp_unavailable' } });
   }
 }

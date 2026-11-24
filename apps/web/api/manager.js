@@ -63611,6 +63611,16 @@ var USAGES = ["corpus", "door", "top"];
 var THICKNESS = [16, 16.7, 18, 22, 25];
 var HEX = /^#[0-9a-f]{6}$/i;
 var text = (v, max) => typeof v === "string" ? v.trim().slice(0, max) : "";
+function erpLinkOf(x) {
+  const v = x;
+  const article = typeof v?.erpArticle === "string" ? v.erpArticle.trim().slice(0, 40) : "";
+  if (!article) return null;
+  const price = typeof v?.erpPrice === "number" && Number.isFinite(v.erpPrice) && v.erpPrice >= 0 ? Math.round(v.erpPrice) : void 0;
+  const s = v?.erpSheet;
+  const mm = (n3) => typeof n3 === "number" && n3 >= 300 && n3 <= 6e3;
+  const sheet = s && mm(s.lengthMm) && mm(s.widthMm) ? { lengthMm: Math.round(s.lengthMm), widthMm: Math.round(s.widthMm) } : void 0;
+  return { article, price, sheet };
+}
 var slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 20) || "brand";
 function textureUrlAllowed(url, allowDataUrls = false) {
   if (allowDataUrls && /^data:image\/(jpeg|png|webp);base64,/.test(url)) return true;
@@ -63629,6 +63639,7 @@ function mergeCatalog(saved, incoming, options = {}) {
   const rawH = inc.hardware ?? [];
   if (rawM.length > 500 || rawH.length > 200) return { ok: false, field: "catalog" };
   const materials = saved.materials.map((m) => ({ ...m }));
+  const links = [];
   let next = materials.length + 1;
   for (const [i, x] of rawM.entries()) {
     const name = text(x?.name, 80);
@@ -63657,6 +63668,8 @@ function mergeCatalog(saved, incoming, options = {}) {
     if (!kind || !THICKNESS.includes(Number(x?.thicknessMm)) || usage.length === 0)
       return { ok: false, field: `materials.${i}` };
     while (materials.some((m) => m.id === `x_m${next}`)) next++;
+    const link = erpLinkOf(x);
+    if (link) links.push({ ...link, id: `x_m${next}`, kind: "material" });
     materials.push({
       id: `x_m${next++}`,
       kind,
@@ -63693,6 +63706,14 @@ function mergeCatalog(saved, incoming, options = {}) {
     for (let n3 = 2; hardware.some((h) => h.kind === kind && h.brandKey === brandKey); n3++)
       brandKey = `x_${slug(`${brand}_${model}`)}_${n3}`;
     while (hardware.some((h) => h.id === `x_h${nextH}`)) nextH++;
+    const linkH = erpLinkOf(x);
+    if (linkH)
+      links.push({
+        id: `x_h${nextH}`,
+        kind: "hardware",
+        article: linkH.article,
+        price: linkH.price
+      });
     hardware.push({ id: `x_h${nextH++}`, kind, brandKey, brand, model, softClose, visible, note });
   }
   let textures = { ...saved.textures ?? {} };
@@ -63713,7 +63734,7 @@ function mergeCatalog(saved, incoming, options = {}) {
       };
     }
   }
-  return { ok: true, ext: { materials, hardware, textures } };
+  return { ok: true, ext: { materials, hardware, textures }, links };
 }
 var CATALOG_TAB = "Katalog";
 var CATALOG_HEADER = [
@@ -64018,6 +64039,7 @@ async function handleManager(req, deps2) {
     return json(400, { error: { code: "invalid_request" } });
   }
   let catalog = deps2.catalog ? await deps2.catalog.get() : void 0;
+  let links = [];
   if (body.catalog !== void 0) {
     if (!deps2.catalogStore || !deps2.catalog)
       return json(503, { error: { code: "not_configured" } });
@@ -64028,6 +64050,7 @@ async function handleManager(req, deps2) {
     await deps2.catalogStore.save(merged.ext);
     deps2.catalog.set(merged.ext);
     catalog = merged.ext;
+    links = merged.links;
   }
   if (body.list === void 0) {
     const { list, updatedAt: updatedAt2 } = await deps2.prices.get();
@@ -64036,6 +64059,16 @@ async function handleManager(req, deps2) {
   const updatedAt = tashkentMinute(deps2.now());
   const parsed = parsePriceList(body.list, `live-${updatedAt}`);
   if (!parsed.ok) return json(400, { error: { code: "invalid_price", field: parsed.field } });
+  for (const l of links) {
+    parsed.list.erpCodes = { ...parsed.list.erpCodes, [l.id]: l.article };
+    if (l.price === void 0) continue;
+    if (l.kind === "hardware") parsed.list.hardware[l.id] = l.price;
+    else if (l.sheet)
+      parsed.list.boardSheets = {
+        ...parsed.list.boardSheets,
+        [l.id]: { price: l.price, lengthMm: l.sheet.lengthMm, widthMm: l.sheet.widthMm }
+      };
+  }
   await deps2.store.save(parsed.list, updatedAt);
   deps2.prices.set(parsed.list, updatedAt);
   return json(200, { ok: true, list: parsed.list, updatedAt, catalog });

@@ -221,3 +221,32 @@ describe('D-20 the kiosk path: manager saves, catalog and quote use it', () => {
     ).toEqual({ ok: false, field: 'services.0' });
   });
 });
+
+describe('D-31 an entry taken from 1C', () => {
+  it('its 1C article and price come back as a link to the new id (not kept in the catalog)', () => {
+    const r = mergeCatalog(EMPTY_EXTENSION, {
+      materials: [
+        {
+          ...board,
+          erpArticle: 'H1362 ST12',
+          erpPrice: 756400,
+          erpSheet: { lengthMm: 2800, widthMm: 2070 },
+        },
+      ],
+      hardware: [{ ...hinge, erpArticle: '10100432Y', erpPrice: 11599 }],
+    });
+    if (!r.ok) throw new Error(r.field);
+    const m = r.ext.materials[0]!;
+    expect(r.links).toEqual([
+      {
+        id: m.id,
+        kind: 'material',
+        article: 'H1362 ST12',
+        price: 756400,
+        sheet: { lengthMm: 2800, widthMm: 2070 },
+      },
+      { id: r.ext.hardware[0]!.id, kind: 'hardware', article: '10100432Y', price: 11599 },
+    ]);
+    expect(JSON.stringify(r.ext)).not.toContain('erpArticle');
+  });
+});

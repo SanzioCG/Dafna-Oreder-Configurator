@@ -54,3 +54,28 @@ per sheet, both in UZS) matched the items of Dafna's stock report.
 - Some 1C items are packs (e.g. "Retail … 20 Pcs"): the manager links the piece article.
 - The token was shared in a chat. Dafna should ask EMAN for a new token, restricted to
   Vercel's addresses if possible.
+
+## Update (D-31, 2026-11-24): the manager builds the kiosk catalogue from 1C
+
+The founder asked for the whole 1C list to be available, with the manager marking which items
+the kiosk shows.
+
+- A new section **"1C katalogi"** browses all of `eman_materials` by item kind
+  (`Catalog_ВидыНоменклатуры`: ЛДСП › Эггер ЛДСП › Эггер 16 мм, ЛМДФ, Кромка, …). It also has
+  a search. Each row shows the 1C name, article, price and free stock. 1C's own item folders
+  are almost flat (18 940 items at the top), so the item kind is the tree.
+- **"Kioskga qo'shish"** opens a form prefilled from the 1C name: LDSP or MDF board, hinge or
+  slide; thickness, brand, decor group and sheet size. The manager adds the colour and where
+  the board is used.
+  - The new entry goes into the catalog extension (ADR-017) as before, so it is append-only.
+  - On save, the server links it to its 1C article and puts the 1C price (per sheet or per
+    unit) into the price list under the new id. The article and price are not stored in the
+    "Katalog" tab.
+- "Kioskdan olish" hides an entry again; nothing is deleted.
+- **1C is only read.** The token allows GET only, and the code sends nothing else. Nothing is
+  ever written to 1C.
+- **Pictures:** 1C has a picture field (`ФайлКартинки`), but it is empty for nearly every item
+  (0 of 1000 chipboard items, 4 of 728 MDF, 0 hinges). The attached-files catalog is not
+  published to OData either. Decor photos stay a manager upload (D-21).
+- Server: `/api/erp` gains the actions `kinds` and `items`. 1C refuses `$expand` together
+  with `$inlinecount`, so the item count is a request of its own.

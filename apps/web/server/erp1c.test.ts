@@ -113,3 +113,32 @@ describe('D-30 /api/erp (1C for the manager page)', () => {
     expect(text).not.toContain('192.168');
   });
 });
+
+describe('D-31 1C catalogue browse and links on save', () => {
+  it('kinds: groups first, names sorted, service kinds (_ / !) left out', async () => {
+    const fetchImpl = (async () =>
+      new Response(
+        JSON.stringify({
+          value: [
+            { Ref_Key: KEY, Description: 'Кромка', IsFolder: true },
+            { Ref_Key: UZS, Description: 'ЛДСП', IsFolder: true },
+            { Ref_Key: 'a', Description: '!Деловые отходы', IsFolder: false },
+            { Ref_Key: 'b', Description: 'Блоки', IsFolder: false },
+          ],
+        }),
+      )) as typeof fetch;
+    const r = await handleErp(req({ action: 'kinds' }), deps(cfg(fetchImpl)));
+    const body = (await r.json()) as { kinds: { name: string; folder: boolean }[] };
+    expect(body.kinds.map((k) => k.name)).toEqual(['Кромка', 'ЛДСП', 'Блоки']);
+  });
+
+  it('items of a kind: the count is asked apart ($expand and $inlinecount do not mix in 1C)', async () => {
+    const { fetchImpl, urls } = fake1C();
+    const r = await handleErp(req({ action: 'items', kind: KEY, skip: 50 }), deps(cfg(fetchImpl)));
+    const body = (await r.json()) as { items: { article: string; price: number }[] };
+    expect(body.items[0]).toMatchObject({ article: '10100432Y', price: 11598.9, stock: 9461 });
+    const page = urls.find((u) => u.includes('$skip=50'))!;
+    expect(page).toContain('$expand');
+    expect(page).not.toContain('$inlinecount');
+  });
+});

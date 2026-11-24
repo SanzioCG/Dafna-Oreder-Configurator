@@ -2037,6 +2037,9 @@ function erpFromEnv(env) {
 var lit = (s) => `'${s.replace(/'/g, "''")}'`;
 var GUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 async function odata(cfg, path, query) {
+  return (await odataPage(cfg, path, query)).value;
+}
+async function odataPage(cfg, path, query) {
   const q = new URLSearchParams({ $format: "json", ...query }).toString().replace(/\+/g, "%20");
   const url = `${cfg.url}${encodeURI(path)}?${q}`;
   const res = await (cfg.fetchImpl ?? fetch)(url, {
@@ -2045,7 +2048,8 @@ async function odata(cfg, path, query) {
   });
   if (!res.ok) throw new Error(`erp_${res.status}`);
   const data = await res.json();
-  return data.value ?? [];
+  const count = data["odata.count"] !== void 0 ? Number(data["odata.count"]) : null;
+  return { value: data.value ?? [], count };
 }
 var ITEM_SELECT = "Ref_Key,Description,\u0410\u0440\u0442\u0438\u043A\u0443\u043B,DeletionMark,IsFolder,\u0415\u0434\u0438\u043D\u0438\u0446\u0430\u0418\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F/Description";
 var toItem = (r) => ({
@@ -2080,7 +2084,14 @@ async function erpPrices(cfg, articles) {
       if (!r.IsFolder && !r.DeletionMark && r.\u0410\u0440\u0442\u0438\u043A\u0443\u043B && !items.has(r.\u0410\u0440\u0442\u0438\u043A\u0443\u043B.trim()))
         items.set(r.\u0410\u0440\u0442\u0438\u043A\u0443\u043B.trim(), toItem(r));
   }
-  const keys = [...items.values()].map((i) => i.key).filter((k) => GUID_RE.test(k));
+  const byKey = await pricesOf(cfg, [...items.values()]);
+  const out = {};
+  for (const [article, item] of items) out[article] = byKey.get(item.key);
+  return out;
+}
+async function pricesOf(cfg, list) {
+  const items = new Map(list.map((i) => [i.key, i]));
+  const keys = [...items.keys()].filter((k) => GUID_RE.test(k));
   const price = /* @__PURE__ */ new Map();
   const stock = /* @__PURE__ */ new Map();
   const currencies = /* @__PURE__ */ new Map();
@@ -2117,18 +2128,66 @@ async function erpPrices(cfg, articles) {
     });
     for (const r of rows) currencies.set(r.Ref_Key, (r.Description ?? "").trim());
   }
-  const out = {};
-  for (const [article, item] of items) {
-    const p = price.get(item.key);
-    out[article] = {
+  const out = /* @__PURE__ */ new Map();
+  for (const [key, item] of items) {
+    const p = price.get(key);
+    out.set(key, {
       name: item.name,
       unit: item.unit,
       price: p ? p.price : null,
       currency: p ? currencies.get(p.currency) ?? null : null,
-      stock: stock.has(item.key) ? stock.get(item.key) : null
-    };
+      stock: stock.has(key) ? stock.get(key) : null
+    });
   }
   return out;
+}
+var ROOT_FOLDER = "00000000-0000-0000-0000-000000000000";
+async function erpKinds(cfg, parent) {
+  const rows = await odata(
+    cfg,
+    "Catalog_\u0412\u0438\u0434\u044B\u041D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u044B",
+    {
+      $filter: `Parent_Key eq guid'${GUID_RE.test(parent) ? parent : ROOT_FOLDER}' and DeletionMark eq false`,
+      $select: "Ref_Key,Description,IsFolder",
+      $top: "500"
+    }
+  );
+  return rows.map((r) => ({
+    key: r.Ref_Key,
+    name: (r.Description ?? "").trim(),
+    folder: r.IsFolder === true
+  })).filter((k) => k.name && !k.name.startsWith("_") && !k.name.startsWith("!")).sort((a, b) => Number(b.folder) - Number(a.folder) || a.name.localeCompare(b.name, "ru"));
+}
+async function erpItemsOfKind(cfg, kind, skip = 0, top = 50) {
+  if (!GUID_RE.test(kind)) return { items: [], total: 0 };
+  const filter = `\u0412\u0438\u0434\u041D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u044B_Key eq guid'${kind}' and IsFolder eq false and DeletionMark eq false`;
+  const count = await odataPage(cfg, "Catalog_\u041D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u0430", {
+    $filter: filter,
+    $select: "Ref_Key",
+    $top: "1",
+    $inlinecount: "allpages"
+  });
+  const res = await odataPage(cfg, "Catalog_\u041D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u0430", {
+    $filter: filter,
+    $select: ITEM_SELECT,
+    $expand: "\u0415\u0434\u0438\u043D\u0438\u0446\u0430\u0418\u0437\u043C\u0435\u0440\u0435\u043D\u0438\u044F",
+    $top: String(top),
+    $skip: String(skip)
+  });
+  const items = res.value.filter((r) => !r.IsFolder && !r.DeletionMark).map(toItem).sort((a, b) => a.name.localeCompare(b.name, "ru"));
+  const prices = await pricesOf(cfg, items);
+  return {
+    items: items.map((i) => {
+      const p = prices.get(i.key);
+      return {
+        ...i,
+        price: p?.price ?? null,
+        currency: p?.currency ?? null,
+        stock: p?.stock ?? null
+      };
+    }),
+    total: count.count ?? items.length
+  };
 }
 var json = (status, body) => new Response(JSON.stringify(body), {
   status,
@@ -2159,6 +2218,16 @@ async function handleErp(req, deps) {
       if (q.trim().length < 2) return json(400, { error: { code: "invalid_request" } });
       return json(200, { items: await erpSearch(deps.erp, q) });
     }
+    if (body.action === "kinds") {
+      const parent = typeof body.parent === "string" ? body.parent : ROOT_FOLDER;
+      return json(200, { kinds: await erpKinds(deps.erp, parent) });
+    }
+    if (body.action === "items") {
+      const b = body;
+      const skip = Number.isInteger(b.skip) && b.skip >= 0 ? b.skip : 0;
+      const kind = typeof b.kind === "string" ? b.kind : "";
+      return json(200, await erpItemsOfKind(deps.erp, kind, Math.min(skip, 1e5)));
+    }
     if (body.action === "prices") {
       const articles = Array.isArray(body.articles) ? body.articles.filter((a) => typeof a === "string" && a.length <= 40) : null;
       if (!articles || articles.length > 300)
@@ -2166,7 +2235,8 @@ async function handleErp(req, deps) {
       return json(200, { prices: await erpPrices(deps.erp, articles) });
     }
     return json(400, { error: { code: "invalid_request" } });
-  } catch {
+  } catch (e) {
+    console.warn("erp:", e instanceof Error ? e.message.slice(0, 40) : "error");
     return json(502, { error: { code: "erp_unavailable" } });
   }
 }

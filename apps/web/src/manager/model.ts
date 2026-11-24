@@ -81,11 +81,20 @@ export const defaultSheet = (id: string) => {
 };
 
 /** a material being added (no id until saved) or a saved one */
-export type MaterialDraft = Omit<CustomMaterial, 'id'> & { id?: string };
+/**
+ * D-31: an entry taken from 1C carries its 1C article and so'm price until it is saved (the
+ * server then links them to the new id in the price list; they are not kept in the catalog)
+ */
+interface ErpFields {
+  erpArticle?: string;
+  erpPrice?: number;
+  erpSheet?: { lengthMm: number; widthMm: number };
+}
+export type MaterialDraft = Omit<CustomMaterial, 'id'> & { id?: string } & ErpFields;
 export type HardwareDraft = Omit<CustomHardware, 'id' | 'brandKey'> & {
   id?: string;
   brandKey?: string;
-};
+} & Omit<ErpFields, 'erpSheet'>;
 export interface CatalogDraft {
   materials: MaterialDraft[];
   hardware: HardwareDraft[];

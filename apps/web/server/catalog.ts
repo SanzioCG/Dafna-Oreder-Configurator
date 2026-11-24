@@ -63,7 +63,39 @@ const THICKNESS = [16, 16.7, 18, 22, 25];
 const HEX = /^#[0-9a-f]{6}$/i;
 const text = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
-export type MergeResult = { ok: true; ext: CatalogExtension } | { ok: false; field: string };
+/**
+ * D-31: a new entry taken from Dafna's 1C carries its 1C article and price (never stored in the
+ * "Katalog" tab): the manager handler puts them into the price list under the new id.
+ */
+export interface ErpLink {
+  id: string;
+  kind: 'material' | 'hardware';
+  article: string;
+  /** so'm: per sheet (material) or per unit (hardware) */
+  price?: number;
+  sheet?: { lengthMm: number; widthMm: number };
+}
+
+export type MergeResult =
+  { ok: true; ext: CatalogExtension; links: ErpLink[] } | { ok: false; field: string };
+
+/** D-31: the 1C fields of an incoming new entry, validated */
+function erpLinkOf(x: unknown): Omit<ErpLink, 'id' | 'kind'> | null {
+  const v = x as { erpArticle?: unknown; erpPrice?: unknown; erpSheet?: unknown } | null;
+  const article = typeof v?.erpArticle === 'string' ? v.erpArticle.trim().slice(0, 40) : '';
+  if (!article) return null;
+  const price =
+    typeof v?.erpPrice === 'number' && Number.isFinite(v.erpPrice) && v.erpPrice >= 0
+      ? Math.round(v.erpPrice)
+      : undefined;
+  const s = v?.erpSheet as { lengthMm?: unknown; widthMm?: unknown } | undefined;
+  const mm = (n: unknown) => typeof n === 'number' && n >= 300 && n <= 6000;
+  const sheet =
+    s && mm(s.lengthMm) && mm(s.widthMm)
+      ? { lengthMm: Math.round(s.lengthMm as number), widthMm: Math.round(s.widthMm as number) }
+      : undefined;
+  return { article, price, sheet };
+}
 
 const slug = (s: string) =>
   s
@@ -102,6 +134,7 @@ export function mergeCatalog(
   if (rawM.length > 500 || rawH.length > 200) return { ok: false, field: 'catalog' };
 
   const materials = saved.materials.map((m) => ({ ...m }));
+  const links: ErpLink[] = [];
   let next = materials.length + 1;
   for (const [i, x] of rawM.entries()) {
     const name = text(x?.name, 80);
@@ -132,6 +165,8 @@ export function mergeCatalog(
     if (!kind || !THICKNESS.includes(Number(x?.thicknessMm)) || usage.length === 0)
       return { ok: false, field: `materials.${i}` };
     while (materials.some((m) => m.id === `x_m${next}`)) next++;
+    const link = erpLinkOf(x);
+    if (link) links.push({ ...link, id: `x_m${next}`, kind: 'material' });
     materials.push({
       id: `x_m${next++}`,
       kind,
@@ -170,6 +205,14 @@ export function mergeCatalog(
     for (let n = 2; hardware.some((h) => h.kind === kind && h.brandKey === brandKey); n++)
       brandKey = `x_${slug(`${brand}_${model}`)}_${n}`;
     while (hardware.some((h) => h.id === `x_h${nextH}`)) nextH++;
+    const linkH = erpLinkOf(x);
+    if (linkH)
+      links.push({
+        id: `x_h${nextH}`,
+        kind: 'hardware',
+        article: linkH.article,
+        price: linkH.price,
+      });
     hardware.push({ id: `x_h${nextH++}`, kind, brandKey, brand, model, softClose, visible, note });
   }
   // D-21: decor photos are visual only: the incoming set replaces the stored one
@@ -199,7 +242,7 @@ export function mergeCatalog(
       };
     }
   }
-  return { ok: true, ext: { materials, hardware, textures } };
+  return { ok: true, ext: { materials, hardware, textures }, links };
 }
 
 /* ---------- the "Katalog" tab ---------- */
