@@ -35,7 +35,7 @@ export type { CatalogDraft } from './model';
  */
 type Section = 'erp' | 'materials' | 'hardware' | 'services' | 'profit' | 'staff';
 const SECTIONS: { id: Section; label: string; hint: string }[] = [
-  { id: 'erp', label: '1C katalogi', hint: 'Kioskda nima chiqadi' },
+  { id: 'erp', label: '1C katalogi', hint: 'Saytda nima chiqadi' },
   { id: 'materials', label: 'Materiallar', hint: 'Plitalar, kromka' },
   { id: 'hardware', label: 'Furnitura', hint: "Petlya, yo'naltiruvchi…" },
   { id: 'services', label: 'Xizmatlar', hint: 'm², metr, dona' },
@@ -263,7 +263,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const status = dirty
     ? "Saqlanmagan o'zgarishlar bor"
     : list.demo || !updatedAt
-      ? "Narxlar hali saqlanmagan: kioskda sinov narxlari ko'rinmoqda"
+      ? "Narxlar hali saqlanmagan: saytda sinov narxlari ko'rinmoqda"
       : `Oxirgi saqlash: ${updatedAt}`;
 
   return (

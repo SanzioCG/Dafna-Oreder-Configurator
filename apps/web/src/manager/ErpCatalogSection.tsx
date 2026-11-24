@@ -21,9 +21,9 @@ import {
 
 /**
  * D-31 "1C katalogi": the whole of Dafna's 1C (eman_materials) by kind (ЛДСП, ЛМДФ, Кромка, …),
- * with price and stock. The manager marks what the kiosk shows: "Kioskga qo'shish" turns a 1C
+ * with price and stock. The manager marks what the kiosk shows: "Saytga qo'shish" turns a 1C
  * board into a material (LDSP / MDF) or a 1C hinge / slide into a hardware brand of the kiosk,
- * linked to its 1C article and priced from 1C; "Kioskdan olish" hides it again (nothing is
+ * linked to its 1C article and priced from 1C; "Saytdan olish" hides it again (nothing is
  * ever deleted, so stored applications regenerate).
  */
 export interface ErpKind {
@@ -265,8 +265,8 @@ export function ErpCatalogSection({
         <div>
           <h2>1C katalogi</h2>
           <p className="mgr-note">
-            EMAN 1C dagi hamma mahsulot (narxi va qoldig&apos;i bilan). Kioskda chiqishi kerak
-            bo&apos;lgan plita, petlya yoki yo&apos;naltiruvchini «Kioskga qo&apos;shish» bilan
+            EMAN 1C dagi hamma mahsulot (narxi va qoldig&apos;i bilan). Saytda chiqishi kerak
+            bo&apos;lgan plita, petlya yoki yo&apos;naltiruvchini «Saytga qo&apos;shish» bilan
             belgilang — u 1C artikuli va narxi bilan qo&apos;shiladi. «Saqlash»ni bosishni unutmang.
           </p>
         </div>
@@ -372,7 +372,7 @@ export function ErpCatalogSection({
                   <th>Artikul</th>
                   <th>Narxi</th>
                   <th>Qoldiq</th>
-                  <th>Kioskda</th>
+                  <th>Saytda</th>
                 </tr>
               </thead>
               <tbody>
@@ -395,10 +395,10 @@ export function ErpCatalogSection({
                       <td>
                         {l && l.visible ? (
                           <span className="mgr-inline">
-                            <b className="mgr-yes">Kioskda</b>
+                            <b className="mgr-yes">Saytda ko&apos;rinadi</b>
                             {l.type !== 'builtin' && (
                               <Button variant="secondary" onClick={() => setVisible(l, false)}>
-                                Kioskdan olish
+                                Saytdan olish
                               </Button>
                             )}
                           </span>
@@ -413,7 +413,7 @@ export function ErpCatalogSection({
                             onClick={() => setAdding(r)}
                             data-testid={`erp-add-${r.article}`}
                           >
-                            Kioskga qo&apos;shish
+                            Saytga qo&apos;shish
                           </Button>
                         )}
                       </td>
@@ -544,10 +544,10 @@ function AddFromErp({
   };
 
   return (
-    <div className="mgr-modal" role="dialog" aria-label="Kioskga qo'shish" data-testid="erp-add">
+    <div className="mgr-modal" role="dialog" aria-label="Saytga qo'shish" data-testid="erp-add">
       <div className="mgr-card mgr-modal-card">
         <header className="mgr-modal-head">
-          <h3>Kioskga qo&apos;shish</h3>
+          <h3>Saytga qo&apos;shish</h3>
           <Button variant="secondary" onClick={onCancel}>
             Bekor qilish
           </Button>
@@ -569,7 +569,7 @@ function AddFromErp({
             </select>
           </label>
           <label className="mgr-field">
-            <span>{board ? 'Kioskdagi nomi' : 'Model'}</span>
+            <span>{board ? 'Saytdagi nomi' : 'Model'}</span>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}

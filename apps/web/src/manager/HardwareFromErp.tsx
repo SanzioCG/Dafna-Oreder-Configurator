@@ -193,7 +193,7 @@ function HardwareForm({
         {price !== undefined && ` · ${money(price)} so'm`}
       </p>
       <label className="mgr-field">
-        <span>Brend * (kioskda guruh nomi)</span>
+        <span>Brend * (saytda guruh nomi)</span>
         <input
           value={brand}
           onChange={(e) => setBrand(e.target.value)}
@@ -201,7 +201,7 @@ function HardwareForm({
         />
       </label>
       <label className="mgr-field">
-        <span>Model * (kioskda kartochka nomi)</span>
+        <span>Model * (saytda kartochka nomi)</span>
         <input
           value={model}
           onChange={(e) => setModel(e.target.value)}
@@ -213,7 +213,7 @@ function HardwareForm({
         <input type="checkbox" checked={softClose} onChange={(e) => setSoft(e.target.checked)} />
       </label>
       <label className="mgr-field" style={{ gridColumn: '1 / -1' }}>
-        <span>Mijoz uchun ma&apos;lumot (kioskda kartochkada chiqadi)</span>
+        <span>Mijoz uchun ma&apos;lumot (saytda kartochkada chiqadi)</span>
         <textarea
           rows={3}
           maxLength={400}

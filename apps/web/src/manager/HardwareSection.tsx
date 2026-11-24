@@ -162,7 +162,7 @@ export function HardwareSection({
             </div>
           ))}
           <p className="mgr-note">
-            «Saqlash»dan keyin kioskda chiqadi (1C dan olinganlari narxi bilan).
+            «Saqlash»dan keyin saytda chiqadi (1C dan olinganlari narxi bilan).
           </p>
         </div>
       )}
@@ -358,7 +358,7 @@ function HardwareInfo({
           </Button>
         </header>
         <label className="mgr-field">
-          <span>Mijoz uchun ma&apos;lumot (kioskda kartochkada chiqadi)</span>
+          <span>Mijoz uchun ma&apos;lumot (saytda kartochkada chiqadi)</span>
           <textarea
             rows={4}
             maxLength={400}
@@ -393,7 +393,7 @@ function HardwareInfo({
             </p>
           )}
         </div>
-        <p className="mgr-note">O&apos;zgarishlar «Saqlash»dan keyin kioskda ko&apos;rinadi.</p>
+        <p className="mgr-note">O&apos;zgarishlar «Saqlash»dan keyin saytda ko&apos;rinadi.</p>
       </div>
     </div>
   );

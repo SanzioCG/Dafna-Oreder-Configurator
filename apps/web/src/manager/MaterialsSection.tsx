@@ -164,7 +164,7 @@ export function MaterialsSection({
         <div>
           <h2>Materiallar</h2>
           <p className="mgr-note">
-            Kioskdagi plitalar: 1C dan qo&apos;shilganlar (narxi, list o&apos;lchami va qalinligi 1C
+            Saytdagi plitalar: 1C dan qo&apos;shilganlar (narxi, list o&apos;lchami va qalinligi 1C
             dan o&apos;zi keladi) va orqa devor uchun HDF. Qatorni bosing — materialning to&apos;liq
             kartochkasi ochiladi.
           </p>
@@ -621,7 +621,7 @@ function TextureBlock({
     <div className="mgr-texture" data-testid="mgr-texture">
       <h3>Tekstura (dekor rasmi)</h3>
       <p className="mgr-note">
-        Rasm 3D ko&apos;rinishda va kioskdagi rang tanlovida chiqadi. Dekorning tekis, yorug&apos;
+        Rasm 3D ko&apos;rinishda va saytdagi rang tanlovida chiqadi. Dekorning tekis, yorug&apos;
         rasmini yuklang (JPG yoki PNG); katta rasm avtomatik kichraytiriladi.
       </p>
       {texture && (
