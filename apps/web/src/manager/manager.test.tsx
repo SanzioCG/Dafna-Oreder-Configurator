@@ -10,13 +10,11 @@ import {
 } from '@dafna/engine';
 import { afterEach, describe, expect, it } from 'vitest';
 import { fetchQuote } from '../state/priceSource';
-import { forgetStaffPin, verifyStaffPin } from '../state/staffAccess';
 import { ThemeProvider } from '../theme/ThemeProvider';
 import { ManagerPage } from './ManagerPage';
 
 afterEach(() => {
   cleanup();
-  forgetStaffPin();
   applyCatalogExtension(EMPTY_EXTENSION);
 });
 
@@ -27,20 +25,39 @@ interface Call {
   body: unknown;
 }
 
-/** a fake /api/manager: PIN 9137, keeps what is PUT */
+/** a fake /api/auth + /api/manager (D-38): staff "aziz" / "aziz-pass-1", keeps what is PUT */
 function fakeManagerApi() {
   const calls: Call[] = [];
+  let signedIn = false;
   let saved: { list: unknown; updatedAt: string } | null = null;
   // the server's append-only merge, simplified: new entries get ids
   let catalog: CatalogExtension = EMPTY_EXTENSION;
   const impl = (async (url: string, init: RequestInit) => {
-    const headers = init.headers as Record<string, string>;
+    const headers = (init.headers ?? {}) as Record<string, string>;
+    if (url === '/api/auth') {
+      const a = init.body ? (JSON.parse(String(init.body)) as Record<string, string>) : {};
+      calls.push({ url, method: String(init.method), headers, body: a });
+      if (a.action === 'login' && a.login === 'aziz' && a.password === 'aziz-pass-1') {
+        signedIn = true;
+        return new Response(
+          JSON.stringify({ user: { login: 'aziz', name: 'Aziz', role: 'manager' } }),
+        );
+      }
+      if (a.action === 'logout') {
+        signedIn = false;
+        return new Response(JSON.stringify({ ok: true }));
+      }
+      return new Response(
+        JSON.stringify({ error: { code: a.action === 'login' ? 'wrong_login' : 'unauthorized' } }),
+        { status: 401 },
+      );
+    }
     const body = init.body
       ? (JSON.parse(String(init.body)) as { list: unknown; catalog?: CatalogExtension })
       : undefined;
     calls.push({ url, method: String(init.method), headers, body });
-    if (headers['x-manager-pin'] !== '9137')
-      return new Response(JSON.stringify({ error: { code: 'wrong_pin' } }), { status: 401 });
+    if (!signedIn)
+      return new Response(JSON.stringify({ error: { code: 'unauthorized' } }), { status: 401 });
     if (init.method === 'PUT') {
       if (body!.catalog)
         catalog = {
@@ -61,21 +78,22 @@ function fakeManagerApi() {
   return { calls, impl };
 }
 
-const login = async (pin: string) => {
-  fireEvent.change(screen.getByTestId('mgr-pin'), { target: { value: pin } });
+const login = async (password: string) => {
+  fireEvent.change(await screen.findByTestId('mgr-login'), { target: { value: 'aziz' } });
+  fireEvent.change(screen.getByTestId('mgr-password'), { target: { value: password } });
   fireEvent.click(screen.getByRole('button', { name: 'Kirish' }));
 };
 
 describe('D-19 manager price page', () => {
-  it('a wrong PIN stays on the PIN form', async () => {
+  it('D-38 a wrong password stays on the sign-in form', async () => {
     const api = fakeManagerApi();
     render(
       <ThemeProvider>
         <ManagerPage fetchImpl={api.impl} />
       </ThemeProvider>,
     );
-    await login('1234');
-    expect((await screen.findByRole('alert')).textContent).toContain("PIN noto'g'ri");
+    await login('wrong-pass');
+    expect((await screen.findByRole('alert')).textContent).toContain("Login yoki parol noto'g'ri");
     expect(screen.queryByTestId('mgr-save')).toBeNull();
   });
 
@@ -86,7 +104,7 @@ describe('D-19 manager price page', () => {
         <ManagerPage fetchImpl={api.impl} />
       </ThemeProvider>,
     );
-    await login('9137');
+    await login('aziz-pass-1');
     await screen.findByTestId('mgr-save');
     expect(screen.getByTestId('mgr-updated').textContent).toContain('hali saqlanmagan');
     // D-35: the demo decors are gone; the built-in back panel (HDF) stays; a row opens its card
@@ -106,7 +124,8 @@ describe('D-19 manager price page', () => {
     );
     const put = api.calls.find((c) => c.method === 'PUT')!;
     expect(put.url).toBe('/api/manager');
-    expect(put.headers['x-manager-pin']).toBe('9137'); // a header, never the URL
+    // D-38: no secret in the request: the session is an HttpOnly cookie
+    expect(JSON.stringify(put.headers)).not.toMatch(/pin|pass/i);
     const list = (put.body as { list: Record<string, unknown> }).list as {
       edgePerM: number;
       erpCodes: Record<string, string>;
@@ -128,7 +147,7 @@ describe('D-19 manager price page', () => {
         <ManagerPage fetchImpl={api.impl} />
       </ThemeProvider>,
     );
-    await login('9137');
+    await login('aziz-pass-1');
     await screen.findByTestId('mgr-save');
     fireEvent.click(screen.getByTestId('mgr-tab-profit'));
     const total = () =>
@@ -187,7 +206,7 @@ describe('D-20 manager adds materials, hardware and services', () => {
         <ManagerPage fetchImpl={api.impl} />
       </ThemeProvider>,
     );
-    await login('9137');
+    await login('aziz-pass-1');
     await screen.findByTestId('mgr-save');
     // a board: its card opens at once
     fireEvent.click(screen.getByTestId('mgr-material-manual'));
@@ -240,7 +259,7 @@ describe('D-21 unsaved new materials', () => {
         <ManagerPage fetchImpl={api.impl} />
       </ThemeProvider>,
     );
-    await login('9137');
+    await login('aziz-pass-1');
     await screen.findByTestId('mgr-save');
     const blanks = () => document.querySelectorAll('[data-testid^="mgr-material-row-new-"]').length;
     fireEvent.click(screen.getByTestId('mgr-material-manual'));
@@ -266,7 +285,6 @@ describe('D-19 kiosk price request', () => {
         headers: init.headers as Record<string, string>,
         body: JSON.parse(String(init.body)),
       });
-      if (url === '/api/staff-pin') return new Response('{"ok":true}');
       return new Response(
         JSON.stringify({ total: 2571000, currency: 'UZS', demo: false, priceListVersion: 'live' }),
       );
@@ -274,26 +292,16 @@ describe('D-19 kiosk price request', () => {
     return { seen, impl };
   };
 
-  it('a customer sends the product and its params only, no PIN', async () => {
+  it('a customer sends the product and its params only, no secret (D-38: staff = a cookie)', async () => {
     const { seen, impl } = capture();
     const q = await fetchQuote(input(), undefined, impl);
     expect(q?.total).toBe(2571000);
-    expect(seen[0]!.headers['x-staff-pin']).toBeUndefined();
+    expect(Object.keys(seen[0]!.headers)).toEqual(['content-type']);
     expect(Object.keys(seen[0]!.body as object).sort()).toEqual([
       'params',
       'templateId',
       'templateVersion',
     ]);
-  });
-
-  it('after the consultant PIN is accepted, the quote asks for the breakdown with it', async () => {
-    const { seen, impl } = capture();
-    expect((await verifyStaffPin('2580', impl)).ok).toBe(true);
-    await fetchQuote(input(), undefined, impl);
-    expect(seen.at(-1)!.headers['x-staff-pin']).toBe('2580');
-    forgetStaffPin();
-    await fetchQuote(input(), undefined, impl);
-    expect(seen.at(-1)!.headers['x-staff-pin']).toBeUndefined();
   });
 
   it('the server unreachable -> no price (never a made-up one)', async () => {

@@ -24,6 +24,7 @@ import {
   parsePriceList,
 } from './prices';
 import { RateLimiter } from './rateLimit';
+import { headerAuth } from './testAuth';
 
 afterEach(() => applyCatalogExtension(EMPTY_EXTENSION));
 
@@ -125,7 +126,7 @@ describe('D-20 the kiosk path: manager saves, catalog and quote use it', () => {
       prices,
       catalogStore,
       catalog,
-      managerPin: '9137',
+      auth: headerAuth('9137'),
       limiter: new RateLimiter(100, 60_000),
       now: () => new Date('2026-11-23T09:05:00Z'),
     };
@@ -133,7 +134,7 @@ describe('D-20 the kiosk path: manager saves, catalog and quote use it', () => {
       handleManager(
         new Request('http://x/api/manager', {
           method: 'PUT',
-          headers: { 'x-manager-pin': '9137' },
+          headers: { 'x-test-staff': '9137' },
           body: JSON.stringify(body),
         }),
         deps,
@@ -160,14 +161,14 @@ describe('D-20 the kiosk path: manager saves, catalog and quote use it', () => {
     const quote = await handleQuote(
       new Request('http://x/api/quote', {
         method: 'POST',
-        headers: { 'x-manager-pin': '9137' },
+        headers: { 'x-test-staff': '9137' },
         body: JSON.stringify({
           templateId: 'wardrobe',
           templateVersion: W.templateVersion,
           params: { ...defaultParams(W), corpusMaterial: 'x_m1' },
         }),
       }),
-      { prices, catalog, staffPin: undefined, managerPin: '9137' },
+      { prices, catalog, auth: headerAuth('9137') },
     );
     expect(quote.status).toBe(200);
     const q = (await quote.json()) as {

@@ -4,7 +4,7 @@
     "api/submit.js": { "maxDuration": 20 },
     "api/retry-telegram.js": { "maxDuration": 60 },
     "api/assembly.js": { "maxDuration": 20 },
-    "api/staff-pin.js": { "maxDuration": 10 },
+    "api/auth.js": { "maxDuration": 10 },
     "api/quote.js": { "maxDuration": 15 },
     "api/manager.js": { "maxDuration": 20 },
     "api/catalog.js": { "maxDuration": 10 },

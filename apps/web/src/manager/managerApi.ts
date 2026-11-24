@@ -1,7 +1,7 @@
 import type { CatalogExtension, PriceList } from '@dafna/engine';
 import type { CatalogDraft } from './ManagerPage';
 
-/** D-19: client of GET / PUT /api/manager (the manager PIN travels in a header, never a URL). */
+/** D-19: client of GET / PUT /api/manager (D-38: the staff session cookie goes by itself). */
 export const MANAGER_URL = '/api/manager';
 
 export type ManagerOutcome =
@@ -9,14 +9,14 @@ export type ManagerOutcome =
   | { ok: false; code: string; field?: string };
 
 async function call(
-  pin: string,
   init: { method: 'GET' | 'PUT'; body?: unknown },
   fetchImpl: typeof fetch = fetch,
 ): Promise<ManagerOutcome> {
   try {
     const res = await fetchImpl(MANAGER_URL, {
       method: init.method,
-      headers: { 'content-type': 'application/json', 'x-manager-pin': pin },
+      headers: { 'content-type': 'application/json' },
+      credentials: 'same-origin',
       body: init.body === undefined ? undefined : JSON.stringify(init.body),
       signal: AbortSignal.timeout(20_000),
     });
@@ -39,20 +39,14 @@ async function call(
   }
 }
 
-export const managerLoad = (pin: string, fetchImpl?: typeof fetch) =>
-  call(pin, { method: 'GET' }, fetchImpl);
+export const managerLoad = (fetchImpl?: typeof fetch) => call({ method: 'GET' }, fetchImpl);
 
 /** D-20: the catalog (materials / hardware) is saved first, then the prices */
-export const managerSave = (
-  pin: string,
-  list: PriceList,
-  catalog: CatalogDraft,
-  fetchImpl?: typeof fetch,
-) => call(pin, { method: 'PUT', body: { list, catalog } }, fetchImpl);
+export const managerSave = (list: PriceList, catalog: CatalogDraft, fetchImpl?: typeof fetch) =>
+  call({ method: 'PUT', body: { list, catalog } }, fetchImpl);
 
 /** D-21: uploads a decor photo; the returned URL is saved with the catalog afterwards */
 export async function managerUploadTexture(
-  pin: string,
   materialId: string,
   image: Blob,
   fetchImpl: typeof fetch = fetch,
@@ -62,9 +56,9 @@ export async function managerUploadTexture(
       method: 'POST',
       headers: {
         'content-type': image.type || 'image/jpeg',
-        'x-manager-pin': pin,
         'x-material-id': materialId,
       },
+      credentials: 'same-origin',
       body: image,
       signal: AbortSignal.timeout(60_000),
     });

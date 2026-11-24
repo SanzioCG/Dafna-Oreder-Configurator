@@ -37,7 +37,6 @@ export interface ErpPrice {
 export type ErpOutcome<T> = { ok: true; value: T } | { ok: false; code: string };
 
 async function post<T>(
-  pin: string,
   body: unknown,
   pick: (d: Record<string, unknown>) => T | undefined,
   fetchImpl: typeof fetch = fetch,
@@ -45,7 +44,8 @@ async function post<T>(
   try {
     const res = await fetchImpl(ERP_URL, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-manager-pin': pin },
+      headers: { 'content-type': 'application/json' },
+      credentials: 'same-origin',
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(30_000),
     });
@@ -85,7 +85,6 @@ export interface ErpApi {
 }
 
 export function erpApi(
-  pin: string,
   fetchImpl?: typeof fetch,
   /** D-32: the manager's group of each top 1C kind */
   groups: Record<string, KindGroup> = {},
@@ -93,42 +92,36 @@ export function erpApi(
   return {
     search: (q, scope) =>
       post(
-        pin,
         scope?.group ? { action: 'search', q, ...scope, groups } : { action: 'search', q },
         (d) => d.items as ErpItem[] | undefined,
         fetchImpl,
       ),
     prices: (articles) =>
       post(
-        pin,
         { action: 'prices', articles },
         (d) => d.prices as Record<string, ErpPrice> | undefined,
         fetchImpl,
       ),
     pictures: (articles) =>
       post(
-        pin,
         { action: 'pictures', articles },
         (d) => d.pictures as Record<string, string | null> | undefined,
         fetchImpl,
       ),
     copyPicture: (article) =>
       post(
-        pin,
         { action: 'copyPicture', q: article },
         (d) => (typeof d.url === 'string' ? d.url : undefined),
         fetchImpl,
       ),
     kinds: (parent) =>
       post(
-        pin,
         parent ? { action: 'kinds', parent } : { action: 'kinds' },
         (d) => d.kinds as ErpKindRow[] | undefined,
         fetchImpl,
       ),
     items: (kind, skip) =>
       post(
-        pin,
         { action: 'items', kind, skip },
         (d) =>
           Array.isArray(d.items)
@@ -145,7 +138,7 @@ export const ERP_ERRORS: Record<string, string> = {
   erp_not_configured: "1C ulanmagan: Vercel'da EMAN_1C_TOKEN qo'shilmagan",
   erp_unavailable: "1C javob bermadi, keyinroq urinib ko'ring",
   rate_limited: "Juda ko'p so'rov: biroz kuting",
-  wrong_pin: "PIN noto'g'ri",
+  unauthorized: 'Kirish muddati tugadi — qayta kiring',
   network: "Internet yoki server bilan aloqa yo'q",
 };
 const errText = (code: string) => ERP_ERRORS[code] ?? ERP_ERRORS.network!;

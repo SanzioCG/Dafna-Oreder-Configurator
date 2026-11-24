@@ -1,4 +1,3 @@
-import { createHash, timingSafeEqual } from 'node:crypto';
 import {
   PRODUCT_ARCHIVE,
   catalogForTemplate,
@@ -13,6 +12,10 @@ import {
 } from '@dafna/engine';
 import { mergeCatalog, type CachedCatalog, type CatalogStore, type ErpLink } from './catalog';
 import type { RateLimiter } from './rateLimit';
+import type { StaffUser } from './staffAuth';
+
+/** D-38: the signed-in staff member of a request (session cookie), or null */
+export type AuthOf = (req: Request) => Promise<StaffUser | null>;
 
 /**
  * D-19: live prices. The manager keeps the price list (sheet prices of the boards, edge band,
@@ -76,14 +79,6 @@ const json = (status: number, body: unknown) =>
     headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
   });
 
-const digest = (s: string) => createHash('sha256').update(s).digest();
-const PIN_RE = /^\d{4,8}$/;
-/** constant-time PIN check; an unset / invalid configured PIN never matches */
-export function pinMatches(given: string | null, configured: string | undefined): boolean {
-  if (!given || !configured || !PIN_RE.test(configured) || !PIN_RE.test(given)) return false;
-  return timingSafeEqual(digest(given), digest(configured));
-}
-
 function clientIp(req: Request): string {
   const fwd = req.headers.get('x-forwarded-for');
   return (fwd ? fwd.split(',')[0] : req.headers.get('x-real-ip'))?.trim() || 'unknown';
@@ -101,10 +96,9 @@ export interface Quote {
 
 export interface QuoteDeps {
   prices: CachedPrices;
-  /** STAFF_PIN: a matching x-staff-pin header gets the breakdown */
-  staffPin: string | undefined;
-  managerPin: string | undefined;
-  /** dev server only: the breakdown without a PIN (dev staff mode has no PIN) */
+  /** D-38: a signed-in staff member gets the breakdown */
+  auth?: AuthOf;
+  /** dev server only: the breakdown without signing in */
   breakdownWithoutPin?: boolean;
   /** D-20: materials / hardware added on the manager page */
   catalog?: CachedCatalog;
@@ -150,10 +144,7 @@ export async function handleQuote(req: Request, deps: QuoteDeps): Promise<Respon
     demo: price.demo,
     priceListVersion: price.priceListVersion,
   };
-  const staff =
-    deps.breakdownWithoutPin ||
-    pinMatches(req.headers.get('x-staff-pin'), deps.staffPin) ||
-    pinMatches(req.headers.get('x-manager-pin'), deps.managerPin);
+  const staff = deps.breakdownWithoutPin || (deps.auth ? (await deps.auth(req)) !== null : false);
   if (staff) quote.breakdown = price;
   return json(200, quote);
 }
@@ -270,8 +261,8 @@ export function parsePriceList(
 export interface ManagerDeps {
   store: PriceStore;
   prices: CachedPrices;
-  /** MANAGER_PIN; unset = the manager page is off */
-  managerPin: string | undefined;
+  /** D-38: the signed-in staff member (admin / manager) */
+  auth: AuthOf;
   limiter: RateLimiter;
   now: () => Date;
   /** D-20: the catalog extension (append-only) */
@@ -295,11 +286,8 @@ export function tashkentMinute(d: Date): string {
 export async function handleManager(req: Request, deps: ManagerDeps): Promise<Response> {
   if (req.method !== 'GET' && req.method !== 'PUT' && req.method !== 'POST')
     return json(405, { error: { code: 'method_not_allowed' } });
-  if (!deps.managerPin || !PIN_RE.test(deps.managerPin))
-    return json(503, { error: { code: 'not_configured' } });
   if (!deps.limiter.take(clientIp(req))) return json(429, { error: { code: 'rate_limited' } });
-  if (!pinMatches(req.headers.get('x-manager-pin'), deps.managerPin))
-    return json(401, { error: { code: 'wrong_pin' } });
+  if (!(await deps.auth(req))) return json(401, { error: { code: 'unauthorized' } });
 
   if (req.method === 'POST') {
     // D-21: POST /api/manager (x-material-id, image body) -> {url}; saved with the catalog later

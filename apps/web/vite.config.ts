@@ -24,24 +24,14 @@ function devSubmitApi(): Plugin {
         };
         run().catch(next);
       });
-      // D-13: the consultant PIN (DEV_STAFF_PIN, default 0000)
-      let staffPin: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
-      server.middlewares.use('/api/staff-pin', (req, res, next) => {
-        const run = async () => {
-          if (!staffPin) {
-            const mod = await server.ssrLoadModule('/server/devApi.ts');
-            staffPin = (mod as typeof import('./server/devApi')).createDevStaffPinHandler();
-          }
-          staffPin(req, res);
-        };
-        run().catch(next);
-      });
       // D-19: the server-side price and the manager's price list (in-memory store)
       for (const [path, factory] of [
         ['/api/quote', 'createDevQuoteHandler'],
         ['/api/manager', 'createDevManagerHandler'],
         ['/api/erp', 'createDevErpHandler'],
         ['/api/catalog', 'createDevCatalogHandler'],
+        // D-38: staff sign-in (dev admin password DEV_ADMIN_PASSWORD, default "admin")
+        ['/api/auth', 'createDevAuthHandler'],
       ] as const) {
         let h: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
         server.middlewares.use(path, (req, res, next) => {

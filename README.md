@@ -26,7 +26,7 @@ The UI is in Uzbek and Russian.
 - **Live 3D.** React Three Fiber renders the generated panels, with a dimension overlay, a
   smart camera and a full-screen 360° presentation.
 - **Two modes.** _Customer mode_ is a simple 4-step flow in plain language, using centimetres
-  and standard sizes only. _Staff mode_ (unlocked by a server-checked PIN) shows every
+  and standard sizes only. _Staff mode_ (unlocked by a staff sign-in) shows every
   parameter, technical warnings and assumptions that production has not yet confirmed.
 - **Reproducible applications.** An application stores only its parameters and template
   version. Templates are never edited in place: a change is always a new version, and archived
@@ -36,7 +36,7 @@ The UI is in Uzbek and Russian.
   application ID, store the lead, notify the sales channel and render a PDF. A cron job
   retries failed notifications.
 - **Live prices.** The price is computed on the server from a price list a manager keeps on
-  `/manager` (own PIN): sheet prices of the boards, edge band, hardware, labour, assembly and
+  `/manager` (staff sign-in, ADR-024): sheet prices of the boards, edge band, hardware, labour, assembly and
   the profit %. Customers only ever receive the final number (ADR-016).
 - **Production hand-off.** A bill of materials (boards, edge banding, hardware) and a
   cutting-list export.
@@ -61,7 +61,7 @@ flowchart LR
     SUB["/api/submit"] --> PDF[PDF]
     SUB --> STORE[Lead store + notification]
     RT["/api/retry-telegram (cron)"]
-    PIN["/api/staff-pin"]
+    AUTH["/api/auth (staff sign-in)"]
     ASM["/api/assembly"]
   end
   engine --> web
@@ -104,7 +104,8 @@ pnpm dev
 
 - Customer mode: http://localhost:5173/
 - Staff mode: http://localhost:5173/?mode=staff
-- Manager price page: http://localhost:5173/manager (dev PIN `DEV_MANAGER_PIN`, default 0000)
+- Manager price page: http://localhost:5173/manager (dev sign-in `admin`, password
+  `DEV_ADMIN_PASSWORD`, default `admin`; dev only)
 
 The server functions read their configuration from environment variables only. Nothing secret
 is in the repository or in the client bundle.

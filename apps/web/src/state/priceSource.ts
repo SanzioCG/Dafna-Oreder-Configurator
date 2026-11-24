@@ -8,7 +8,6 @@ import {
   type Template,
 } from '@dafna/engine';
 import { useEffect, useMemo, useState } from 'react';
-import { currentStaffPin } from './staffAccess';
 
 /**
  * D-19: the price comes from the server (POST /api/quote): the price list (costs, profit %) never
@@ -55,9 +54,8 @@ export async function fetchQuote(
   fetchImpl: typeof fetch = fetch,
 ): Promise<Quote | null> {
   try {
+    // D-38: a signed-in staff member's session cookie travels by itself (breakdown)
     const headers: Record<string, string> = { 'content-type': 'application/json' };
-    const pin = currentStaffPin();
-    if (pin) headers['x-staff-pin'] = pin;
     const res = await fetchImpl(QUOTE_URL, {
       method: 'POST',
       headers,

@@ -64291,16 +64291,14 @@ var ru = {
   "idle.title": "\u0412\u044B \u0435\u0449\u0451 \u0437\u0434\u0435\u0441\u044C?",
   "idle.text": "\u0427\u0435\u0440\u0435\u0437 {s} \u0441 \u043A\u043E\u043D\u0444\u0438\u0433\u0443\u0440\u0430\u0446\u0438\u044F \u0431\u0443\u0434\u0435\u0442 \u0443\u0434\u0430\u043B\u0435\u043D\u0430 \u0438 \u043E\u0442\u043A\u0440\u043E\u0435\u0442\u0441\u044F \u043D\u0430\u0447\u0430\u043B\u044C\u043D\u044B\u0439 \u044D\u043A\u0440\u0430\u043D.",
   "idle.stay": "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C",
-  "pin.title": "PIN-\u043A\u043E\u0434 \u043A\u043E\u043D\u0441\u0443\u043B\u044C\u0442\u0430\u043D\u0442\u0430",
-  "pin.entered": "\u0412\u0432\u0435\u0434\u0435\u043D\u043E \u0446\u0438\u0444\u0440: {n}",
+  "pin.title": "\u0412\u0445\u043E\u0434 \u0434\u043B\u044F \u0441\u043E\u0442\u0440\u0443\u0434\u043D\u0438\u043A\u0430",
   "pin.ok": "\u0412\u043E\u0439\u0442\u0438",
-  "pin.erase": "\u0421\u0442\u0435\u0440\u0435\u0442\u044C",
   "pin.cancel": "\u041E\u0442\u043C\u0435\u043D\u0430",
-  "pin.locked": "\u0421\u043B\u0438\u0448\u043A\u043E\u043C \u043C\u043D\u043E\u0433\u043E \u043F\u043E\u043F\u044B\u0442\u043E\u043A. \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u0447\u0435\u0440\u0435\u0437 {s} \u0441.",
-  "pin.error.wrong_pin": "\u041D\u0435\u0432\u0435\u0440\u043D\u044B\u0439 PIN",
-  "pin.error.rate_limited": "\u0421\u043B\u0438\u0448\u043A\u043E\u043C \u043C\u043D\u043E\u0433\u043E \u043F\u043E\u043F\u044B\u0442\u043E\u043A. \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u043F\u043E\u0437\u0436\u0435.",
-  "pin.error.not_configured": "PIN \u043D\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0435\u043D (Vercel: STAFF_PIN)",
-  "pin.error.network": "\u041D\u0435\u0442 \u0441\u0432\u044F\u0437\u0438 \u0441 \u0441\u0435\u0440\u0432\u0435\u0440\u043E\u043C. \u041F\u043E\u0432\u0442\u043E\u0440\u0438\u0442\u0435 \u043F\u043E\u043F\u044B\u0442\u043A\u0443.",
+  "pin.login": "\u041B\u043E\u0433\u0438\u043D",
+  "pin.password": "\u041F\u0430\u0440\u043E\u043B\u044C",
+  "pin.error.wrong_login": "\u041D\u0435\u0432\u0435\u0440\u043D\u044B\u0439 \u043B\u043E\u0433\u0438\u043D \u0438\u043B\u0438 \u043F\u0430\u0440\u043E\u043B\u044C",
+  "pin.error.rate_limited": "\u0421\u043B\u0438\u0448\u043A\u043E\u043C \u043C\u043D\u043E\u0433\u043E \u043F\u043E\u043F\u044B\u0442\u043E\u043A. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 \u043F\u043E\u0437\u0436\u0435.",
+  "pin.error.network": "\u041D\u0435\u0442 \u0441\u0432\u044F\u0437\u0438 \u0441 \u0441\u0435\u0440\u0432\u0435\u0440\u043E\u043C. \u041F\u043E\u043F\u0440\u043E\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0451 \u0440\u0430\u0437.",
   "staff.exit": "\u0412\u044B\u0439\u0442\u0438 \u0438\u0437 \u0440\u0435\u0436\u0438\u043C\u0430 \u0441\u043E\u0442\u0440\u0443\u0434\u043D\u0438\u043A\u0430",
   "staff.exitShort": "\u0412\u044B\u0439\u0442\u0438",
   "staff.badge": "\u041D\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u043E",
@@ -64749,15 +64747,13 @@ var uz = {
   "idle.title": "Hali shu yerdamisiz?",
   "idle.text": "{s} soniyadan so'ng konfiguratsiya o'chiriladi va bosh ekranga qaytamiz.",
   "idle.stay": "Davom etish",
-  "pin.title": "Konsultant PIN-kodi",
-  "pin.entered": "{n} ta raqam kiritildi",
+  "pin.title": "Xodim kirishi",
   "pin.ok": "Kirish",
-  "pin.erase": "O'chirish",
   "pin.cancel": "Bekor qilish",
-  "pin.locked": "Ko'p urinish. {s} soniyadan so'ng qayta urinib ko'ring.",
-  "pin.error.wrong_pin": "PIN noto'g'ri",
+  "pin.login": "Login",
+  "pin.password": "Parol",
+  "pin.error.wrong_login": "Login yoki parol noto'g'ri",
   "pin.error.rate_limited": "Ko'p urinish. Birozdan so'ng qayta urinib ko'ring.",
-  "pin.error.not_configured": "PIN sozlanmagan (Vercel: STAFF_PIN)",
   "pin.error.network": "Server bilan aloqa yo'q. Qayta urinib ko'ring.",
   "staff.exit": "Xodim rejimidan chiqish",
   "staff.exitShort": "Chiqish",
@@ -66734,6 +66730,9 @@ var GoogleSheetsCatalogStore = class {
 
 // server/prices.ts
 var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
+
+// server/staffAuth.ts
+var SESSION_MS = 12 * 36e5;
 
 // server/telegram.ts
 var escapeHtml = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

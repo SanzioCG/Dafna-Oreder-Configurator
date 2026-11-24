@@ -180,9 +180,9 @@ export function toServiceModel(list: PriceList): PriceList {
 }
 
 export const ERRORS: Record<string, string> = {
-  wrong_pin: "PIN noto'g'ri",
+  unauthorized: 'Kirish muddati tugadi — qayta kiring',
   rate_limited: "Juda ko'p urinish: 10 daqiqadan keyin qayta urining",
-  not_configured: "Menejer PIN'i serverda sozlanmagan (Vercel: MANAGER_PIN)",
+  not_configured: 'Server sozlanmagan',
   invalid_price: "Narxlardan biri noto'g'ri",
   invalid_catalog: "Yangi material yoki furnituraning majburiy maydoni to'ldirilmagan",
   storage_not_configured:

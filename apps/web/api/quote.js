@@ -75781,15 +75781,13 @@ var uz = {
   "idle.title": "Hali shu yerdamisiz?",
   "idle.text": "{s} soniyadan so'ng konfiguratsiya o'chiriladi va bosh ekranga qaytamiz.",
   "idle.stay": "Davom etish",
-  "pin.title": "Konsultant PIN-kodi",
-  "pin.entered": "{n} ta raqam kiritildi",
+  "pin.title": "Xodim kirishi",
   "pin.ok": "Kirish",
-  "pin.erase": "O'chirish",
   "pin.cancel": "Bekor qilish",
-  "pin.locked": "Ko'p urinish. {s} soniyadan so'ng qayta urinib ko'ring.",
-  "pin.error.wrong_pin": "PIN noto'g'ri",
+  "pin.login": "Login",
+  "pin.password": "Parol",
+  "pin.error.wrong_login": "Login yoki parol noto'g'ri",
   "pin.error.rate_limited": "Ko'p urinish. Birozdan so'ng qayta urinib ko'ring.",
-  "pin.error.not_configured": "PIN sozlanmagan (Vercel: STAFF_PIN)",
   "pin.error.network": "Server bilan aloqa yo'q. Qayta urinib ko'ring.",
   "staff.exit": "Xodim rejimidan chiqish",
   "staff.exitShort": "Chiqish",
@@ -76508,7 +76506,6 @@ var GoogleSheetsCatalogStore = class {
 };
 
 // server/prices.ts
-import { createHash, timingSafeEqual } from "node:crypto";
 var CachedPrices = class {
   constructor(store, ttlMs = 6e4, now = Date.now) {
     this.store = store;
@@ -76539,12 +76536,6 @@ var json = (status, body) => new Response(JSON.stringify(body), {
   status,
   headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" }
 });
-var digest = (s) => createHash("sha256").update(s).digest();
-var PIN_RE = /^\d{4,8}$/;
-function pinMatches(given, configured) {
-  if (!given || !configured || !PIN_RE.test(configured) || !PIN_RE.test(given)) return false;
-  return timingSafeEqual(digest(given), digest(configured));
-}
 var MAX_BODY = 2e4;
 async function handleQuote(req, deps2) {
   if (req.method !== "POST") return json(405, { error: { code: "method_not_allowed" } });
@@ -76577,11 +76568,148 @@ async function handleQuote(req, deps2) {
     demo: price.demo,
     priceListVersion: price.priceListVersion
   };
-  const staff = deps2.breakdownWithoutPin || pinMatches(req.headers.get("x-staff-pin"), deps2.staffPin) || pinMatches(req.headers.get("x-manager-pin"), deps2.managerPin);
+  const staff = deps2.breakdownWithoutPin || (deps2.auth ? await deps2.auth(req) !== null : false);
   if (staff) quote.breakdown = price;
   return json(200, quote);
 }
 var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
+function tashkentMinute(d) {
+  return new Date(d.getTime() + 5 * 36e5).toISOString().slice(0, 16).replace("T", " ");
+}
+
+// server/staffAuth.ts
+import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+var ROLES = ["admin", "manager"];
+var ADMIN_LOGIN = "admin";
+var LOGIN_RE = /^[a-z0-9._-]{3,32}$/;
+var SESSION_COOKIE = "dafna_staff";
+var SESSION_MS = 12 * 36e5;
+var fingerprint = (s) => createHash("sha256").update(s).digest("base64url").slice(0, 12);
+function readSession(token, secret, now) {
+  const [body, mac] = token.split(".");
+  if (!body || !mac) return null;
+  const want = createHmac("sha256", secret).update(body).digest();
+  const got = Buffer.from(mac, "base64url");
+  if (got.length !== want.length || !timingSafeEqual(got, want)) return null;
+  try {
+    const s = JSON.parse(Buffer.from(body, "base64url").toString());
+    if (typeof s.l !== "string" || typeof s.v !== "string" || typeof s.e !== "number") return null;
+    return s.e > now ? s : null;
+  } catch {
+    return null;
+  }
+}
+function cookieOf(req, name) {
+  for (const part2 of (req.headers.get("cookie") ?? "").split(";")) {
+    const [k, ...v] = part2.trim().split("=");
+    if (k === name) return v.join("=");
+  }
+  return null;
+}
+function sessionSecretFrom(privateKey) {
+  return createHash("sha256").update(`dafna-staff-session|${privateKey}`).digest("hex");
+}
+var STAFF_TAB = "Xodimlar";
+var HEADER = ["login", "ism", "rol", "parol (xesh)", "faol", "o'zgargan"];
+function staffToRows(list) {
+  return [
+    HEADER,
+    ...list.map((a) => [a.login, a.name, a.role, a.hash, a.active ? "ha" : "yo'q", a.updatedAt])
+  ];
+}
+function rowsToStaff(rows) {
+  const out = [];
+  for (const r of rows.slice(1)) {
+    const [login, name, role, hash, active, updatedAt] = r.map((c) => String(c ?? "").trim());
+    if (!login || !LOGIN_RE.test(login) || !hash) continue;
+    if (!ROLES.includes(role)) continue;
+    out.push({
+      login,
+      name: name || login,
+      role,
+      hash,
+      active: active !== "yo'q",
+      updatedAt: updatedAt ?? ""
+    });
+  }
+  return out;
+}
+var GoogleSheetsStaffStore = class {
+  tab;
+  constructor(config) {
+    this.tab = new SheetTab(config, STAFF_TAB);
+  }
+  async load() {
+    return rowsToStaff(await this.tab.read());
+  }
+  async save(list) {
+    await this.tab.write(staffToRows(list));
+  }
+};
+var CachedStaff = class {
+  constructor(store, ttlMs = 3e4, now = Date.now) {
+    this.store = store;
+    this.ttlMs = ttlMs;
+    this.now = now;
+  }
+  store;
+  ttlMs;
+  now;
+  cached = null;
+  async get() {
+    const t = this.now();
+    if (!this.cached || t - this.cached.at >= this.ttlMs)
+      this.cached = { list: await this.store.load(), at: t };
+    return this.cached.list;
+  }
+  async save(list) {
+    await this.store.save(list);
+    this.cached = { list, at: this.now() };
+  }
+};
+var adminUser = { login: ADMIN_LOGIN, name: "Admin", role: "admin" };
+var publicOf = (a) => ({ login: a.login, name: a.name, role: a.role });
+async function sessionUser(req, deps2) {
+  const token = cookieOf(req, SESSION_COOKIE);
+  if (!token) return null;
+  const s = readSession(token, deps2.secret, deps2.now());
+  if (!s) return null;
+  if (s.l === ADMIN_LOGIN)
+    return deps2.adminPassword && s.v === fingerprint(`admin|${deps2.adminPassword}`) ? adminUser : null;
+  const a = (await deps2.staff.get()).find((x) => x.login === s.l);
+  return a && a.active && fingerprint(a.hash) === s.v ? publicOf(a) : null;
+}
+
+// server/rateLimit.ts
+var RateLimiter = class {
+  constructor(limit, windowMs, now = Date.now) {
+    this.limit = limit;
+    this.windowMs = windowMs;
+    this.now = now;
+  }
+  limit;
+  windowMs;
+  now;
+  hits = /* @__PURE__ */ new Map();
+  /** Records a hit; false when `key` is over the limit (the hit is then not counted). */
+  take(key) {
+    const t = this.now();
+    const recent = (this.hits.get(key) ?? []).filter((x) => t - x < this.windowMs);
+    if (recent.length >= this.limit) {
+      this.hits.set(key, recent);
+      return false;
+    }
+    recent.push(t);
+    this.hits.set(key, recent);
+    if (this.hits.size > 5e3) this.prune(t);
+    return true;
+  }
+  prune(t) {
+    for (const [k, v] of this.hits) {
+      if (v.every((x) => t - x >= this.windowMs)) this.hits.delete(k);
+    }
+  }
+};
 
 // server/config.ts
 var IP_LIMIT = { limit: 20, windowMs: 10 * 60 * 1e3 };
@@ -76604,6 +76732,24 @@ function catalogFromEnv(env) {
   catalogSingleton = { store, catalog: new CachedCatalog(store) };
   return catalogSingleton;
 }
+var authSingleton = null;
+function authFromEnv(env) {
+  if (authSingleton) return authSingleton;
+  const account = parseServiceAccount(env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  if (!account || !env.GOOGLE_SHEET_ID) throw new Error("google sheets env missing");
+  authSingleton = {
+    secret: sessionSecretFrom(account.private_key),
+    adminPassword: env.ADMIN_PASSWORD || void 0,
+    staff: new CachedStaff(new GoogleSheetsStaffStore({ sheetId: env.GOOGLE_SHEET_ID, account })),
+    // 10 sign-in attempts per IP per 10 minutes (per warm instance)
+    limiter: new RateLimiter(10, 10 * 60 * 1e3),
+    now: Date.now,
+    secure: true,
+    stamp: () => tashkentMinute(/* @__PURE__ */ new Date())
+  };
+  return authSingleton;
+}
+var authOfEnv = (env) => (req) => sessionUser(req, authFromEnv(env));
 
 // server/entries/quote.ts
 var deps = null;
@@ -76617,8 +76763,7 @@ async function POST(request) {
   }
   deps ??= {
     prices: pricesFromEnv(process.env).prices,
-    staffPin: process.env.STAFF_PIN,
-    managerPin: process.env.MANAGER_PIN,
+    auth: authOfEnv(process.env),
     catalog: catalogFromEnv(process.env).catalog
   };
   return handleQuote(request, deps);

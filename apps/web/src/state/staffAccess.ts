@@ -1,60 +1,34 @@
 import { useRef, useState } from 'react';
+import { signIn, signOut } from '../auth/staffSession';
 
 /**
- * D-13: staff mode behind a PIN. A long press on the logo asks for the PIN (customers never see
- * an entry); the PIN is checked by POST /api/staff-pin (env STAFF_PIN, never in this bundle).
- * `?mode=staff` also asks for it; a dev build skips the PIN.
+ * D-13 / D-38: staff mode behind a staff sign-in. A long press on the logo asks for the login and
+ * password (customers never see an entry); the server checks them (/api/auth) and sets an
+ * HttpOnly session cookie, so /api/quote returns the price breakdown to staff. `?mode=staff` also
+ * asks; a dev build skips it. Leaving staff mode signs out (a kiosk is a shared device).
  */
 export const STAFF_REQUEST_EVENT = 'dafna:staff-request';
 export const STAFF_EXIT_EVENT = 'dafna:staff-exit';
-export const STAFF_PIN_URL = '/api/staff-pin';
 /** hold the logo this long to ask for the PIN */
 export const LONG_PRESS_MS = 3000;
-/** wrong PINs in a row before the pad locks for LOCK_MS (the server limits attempts too) */
-export const MAX_TRIES = 5;
-export const LOCK_MS = 60_000;
 
-export type PinOutcome =
-  { ok: true } | { ok: false; code: 'wrong_pin' | 'rate_limited' | 'not_configured' | 'network' };
+export type StaffSignIn =
+  { ok: true } | { ok: false; code: 'wrong_login' | 'rate_limited' | 'network' };
 
-/**
- * D-19: the consultant PIN, kept in memory only (never storage) after the server accepted it,
- * so /api/quote returns the price breakdown to staff. Cleared when staff mode ends.
- */
-let staffPinMemory: string | null = null;
-export const currentStaffPin = () => staffPinMemory;
-export const forgetStaffPin = () => {
-  staffPinMemory = null;
-};
-
-export async function verifyStaffPin(
-  pin: string,
-  fetchImpl: typeof fetch = fetch,
-): Promise<PinOutcome> {
-  try {
-    const res = await fetchImpl(STAFF_PIN_URL, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ pin }),
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (res.ok) {
-      staffPinMemory = pin;
-      return { ok: true };
-    }
-    const data = (await res.json().catch(() => null)) as { error?: { code?: string } } | null;
-    const code = data?.error?.code;
-    if (code === 'rate_limited' || code === 'not_configured') return { ok: false, code };
-    if (res.status === 401) return { ok: false, code: 'wrong_pin' };
-    return { ok: false, code: 'network' };
-  } catch {
-    return { ok: false, code: 'network' };
-  }
+export async function signInStaff(
+  login: string,
+  password: string,
+  fetchImpl?: typeof fetch,
+): Promise<StaffSignIn> {
+  const r = await signIn(login, password, fetchImpl);
+  if (r.ok) return { ok: true };
+  if (r.code === 'wrong_login' || r.code === 'rate_limited') return { ok: false, code: r.code };
+  return { ok: false, code: 'network' };
 }
 
 export const requestStaff = () => window.dispatchEvent(new Event(STAFF_REQUEST_EVENT));
 export const exitStaff = () => {
-  forgetStaffPin();
+  void signOut();
   window.dispatchEvent(new Event(STAFF_EXIT_EVENT));
 };
 

@@ -3,9 +3,15 @@ import { handleAssembly } from './assemblyLink';
 import { FakeNotifier, MemoryLeadStore } from './memory';
 import { CachedCatalog, MemoryCatalogStore, handleCatalog } from './catalog';
 import { erpFromEnv, handleErp } from './erp1c';
-import { CachedPrices, MemoryPriceStore, handleManager, handleQuote } from './prices';
+import {
+  CachedPrices,
+  MemoryPriceStore,
+  handleManager,
+  handleQuote,
+  tashkentMinute,
+} from './prices';
 import { RateLimiter } from './rateLimit';
-import { handleStaffPin } from './staffPin';
+import { CachedStaff, MemoryStaffStore, handleAuth, sessionUser, type AuthDeps } from './staffAuth';
 import { handleSubmit, type SubmitDeps } from './submit';
 
 /**
@@ -35,28 +41,23 @@ export function createDevAssemblyHandler() {
 }
 
 /**
- * `vite dev`: POST /api/staff-pin against DEV_STAFF_PIN (default 0000; dev only — production
- * reads the Vercel env var STAFF_PIN).
+ * D-38 `vite dev`: staff sign-in on an in-memory staff list; the built-in "admin" signs in with
+ * DEV_ADMIN_PASSWORD (default "admin"; dev only - production reads ADMIN_PASSWORD).
  */
-export function createDevStaffPinHandler() {
-  const limiter = new RateLimiter(100, 60_000);
-  const pin = process.env.DEV_STAFF_PIN ?? '0000';
-  return (req: IncomingMessage, res: ServerResponse) => {
-    const chunks: Buffer[] = [];
-    req.on('data', (c: Buffer) => chunks.push(c));
-    req.on('end', () => {
-      const request = new Request('http://localhost/api/staff-pin', {
-        method: req.method,
-        headers: req.headers as Record<string, string>,
-        body: req.method === 'POST' ? Buffer.concat(chunks) : undefined,
-      });
-      void handleStaffPin(request, { pin, limiter }).then(async (response) => {
-        res.statusCode = response.status;
-        response.headers.forEach((v, k) => res.setHeader(k, v));
-        res.end(await response.text());
-      });
-    });
-  };
+const devAuth: AuthDeps = {
+  secret: 'dev-staff-session',
+  adminPassword: process.env.DEV_ADMIN_PASSWORD ?? 'admin',
+  staff: new CachedStaff(new MemoryStaffStore(), 0),
+  limiter: new RateLimiter(100, 60_000),
+  now: Date.now,
+  // the dev server is plain http
+  secure: false,
+  stamp: () => tashkentMinute(new Date()),
+};
+const devAuthOf = (req: Request) => sessionUser(req, devAuth);
+
+export function createDevAuthHandler() {
+  return adapt((r) => handleAuth(r, devAuth), '/api/auth');
 }
 
 export function createDevSubmitHandler() {
@@ -102,8 +103,8 @@ export function createDevSubmitHandler() {
 
 /**
  * D-19 `vite dev`: /api/quote and /api/manager on one in-memory price store (the DEMO list until
- * the manager saves). The manager PIN is DEV_MANAGER_PIN (default 0000; dev only — production
- * reads MANAGER_PIN). Dev staff mode has no PIN, so the quote always carries the breakdown.
+ * the manager saves). D-38: the manager page needs a dev staff sign-in (devAuth). Dev staff mode
+ * needs no sign-in, so the quote always carries the breakdown.
  */
 const devPrices = (() => {
   const store = new MemoryPriceStore();
@@ -143,8 +144,6 @@ export function createDevQuoteHandler() {
     (r) =>
       handleQuote(r, {
         prices: devPrices.prices,
-        staffPin: undefined,
-        managerPin: undefined,
         breakdownWithoutPin: true,
         catalog: devCatalog.catalog,
       }),
@@ -152,14 +151,14 @@ export function createDevQuoteHandler() {
   );
 }
 
-/** D-30 `vite dev`: /api/erp with the dev manager PIN; 1C only when EMAN_1C_TOKEN is set */
+/** D-30 `vite dev`: /api/erp for a signed-in dev staff member; 1C only when EMAN_1C_TOKEN is set */
 export function createDevErpHandler() {
   const limiter = new RateLimiter(100, 60_000);
   return adapt(
     (r) =>
       handleErp(r, {
         erp: erpFromEnv(process.env),
-        managerPin: process.env.DEV_MANAGER_PIN ?? '0000',
+        auth: devAuthOf,
         limiter,
         // D-34: no photo store in dev: pictures as data URLs
         dataUrls: true,
@@ -175,7 +174,7 @@ export function createDevManagerHandler() {
       handleManager(r, {
         ...devPrices,
         ...devCatalog,
-        managerPin: process.env.DEV_MANAGER_PIN ?? '0000',
+        auth: devAuthOf,
         // D-21: decor photos as data URLs (dev only, never stored in a sheet)
         allowDataUrls: true,
         putTexture: async (_name, body, type) =>

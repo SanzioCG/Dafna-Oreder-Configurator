@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ru } from './i18n/ru';
 import { uz } from './i18n/uz';
@@ -746,7 +746,7 @@ describe('D-4.1 navigation', () => {
   });
 });
 
-describe('D-13 kiosk safety: idle reset and the consultant PIN', () => {
+describe('D-13 kiosk safety: idle reset and the staff sign-in (D-38)', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
@@ -784,18 +784,22 @@ describe('D-13 kiosk safety: idle reset and the consultant PIN', () => {
     expect(screen.queryByTestId('idle-warning')).toBeNull();
   });
 
-  it('holding the logo asks for the PIN; the server decides; staff can leave again', async () => {
+  it('holding the logo asks for a staff sign-in (D-38); the server decides; leaving signs out', async () => {
     let good = false;
-    const calls: string[] = [];
+    const calls: { url: string; body: Record<string, unknown> }[] = [];
     vi.stubGlobal(
       'fetch',
-      vi.fn(async (_url: string, init: RequestInit) => {
-        calls.push(String(init.body));
+      vi.fn(async (url: string, init: RequestInit) => {
+        const body = JSON.parse(String(init.body ?? '{}')) as Record<string, unknown>;
+        calls.push({ url, body });
+        if (body.action === 'logout') return new Response(JSON.stringify({ ok: true }));
         return new Response(
-          JSON.stringify(good ? { ok: true } : { error: { code: 'wrong_pin' } }),
-          {
-            status: good ? 200 : 401,
-          },
+          JSON.stringify(
+            good
+              ? { user: { login: 'aziz', name: 'Aziz', role: 'manager' } }
+              : { error: { code: 'wrong_login' } },
+          ),
+          { status: good ? 200 : 401 },
         );
       }),
     );
@@ -805,57 +809,38 @@ describe('D-13 kiosk safety: idle reset and the consultant PIN', () => {
     fireEvent.pointerDown(logo);
     wait(1);
     fireEvent.pointerUp(logo); // released early: nothing
-    expect(screen.queryByTestId('pin-pad')).toBeNull();
+    expect(screen.queryByTestId('staff-login')).toBeNull();
     fireEvent.pointerDown(logo);
     wait(3);
-    const pad = screen.getByTestId('pin-pad');
+    expect(screen.getByTestId('staff-login')).toBeTruthy();
     vi.useRealTimers();
-    const enter = (pin: string) => {
-      for (const d of pin) fireEvent.click(within(pad).getByRole('button', { name: d }));
+    const enter = (password: string) => {
+      fireEvent.change(screen.getByTestId('staff-login-name'), { target: { value: 'aziz' } });
+      fireEvent.change(screen.getByTestId('staff-login-password'), {
+        target: { value: password },
+      });
       fireEvent.click(screen.getByTestId('pin-ok'));
     };
-    enter('1234');
-    expect(await screen.findByText(uz['pin.error.wrong_pin'])).toBeTruthy();
+    enter('wrong-pass');
+    expect(await screen.findByText(uz['pin.error.wrong_login'])).toBeTruthy();
     expect(screen.queryByTestId('staff-exit')).toBeNull();
     good = true;
-    enter('4321');
+    enter('right-pass');
     expect(await screen.findByTestId('staff-exit')).toBeTruthy();
-    expect(calls.map((b) => JSON.parse(b).pin)).toEqual(['1234', '4321']);
-    // the PIN is never part of the page
-    expect(document.body.innerHTML).not.toContain('4321');
+    const signIns = calls.filter((c) => c.url === '/api/auth' && c.body.action === 'login');
+    expect(signIns.map((c) => c.body.password)).toEqual(['wrong-pass', 'right-pass']);
+    // the password is never part of the page
+    expect(document.body.innerHTML).not.toContain('right-pass');
     fireEvent.click(screen.getByTestId('staff-exit'));
     expect(screen.queryByTestId('staff-exit')).toBeNull();
     expect(screen.getByRole('heading', { name: uz['start.whatTitle'] })).toBeTruthy(); // D-24
+    // a kiosk is shared: leaving staff mode signs out
+    expect(calls.some((c) => c.body.action === 'logout')).toBe(true);
   });
 
   it('the logo really takes a press (no pointer-events: none on it)', async () => {
     const css = (await import('./styles.css?raw')).default;
     const rule = /\.brand-logo\s*\{([^}]*)\}/.exec(css)![1]!;
     expect(rule).not.toMatch(/pointer-events:\s*none/);
-  });
-
-  it('five wrong PINs lock the pad for a minute', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(
-        async () => new Response(JSON.stringify({ error: { code: 'wrong_pin' } }), { status: 401 }),
-      ),
-    );
-    const { PinPad } = await import('./ui/PinPad');
-    const { I18nProvider } = await import('./i18n/I18n');
-    render(
-      <I18nProvider initial="uz">
-        <PinPad onSuccess={() => {}} onCancel={() => {}} />
-      </I18nProvider>,
-    );
-    for (let i = 0; i < 5; i++) {
-      for (const d of '1111') fireEvent.click(screen.getByRole('button', { name: d }));
-      fireEvent.click(screen.getByTestId('pin-ok'));
-      await waitFor(() =>
-        expect(screen.getByTestId('pin-error').textContent).toMatch(i < 4 ? /noto'g'ri/ : /60|59/),
-      );
-    }
-    expect(screen.getByTestId('pin-error').textContent).toMatch(/60|59/);
-    expect((screen.getByRole('button', { name: '1' }) as HTMLButtonElement).disabled).toBe(true);
   });
 });

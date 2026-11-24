@@ -4,12 +4,14 @@ import {
   type CatalogExtension,
   type PriceList,
 } from '@dafna/engine';
-import { useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { authError, getMe, signIn, signOut, type StaffUser } from '../auth/staffSession';
 import { Button } from '../ui/Button';
 import { HardwareSection } from './HardwareSection';
 import { MaterialsSection } from './MaterialsSection';
 import { ProfitSection } from './ProfitSection';
 import { ServicesSection } from './ServicesSection';
+import { StaffSection } from './StaffSection';
 import { ERP_ERRORS, ErpContext, applyErpPrices, erpApi } from './erp';
 import { ErpCatalogSection } from './ErpCatalogSection';
 import { managerLoad, managerSave, managerUploadTexture, type ManagerOutcome } from './managerApi';
@@ -18,7 +20,8 @@ import { ERRORS, fieldText, toServiceModel, type CatalogDraft } from './model';
 export type { CatalogDraft } from './model';
 
 /**
- * D-19 / D-20: Dafna's admin page (`/manager`, own PIN: env MANAGER_PIN). Four sections:
+ * D-19 / D-20: Dafna's admin page (`/manager`; D-38: staff sign in with a login and a password,
+ * the admin also manages the staff in "Xodimlar"). Sections:
  * - Materiallar: every board with all its data, 1C code and sheet price; the edge band price;
  *   new boards (they appear in the kiosk at once);
  * - Furnitura: every hardware item with 1C code and price; new hinges / slides;
@@ -29,7 +32,7 @@ export type { CatalogDraft } from './model';
  * Board prices will come from Dafna's 1C (by the 1C code); until then they are typed here.
  * An internal page for Dafna's office: Uzbek only.
  */
-type Section = 'erp' | 'materials' | 'hardware' | 'services' | 'profit';
+type Section = 'erp' | 'materials' | 'hardware' | 'services' | 'profit' | 'staff';
 const SECTIONS: { id: Section; label: string; hint: string }[] = [
   { id: 'erp', label: '1C katalogi', hint: 'Kioskda nima chiqadi' },
   { id: 'materials', label: 'Materiallar', hint: 'Plitalar, kromka' },
@@ -37,13 +40,19 @@ const SECTIONS: { id: Section; label: string; hint: string }[] = [
   { id: 'services', label: 'Xizmatlar', hint: 'm², metr, dona' },
   { id: 'profit', label: 'Foyda va narx', hint: 'Umumiy %' },
 ];
+/** D-38: the admin only */
+const STAFF_SECTION = { id: 'staff' as const, label: 'Xodimlar', hint: 'Kim kira oladi' };
 
 const errorText = (o: Extract<ManagerOutcome, { ok: false }>) =>
   (ERRORS[o.code] ?? ERRORS.network!) + fieldText(o.field);
 
 export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
-  const [pin, setPin] = useState('');
-  const [authed, setAuthed] = useState(false);
+  const [loginName, setLoginName] = useState('');
+  const [password, setPassword] = useState('');
+  /** D-38: the signed-in staff member (null = the sign-in form) */
+  const [user, setUser] = useState<StaffUser | null>(null);
+  /** the first check of an open session (no form flash) */
+  const [checking, setChecking] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [list, setList] = useState<PriceList | null>(null);
@@ -54,9 +63,9 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const [section, setSection] = useState<Section>('materials');
   /** D-30: the last "1C narxlarini olish" result */
   const [erpNote, setErpNote] = useState<string | null>(null);
-  // one client while the PIN and the kind groups stay the same (effects depend on it)
+  // one client while the kind groups stay the same (effects depend on it)
   const kindGroups = list?.erpKindGroups;
-  const erp = useMemo(() => erpApi(pin, fetchImpl, kindGroups), [pin, fetchImpl, kindGroups]);
+  const erp = useMemo(() => erpApi(fetchImpl, kindGroups), [fetchImpl, kindGroups]);
 
   /** the stored catalog becomes the engine's (labels, preview) and the editable draft */
   const takeCatalog = (c: CatalogExtension) => {
@@ -64,24 +73,55 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
     setDraftState({ materials: c.materials, hardware: c.hardware, textures: c.textures ?? {} });
   };
 
-  const login = async (e: FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    const r = await managerLoad(pin, fetchImpl);
-    setBusy(false);
+  /** the price list and catalog of a signed-in staff member */
+  const load = async (who: StaffUser) => {
+    const r = await managerLoad(fetchImpl);
     if (!r.ok) return setError(errorText(r));
     takeCatalog(r.catalog ?? EMPTY_EXTENSION);
     setList(toServiceModel(r.list));
     setUpdatedAt(r.updatedAt);
-    setAuthed(true);
+    setUser(who);
+  };
+
+  // D-38: an open session (the cookie) skips the form
+  useEffect(() => {
+    let live = true;
+    void getMe(fetchImpl).then(async (r) => {
+      if (live && r.ok) await load(r.value);
+      if (live) setChecking(false);
+    });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchImpl]);
+
+  const login = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    const r = await signIn(loginName.trim(), password, fetchImpl);
+    if (!r.ok) {
+      setBusy(false);
+      return setError(authError(r.code));
+    }
+    setPassword('');
+    await load(r.value);
+    setBusy(false);
+  };
+
+  const logout = async () => {
+    await signOut(fetchImpl);
+    setUser(null);
+    setList(null);
+    setSection('materials');
   };
 
   const save = async () => {
     if (!list) return;
     setBusy(true);
     setError(null);
-    const r = await managerSave(pin, list, draft, fetchImpl);
+    const r = await managerSave(list, draft, fetchImpl);
     setBusy(false);
     if (!r.ok) return setError(errorText(r));
     if (r.catalog) takeCatalog(r.catalog);
@@ -127,21 +167,31 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
     setJustSaved(false);
   };
 
-  if (!authed || !list) {
+  if (!user || !list) {
+    if (checking) return <main className="mgr-page mgr-login" aria-busy="true" />;
     return (
       <main className="mgr-page mgr-login">
         <form className="mgr-card mgr-login-card" onSubmit={login}>
-          <h1>Dafna — boshqaruv paneli</h1>
+          <h1>Dafna — xodimlar uchun</h1>
           <p className="mgr-note">Materiallar, furnitura, xizmatlar va narxlar</p>
           <label className="mgr-field">
-            <span>Menejer PIN</span>
+            <span>Login</span>
+            <input
+              autoComplete="username"
+              autoCapitalize="none"
+              value={loginName}
+              onChange={(e) => setLoginName(e.target.value)}
+              data-testid="mgr-login"
+            />
+          </label>
+          <label className="mgr-field">
+            <span>Parol</span>
             <input
               type="password"
-              inputMode="numeric"
-              autoComplete="off"
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 8))}
-              data-testid="mgr-pin"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              data-testid="mgr-password"
             />
           </label>
           {error && (
@@ -149,7 +199,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               {error}
             </p>
           )}
-          <Button variant="primary" type="submit" disabled={busy || pin.length < 4}>
+          <Button variant="primary" type="submit" disabled={busy || !loginName.trim() || !password}>
             Kirish
           </Button>
         </form>
@@ -172,7 +222,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
             <span>boshqaruv paneli</span>
           </div>
           <nav aria-label="Bo'limlar">
-            {SECTIONS.map((s) => (
+            {(user.role === 'admin' ? [...SECTIONS, STAFF_SECTION] : SECTIONS).map((s) => (
               <button
                 key={s.id}
                 type="button"
@@ -186,6 +236,14 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               </button>
             ))}
           </nav>
+          <div className="mgr-user" data-testid="mgr-user">
+            <span>
+              {user.name} · {user.role === 'admin' ? 'Admin' : 'Menejer'}
+            </span>
+            <Button variant="secondary" onClick={() => void logout()} data-testid="mgr-logout">
+              Chiqish
+            </Button>
+          </div>
         </aside>
         <main className="mgr-page">
           <header className="mgr-head">
@@ -225,7 +283,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               edit={edit}
               draft={draft}
               setDraft={setDraft}
-              uploadTexture={(id, image) => managerUploadTexture(pin, id, image, fetchImpl)}
+              uploadTexture={(id, image) => managerUploadTexture(id, image, fetchImpl)}
               onFromErp={() => setSection('erp')}
             />
           )}
@@ -236,11 +294,12 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               edit={edit}
               draft={draft}
               setDraft={setDraft}
-              uploadTexture={(id, image) => managerUploadTexture(pin, id, image, fetchImpl)}
+              uploadTexture={(id, image) => managerUploadTexture(id, image, fetchImpl)}
             />
           )}
           {section === 'services' && <ServicesSection list={list} edit={edit} />}
           {section === 'profit' && <ProfitSection list={list} edit={edit} />}
+          {section === 'staff' && user.role === 'admin' && <StaffSection fetchImpl={fetchImpl} />}
         </main>
       </div>
     </ErpContext.Provider>

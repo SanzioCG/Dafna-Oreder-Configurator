@@ -27,7 +27,7 @@ import { useCatalogExtension } from './state/catalogSource';
 import { STAFF_EXIT_EVENT, STAFF_REQUEST_EVENT, exitStaff } from './state/staffAccess';
 import { CUSTOMER_IDLE_S, STAFF_IDLE_S, useIdle } from './state/useIdle';
 import { IdleWarning } from './ui/IdleWarning';
-import { PinPad } from './ui/PinPad';
+import { StaffLogin } from './ui/StaffLogin';
 
 /** prefers-reduced-motion: the reveal shows its final state directly. */
 export function prefersReducedMotion(): boolean {
@@ -333,7 +333,7 @@ function Session({
 }: {
   mode: Mode;
   onEnd: () => void;
-  /** D-13: the PIN pad is open */
+  /** D-13 / D-38: the staff sign-in is open */
   pin: { onSuccess: () => void; onCancel: () => void } | null;
 }) {
   const { resetTheme } = useTheme();
@@ -346,13 +346,13 @@ function Session({
           onEnd();
         }}
       />
-      {pin && <PinPad onSuccess={pin.onSuccess} onCancel={pin.onCancel} />}
+      {pin && <StaffLogin onSuccess={pin.onSuccess} onCancel={pin.onCancel} />}
     </I18nProvider>
   );
 }
 
 export function App() {
-  // D-13: staff mode needs the PIN (server-checked); `?mode=staff` asks for it, a dev build
+  // D-13 / D-38: staff mode needs a staff sign-in; `?mode=staff` asks for it, a dev build
   // opens staff mode straight away. Entering or leaving staff mode starts a fresh session.
   const wantsStaff = parseMode(window.location.search) === 'staff';
   // D-20: materials / hardware added on the manager page (re-renders the kiosk when they arrive)

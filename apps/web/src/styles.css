@@ -2349,6 +2349,28 @@ p {
   max-width: 22rem;
 }
 
+/* D-38: staff sign-in (login + password) */
+.staff-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  text-align: left;
+}
+.staff-field input {
+  min-height: 48px;
+  padding: 0 var(--space-3);
+  border: var(--line-in-card);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+}
+.staff-field input:focus-visible {
+  outline: var(--focus-line);
+  outline-offset: 1px;
+}
+
 .pin-dots {
   display: flex;
   justify-content: center;
@@ -2445,6 +2467,16 @@ p {
   font-size: 22px;
 }
 .mgr-brand span {
+  color: var(--text-2);
+  font-size: 14px;
+}
+/* D-38: the signed-in staff member and "Chiqish" */
+.mgr-user {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding: var(--space-2);
   color: var(--text-2);
   font-size: 14px;
 }

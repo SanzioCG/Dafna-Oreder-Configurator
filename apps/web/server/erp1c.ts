@@ -1,5 +1,5 @@
 import { copyPicture, emanPicture } from './emanSite';
-import { pinMatches } from './prices';
+import type { AuthOf } from './prices';
 import type { RateLimiter } from './rateLimit';
 
 /**
@@ -380,7 +380,8 @@ const json = (status: number, body: unknown) =>
 
 export interface ErpDeps {
   erp: ErpConfig | null;
-  managerPin: string | undefined;
+  /** D-38: the signed-in staff member */
+  auth: AuthOf;
   limiter: RateLimiter;
   /** D-34: our photo store (Vercel Blob); undefined = not configured */
   putPicture?: (name: string, body: ArrayBuffer, contentType: string) => Promise<string>;
@@ -397,10 +398,8 @@ function clientIp(req: Request): string {
 
 export async function handleErp(req: Request, deps: ErpDeps): Promise<Response> {
   if (req.method !== 'POST') return json(405, { error: { code: 'method_not_allowed' } });
-  if (!deps.managerPin) return json(503, { error: { code: 'not_configured' } });
   if (!deps.limiter.take(clientIp(req))) return json(429, { error: { code: 'rate_limited' } });
-  if (!pinMatches(req.headers.get('x-manager-pin'), deps.managerPin))
-    return json(401, { error: { code: 'wrong_pin' } });
+  if (!(await deps.auth(req))) return json(401, { error: { code: 'unauthorized' } });
   if (!deps.erp) return json(503, { error: { code: 'erp_not_configured' } });
   let body: {
     action?: unknown;

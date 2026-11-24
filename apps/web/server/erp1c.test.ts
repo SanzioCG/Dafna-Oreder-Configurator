@@ -9,6 +9,7 @@ import {
   type ErpConfig,
 } from './erp1c';
 import { RateLimiter } from './rateLimit';
+import { headerAuth } from './testAuth';
 
 /** D-30: Dafna's 1C (OData, read-only) for the manager page, with a fake 1C */
 const KEY = '115514ae-80f4-4095-9117-42bae0a43d76';
@@ -55,12 +56,12 @@ const cfg = (f: typeof fetch): ErpConfig => ({
 const req = (body: unknown, pin = '1234') =>
   new Request('http://localhost/api/erp', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-manager-pin': pin },
+    headers: { 'content-type': 'application/json', 'x-test-staff': pin },
     body: JSON.stringify(body),
   });
 const deps = (erp: ErpConfig | null) => ({
   erp,
-  managerPin: '1234',
+  auth: headerAuth('1234'),
   limiter: new RateLimiter(100, 60_000),
 });
 
@@ -73,7 +74,7 @@ describe('D-30 /api/erp (1C for the manager page)', () => {
     expect(((await r.json()) as { error: { code: string } }).error.code).toBe('erp_not_configured');
   });
 
-  it('the manager PIN is required', async () => {
+  it('a signed-in staff member is required (D-38)', async () => {
     const { fetchImpl, urls } = fake1C();
     const r = await handleErp(req({ action: 'search', q: 'master' }, '9999'), deps(cfg(fetchImpl)));
     expect(r.status).toBe(401);

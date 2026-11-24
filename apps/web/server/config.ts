@@ -3,7 +3,14 @@ import { giblabForLead } from './giblab';
 import { buildOrderPdf, orderPdfInput } from './orderPdf';
 import { CachedCatalog, GoogleSheetsCatalogStore } from './catalog';
 import { GoogleSheetsPriceStore } from './priceSheet';
-import { CachedPrices } from './prices';
+import { CachedPrices, tashkentMinute } from './prices';
+import {
+  CachedStaff,
+  GoogleSheetsStaffStore,
+  sessionSecretFrom,
+  sessionUser,
+  type AuthDeps,
+} from './staffAuth';
 import { RateLimiter } from './rateLimit';
 import { GoogleSheetsStore, parseServiceAccount } from './sheets';
 import type { SubmitDeps } from './submit';
@@ -14,8 +21,8 @@ import { TelegramNotifier } from './telegram';
  *   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, GOOGLE_SERVICE_ACCOUNT_JSON, GOOGLE_SHEET_ID
  * Cron: CRON_SECRET (Vercel sends it as "Authorization: Bearer …" to the cron endpoint).
  * Optional, non-production only: TELEGRAM_FORCE_FAIL=1 (simulates a Telegram outage).
- * D-19: MANAGER_PIN (the manager price page; unset = the page is off). The price list lives in
- * the same Google Sheet (tab "Narxlar").
+ * D-38: ADMIN_PASSWORD (the built-in "admin" staff account; other staff are added by the admin
+ * on /manager, tab "Xodimlar"). The price list lives in the same Google Sheet (tab "Narxlar").
  */
 export const REQUIRED_ENV = [
   'TELEGRAM_BOT_TOKEN',
@@ -115,3 +122,25 @@ export async function applyCatalogFromEnv(env: Env): Promise<void> {
     console.error(JSON.stringify({ event: 'catalog_load_failed', message: (e as Error).message }));
   }
 }
+
+/** D-38: staff sign-in (tab "Xodimlar", ADMIN_PASSWORD); one per warm instance */
+let authSingleton: AuthDeps | null = null;
+export function authFromEnv(env: Env): AuthDeps {
+  if (authSingleton) return authSingleton;
+  const account = parseServiceAccount(env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  if (!account || !env.GOOGLE_SHEET_ID) throw new Error('google sheets env missing');
+  authSingleton = {
+    secret: sessionSecretFrom(account.private_key),
+    adminPassword: env.ADMIN_PASSWORD || undefined,
+    staff: new CachedStaff(new GoogleSheetsStaffStore({ sheetId: env.GOOGLE_SHEET_ID, account })),
+    // 10 sign-in attempts per IP per 10 minutes (per warm instance)
+    limiter: new RateLimiter(10, 10 * 60 * 1000),
+    now: Date.now,
+    secure: true,
+    stamp: () => tashkentMinute(new Date()),
+  };
+  return authSingleton;
+}
+
+/** D-38: the signed-in staff member of a request (null without a valid session) */
+export const authOfEnv = (env: Env) => (req: Request) => sessionUser(req, authFromEnv(env));

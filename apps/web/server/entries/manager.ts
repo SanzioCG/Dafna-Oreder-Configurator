@@ -1,9 +1,9 @@
 /**
- * Vercel Function entry: GET / PUT /api/manager (D-19: the manager's price list; env
- * MANAGER_PIN). Bundled by scripts/build-api.mjs into api/manager.js.
+ * Vercel Function entry: GET / PUT /api/manager (D-19: the manager's price list; D-38: staff
+ * signed in). Bundled by scripts/build-api.mjs into api/manager.js.
  */
 import { blobPutter, blobTokenFrom } from '../blob';
-import { catalogFromEnv, pricesFromEnv } from '../config';
+import { authOfEnv, catalogFromEnv, pricesFromEnv } from '../config';
 import { handleManager, type ManagerDeps } from '../prices';
 import { RateLimiter } from '../rateLimit';
 
@@ -20,11 +20,11 @@ function handle(request: Request): Promise<Response> {
   }
   if (!deps) {
     const { store, prices } = pricesFromEnv(process.env);
-    // 30 requests per IP per 10 minutes (wrong PINs included)
+    // 30 requests per IP per 10 minutes
     deps = {
       store,
       prices,
-      managerPin: process.env.MANAGER_PIN,
+      auth: authOfEnv(process.env),
       limiter: new RateLimiter(30, 10 * 60 * 1000),
       now: () => new Date(),
       catalogStore: catalogFromEnv(process.env).store,

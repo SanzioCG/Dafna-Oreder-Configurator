@@ -12,6 +12,7 @@ import {
   type QuoteDeps,
 } from './prices';
 import { RateLimiter } from './rateLimit';
+import { headerAuth } from './testAuth';
 
 const quoteReq = (body: unknown, headers: Record<string, string> = {}) =>
   new Request('http://x/api/quote', {
@@ -28,11 +29,11 @@ const wardrobe = {
 function setup() {
   const store = new MemoryPriceStore();
   const prices = new CachedPrices(store, 0);
-  const quote: QuoteDeps = { prices, staffPin: '2580', managerPin: '9137' };
+  const quote: QuoteDeps = { prices, auth: headerAuth('2580', '9137') };
   const manager: ManagerDeps = {
     store,
     prices,
-    managerPin: '9137',
+    auth: headerAuth('9137'),
     limiter: new RateLimiter(100, 60_000),
     now: () => new Date('2026-11-23T09:05:00Z'),
   };
@@ -42,7 +43,7 @@ function setup() {
 const managerReq = (method: string, pin: string | null, body?: unknown) =>
   new Request('http://x/api/manager', {
     method,
-    headers: { 'content-type': 'application/json', ...(pin ? { 'x-manager-pin': pin } : {}) },
+    headers: { 'content-type': 'application/json', ...(pin ? { 'x-test-staff': pin } : {}) },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
@@ -76,9 +77,9 @@ describe('D-19 /api/quote: the price is computed on the server', () => {
     const { quote } = setup();
     const get = async (h: Record<string, string>) =>
       (await (await handleQuote(quoteReq(wardrobe, h), quote)).json()) as QuoteBody;
-    expect((await get({ 'x-staff-pin': '2580' })).breakdown).toBeTruthy();
-    expect((await get({ 'x-manager-pin': '9137' })).breakdown).toBeTruthy();
-    expect((await get({ 'x-staff-pin': '1111' })).breakdown).toBeUndefined();
+    expect((await get({ 'x-test-staff': '2580' })).breakdown).toBeTruthy();
+    expect((await get({ 'x-test-staff': '9137' })).breakdown).toBeTruthy();
+    expect((await get({ 'x-test-staff': '1111' })).breakdown).toBeUndefined();
   });
 
   it('unknown product / version / prototype keys -> 400; GET -> 405', async () => {
@@ -95,11 +96,9 @@ describe('D-19 /api/quote: the price is computed on the server', () => {
   });
 });
 
-describe('D-19 /api/manager: the price list behind MANAGER_PIN', () => {
-  it('not configured -> 503; no / wrong PIN -> 401', async () => {
+describe('D-19 /api/manager: the price list for signed-in staff (D-38)', () => {
+  it('not signed in -> 401', async () => {
     const { manager } = setup();
-    const off = { ...manager, managerPin: undefined };
-    expect((await handleManager(managerReq('GET', '9137'), off)).status).toBe(503);
     expect((await handleManager(managerReq('GET', null), manager)).status).toBe(401);
     expect((await handleManager(managerReq('GET', '1234'), manager)).status).toBe(401);
   });
@@ -112,7 +111,7 @@ describe('D-19 /api/manager: the price list behind MANAGER_PIN', () => {
     expect(store.saved?.updatedAt).toBe('2026-11-23 14:05');
     expect(store.saved?.list.priceListVersion).toBe('live-2026-11-23 14:05');
     const after = (await (
-      await handleQuote(quoteReq(wardrobe, { 'x-manager-pin': '9137' }), quote)
+      await handleQuote(quoteReq(wardrobe, { 'x-test-staff': '9137' }), quote)
     ).json()) as QuoteBody;
     expect(after.demo).toBe(false);
     expect(after.total).not.toBe(before.total);

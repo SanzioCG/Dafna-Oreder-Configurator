@@ -12,6 +12,7 @@ import {
 } from './catalog';
 import { CachedPrices, MemoryPriceStore, handleManager, type ManagerDeps } from './prices';
 import { RateLimiter } from './rateLimit';
+import { headerAuth } from './testAuth';
 
 afterEach(() => applyCatalogExtension(EMPTY_EXTENSION));
 
@@ -26,7 +27,7 @@ function deps(extra: Partial<ManagerDeps> = {}): ManagerDeps & { uploaded: strin
     prices: new CachedPrices(store, 0),
     catalogStore,
     catalog: new CachedCatalog(catalogStore, 0),
-    managerPin: '9137',
+    auth: headerAuth('9137'),
     limiter: new RateLimiter(100, 60_000),
     now: () => new Date('2026-11-23T09:05:00Z'),
     putTexture: async (name) => {
@@ -42,7 +43,7 @@ const upload = (d: ManagerDeps, body: BodyInit, headers: Record<string, string>)
   handleManager(
     new Request('http://x/api/manager', {
       method: 'POST',
-      headers: { 'x-manager-pin': '9137', ...headers },
+      headers: { 'x-test-staff': '9137', ...headers },
       body,
     }),
     d,

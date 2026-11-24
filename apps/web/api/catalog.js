@@ -63120,6 +63120,9 @@ var NEW = { top: (0, import_pdf_lib3.rgb)(1, 0.9, 0.7), front: (0, import_pdf_li
 // server/prices.ts
 var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
 
+// server/staffAuth.ts
+var SESSION_MS = 12 * 36e5;
+
 // server/config.ts
 var IP_LIMIT = { limit: 20, windowMs: 10 * 60 * 1e3 };
 var KIOSK_LIMIT = { limit: 10, windowMs: 10 * 60 * 1e3 };
