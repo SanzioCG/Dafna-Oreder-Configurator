@@ -63287,8 +63287,8 @@ var uz = {
   "start.product": "Mahsulot",
   "start.whatTitle": "Nima buyurtma qilmoqchisiz?",
   "start.whatHint": "Mahsulotni tanlang \u2014 keyin tayyor modellar chiqadi.",
-  // D-55: the website's link to the staff panel (/manager)
-  "start.staffLogin": "Xodimlar uchun kirish",
+  // D-55: the website's link to the staff panel (/manager); just "Staff" (quiet for customers)
+  "start.staffLogin": "Staff",
   "start.productHint.wardrobe": "Kiyim, javon va tortmalar uchun",
   "start.productHint.pedestal": "Stol ostiga, g'ildirakli tortmalar",
   "start.productHint.desk": "Ish va yozuv stoli",

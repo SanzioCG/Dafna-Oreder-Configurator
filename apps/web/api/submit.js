@@ -64628,7 +64628,7 @@ var ru = {
   "product.desk": "\u0421\u0442\u043E\u043B",
   "start.whatTitle": "\u0427\u0442\u043E \u0432\u044B \u0445\u043E\u0442\u0438\u0442\u0435 \u0437\u0430\u043A\u0430\u0437\u0430\u0442\u044C?",
   "start.whatHint": "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0438\u0437\u0434\u0435\u043B\u0438\u0435 \u2014 \u0437\u0430\u0442\u0435\u043C \u043F\u043E\u044F\u0432\u044F\u0442\u0441\u044F \u0433\u043E\u0442\u043E\u0432\u044B\u0435 \u043C\u043E\u0434\u0435\u043B\u0438.",
-  "start.staffLogin": "\u0412\u0445\u043E\u0434 \u0434\u043B\u044F \u0441\u043E\u0442\u0440\u0443\u0434\u043D\u0438\u043A\u043E\u0432",
+  "start.staffLogin": "Staff",
   "start.productHint.wardrobe": "\u0414\u043B\u044F \u043E\u0434\u0435\u0436\u0434\u044B, \u043F\u043E\u043B\u043E\u043A \u0438 \u044F\u0449\u0438\u043A\u043E\u0432",
   "start.productHint.pedestal": "\u041F\u043E\u0434 \u0441\u0442\u043E\u043B, \u044F\u0449\u0438\u043A\u0438 \u043D\u0430 \u043A\u043E\u043B\u0451\u0441\u0430\u0445",
   "start.productHint.desk": "\u0420\u0430\u0431\u043E\u0447\u0438\u0439 \u0438 \u043F\u0438\u0441\u044C\u043C\u0435\u043D\u043D\u044B\u0439 \u0441\u0442\u043E\u043B",
@@ -65111,8 +65111,8 @@ var uz = {
   "start.product": "Mahsulot",
   "start.whatTitle": "Nima buyurtma qilmoqchisiz?",
   "start.whatHint": "Mahsulotni tanlang \u2014 keyin tayyor modellar chiqadi.",
-  // D-55: the website's link to the staff panel (/manager)
-  "start.staffLogin": "Xodimlar uchun kirish",
+  // D-55: the website's link to the staff panel (/manager); just "Staff" (quiet for customers)
+  "start.staffLogin": "Staff",
   "start.productHint.wardrobe": "Kiyim, javon va tortmalar uchun",
   "start.productHint.pedestal": "Stol ostiga, g'ildirakli tortmalar",
   "start.productHint.desk": "Ish va yozuv stoli",
