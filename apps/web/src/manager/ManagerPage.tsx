@@ -301,7 +301,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
         <form className="mgr-card mgr-login-card" onSubmit={login}>
           <img className="mgr-login-logo" src={logoUrl} alt="Dafna" draggable={false} />
           <h1>Xodimlar uchun kirish</h1>
-          <p className="mgr-note">Materiallar, furnitura, xizmatlar va narxlar</p>
+          <p className="mgr-note">Buyurtmalar, materiallar va narxlar</p>
           <label className="mgr-field">
             <span>Login</span>
             <input
@@ -338,6 +338,10 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
           >
             Parolni unutdim
           </button>
+          {/* D-55: the staff come in from the site's own address; the way back */}
+          <a className="mgr-link mgr-login-back" href="/" data-testid="mgr-to-site">
+            ← Saytga qaytish
+          </a>
         </form>
       </main>
     );

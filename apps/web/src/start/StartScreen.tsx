@@ -28,18 +28,24 @@ const PRODUCT_FILL: Record<ProductId, string> = {
  * 2. the chosen product's ready-made models (bento cards with a front-view thumbnail, name,
  *    width and "Tanlash") and "Noldan boshlash"; "Mahsulotlar" goes back to screen 1.
  * Selecting a model loads its engine params and continues to step 1.
+ * D-55: the website's product screen ends with a quiet "Xodimlar uchun kirish" (/manager), so
+ * the staff use the site's one address; a shop kiosk has no such link (its staff mode is a long
+ * press on the logo).
  */
 export function StartScreen({
   mode,
   onPick,
   onScratch,
   onProductChange,
+  site = false,
 }: {
   mode: Mode;
   onPick: (model: ReadyModel) => void;
   onScratch: (product: ProductId) => void;
   /** D-43: the product screen (null) or a product's models - the website lays them out differently */
   onProductChange?: (product: ProductId | null) => void;
+  /** D-55: the website (not a shop kiosk): the staff sign-in link */
+  site?: boolean;
 }) {
   const { t } = useI18n();
   const [product, setProductState] = useState<ProductId | null>(null);
@@ -92,6 +98,11 @@ export function StartScreen({
             );
           })}
         </div>
+        {site && (
+          <a className="start-staff" href="/manager" data-testid="start-staff">
+            {t('start.staffLogin')}
+          </a>
+        )}
       </div>
     );
 

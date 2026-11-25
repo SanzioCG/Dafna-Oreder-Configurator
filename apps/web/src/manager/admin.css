@@ -1649,3 +1649,10 @@
   display: grid;
   gap: 2px;
 }
+/* D-55: the sign-in card's way back to the site */
+.mgr-login-card .mgr-login-back {
+  align-self: center;
+  color: var(--adm-text-2);
+  font-size: 13px;
+  text-decoration: none;
+}

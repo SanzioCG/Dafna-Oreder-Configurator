@@ -404,6 +404,7 @@ export const ru: Messages = {
   'product.desk': 'Стол',
   'start.whatTitle': 'Что вы хотите заказать?',
   'start.whatHint': 'Выберите изделие — затем появятся готовые модели.',
+  'start.staffLogin': 'Вход для сотрудников',
   'start.productHint.wardrobe': 'Для одежды, полок и ящиков',
   'start.productHint.pedestal': 'Под стол, ящики на колёсах',
   'start.productHint.desk': 'Рабочий и письменный стол',

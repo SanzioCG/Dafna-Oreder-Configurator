@@ -426,6 +426,8 @@ export const uz = {
   'start.product': 'Mahsulot',
   'start.whatTitle': 'Nima buyurtma qilmoqchisiz?',
   'start.whatHint': 'Mahsulotni tanlang — keyin tayyor modellar chiqadi.',
+  // D-55: the website's link to the staff panel (/manager)
+  'start.staffLogin': 'Xodimlar uchun kirish',
   'start.productHint.wardrobe': 'Kiyim, javon va tortmalar uchun',
   'start.productHint.pedestal': "Stol ostiga, g'ildirakli tortmalar",
   'start.productHint.desk': 'Ish va yozuv stoli',

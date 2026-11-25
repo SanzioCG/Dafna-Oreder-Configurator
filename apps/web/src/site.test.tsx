@@ -46,6 +46,10 @@ describe('D-43 the website (konfigurator.dafna.uz) vs a shop kiosk', () => {
     const card = screen.getByTestId('site-contact-card');
     expect(card.textContent).toContain(DAFNA_CONTACT.phone);
     expect(card.querySelector('a')?.getAttribute('href')).toBe(DAFNA_CONTACT.tel);
+    // D-55: one address for everyone - the staff sign in from the site's product screen
+    const staff = screen.getByTestId('start-staff');
+    expect(staff.textContent).toBe(uz['start.staffLogin']);
+    expect(staff.getAttribute('href')).toBe('/manager');
   });
 
   it('the website: the phone step line and "Tayyor — ko\'rib chiqish"', () => {
@@ -63,6 +67,8 @@ describe('D-43 the website (konfigurator.dafna.uz) vs a shop kiosk', () => {
     expect(screen.queryByTestId('site-header')).toBeNull();
     expect(screen.getByTestId('consultant-button')).toBeTruthy();
     expect(document.documentElement.dataset.theme).toBe('dark');
+    // D-55: no staff sign-in link on a shop kiosk (its staff mode: a long press on the logo)
+    expect(screen.queryByTestId('start-staff')).toBeNull();
   });
 });
 
