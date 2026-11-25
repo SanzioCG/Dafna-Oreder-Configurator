@@ -33,6 +33,7 @@ const lead = (templateId: string): LeadRecord => ({
   orderId: '',
   orderItem: '',
   quantity: 1,
+  manager: '',
 });
 
 describe('D-11 order PDF for the workshop', () => {

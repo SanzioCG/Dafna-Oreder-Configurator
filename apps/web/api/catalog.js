@@ -62782,14 +62782,18 @@ var COLUMNS = [
   // D-25: several products in one order (appended: existing sheets keep their columns)
   { key: "orderId", header: "Buyurtma" },
   { key: "orderItem", header: "Buyurtmada" },
-  { key: "quantity", header: "Soni" }
+  { key: "quantity", header: "Soni" },
+  // D-47: who changed the status on the manager page (appended: existing sheets keep theirs)
+  { key: "manager", header: "Menejer" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
 var TELEGRAM_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "telegram");
 function columnLetter(index) {
-  if (index < 0 || index > 25) throw new Error(`column index out of range: ${index}`);
-  return String.fromCharCode(65 + index);
+  if (!Number.isInteger(index) || index < 0 || index > 701)
+    throw new Error(`column index out of range: ${index}`);
+  const last = String.fromCharCode(65 + index % 26);
+  return index < 26 ? last : String.fromCharCode(64 + Math.floor(index / 26)) + last;
 }
 var LAST_COLUMN = columnLetter(COLUMNS.length - 1);
 

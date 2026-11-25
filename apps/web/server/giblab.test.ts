@@ -33,6 +33,7 @@ const lead = (templateId: string, over: Record<string, unknown> = {}): LeadRecor
     orderId: '',
     orderItem: '',
     quantity: 1,
+    manager: '',
   };
 };
 

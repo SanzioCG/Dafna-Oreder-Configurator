@@ -13,6 +13,7 @@ import {
 import { RateLimiter } from './rateLimit';
 import { CachedStaff, MemoryStaffStore, handleAuth, workingUser, type AuthDeps } from './staffAuth';
 import { handleSubmit, type SubmitDeps } from './submit';
+import { handleOrders } from './orders';
 
 /**
  * `vite dev` only (loaded by vite.config.ts through server.ssrLoadModule): POST /api/submit with
@@ -188,5 +189,19 @@ export function createDevManagerHandler() {
         now: () => new Date(),
       }),
     '/api/manager',
+  );
+}
+
+/** D-47 `vite dev`: "Buyurtmalar" on the same in-memory store as the dev submit handler */
+export function createDevOrdersHandler() {
+  return adapt(
+    (r) =>
+      handleOrders(r, {
+        store: devStore ?? (devStore = new MemoryLeadStore()),
+        auth: devAuthOf,
+        sheetUrl: null,
+        linkSecret: DEV_LINK_SECRET,
+      }),
+    '/api/orders',
   );
 }

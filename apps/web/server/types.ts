@@ -57,6 +57,8 @@ export interface LeadRecord {
   orderItem: string;
   /** D-25: how many of this product (1 when absent) */
   quantity: number;
+  /** D-47: the staff member who last changed the status / note on the manager page */
+  manager: string;
 }
 
 export interface StoredLead extends LeadRecord {
@@ -73,6 +75,13 @@ export interface LeadStore {
   updateTelegram(ref: number, state: TelegramState, attempts: number): Promise<void>;
   /** leads whose notification failed (or got stuck pending) and still have attempts left */
   listForRetry(): Promise<StoredLead[]>;
+  /** D-47: every application (the manager page's "Buyurtmalar") */
+  listAll(): Promise<StoredLead[]>;
+  /** D-47: the manager's status / note on a row, and who made the change */
+  updateByManager(
+    ref: number,
+    patch: { status?: string; managerNote?: string; manager: string },
+  ): Promise<void>;
 }
 
 export interface Notifier {

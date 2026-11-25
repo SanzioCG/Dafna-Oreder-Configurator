@@ -14,7 +14,7 @@ import type { LeadRecord } from './types';
  * - the two columns the manager edits ("Holat", "Menejer izohi") are tinted and noted; every
  *   other cell warns before an accidental edit (warning only, nobody is locked out).
  */
-export const SHEET_FORMAT_VERSION = '4';
+export const SHEET_FORMAT_VERSION = '5';
 /** D-46: the header colour (Figma "Google Sheet": Dafna ink #191D24) */
 export const HEADER_BG = '#191d24';
 export const FORMAT_METADATA_KEY = 'dafna.sheetFormat';
@@ -67,6 +67,7 @@ export const COLUMN_WIDTHS: Partial<Record<keyof LeadRecord, number>> = {
   orderId: 130,
   orderItem: 90,
   quantity: 60,
+  manager: 130,
 };
 
 /** Columns the manager never needs: hidden (still there for the API and regeneration). */

@@ -34,16 +34,20 @@ export const COLUMNS: { key: keyof LeadRecord; header: string }[] = [
   { key: 'orderId', header: 'Buyurtma' },
   { key: 'orderItem', header: 'Buyurtmada' },
   { key: 'quantity', header: 'Soni' },
+  // D-47: who changed the status on the manager page (appended: existing sheets keep theirs)
+  { key: 'manager', header: 'Menejer' },
 ];
 
 export const HEADERS = COLUMNS.map((c) => c.header);
 export const STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === 'status');
 export const TELEGRAM_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === 'telegram');
 
-/** "A".."Z" for a 0-based column index (the sheet stays well under 26 columns). */
+/** "A".."Z", "AA".."ZZ" for a 0-based column index (D-47: "Menejer" is the 27th, "AA"). */
 export function columnLetter(index: number): string {
-  if (index < 0 || index > 25) throw new Error(`column index out of range: ${index}`);
-  return String.fromCharCode(65 + index);
+  if (!Number.isInteger(index) || index < 0 || index > 701)
+    throw new Error(`column index out of range: ${index}`);
+  const last = String.fromCharCode(65 + (index % 26));
+  return index < 26 ? last : String.fromCharCode(64 + Math.floor(index / 26)) + last;
 }
 export const LAST_COLUMN = columnLetter(COLUMNS.length - 1);
 

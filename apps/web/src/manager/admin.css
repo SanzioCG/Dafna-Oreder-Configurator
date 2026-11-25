@@ -19,6 +19,9 @@
   --adm-success-soft: #e3f5ea;
   --adm-warning: #8a5a00;
   --adm-warning-soft: #fff4d6;
+  /* D-47: the "Tasdiqlandi" status */
+  --adm-violet: #6b3fd4;
+  --adm-violet-soft: #f0eafd;
   --adm-danger: #b42318;
   --adm-danger-soft: #fde8e7;
   --adm-radius-sm: 4px;
@@ -42,6 +45,8 @@
   --adm-success-soft: #16301f;
   --adm-warning: #f2c14e;
   --adm-warning-soft: #332a10;
+  --adm-violet: #b9a2f5;
+  --adm-violet-soft: #2a2142;
   --adm-danger: #f28b82;
   --adm-danger-soft: #3a1a1a;
 }
@@ -1207,7 +1212,8 @@
 }
 .mgr-shell .mgr-search input {
   max-width: none !important;
-  padding-left: 32px;
+  /* beats the generic `.mgr-shell input:not(…)` padding (the icon sat on the text) */
+  padding-left: 32px !important;
 }
 .mgr-push {
   margin-left: auto;
@@ -1296,5 +1302,287 @@
   .mgr-tree {
     position: static;
     max-height: 320px;
+  }
+}
+
+/* D-47 "Bosh sahifa" / "Buyurtmalar" (Figma "Admin / Bosh sahifa", "Admin / Buyurtmalar") */
+.mgr-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--adm-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: var(--adm-surface-2);
+  color: var(--adm-text-2);
+}
+.mgr-pill::before,
+.mgr-stat-label i {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.mgr-pill[data-tone='info'] {
+  background: var(--adm-accent-soft);
+  color: var(--adm-accent);
+}
+.mgr-pill[data-tone='warn'] {
+  background: var(--adm-warning-soft);
+  color: var(--adm-warning);
+}
+.mgr-pill[data-tone='accent'] {
+  background: var(--adm-violet-soft);
+  color: var(--adm-violet);
+}
+.mgr-pill[data-tone='ok'] {
+  background: var(--adm-success-soft);
+  color: var(--adm-success);
+}
+.mgr-status-tabs {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--adm-border);
+}
+.mgr-status-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  color: var(--adm-text-2);
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mgr-status-tabs button:hover {
+  color: var(--adm-text);
+}
+.mgr-status-tabs button.active {
+  border-bottom-color: var(--adm-accent);
+  color: var(--adm-accent);
+  font-weight: 500;
+}
+.mgr-status-tabs button:focus-visible {
+  outline: none;
+  box-shadow: var(--adm-ring);
+}
+.mgr-tab-count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: var(--adm-radius-sm);
+  background: var(--adm-surface-2);
+  color: var(--adm-text-2);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-status-tabs button.active .mgr-tab-count {
+  background: var(--adm-accent-soft);
+  color: var(--adm-accent);
+}
+.mgr-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--adm-text);
+  font: inherit;
+  cursor: pointer;
+}
+.mgr-table tr.mgr-row-open {
+  cursor: pointer;
+}
+.mgr-table tr.mgr-row-open:hover {
+  background: var(--adm-surface-2);
+}
+.mgr-orders-table td {
+  white-space: nowrap;
+}
+.mgr-order-id {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-dim {
+  color: var(--adm-text-2);
+}
+.mgr-customer {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.mgr-customer small {
+  color: var(--adm-text-3);
+  font-size: 12px;
+}
+.mgr-pages button {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--adm-border);
+  border-radius: var(--adm-radius);
+  background: var(--adm-surface);
+  color: var(--adm-text);
+  font: inherit;
+  cursor: pointer;
+}
+.mgr-pages button.active {
+  border-color: transparent;
+  background: var(--adm-accent-soft);
+  color: var(--adm-accent);
+  font-weight: 500;
+}
+.mgr-pages button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.mgr-order-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.mgr-order-body > .btn {
+  align-self: flex-start;
+}
+.mgr-order-customer {
+  flex: none;
+  gap: 2px;
+}
+.mgr-order-customer a {
+  color: var(--adm-accent);
+  text-decoration: none;
+}
+.mgr-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin: 0;
+}
+.mgr-facts dt {
+  color: var(--adm-text-3);
+  font-size: 12px;
+}
+.mgr-facts dd {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+.mgr-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.mgr-stat {
+  gap: 8px;
+}
+.mgr-stat-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--adm-text-2);
+}
+.mgr-stat-label i[data-tone='info'] {
+  background: var(--adm-accent);
+}
+.mgr-stat-label i[data-tone='warn'] {
+  background: var(--adm-warning);
+}
+.mgr-stat-label i[data-tone='accent'] {
+  background: var(--adm-violet);
+}
+.mgr-stat-label i[data-tone='ok'] {
+  background: var(--adm-success);
+}
+.mgr-stat strong {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 28px;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-stat small {
+  color: var(--adm-text-3);
+  font-size: 12px;
+}
+.mgr-home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 16px;
+  align-items: start;
+}
+.mgr-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.mgr-card-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.mgr-card-head .mgr-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.mgr-home-side {
+  padding: 0 0 16px;
+}
+.mgr-home-side > :not(.mgr-card-head) {
+  margin: 0 16px;
+}
+.mgr-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mgr-bar {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 10px;
+}
+.mgr-bar strong {
+  text-align: right;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--adm-surface-2);
+  overflow: hidden;
+}
+.mgr-bar-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--adm-accent);
+}
+@media (max-width: 1100px) {
+  .mgr-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mgr-home-grid {
+    grid-template-columns: 1fr;
   }
 }

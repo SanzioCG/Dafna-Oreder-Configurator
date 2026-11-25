@@ -18,6 +18,7 @@ export const API_ENTRIES = [
   'retry-telegram',
   'assembly',
   'auth',
+  'orders',
   'quote',
   'manager',
   'catalog',

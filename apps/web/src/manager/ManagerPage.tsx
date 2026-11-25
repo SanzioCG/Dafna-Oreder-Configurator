@@ -7,7 +7,9 @@ import {
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { authError, getMe, signIn, signOut, type StaffUser } from '../auth/staffSession';
 import {
+  ClipboardList,
   Database,
+  Home,
   Layers,
   Lock,
   LogOut,
@@ -22,6 +24,8 @@ import { useTheme } from '../theme/ThemeProvider';
 import { Button } from '../ui/Button';
 import './admin.css';
 import { HardwareSection } from './HardwareSection';
+import { HomeSection } from './HomeSection';
+import { OrdersSection } from './OrdersSection';
 import { MaterialsSection } from './MaterialsSection';
 import { ProfitSection } from './ProfitSection';
 import { ServicesSection } from './ServicesSection';
@@ -37,6 +41,8 @@ export type { CatalogDraft } from './model';
 /**
  * D-19 / D-20: Dafna's admin page (`/manager`; D-38: staff sign in with a login and a password,
  * the admin also manages the staff in "Xodimlar"). Sections:
+ * - D-47 Bosh sahifa: today's applications at a glance; Buyurtmalar: the applications of the
+ *   Google Sheet "Arizalar" with their status and the manager's note;
  * - Materiallar: every board with all its data, 1C code and sheet price; the edge band price;
  *   new boards (they appear in the kiosk at once);
  * - Furnitura: every hardware item with 1C code and price; new hinges / slides;
@@ -47,7 +53,10 @@ export type { CatalogDraft } from './model';
  * Board prices will come from Dafna's 1C (by the 1C code); until then they are typed here.
  * An internal page for Dafna's office: Uzbek only.
  */
-type Section = 'erp' | 'materials' | 'hardware' | 'services' | 'profit' | 'staff';
+type Section =
+  'home' | 'orders' | 'erp' | 'materials' | 'hardware' | 'services' | 'profit' | 'staff';
+/** D-47: the sections without the catalogue's "Saqlash" / "1C narxlarini olish" */
+const OWN_SAVE: Section[] = ['home', 'orders', 'staff'];
 interface NavItem {
   id: Section;
   label: string;
@@ -55,8 +64,15 @@ interface NavItem {
   /** D-38: the admin only */
   adminOnly?: boolean;
 }
-/** D-42: the admin panel's menu (Figma "Admin"): catalogue, then settings */
+/** D-42: the admin panel's menu (Figma "Admin"): D-47 orders, catalogue, then settings */
 const NAV: { group: string; items: NavItem[] }[] = [
+  {
+    group: 'Asosiy',
+    items: [
+      { id: 'home', label: 'Bosh sahifa', icon: Home },
+      { id: 'orders', label: 'Buyurtmalar', icon: ClipboardList },
+    ],
+  },
   {
     group: 'Katalog',
     items: [
@@ -117,7 +133,9 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
-  const [section, setSection] = useState<Section>('materials');
+  const [section, setSection] = useState<Section>('home');
+  /** D-47: an order to open in "Buyurtmalar" (a "Bosh sahifa" row) */
+  const [openOrder, setOpenOrder] = useState<string | null>(null);
   /** D-30: the last "1C narxlarini olish" result */
   const [erpNote, setErpNote] = useState<string | null>(null);
   // one client while the kind groups stay the same (effects depend on it)
@@ -175,7 +193,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
     setPending(null);
     setChanging(false);
     setList(null);
-    setSection('materials');
+    setSection('home');
   };
 
   /** D-39: leaves the reset page (the link is used up or not wanted) */
@@ -383,26 +401,33 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               <span aria-hidden="true">›</span>
               <strong>{LABEL[section]}</strong>
             </nav>
-            <p className={dirty ? 'mgr-status dirty' : 'mgr-status'} data-testid="mgr-updated">
-              {status}
-            </p>
-            <Button
-              variant="secondary"
-              icon={<RefreshCw className="mgr-icon" aria-hidden />}
-              onClick={() => void pullErp()}
-              disabled={busy}
-              data-testid="mgr-erp-pull"
-            >
-              1C narxlarini olish
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => void save()}
-              disabled={busy || (!dirty && !list.demo)}
-              data-testid="mgr-save"
-            >
-              {busy ? 'Saqlanmoqda…' : justSaved ? 'Saqlandi' : 'Saqlash'}
-            </Button>
+            {/* D-47: the catalogue's buttons (an unsaved change still shows on the other pages) */}
+            {(!OWN_SAVE.includes(section) || dirty) && (
+              <>
+                <p className={dirty ? 'mgr-status dirty' : 'mgr-status'} data-testid="mgr-updated">
+                  {status}
+                </p>
+                {!OWN_SAVE.includes(section) && (
+                  <Button
+                    variant="secondary"
+                    icon={<RefreshCw className="mgr-icon" aria-hidden />}
+                    onClick={() => void pullErp()}
+                    disabled={busy}
+                    data-testid="mgr-erp-pull"
+                  >
+                    1C narxlarini olish
+                  </Button>
+                )}
+                <Button
+                  variant="primary"
+                  onClick={() => void save()}
+                  disabled={busy || (!dirty && !list.demo)}
+                  data-testid="mgr-save"
+                >
+                  {busy ? 'Saqlanmoqda…' : justSaved ? 'Saqlandi' : 'Saqlash'}
+                </Button>
+              </>
+            )}
           </header>
           <main className="mgr-page">
             {error && (
@@ -414,6 +439,23 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               <p className="mgr-note mgr-erp-note" role="status" data-testid="mgr-erp-note">
                 {erpNote}
               </p>
+            )}
+            {section === 'home' && (
+              <HomeSection
+                userName={user.name}
+                fetchImpl={fetchImpl}
+                onOpenOrders={(id) => {
+                  setOpenOrder(id ?? null);
+                  setSection('orders');
+                }}
+              />
+            )}
+            {section === 'orders' && (
+              <OrdersSection
+                fetchImpl={fetchImpl}
+                openId={openOrder}
+                onOpened={() => setOpenOrder(null)}
+              />
             )}
             {section === 'materials' && (
               <MaterialsSection

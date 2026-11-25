@@ -28,7 +28,7 @@ import {
 export const SHEET_TITLE = 'Arizalar';
 
 interface SheetMeta {
-  properties: { sheetId: number; title: string };
+  properties: { sheetId: number; title: string; gridProperties?: { columnCount?: number } };
   developerMetadata?: { metadataId: number; metadataKey: string; metadataValue: string }[];
   bandedRanges?: { bandedRangeId: number }[];
   protectedRanges?: { protectedRangeId: number; description?: string }[];
@@ -193,6 +193,28 @@ export class GoogleSheetsStore implements LeadStore {
     });
   }
 
+  /** D-47: every application, for the manager page */
+  async listAll(): Promise<StoredLead[]> {
+    return this.rows();
+  }
+
+  /** D-47: the manager page writes the status / note and who changed them */
+  async updateByManager(
+    ref: number,
+    patch: { status?: string; managerNote?: string; manager: string },
+  ): Promise<void> {
+    const at = (key: keyof LeadRecord) =>
+      `${SHEET_TITLE}!${columnLetter(COLUMNS.findIndex((c) => c.key === key))}${ref}`;
+    const data = [{ range: at('manager'), values: [[patch.manager]] }];
+    if (patch.status !== undefined) data.push({ range: at('status'), values: [[patch.status]] });
+    if (patch.managerNote !== undefined)
+      data.push({ range: at('managerNote'), values: [[patch.managerNote]] });
+    await this.api(`/values:batchUpdate`, {
+      method: 'POST',
+      body: { valueInputOption: 'RAW', data },
+    });
+  }
+
   async listForRetry(): Promise<StoredLead[]> {
     const now = this.now().getTime();
     return (await this.rows()).filter((r) => {
@@ -215,23 +237,42 @@ export class GoogleSheetsStore implements LeadStore {
     formatted: boolean;
   }> {
     const meta = await this.api<{ sheets?: SheetMeta[] }>(
-      '?fields=sheets(properties(sheetId,title),developerMetadata(metadataId,metadataKey,metadataValue),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId,description),conditionalFormats(ranges))',
+      '?fields=sheets(properties(sheetId,title,gridProperties(columnCount)),developerMetadata(metadataId,metadataKey,metadataValue),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId,description),conditionalFormats(ranges))',
     );
     const own = meta.sheets?.find((s) => s.properties.title === SHEET_TITLE);
     let tab = own?.properties.sheetId;
+    let columnCount = own?.properties.gridProperties?.columnCount;
     let created = false;
     if (tab === undefined) {
-      const res = await this.api<{ replies: { addSheet: { properties: { sheetId: number } } }[] }>(
-        ':batchUpdate',
-        {
-          method: 'POST',
-          body: { requests: [{ addSheet: { properties: { title: SHEET_TITLE } } }] },
-        },
-      );
+      const res = await this.api<{
+        replies: { addSheet: { properties: SheetMeta['properties'] } }[];
+      }>(':batchUpdate', {
+        method: 'POST',
+        body: { requests: [{ addSheet: { properties: { title: SHEET_TITLE } } }] },
+      });
       tab = res.replies[0]?.addSheet.properties.sheetId;
+      columnCount = res.replies[0]?.addSheet.properties.gridProperties?.columnCount ?? 26;
       created = true;
     }
     if (tab === undefined) throw new Error('sheets: tab not available');
+    // D-47: a new tab has 26 columns (A..Z); the 27th ("Menejer", AA) needs the grid widened first,
+    // or every range up to AA is "exceeds grid limits"
+    if (columnCount !== undefined && columnCount < COLUMNS.length) {
+      await this.api(':batchUpdate', {
+        method: 'POST',
+        body: {
+          requests: [
+            {
+              appendDimension: {
+                sheetId: tab,
+                dimension: 'COLUMNS',
+                length: COLUMNS.length - columnCount,
+              },
+            },
+          ],
+        },
+      });
+    }
     const head = await this.api<{ values?: unknown[][] }>(
       `/values/${this.range(`A1:${LAST_COLUMN}1`)}`,
     );

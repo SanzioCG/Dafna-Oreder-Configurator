@@ -32,6 +32,8 @@ function devSubmitApi(): Plugin {
         ['/api/catalog', 'createDevCatalogHandler'],
         // D-38: staff sign-in (dev admin password DEV_ADMIN_PASSWORD, default "admin")
         ['/api/auth', 'createDevAuthHandler'],
+        // D-47: "Buyurtmalar" (the dev submit handler's in-memory applications)
+        ['/api/orders', 'createDevOrdersHandler'],
       ] as const) {
         let h: ((req: IncomingMessage, res: ServerResponse) => void) | null = null;
         server.middlewares.use(path, (req, res, next) => {

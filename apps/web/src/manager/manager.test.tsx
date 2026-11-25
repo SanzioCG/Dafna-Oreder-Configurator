@@ -12,6 +12,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { fetchQuote } from '../state/priceSource';
 import { ThemeProvider } from '../theme/ThemeProvider';
 import { ManagerPage } from './ManagerPage';
+import { ORDER_STATUSES, tashkentDay, type OrderRow } from './ordersApi';
+import { LEAD_STATUSES } from '../../server/types';
 
 afterEach(() => {
   cleanup();
@@ -32,6 +34,15 @@ function fakeManagerApi() {
   let saved: { list: unknown; updatedAt: string } | null = null;
   // the server's append-only merge, simplified: new entries get ids
   let catalog: CatalogExtension = EMPTY_EXTENSION;
+  // D-47: two applications, one today (Tashkent) and one older
+  const orders: OrderRow[] = [
+    order('DFN-251125-AAAA', `${tashkentDay()} 10:15:00`, 3, { firstName: 'Malika' }),
+    order('DFN-251101-BBBB', '2026-11-01 09:00:00', 2, {
+      product: 'Stol',
+      status: 'Tasdiqlandi',
+      kiosk: 'k1',
+    }),
+  ];
   const impl = (async (url: string, init: RequestInit) => {
     const headers = (init.headers ?? {}) as Record<string, string>;
     if (url === '/api/auth') {
@@ -51,6 +62,21 @@ function fakeManagerApi() {
         JSON.stringify({ error: { code: a.action === 'login' ? 'wrong_login' : 'unauthorized' } }),
         { status: 401 },
       );
+    }
+    if (url === '/api/orders') {
+      const b = init.body ? (JSON.parse(String(init.body)) as Record<string, string>) : undefined;
+      calls.push({ url, method: String(init.method), headers, body: b });
+      if (!signedIn)
+        return new Response(JSON.stringify({ error: { code: 'unauthorized' } }), { status: 401 });
+      if (init.method === 'POST') {
+        const o = orders.find((x) => x.ref === Number(b!.ref) && x.id === b!.id);
+        if (!o)
+          return new Response(JSON.stringify({ error: { code: 'row_moved' } }), { status: 409 });
+        Object.assign(o, b!.status ? { status: b!.status } : {}, { manager: 'Aziz' });
+        if (b!.managerNote !== undefined) o.managerNote = b!.managerNote;
+        return new Response(JSON.stringify({ order: o }));
+      }
+      return new Response(JSON.stringify({ orders, sheetUrl: 'https://docs.google.com/x' }));
     }
     const body = init.body
       ? (JSON.parse(String(init.body)) as { list: unknown; catalog?: CatalogExtension })
@@ -77,6 +103,40 @@ function fakeManagerApi() {
   }) as unknown as typeof fetch;
   return { calls, impl };
 }
+
+const order = (
+  id: string,
+  createdAt: string,
+  ref: number,
+  x: Partial<OrderRow> = {},
+): OrderRow => ({
+  ref,
+  id,
+  createdAt,
+  status: 'Yangi',
+  firstName: 'Aziza',
+  lastName: '',
+  phone: '+998 90 123 45 67',
+  product: 'Shkaf',
+  sizeMm: '1500 × 2100 × 600',
+  corpus: 'Oq',
+  door: 'Oq',
+  sections: '2 ta qism',
+  kiosk: '',
+  telegram: 'sent',
+  managerNote: '',
+  manager: '',
+  orderId: id,
+  orderItem: '1/1',
+  quantity: 1,
+  ...x,
+});
+
+/** D-47: the page opens on "Bosh sahifa"; the catalogue sections have "Saqlash" */
+const openCatalog = async () => {
+  fireEvent.click(await screen.findByTestId('mgr-tab-materials'));
+  await screen.findByTestId('mgr-save');
+};
 
 const login = async (password: string) => {
   fireEvent.change(await screen.findByTestId('mgr-login'), { target: { value: 'aziz' } });
@@ -105,7 +165,7 @@ describe('D-19 manager price page', () => {
       </ThemeProvider>,
     );
     await login('aziz-pass-1');
-    await screen.findByTestId('mgr-save');
+    await openCatalog();
     expect(screen.getByTestId('mgr-updated').textContent).toContain('hali saqlanmagan');
     // D-35: the demo decors are gone; the built-in back panel (HDF) stays; a row opens its card
     expect(screen.queryByTestId('mgr-material-row-ldsp_white_16')).toBeNull();
@@ -148,7 +208,7 @@ describe('D-19 manager price page', () => {
       </ThemeProvider>,
     );
     await login('aziz-pass-1');
-    await screen.findByTestId('mgr-save');
+    await openCatalog();
     fireEvent.click(screen.getByTestId('mgr-tab-profit'));
     const total = () =>
       Number(screen.getByTestId('mgr-total-wardrobe').textContent?.replace(/\D/g, ''));
@@ -207,7 +267,7 @@ describe('D-20 manager adds materials, hardware and services', () => {
       </ThemeProvider>,
     );
     await login('aziz-pass-1');
-    await screen.findByTestId('mgr-save');
+    await openCatalog();
     // a board: its card opens at once
     fireEvent.click(screen.getByTestId('mgr-material-manual'));
     fireEvent.change(screen.getByTestId('mgr-material-name'), {
@@ -260,7 +320,7 @@ describe('D-21 unsaved new materials', () => {
       </ThemeProvider>,
     );
     await login('aziz-pass-1');
-    await screen.findByTestId('mgr-save');
+    await openCatalog();
     const blanks = () => document.querySelectorAll('[data-testid^="mgr-material-row-new-"]').length;
     fireEvent.click(screen.getByTestId('mgr-material-manual'));
     fireEvent.click(screen.getByTestId('mgr-material-manual'));
@@ -268,6 +328,78 @@ describe('D-21 unsaved new materials', () => {
     expect(blanks()).toBe(1);
     fireEvent.click(screen.getByTestId('mgr-material-drop'));
     expect(blanks()).toBe(0);
+  });
+});
+
+describe('D-47 "Bosh sahifa" and "Buyurtmalar"', () => {
+  it('the page statuses are the sheet statuses', () => {
+    expect([...ORDER_STATUSES]).toEqual([...LEAD_STATUSES]);
+  });
+
+  it('home counts the applications of today; a row opens it; a new status is saved with a note', async () => {
+    const api = fakeManagerApi();
+    render(
+      <ThemeProvider>
+        <ManagerPage fetchImpl={api.impl} />
+      </ThemeProvider>,
+    );
+    await login('aziz-pass-1');
+    await screen.findByTestId('mgr-home');
+    // no catalogue "Saqlash" on the home page
+    expect(screen.queryByTestId('mgr-save')).toBeNull();
+    await waitFor(() =>
+      expect(screen.getByTestId('home-stat-today').querySelector('strong')!.textContent).toBe('1'),
+    );
+    expect(screen.getByTestId('home-stat-fresh').querySelector('strong')!.textContent).toBe('1');
+    expect(screen.getByTestId('home-stat-confirmed').querySelector('strong')!.textContent).toBe(
+      '1',
+    );
+
+    fireEvent.click(screen.getByTestId('home-row-DFN-251125-AAAA'));
+    const drawer = await screen.findByTestId('order-drawer');
+    expect(drawer.textContent).toContain('Malika');
+    fireEvent.change(screen.getByTestId('order-status'), {
+      target: { value: "Qo'ng'iroq qilindi" },
+    });
+    fireEvent.change(screen.getByTestId('order-note'), { target: { value: "Ertaga o'lchov" } });
+    fireEvent.click(screen.getByTestId('order-save'));
+    await waitFor(() =>
+      expect(screen.getByTestId('orders-row-DFN-251125-AAAA').textContent).toContain('Aziz'),
+    );
+    const post = api.calls.find((c) => c.url === '/api/orders' && c.method === 'POST')!;
+    expect(post.body).toEqual({
+      ref: 3,
+      id: 'DFN-251125-AAAA',
+      status: "Qo'ng'iroq qilindi",
+      managerNote: "Ertaga o'lchov",
+    });
+  });
+
+  it('tabs count by status; search and the source filter narrow the list', async () => {
+    const api = fakeManagerApi();
+    render(
+      <ThemeProvider>
+        <ManagerPage fetchImpl={api.impl} />
+      </ThemeProvider>,
+    );
+    await login('aziz-pass-1');
+    fireEvent.click(await screen.findByTestId('mgr-tab-orders'));
+    await screen.findByTestId('orders-row-DFN-251101-BBBB');
+    expect(screen.getByTestId('orders-tab-all').textContent).toBe('Hammasi2');
+    expect(screen.getByTestId('orders-tab-2').textContent).toBe('Tasdiqlandi1');
+    expect(screen.getByTestId('orders-sheet').getAttribute('href')).toBe(
+      'https://docs.google.com/x',
+    );
+    fireEvent.click(screen.getByTestId('orders-tab-2'));
+    expect(screen.queryByTestId('orders-row-DFN-251125-AAAA')).toBeNull();
+    fireEvent.click(screen.getByTestId('orders-tab-all'));
+    fireEvent.change(screen.getByTestId('orders-search'), { target: { value: 'malika' } });
+    expect(screen.queryByTestId('orders-row-DFN-251101-BBBB')).toBeNull();
+    expect(screen.getByTestId('orders-row-DFN-251125-AAAA')).toBeTruthy();
+    fireEvent.change(screen.getByTestId('orders-search'), { target: { value: '' } });
+    fireEvent.change(screen.getByTestId('orders-source'), { target: { value: 'kiosk' } });
+    expect(screen.queryByTestId('orders-row-DFN-251125-AAAA')).toBeNull();
+    expect(screen.getByTestId('orders-range').textContent).toContain('1–1 / 1');
   });
 });
 

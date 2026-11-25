@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { generateKeyPairSync } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { HEADERS, LAST_COLUMN, leadToRow } from './columns';
+import { HEADERS, LAST_COLUMN, columnLetter, leadToRow } from './columns';
 import { SHEET_FORMAT_VERSION } from './sheetFormat';
 import { GoogleSheetsStore, parseServiceAccount, SHEET_TITLE } from './sheets';
 import { TelegramNotifier, telegramText } from './telegram';
@@ -34,6 +34,7 @@ const LEAD: LeadRecord = {
   orderId: '',
   orderItem: '',
   quantity: 1,
+  manager: '',
 };
 
 /** the parts of a Sheets batchUpdate request the tests look at */
@@ -400,6 +401,42 @@ describe('Google Sheets store', () => {
       { range: `${SHEET_TITLE}!N3`, values: [['sent']] },
       { range: `${SHEET_TITLE}!U3`, values: [[3]] },
     ]);
-    expect(LAST_COLUMN).toBe('Z'); // D-8: + Mahsulot, templateId; D-25: + Buyurtma, Buyurtmada, Soni
+    // D-8: + Mahsulot, templateId; D-25: + Buyurtma, Buyurtmada, Soni; D-47: + Menejer
+    expect(LAST_COLUMN).toBe('AA');
+  });
+
+  it('D-47: column letters past Z; a 26-column tab is widened before the header is read', async () => {
+    expect([0, 25, 26, 27, 51, 52].map(columnLetter)).toEqual(['A', 'Z', 'AA', 'AB', 'AZ', 'BA']);
+    expect(() => columnLetter(702)).toThrow();
+    const f = fakeFetch((c) => {
+      if (c.url.startsWith('https://oauth2'))
+        return { json: { access_token: 'AT', expires_in: 3600 } };
+      if (c.url.includes('?fields=sheets'))
+        return {
+          json: {
+            sheets: [
+              {
+                properties: { sheetId: 7, title: SHEET_TITLE, gridProperties: { columnCount: 26 } },
+              },
+            ],
+          },
+        };
+      if (c.method === 'GET') return { json: { values: [HEADERS] } };
+      return { json: {} };
+    });
+    const store = new GoogleSheetsStore({ sheetId: 'S1', account, fetch: f.impl });
+    await store.listAll();
+    const widen = f.calls.findIndex((c) =>
+      JSON.stringify(c.body ?? '').includes('appendDimension'),
+    );
+    const header = f.calls.findIndex((c) =>
+      c.url.includes(encodeURIComponent(`${SHEET_TITLE}!A1:AA1`)),
+    );
+    expect(widen).toBeGreaterThan(-1);
+    expect(widen).toBeLessThan(header);
+    expect(
+      (f.calls[widen]!.body as { requests: { appendDimension: unknown }[] }).requests[0]!
+        .appendDimension,
+    ).toEqual({ sheetId: 7, dimension: 'COLUMNS', length: 1 });
   });
 });

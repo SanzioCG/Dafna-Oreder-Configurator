@@ -39,6 +39,19 @@ export class MemoryLeadStore implements LeadStore {
       (r) => r.telegram === 'failed' && r.telegramAttempts < MAX_TELEGRAM_ATTEMPTS,
     );
   }
+  async listAll() {
+    return [...this.rows];
+  }
+  async updateByManager(
+    ref: number,
+    patch: { status?: string; managerNote?: string; manager: string },
+  ) {
+    const row = this.rows.find((r) => r.ref === ref);
+    if (!row) return;
+    if (patch.status !== undefined) row.status = patch.status;
+    if (patch.managerNote !== undefined) row.managerNote = patch.managerNote;
+    row.manager = patch.manager;
+  }
 }
 
 /** Notifier fake: records deliveries; `failing` makes every call throw. */

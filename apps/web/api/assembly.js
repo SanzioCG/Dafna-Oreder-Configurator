@@ -66048,14 +66048,18 @@ var COLUMNS = [
   // D-25: several products in one order (appended: existing sheets keep their columns)
   { key: "orderId", header: "Buyurtma" },
   { key: "orderItem", header: "Buyurtmada" },
-  { key: "quantity", header: "Soni" }
+  { key: "quantity", header: "Soni" },
+  // D-47: who changed the status on the manager page (appended: existing sheets keep theirs)
+  { key: "manager", header: "Menejer" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
 var TELEGRAM_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "telegram");
 function columnLetter(index) {
-  if (index < 0 || index > 25) throw new Error(`column index out of range: ${index}`);
-  return String.fromCharCode(65 + index);
+  if (!Number.isInteger(index) || index < 0 || index > 701)
+    throw new Error(`column index out of range: ${index}`);
+  const last = String.fromCharCode(65 + index % 26);
+  return index < 26 ? last : String.fromCharCode(64 + Math.floor(index / 26)) + last;
 }
 var LAST_COLUMN = columnLetter(COLUMNS.length - 1);
 var CELL_LIMIT = 5e4;
@@ -66096,7 +66100,7 @@ function parseTashkentTimestamp(s) {
 }
 
 // server/sheetFormat.ts
-var SHEET_FORMAT_VERSION = "4";
+var SHEET_FORMAT_VERSION = "5";
 var HEADER_BG = "#191d24";
 var FORMAT_METADATA_KEY = "dafna.sheetFormat";
 var PROTECTION_DESCRIPTION = "dafna: avtomatik ustunlar";
@@ -66135,7 +66139,8 @@ var COLUMN_WIDTHS = {
   product: 120,
   orderId: 130,
   orderItem: 90,
-  quantity: 60
+  quantity: 60,
+  manager: 130
 };
 var HIDDEN_KEYS = [
   "paramsJson",
@@ -66568,6 +66573,22 @@ var GoogleSheetsStore = class {
       }
     });
   }
+  /** D-47: every application, for the manager page */
+  async listAll() {
+    return this.rows();
+  }
+  /** D-47: the manager page writes the status / note and who changed them */
+  async updateByManager(ref, patch) {
+    const at = (key) => `${SHEET_TITLE}!${columnLetter(COLUMNS.findIndex((c) => c.key === key))}${ref}`;
+    const data = [{ range: at("manager"), values: [[patch.manager]] }];
+    if (patch.status !== void 0) data.push({ range: at("status"), values: [[patch.status]] });
+    if (patch.managerNote !== void 0)
+      data.push({ range: at("managerNote"), values: [[patch.managerNote]] });
+    await this.api(`/values:batchUpdate`, {
+      method: "POST",
+      body: { valueInputOption: "RAW", data }
+    });
+  }
   async listForRetry() {
     const now = this.now().getTime();
     return (await this.rows()).filter((r) => {
@@ -66585,23 +66606,38 @@ var GoogleSheetsStore = class {
    */
   async ensureSchema(options = {}) {
     const meta = await this.api(
-      "?fields=sheets(properties(sheetId,title),developerMetadata(metadataId,metadataKey,metadataValue),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId,description),conditionalFormats(ranges))"
+      "?fields=sheets(properties(sheetId,title,gridProperties(columnCount)),developerMetadata(metadataId,metadataKey,metadataValue),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId,description),conditionalFormats(ranges))"
     );
     const own = meta.sheets?.find((s) => s.properties.title === SHEET_TITLE);
     let tab = own?.properties.sheetId;
+    let columnCount = own?.properties.gridProperties?.columnCount;
     let created = false;
     if (tab === void 0) {
-      const res = await this.api(
-        ":batchUpdate",
-        {
-          method: "POST",
-          body: { requests: [{ addSheet: { properties: { title: SHEET_TITLE } } }] }
-        }
-      );
+      const res = await this.api(":batchUpdate", {
+        method: "POST",
+        body: { requests: [{ addSheet: { properties: { title: SHEET_TITLE } } }] }
+      });
       tab = res.replies[0]?.addSheet.properties.sheetId;
+      columnCount = res.replies[0]?.addSheet.properties.gridProperties?.columnCount ?? 26;
       created = true;
     }
     if (tab === void 0) throw new Error("sheets: tab not available");
+    if (columnCount !== void 0 && columnCount < COLUMNS.length) {
+      await this.api(":batchUpdate", {
+        method: "POST",
+        body: {
+          requests: [
+            {
+              appendDimension: {
+                sheetId: tab,
+                dimension: "COLUMNS",
+                length: COLUMNS.length - columnCount
+              }
+            }
+          ]
+        }
+      });
+    }
     const head = await this.api(
       `/values/${this.range(`A1:${LAST_COLUMN}1`)}`
     );
