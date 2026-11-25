@@ -7,6 +7,7 @@ import {
   ErpContext,
   ErpThumb,
   PictureChoice,
+  pictureWarning,
   usePictures,
   type ErpApi,
   type KindGroup,
@@ -343,6 +344,9 @@ export function ErpCatalogSection({
     let next = draft;
     const skipped: string[] = [];
     let taken = 0;
+    /** D-53: pictures not copied, and why (the last reason) */
+    let noPicture = 0;
+    let pictureCode = '';
     setBusy(true);
     for (const r of targets) {
       const l = linkOf(r.article);
@@ -362,6 +366,10 @@ export function ErpCatalogSection({
         if (pics[r.article]) {
           const c = await api.copyPicture(r.article);
           if (c.ok) pic = c.value;
+          else {
+            noPicture++;
+            pictureCode = c.code;
+          }
         }
         const d = quickDraft(r, selected?.group ?? null, list, pic);
         if (!d) skipped.push(r.name);
@@ -379,6 +387,7 @@ export function ErpCatalogSection({
       parts.push(
         `${skipped.length} tasini avtomatik qo'shib bo'lmadi (turini aniqlab bo'lmadi) — ularni bittalab «Saytga qo'shish» formasi bilan qo'shing`,
       );
+    if (noPicture) parts.push(`${noPicture} ta: ${pictureWarning(pictureCode)}`);
     setNote(parts.length ? `${parts.join('; ')}. «Saqlash»ni bosing.` : null);
   };
 
@@ -688,11 +697,13 @@ export function ErpCatalogSection({
           picture={pics[adding.article]}
           list={list}
           onCancel={() => setAdding(null)}
-          onAdd={(d) => {
+          onAdd={(d, warning) => {
             if (d.type === 'material')
               setDraft({ ...draft, materials: [...draft.materials, d.item] });
             else setDraft({ ...draft, hardware: [...draft.hardware, d.item] });
             setAdding(null);
+            // D-53: the item is added; a picture that was not saved is said
+            setNote(warning ? `${warning}. «Saqlash»ni bosing.` : null);
           }}
         />
       )}
@@ -715,7 +726,8 @@ function AddFromErp({
   /** D-34: its eman.uz picture */
   picture?: string | null;
   list: PriceList;
-  onAdd: (a: Added) => void;
+  /** D-53: `warning` = the picture was not saved (why) */
+  onAdd: (a: Added, warning?: string) => void;
   onCancel: () => void;
 }) {
   const api = useContext(ErpContext);
@@ -736,47 +748,55 @@ function AddFromErp({
   const add = async () => {
     // D-34: the eman.uz picture is copied into our photo store first
     let pic: string | undefined;
+    let warning: string | undefined;
     if (take && picture && api) {
       setBusy(true);
       const r = await api.copyPicture(row.article);
       setBusy(false);
       if (r.ok) pic = r.value;
+      else warning = pictureWarning(r.code);
     }
     const erp = { erpArticle: row.article, erpPrice: price };
     if (board)
-      onAdd({
-        type: 'material',
-        item: {
-          ...NEW_MATERIAL,
-          kind,
-          name,
-          brand,
-          code: '',
-          thicknessMm,
-          colorHex,
-          group,
-          grain: group === 'wood',
-          usage,
-          note: `1C: ${row.name}`.slice(0, 200),
-          ...erp,
-          erpSheet: g.sheet,
-          erpPicture: pic,
-        } as MaterialDraft,
-      });
+      onAdd(
+        {
+          type: 'material',
+          item: {
+            ...NEW_MATERIAL,
+            kind,
+            name,
+            brand,
+            code: '',
+            thicknessMm,
+            colorHex,
+            group,
+            grain: group === 'wood',
+            usage,
+            note: `1C: ${row.name}`.slice(0, 200),
+            ...erp,
+            erpSheet: g.sheet,
+            erpPicture: pic,
+          } as MaterialDraft,
+        },
+        warning,
+      );
     else
-      onAdd({
-        type: 'hardware',
-        item: {
-          ...NEW_HARDWARE,
-          kind,
-          brand: brand || '—',
-          model: name,
-          softClose,
-          note: `1C: ${row.name}`.slice(0, 200),
-          photoUrl: pic,
-          ...erp,
-        } as HardwareDraft,
-      });
+      onAdd(
+        {
+          type: 'hardware',
+          item: {
+            ...NEW_HARDWARE,
+            kind,
+            brand: brand || '—',
+            model: name,
+            softClose,
+            note: `1C: ${row.name}`.slice(0, 200),
+            photoUrl: pic,
+            ...erp,
+          } as HardwareDraft,
+        },
+        warning,
+      );
   };
 
   return (

@@ -1,9 +1,9 @@
 import { allMaterials, type Material, type MaterialTexture, type PriceList } from '@dafna/engine';
 import { X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { translate } from '../i18n/I18n';
 import { Button } from '../ui/Button';
-import { ErpCodeInput } from './erp';
+import { ErpCodeInput, ErpContext, pictureWarning } from './erp';
 import {
   EDGE_BAND_KEY,
   KIND_LABEL,
@@ -601,6 +601,7 @@ function MaterialCard({
             texture={texture}
             putTexture={putTexture}
             uploadTexture={uploadTexture}
+            erp={erp}
           />
         )}
         {onDrop && (
@@ -627,14 +628,32 @@ function TextureBlock({
   texture,
   putTexture,
   uploadTexture,
+  erp,
 }: {
   id: string;
   texture?: MaterialTexture;
   putTexture: (t: MaterialTexture | null) => void;
   uploadTexture: UploadTexture;
+  /** D-53: the board's 1C article - its eman.uz picture can be taken again */
+  erp?: string;
 }) {
+  const api = useContext(ErpContext);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** D-53: the eman.uz picture (e.g. after the photo store was connected) */
+  const fromEman = async () => {
+    if (!api || !erp) return;
+    setBusy(true);
+    setError(null);
+    const r = await api.copyPicture(erp);
+    setBusy(false);
+    if (!r.ok) return setError(pictureWarning(r.code));
+    putTexture({
+      url: r.value,
+      widthMm: texture?.widthMm ?? 1000,
+      heightMm: texture?.heightMm ?? 1000,
+    });
+  };
   const pick = async (file: File | undefined) => {
     if (!file) return;
     setBusy(true);
@@ -680,6 +699,16 @@ function TextureBlock({
         />
         <span>{busy ? 'Yuklanmoqda…' : texture ? 'Boshqa rasm yuklash' : 'Rasm yuklash'}</span>
       </label>
+      {api && erp && (
+        <Button
+          variant="secondary"
+          disabled={busy}
+          onClick={() => void fromEman()}
+          data-testid="mgr-texture-eman"
+        >
+          eman.uz dagi rasmini olish
+        </Button>
+      )}
       {texture && (
         <>
           <label className="mgr-field">

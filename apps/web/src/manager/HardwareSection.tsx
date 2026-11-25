@@ -41,6 +41,8 @@ export function HardwareSection({
   const [query, setQuery] = useState('');
   /** D-33: "+ Yangi furnitura" picks from 1C first */
   const [fromErp, setFromErp] = useState(false);
+  /** D-53: a picture of the last item from 1C that was not saved */
+  const [pictureNote, setPictureNote] = useState<string | null>(null);
   /** D-33: the added item whose customer text / photo is being edited */
   const [infoOf, setInfoOf] = useState<number | null>(null);
   const setH = (i: number, patch: Partial<HardwareDraft>) =>
@@ -167,6 +169,11 @@ export function HardwareSection({
         </div>
       )}
 
+      {pictureNote && (
+        <p className="mgr-note mgr-warn-text" role="status" data-testid="hw-picture-note">
+          {pictureNote}. «Saqlash»ni bosing.
+        </p>
+      )}
       <div className="mgr-toolbar">
         <input
           type="search"
@@ -296,9 +303,10 @@ export function HardwareSection({
       {fromErp && (
         <HardwareFromErp
           list={list}
-          onAdd={(h) => {
+          onAdd={(h, warning) => {
             setDraft({ ...draft, hardware: [...draft.hardware, h] });
             setFromErp(false);
+            setPictureNote(warning ?? null);
           }}
           onManual={() => {
             setDraft({ ...draft, hardware: [...draft.hardware, { ...NEW_HARDWARE }] });

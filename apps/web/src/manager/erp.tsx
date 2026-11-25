@@ -147,6 +147,18 @@ export const ERP_ERRORS: Record<string, string> = {
 };
 const errText = (code: string) => ERP_ERRORS[code] ?? ERP_ERRORS.network!;
 
+/**
+ * D-53: why an eman.uz picture was not copied into our photo store (the item is still added,
+ * shown with its colour) - the manager must know, not find a plain swatch later
+ */
+export const PICTURE_ERRORS: Record<string, string> = {
+  storage_not_configured:
+    'rasm ombori ulanmagan (Vercel → Storage → Blob, BLOB_READ_WRITE_TOKEN). Ulangach, rasmni materialning kartochkasidan qayta oling',
+  no_picture: 'eman.uz da rasm topilmadi',
+};
+export const pictureWarning = (code: string) =>
+  `Rasm saqlanmadi: ${PICTURE_ERRORS[code] ?? errText(code)}`;
+
 const SCOPE_LABEL: Record<string, string> = {
   material: 'materiallar',
   hardware: 'furnitura',

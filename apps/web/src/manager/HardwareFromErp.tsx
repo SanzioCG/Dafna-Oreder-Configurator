@@ -7,6 +7,7 @@ import {
   ErpContext,
   ErpThumb,
   PictureChoice,
+  pictureWarning,
   usePictures,
   type ErpItem,
   type ErpPrice,
@@ -25,7 +26,8 @@ export function HardwareFromErp({
   onClose,
 }: {
   list: PriceList;
-  onAdd: (h: HardwareDraft) => void;
+  /** D-53: `warning` = the picture was not saved (why) */
+  onAdd: (h: HardwareDraft, warning?: string) => void;
   /** 1C has no such item: add by hand as before */
   onManual: () => void;
   onClose: () => void;
@@ -172,7 +174,8 @@ function HardwareForm({
   sub: 'hinge' | 'slide';
   list: PriceList;
   onBack: () => void;
-  onAdd: (h: HardwareDraft) => void;
+  /** D-53: `warning` = the picture was not saved (why) */
+  onAdd: (h: HardwareDraft, warning?: string) => void;
 }) {
   const g = guessFromName(row.name);
   const [brand, setBrand] = useState(g.brand);
@@ -236,24 +239,29 @@ function HardwareForm({
           onClick={async () => {
             // D-34: the eman.uz picture is copied into our photo store first
             let photoUrl: string | undefined;
+            let warning: string | undefined;
             if (take && picture && api) {
               setBusy(true);
               const r = await api.copyPicture(row.article);
               setBusy(false);
               if (r.ok) photoUrl = r.value;
+              else warning = pictureWarning(r.code);
             }
-            onAdd({
-              ...NEW_HARDWARE,
-              kind: sub,
-              brand: brand.trim(),
-              model: model.trim(),
-              softClose,
-              info: info.trim() || undefined,
-              note: `1C: ${row.name}`.slice(0, 200),
-              erpArticle: row.article,
-              erpPrice: price,
-              photoUrl,
-            });
+            onAdd(
+              {
+                ...NEW_HARDWARE,
+                kind: sub,
+                brand: brand.trim(),
+                model: model.trim(),
+                softClose,
+                info: info.trim() || undefined,
+                note: `1C: ${row.name}`.slice(0, 200),
+                erpArticle: row.article,
+                erpPrice: price,
+                photoUrl,
+              },
+              warning,
+            );
           }}
           data-testid="hw-erp-add"
         >
