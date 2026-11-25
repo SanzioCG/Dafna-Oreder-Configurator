@@ -1621,3 +1621,10 @@
 .mgr-tree-item.active .mgr-tree-count {
   color: inherit;
 }
+/* D-52: the board of the LESTER comparison */
+.mgr-lester-board select {
+  max-width: 340px;
+}
+.mgr-warn-text {
+  color: var(--adm-warning);
+}

@@ -7,15 +7,17 @@ import {
   defaultParams,
   generate,
   getMaterial,
+  kioskOptions,
+  kioskParams,
   nestBoards,
   sheetSizeOf,
   type Params,
   type PriceList,
   type Template,
 } from '@dafna/engine';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { translate } from '../i18n/I18n';
-import { PRODUCTS, money } from './model';
+import { KIND_LABEL, PRODUCTS, money } from './model';
 
 /**
  * D-20 "Foyda va narx": the overall profit %, how a board is charged (D-48: by area with the
@@ -111,6 +113,36 @@ export function ProfitSection({ list, edit }: { list: PriceList; edit: (l: Price
   );
 }
 
+/** D-52: the board params of a product (corpus / top) */
+const BOARD_PARAMS = ['corpusMaterial', 'topMaterial'];
+
+/**
+ * D-52: a product with the boards a customer gets: the kiosk default (the manager's boards from
+ * 1C, never a demo decor), or `board` wherever the product offers it
+ */
+export function customerParams(t: Template, over: Params, board: string): Params {
+  let p = kioskParams(t, { ...defaultParams(t), ...over });
+  if (!board) return p;
+  for (const def of t.parameters)
+    if (BOARD_PARAMS.includes(def.key) && kioskOptions(def).includes(board))
+      p = { ...p, [def.key]: board };
+  return p;
+}
+
+/** the boards the products offer customers (the manager's, from 1C), each once */
+export function offeredBoards(): string[] {
+  const ids = new Set<string>();
+  for (const t of Object.values(PRODUCT_TEMPLATES))
+    for (const def of t.parameters)
+      if (BOARD_PARAMS.includes(def.key))
+        for (const o of kioskOptions(def)) if (typeof o === 'string') ids.add(o);
+  return [...ids];
+}
+
+/** a board has its own price (a sheet price or a per-m² price), not the demo one of its kind */
+const hasOwnPrice = (id: string, list: PriceList) =>
+  (list.boardSheets?.[id]?.price ?? 0) > 0 || list.boardPerM2ById[id] !== undefined;
+
 /** a product priced with the list being edited, and its raskroy */
 function priced(t: Template, params: Params, list: PriceList) {
   const result = generate(t, params);
@@ -130,7 +162,10 @@ const boardName = (id: string) => {
 export function Preview({ list }: { list: PriceList }) {
   const rows = useMemo(
     () =>
-      Object.values(PRODUCT_TEMPLATES).map((t) => ({ t, ...priced(t, defaultParams(t), list) })),
+      Object.values(PRODUCT_TEMPLATES).map((t) => ({
+        t,
+        ...priced(t, kioskParams(t, defaultParams(t)), list),
+      })),
     [list],
   );
   return (
@@ -229,30 +264,59 @@ export const LESTER: {
 ];
 
 function LesterCompare({ list }: { list: PriceList }) {
+  /** D-52: '' = each product's kiosk default board */
+  const [board, setBoard] = useState('');
+  // the manager's boards change only on "Saqlash" (a re-render), so no memo
+  const boards = offeredBoards();
   const rows = useMemo(
     () =>
       LESTER.map((l) => {
         const t = PRODUCT_TEMPLATES[l.templateId]!;
-        const { r } = priced(t, { ...defaultParams(t), ...l.params }, list);
-        return { l, ours: r.total };
+        const params = customerParams(t, l.params, board);
+        const { r } = priced(t, params, list);
+        const used = String(params.topMaterial ?? params.corpusMaterial ?? '');
+        return { l, ours: r.total, used, fits: !board || used === board };
       }),
-    [list],
+    [list, board],
   );
+  const kindOf = (id: string) => {
+    const m = getMaterial(allMaterials, id);
+    return m ? (KIND_LABEL[m.kind] ?? m.kind) : '';
+  };
   return (
     <div className="mgr-card mgr-table-wrap" data-testid="mgr-lester">
-      <h3>dafna.uz bilan solishtirish (LESTER seriyasi)</h3>
+      <header className="mgr-card-head">
+        <h3>dafna.uz bilan solishtirish (LESTER seriyasi)</h3>
+        <label className="mgr-inline mgr-lester-board">
+          <span className="mgr-count">Plita</span>
+          <select
+            value={board}
+            onChange={(e) => setBoard(e.target.value)}
+            data-testid="mgr-lester-board"
+          >
+            <option value="">Mijozga standart chiqadigan plita</option>
+            {boards.map((id) => (
+              <option key={id} value={id}>
+                {boardName(id)} · {kindOf(id)}
+                {hasOwnPrice(id, list) ? '' : ' (narxi kiritilmagan)'}
+              </option>
+            ))}
+          </select>
+        </label>
+      </header>
       <table className="mgr-table">
         <thead>
           <tr>
             <th>dafna.uz dagi mahsulot</th>
             <th>O&apos;lcham, mm</th>
+            <th>Plita</th>
             <th className="mgr-num">Saytdagi narx</th>
             <th className="mgr-num">Konfigurator</th>
             <th className="mgr-num">Farq</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map(({ l, ours }) => {
+          {rows.map(({ l, ours, used, fits }) => {
             const diff = Math.round(((ours - l.price) / l.price) * 100);
             return (
               <tr key={l.id} data-testid={`mgr-lester-${l.id}`}>
@@ -263,6 +327,19 @@ function LesterCompare({ list }: { list: PriceList }) {
                   {l.note && <small className="mgr-sheet-line">{l.note}</small>}
                 </td>
                 <td className="mgr-dim">{l.size}</td>
+                <td data-testid={`mgr-lester-board-${l.id}`}>
+                  {boardName(used)} <span className="mgr-dim">· {kindOf(used)}</span>
+                  {!hasOwnPrice(used, list) && (
+                    <small className="mgr-sheet-line mgr-warn-text">
+                      narxi kiritilmagan — {kindOf(used)} uchun sinov narxi olindi
+                    </small>
+                  )}
+                  {!fits && (
+                    <small className="mgr-sheet-line mgr-warn-text">
+                      tanlangan plita bu mahsulotga mos emas
+                    </small>
+                  )}
+                </td>
                 <td className="mgr-num">{money(l.price)}</td>
                 <td className="mgr-num">
                   <strong>{money(ours)}</strong>
@@ -280,8 +357,8 @@ function LesterCompare({ list }: { list: PriceList }) {
       </table>
       <p className="mgr-note mgr-table-note">
         Saytdagi narxlar 2026-11-25 holatiga (kashmir rang). Konfigurator xuddi shu o&apos;lchamni
-        hozirgi narxlar bilan hisoblaydi — farq katta bo&apos;lsa, plita narxi, xizmatlar yoki foyda
-        foizini tekshiring.
+        mijoz tanlaydigan plita (siz 1C dan qo&apos;shganlar) va hozirgi narxlar bilan hisoblaydi.
+        Farq katta bo&apos;lsa, plita narxi, xizmatlar yoki foyda foizini tekshiring.
       </p>
     </div>
   );
