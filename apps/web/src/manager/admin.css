@@ -1586,3 +1586,27 @@
     grid-template-columns: 1fr;
   }
 }
+/* D-48 "Foyda va narx": sheets per board, notes under the tables */
+.mgr-sheet-line {
+  display: block;
+  color: var(--adm-text-2);
+  font-size: 12px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+.mgr-sheet-line strong {
+  color: var(--adm-text);
+  font-weight: 500;
+}
+.mgr-table-note {
+  margin: 0;
+  padding: 10px 12px;
+  color: var(--adm-text-3);
+  font-size: 12px;
+}
+.mgr-profit .mgr-field .mgr-note {
+  margin: 0;
+  color: var(--adm-text-2);
+  font-size: 12px;
+  line-height: 18px;
+}

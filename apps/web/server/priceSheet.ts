@@ -43,6 +43,26 @@ export function priceListToRows(list: PriceList, updatedAt: string): Row[] {
   rows.push(['foyda_foiz', '', 'Foyda, umumiy qiymatdan %', list.markupPct, '', '', '']);
   rows.push(['ish_haqi_m2', '', 'Ish haqi, 1 m² plita uchun', list.laborPerM2, '', '', '']);
   rows.push(['kromka_m', '', 'Kromka, 1 metr', list.edgePerM, '', '', '']);
+  // D-48: boards by area (x the waste) or by the whole sheets of the raskroy
+  // a whole % (a decimal "1,15" would come back in the sheet's locale)
+  rows.push([
+    'chiqindi_foiz',
+    '',
+    "Chiqindi %, m² bo'yicha hisobda",
+    Math.round((list.wasteFactor - 1) * 100),
+    '',
+    '',
+    '',
+  ]);
+  rows.push([
+    'plita_hisobi',
+    '',
+    'Plita narxi: area = m² + chiqindi, sheets = butun listlar (raskroy)',
+    list.boardBilling ?? 'area',
+    '',
+    '',
+    '',
+  ]);
   const erp = (id: string) => list.erpCodes?.[id] ?? '';
   for (const [type, v] of Object.entries(list.assembly ?? {}))
     rows.push(['yigish', type, "Yig'ish, 1 dona mahsulot", v, '', '', '']);
@@ -98,6 +118,12 @@ export function rowsToPriceList(rows: unknown[][]): { list: PriceList; updatedAt
         break;
       case 'kromka_m':
         if (v >= 0) list.edgePerM = v;
+        break;
+      case 'chiqindi_foiz':
+        if (v >= 0 && v <= 100) list.wasteFactor = 1 + v / 100;
+        break;
+      case 'plita_hisobi':
+        if (value === 'area' || value === 'sheets') list.boardBilling = value;
         break;
       case 'yigish':
         if (id && v >= 0) list.assembly![id] = v;

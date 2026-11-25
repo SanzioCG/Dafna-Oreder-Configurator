@@ -59,7 +59,12 @@ const live = {
 interface QuoteBody {
   total: number;
   demo: boolean;
-  breakdown?: { assembly: number; markup: number; subtotal: number };
+  breakdown?: {
+    assembly: number;
+    markup: number;
+    subtotal: number;
+    lines: { ref: string; cost: number; sheets?: number }[];
+  };
 }
 
 describe('D-19 /api/quote: the price is computed on the server', () => {
@@ -97,6 +102,24 @@ describe('D-19 /api/quote: the price is computed on the server', () => {
 });
 
 describe('D-19 /api/manager: the price list for signed-in staff (D-38)', () => {
+  it('D-48: a list billed by the sheet prices the quote by the raskroy', async () => {
+    const { manager, quote } = setup();
+    const staff = { 'x-test-staff': '9137' };
+    await handleManager(managerReq('PUT', '9137', { list: live }), manager);
+    const area = (await (await handleQuote(quoteReq(wardrobe, staff), quote)).json()) as QuoteBody;
+    await handleManager(
+      managerReq('PUT', '9137', { list: { ...live, boardBilling: 'sheets' } }),
+      manager,
+    );
+    const sheets = (await (
+      await handleQuote(quoteReq(wardrobe, staff), quote)
+    ).json()) as QuoteBody;
+    const white = sheets.breakdown?.lines.find((l) => l.ref === 'ldsp_white_16');
+    expect(white?.sheets).toBeGreaterThan(0);
+    expect(white?.cost).toBe(579600 * white!.sheets!);
+    expect(sheets.total).not.toBe(area.total);
+  });
+
   it('not signed in -> 401', async () => {
     const { manager } = setup();
     expect((await handleManager(managerReq('GET', null), manager)).status).toBe(401);
@@ -152,6 +175,26 @@ describe('D-19 /api/manager: the price list for signed-in staff (D-38)', () => {
   });
 });
 
+describe('D-48 board billing in a saved list', () => {
+  it('area by default; sheets kept; a wrong value or waste refused', () => {
+    const area = parsePriceList(live, 'v');
+    expect(area.ok && area.list.boardBilling).toBe('area');
+    const sheets = parsePriceList({ ...live, boardBilling: 'sheets', wasteFactor: 1.25 }, 'v');
+    expect(sheets.ok && [sheets.list.boardBilling, sheets.list.wasteFactor]).toEqual([
+      'sheets',
+      1.25,
+    ]);
+    expect(parsePriceList({ ...live, boardBilling: 'pieces' }, 'v')).toEqual({
+      ok: false,
+      field: 'boardBilling',
+    });
+    expect(parsePriceList({ ...live, wasteFactor: 3 }, 'v')).toEqual({
+      ok: false,
+      field: 'wasteFactor',
+    });
+  });
+});
+
 describe('D-19 "Narxlar" sheet tab', () => {
   it('rows round-trip the list; an empty tab means nothing saved', () => {
     const parsed = parsePriceList(live, 'live-2026-11-23 14:05');
@@ -173,6 +216,12 @@ describe('D-19 "Narxlar" sheet tab', () => {
       r.map((c) => (typeof c === 'number' ? c.toLocaleString('ru-RU') : c)),
     );
     expect(rowsToPriceList(asText)).toEqual({ list: parsed.list, updatedAt: '2026-11-23 14:05' });
+    // D-48: the board billing and the waste % come back as saved
+    const sheets = { ...parsed.list, boardBilling: 'sheets' as const, wasteFactor: 1.2 };
+    expect(rowsToPriceList(priceListToRows(sheets, '2026-11-25 10:00'))?.list).toMatchObject({
+      boardBilling: 'sheets',
+      wasteFactor: 1.2,
+    });
     expect(rowsToPriceList([])).toBeNull();
     expect(rowsToPriceList([rows[0]!])).toBeNull();
   });

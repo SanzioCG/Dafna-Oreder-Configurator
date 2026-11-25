@@ -63937,9 +63937,97 @@ var hardware_v1_default = {
   hardwareNote: `D-28: real items from Dafna's stock report (Furniture.docx, founder 2026-11-23), sorted by brand (Samet, Mesan, screws). costUsd = cost of one unit in USD as in the report (stock counts are not kept: they change daily). Strax / Hettich (use = legacy) stay for applications made before; the kiosk offers Samet. Connectors, screws and sliding-door parts are listed for the office only (no product rule counts them yet). D-29: slides and their locks are Camet (founder 2026-11-24); their ids and option keys keep "samet_" so stored applications regenerate.`
 };
 
+// ../../packages/engine/src/nesting.ts
+var DEFAULT_SHEET = { lengthMm: 2800, widthMm: 2070 };
+var DEFAULT_KERF_MM = 4;
+var DEFAULT_TRIM_MM = 10;
+var r3 = (v) => Math.round(v * 1e3) / 1e3;
+function nestParts(parts, sheet = DEFAULT_SHEET, kerfMm = DEFAULT_KERF_MM, trimMm = DEFAULT_TRIM_MM) {
+  const W = sheet.lengthMm - 2 * trimMm + kerfMm;
+  const H = sheet.widthMm - 2 * trimMm + kerfMm;
+  const fits = (l, w) => l + kerfMm <= W && w + kerfMm <= H;
+  const tooLarge = [];
+  const todo = parts.filter((p) => {
+    const ok = fits(p.lengthMm, p.widthMm) || p.turn && fits(p.widthMm, p.lengthMm);
+    if (!ok) tooLarge.push(p.id);
+    return ok;
+  }).sort(
+    (a, b) => b.lengthMm * b.widthMm - a.lengthMm * a.widthMm || Math.max(b.lengthMm, b.widthMm) - Math.max(a.lengthMm, a.widthMm) || a.id.localeCompare(b.id)
+  );
+  const sheets = [];
+  for (const p of todo) {
+    const ways = [[p.lengthMm, p.widthMm, false]];
+    if (p.turn && p.lengthMm !== p.widthMm) ways.push([p.widthMm, p.lengthMm, true]);
+    let best = null;
+    for (let s2 = 0; s2 < sheets.length && best === null; s2++) {
+      const free = sheets[s2].free;
+      for (let f2 = 0; f2 < free.length; f2++) {
+        const fr2 = free[f2];
+        for (const [l2, w2, turned2] of ways) {
+          if (l2 + kerfMm > fr2.w || w2 + kerfMm > fr2.h) continue;
+          const score = fr2.w * fr2.h - (l2 + kerfMm) * (w2 + kerfMm) + Math.min(fr2.w - l2 - kerfMm, fr2.h - w2 - kerfMm) / 1e6;
+          if (best === null || score < best.score) best = { s: s2, f: f2, l: l2, w: w2, turned: turned2, score };
+        }
+      }
+    }
+    if (best === null) {
+      sheets.push({ free: [{ x: 0, y: 0, w: W, h: H }], placed: [] });
+      const [l2, w2, turned2] = ways.find(([l3, w3]) => l3 + kerfMm <= W && w3 + kerfMm <= H) ?? ways[0];
+      best = { s: sheets.length - 1, f: 0, l: l2, w: w2, turned: turned2, score: 0 };
+    }
+    const { s, f, l, w, turned } = best;
+    const sh = sheets[s];
+    const fr = sh.free[f];
+    sh.placed.push({ id: p.id, x: fr.x, y: fr.y, lengthMm: l, widthMm: w, turned });
+    const cl = l + kerfMm;
+    const cw = w + kerfMm;
+    const right = fr.w - cl;
+    const top = fr.h - cw;
+    const pieces = right < top ? [
+      { x: fr.x + cl, y: fr.y, w: right, h: cw },
+      { x: fr.x, y: fr.y + cw, w: fr.w, h: top }
+    ] : [
+      { x: fr.x + cl, y: fr.y, w: right, h: fr.h },
+      { x: fr.x, y: fr.y + cw, w: cl, h: top }
+    ];
+    sh.free.splice(f, 1, ...pieces.filter((r) => r.w > kerfMm && r.h > kerfMm));
+  }
+  const area = (ps) => ps.reduce((a, p) => a + p.lengthMm * p.widthMm, 0) / 1e6;
+  const sheetM2 = sheet.lengthMm * sheet.widthMm / 1e6;
+  const partsAreaM2 = sheets.reduce((a, s) => a + area(s.placed), 0);
+  const sheetsAreaM2 = sheets.length * sheetM2;
+  return {
+    sheet,
+    sheets: sheets.map((s) => s.placed),
+    tooLarge,
+    partsAreaM2: r3(partsAreaM2),
+    sheetsAreaM2: r3(sheetsAreaM2),
+    utilization: sheetsAreaM2 > 0 ? r3(partsAreaM2 / sheetsAreaM2) : 0,
+    lastSheetUse: sheets.length ? r3(area(sheets.at(-1).placed) / sheetM2) : 0
+  };
+}
+function panelPart(p, catalog = allMaterials) {
+  const m = getMaterial(catalog, p.material);
+  const plain = !p.grainDirection || m?.group === "plain" || m?.kind === "hdf";
+  return p.grainDirection === "width" && !plain ? { id: p.id, lengthMm: p.widthMm, widthMm: p.lengthMm, turn: false } : { id: p.id, lengthMm: p.lengthMm, widthMm: p.widthMm, turn: plain };
+}
+function nestBoards(result, sheetOf = () => DEFAULT_SHEET, catalog = allMaterials) {
+  const by = /* @__PURE__ */ new Map();
+  for (const p of result.panels) {
+    if (p.role === "frame") continue;
+    const list = by.get(p.material) ?? [];
+    list.push(panelPart(p, catalog));
+    by.set(p.material, list);
+  }
+  return [...by].map(([material, parts]) => ({
+    material,
+    nest: nestParts(parts, sheetOf(material))
+  }));
+}
+
 // ../../packages/engine/src/bom.ts
 var hardwareV1 = hardware_v1_default;
-var r3 = (v) => Math.round(v * 1e3) / 1e3;
+var r32 = (v) => Math.round(v * 1e3) / 1e3;
 function hingeCount(heightMm, hw = hardwareV1) {
   const rule = hw.hingeRule.find((r) => heightMm <= r.maxDoorHeightMm);
   return rule ? rule.count : (hw.hingeRule.at(-1)?.count ?? 2) + 1;
@@ -63991,7 +64079,7 @@ function computeBom(template, params, result, hw = hardwareV1) {
     addHw(extra, drawers);
   const railM = result.rails.reduce((m, r) => m + r.lengthMm / 1e3, 0);
   if (railM > 0) {
-    hardware.set("rail_oval_25", r3(railM));
+    hardware.set("rail_oval_25", r32(railM));
     addHw("rail_holder", 2 * result.rails.length);
   }
   addHw("castor_standard", result.panels.filter((p) => p.id.startsWith("castor-")).length);
@@ -64001,13 +64089,13 @@ function computeBom(template, params, result, hw = hardwareV1) {
     ...[...boards].map(([ref, qty]) => ({
       kind: "board",
       ref,
-      qty: r3(qty),
+      qty: r32(qty),
       unit: "m2"
     })),
     ...[...edges].map(([ref, qty]) => ({
       kind: "edge",
       ref,
-      qty: r3(qty),
+      qty: r32(qty),
       unit: "m"
     })),
     ...[...hardware].map(([ref, qty]) => ({
@@ -65503,17 +65591,30 @@ async function buildOrderPdf({
         `${b.unit === "m" ? b.qty.toFixed(2) : b.qty} ${UNIT_NAMES[b.unit] ?? b.unit}`
       ])
     );
+  const sheetsOf = new Map(
+    nestBoards(result).map((n3) => [n3.material, n3.nest.sheets.length])
+  );
   section("Jami material", [
-    ...bom.filter((b) => b.kind === "board").map((b) => [`Plita: ${decorName(b.ref)}`, `${b.qty.toFixed(2)} m\xB2`]),
+    ...bom.filter((b) => b.kind === "board").map((b) => [
+      `Plita: ${decorName(b.ref)}`,
+      `${b.qty.toFixed(2)} m\xB2` + (sheetsOf.has(b.ref) ? ` \xB7 ${sheetsOf.get(b.ref)} list` : "")
+    ]),
     ...bom.filter((b) => b.kind === "edge").map((b) => [edgeName(result, b.ref), `${b.qty.toFixed(1)} m`])
   ]);
   w.y -= 10;
   w.text(
-    "Plita maydoni \u2014 kesilgan detallar bo\u2018yicha, chiqindisiz." + (hardware.length > 0 ? " Furnitura ro\u2018yxati Dafna tomonidan hali tasdiqlanmagan." : ""),
+    "m\xB2 \u2014 kesilgan detallar, chiqindisiz; list \u2014 taxminiy raskroy (2800 \xD7 2070, arra 4 mm).",
     M,
     w.y,
     { size: 7.5, color: MUTED }
   );
+  if (hardware.length > 0) {
+    w.y -= 11;
+    w.text("Furnitura ro\u2018yxati Dafna tomonidan hali tasdiqlanmagan.", M, w.y, {
+      size: 7.5,
+      color: MUTED
+    });
+  }
   w.pages.forEach((p, i) => {
     w.page = p;
     w.line(M, M - 6, right, M - 6, LINE, 0.5);

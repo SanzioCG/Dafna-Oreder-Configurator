@@ -99,6 +99,8 @@ export {
   hingesForDoor,
   doorWeightKg,
   priceListDemo,
+  sheetCounts,
+  sheetSizeOf,
   type BomLine,
   type HardwareCatalog,
   type HardwareItem,
@@ -108,6 +110,19 @@ export {
   type PriceResult,
   type PricedLine,
 } from './bom.js';
+export {
+  DEFAULT_KERF_MM,
+  DEFAULT_SHEET,
+  DEFAULT_TRIM_MM,
+  nestBoards,
+  nestParts,
+  panelPart,
+  type BoardSheets,
+  type NestPart,
+  type NestResult,
+  type PlacedPart,
+  type SheetSize,
+} from './nesting.js';
 export {
   applyCatalogExtension,
   catalogExtension,

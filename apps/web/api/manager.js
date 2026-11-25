@@ -63535,6 +63535,24 @@ function priceListToRows(list, updatedAt) {
   rows.push(["foyda_foiz", "", "Foyda, umumiy qiymatdan %", list.markupPct, "", "", ""]);
   rows.push(["ish_haqi_m2", "", "Ish haqi, 1 m\xB2 plita uchun", list.laborPerM2, "", "", ""]);
   rows.push(["kromka_m", "", "Kromka, 1 metr", list.edgePerM, "", "", ""]);
+  rows.push([
+    "chiqindi_foiz",
+    "",
+    "Chiqindi %, m\xB2 bo'yicha hisobda",
+    Math.round((list.wasteFactor - 1) * 100),
+    "",
+    "",
+    ""
+  ]);
+  rows.push([
+    "plita_hisobi",
+    "",
+    "Plita narxi: area = m\xB2 + chiqindi, sheets = butun listlar (raskroy)",
+    list.boardBilling ?? "area",
+    "",
+    "",
+    ""
+  ]);
   const erp = (id) => list.erpCodes?.[id] ?? "";
   for (const [type, v] of Object.entries(list.assembly ?? {}))
     rows.push(["yigish", type, "Yig'ish, 1 dona mahsulot", v, "", "", ""]);
@@ -63585,6 +63603,12 @@ function rowsToPriceList(rows) {
         break;
       case "kromka_m":
         if (v >= 0) list.edgePerM = v;
+        break;
+      case "chiqindi_foiz":
+        if (v >= 0 && v <= 100) list.wasteFactor = 1 + v / 100;
+        break;
+      case "plita_hisobi":
+        if (value === "area" || value === "sheets") list.boardBilling = value;
         break;
       case "yigish":
         if (id && v >= 0) list.assembly[id] = v;
@@ -64189,6 +64213,11 @@ function parsePriceList(raw, version) {
   const markup = v.markupPct;
   if (typeof markup !== "number" || !(markup >= 0 && markup <= 300))
     return { ok: false, field: "markupPct" };
+  if (v.boardBilling !== void 0 && v.boardBilling !== "area" && v.boardBilling !== "sheets")
+    return { ok: false, field: "boardBilling" };
+  const waste = v.wasteFactor ?? priceListDemo.wasteFactor;
+  if (typeof waste !== "number" || !(waste >= 1 && waste <= 2))
+    return { ok: false, field: "wasteFactor" };
   return {
     ok: true,
     list: {
@@ -64203,7 +64232,9 @@ function parsePriceList(raw, version) {
       erpKindGroups,
       edgePerM: Math.round(v.edgePerM),
       laborPerM2: Math.round(v.laborPerM2),
-      markupPct: markup
+      markupPct: markup,
+      wasteFactor: Math.round(waste * 1e3) / 1e3,
+      boardBilling: v.boardBilling === "sheets" ? "sheets" : "area"
     }
   };
 }

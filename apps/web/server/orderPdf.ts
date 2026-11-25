@@ -6,6 +6,7 @@ import {
   getMaterial,
   hardwareV1,
   hingesForDoor,
+  nestBoards,
   resolveParams,
   type GenerateResult,
   type Params,
@@ -354,22 +355,35 @@ export async function buildOrderPdf({
         `${b.unit === 'm' ? b.qty.toFixed(2) : b.qty} ${UNIT_NAMES[b.unit] ?? b.unit}`,
       ]),
     );
+  // D-48: whole sheets per board (one product cut from fresh 2800 x 2070 sheets)
+  const sheetsOf = new Map(
+    nestBoards(result).map((n) => [n.material, n.nest.sheets.length] as const),
+  );
   section('Jami material', [
     ...bom
       .filter((b) => b.kind === 'board')
-      .map((b): [string, string] => [`Plita: ${decorName(b.ref)}`, `${b.qty.toFixed(2)} m²`]),
+      .map((b): [string, string] => [
+        `Plita: ${decorName(b.ref)}`,
+        `${b.qty.toFixed(2)} m²` + (sheetsOf.has(b.ref) ? ` · ${sheetsOf.get(b.ref)} list` : ''),
+      ]),
     ...bom
       .filter((b) => b.kind === 'edge')
       .map((b): [string, string] => [edgeName(result, b.ref), `${b.qty.toFixed(1)} m`]),
   ]);
   w.y -= 10;
   w.text(
-    'Plita maydoni — kesilgan detallar bo‘yicha, chiqindisiz.' +
-      (hardware.length > 0 ? ' Furnitura ro‘yxati Dafna tomonidan hali tasdiqlanmagan.' : ''),
+    'm² — kesilgan detallar, chiqindisiz; list — taxminiy raskroy (2800 × 2070, arra 4 mm).',
     M,
     w.y,
     { size: 7.5, color: MUTED },
   );
+  if (hardware.length > 0) {
+    w.y -= 11;
+    w.text('Furnitura ro‘yxati Dafna tomonidan hali tasdiqlanmagan.', M, w.y, {
+      size: 7.5,
+      color: MUTED,
+    });
+  }
 
   // ----- footer on every page -----
   w.pages.forEach((p, i) => {

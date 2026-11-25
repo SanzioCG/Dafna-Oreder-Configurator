@@ -213,6 +213,15 @@ describe('D-19 manager price page', () => {
     const total = () =>
       Number(screen.getByTestId('mgr-total-wardrobe').textContent?.replace(/\D/g, ''));
     const t0 = total();
+    // D-48: the sheets of each board (raskroy) and the LESTER models of dafna.uz
+    expect(screen.getByTestId('mgr-sheets-wardrobe').textContent).toMatch(/\d+ list/);
+    expect(screen.getByTestId('mgr-lester-stol').textContent).toContain('1 706 000');
+    // whole sheets cost more than the area with 15 % waste; back to the area for the rest
+    fireEvent.click(screen.getByTestId('mgr-billing-sheets'));
+    expect(total()).toBeGreaterThan(t0);
+    expect(screen.queryByTestId('mgr-waste')).toBeNull();
+    fireEvent.click(screen.getByTestId('mgr-billing-area'));
+    expect(total()).toBe(t0);
     fireEvent.change(screen.getByTestId('mgr-markup'), { target: { value: '40' } });
     const t1 = total();
     expect(t1).toBeGreaterThan(t0);
@@ -241,6 +250,7 @@ describe('D-19 manager price page', () => {
     await waitFor(() => expect(screen.getByTestId('mgr-save').textContent).toBe('Saqlandi'));
     const list = (api.calls.find((c) => c.method === 'PUT')!.body as { list: PriceListLike }).list;
     expect(list.markupPct).toBe(40);
+    expect(list.boardBilling).toBe('area');
     expect(list.laborPerM2).toBe(0); // the labour lives in the services now (same price)
     expect(list.services.map((s) => [s.name, s.basis, s.price])).toEqual([
       ['Ish haqi (kesish, ishlov berish)', 'm2', priceListDemo.laborPerM2],
@@ -254,6 +264,7 @@ describe('D-19 manager price page', () => {
 
 interface PriceListLike {
   markupPct: number;
+  boardBilling?: string;
   laborPerM2: number;
   services: { name: string; basis: string; price: number }[];
 }

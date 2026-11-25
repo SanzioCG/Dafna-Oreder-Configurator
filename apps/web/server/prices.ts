@@ -5,6 +5,7 @@ import {
   computePrice,
   generate,
   priceListDemo,
+  sheetCounts,
   type PriceList,
   type PriceResult,
   type PriceService,
@@ -132,11 +133,14 @@ export async function handleQuote(req: Request, deps: QuoteDeps): Promise<Respon
   const { list } = await deps.prices.get();
   const params = body.params as Record<string, unknown>;
   const result = generate(template, params);
+  const catalog = catalogForTemplate(template);
   const price = computePrice(
     computeBom(template, params as never, result),
-    catalogForTemplate(template),
+    catalog,
     list,
     template.productType,
+    // D-48: the raskroy (used when the list bills boards by the whole sheet)
+    list.boardBilling === 'sheets' ? sheetCounts(result, list, catalog) : undefined,
   );
   const quote: Quote = {
     total: price.total,
@@ -239,6 +243,12 @@ export function parsePriceList(
   const markup = v.markupPct;
   if (typeof markup !== 'number' || !(markup >= 0 && markup <= 300))
     return { ok: false, field: 'markupPct' };
+  // D-48: how a board is charged; the waste of the area billing (absent = the demo's)
+  if (v.boardBilling !== undefined && v.boardBilling !== 'area' && v.boardBilling !== 'sheets')
+    return { ok: false, field: 'boardBilling' };
+  const waste = v.wasteFactor ?? priceListDemo.wasteFactor;
+  if (typeof waste !== 'number' || !(waste >= 1 && waste <= 2))
+    return { ok: false, field: 'wasteFactor' };
   return {
     ok: true,
     list: {
@@ -254,6 +264,8 @@ export function parsePriceList(
       edgePerM: Math.round(v.edgePerM as number),
       laborPerM2: Math.round(v.laborPerM2 as number),
       markupPct: markup,
+      wasteFactor: Math.round(waste * 1000) / 1000,
+      boardBilling: v.boardBilling === 'sheets' ? 'sheets' : 'area',
     },
   };
 }

@@ -1,6 +1,7 @@
 import hardwareV1Json from '../catalog/hardware.v1.json' with { type: 'json' };
 import priceListDemoJson from '../catalog/pricelist.demo.json' with { type: 'json' };
 import { allMaterials, getMaterial } from './catalog.js';
+import { DEFAULT_SHEET, nestBoards, type SheetSize } from './nesting.js';
 import type { GenerateResult, MaterialCatalog, Panel, Params, Template } from './types.js';
 
 /**
@@ -108,7 +109,13 @@ export interface PriceList {
   erpKindGroups?: Record<string, 'material' | 'hardware' | 'other'>;
   /** D-28: USD -> so'm rate the demo hardware prices were made with */
   usdRate?: number;
+  /** boards by area: m² x wasteFactor (the offcuts the product leaves) */
   wasteFactor: number;
+  /**
+   * D-48: how a board is charged - "area" (m² x wasteFactor, the default) or "sheets" (the whole
+   * sheets the product's raskroy takes; nesting.ts)
+   */
+  boardBilling?: 'area' | 'sheets';
   markupPct: number;
   roundTo: number;
 }
@@ -242,6 +249,8 @@ export function computeBom(
 export interface PricedLine extends BomLine {
   unitPrice: number;
   cost: number;
+  /** D-48: boards charged by the sheet - the whole sheets taken (unitPrice = one sheet) */
+  sheets?: number;
 }
 
 export interface PriceResult {
@@ -279,15 +288,53 @@ export function boardPrice(
   return list.boardPerM2ByThickness[String(m.thicknessMm)] ?? list.boardPerM2[m.kind];
 }
 
+/** D-48: a board's sheet: the manager's sheet size, else Dafna's usual 2800 x 2070 */
+export function sheetSizeOf(id: string, list: PriceList): SheetSize {
+  const s = list.boardSheets?.[id];
+  return s && s.lengthMm > 0 && s.widthMm > 0
+    ? { lengthMm: s.lengthMm, widthMm: s.widthMm }
+    : DEFAULT_SHEET;
+}
+
+/** D-48: whole sheets per board material of a generated product (its raskroy) */
+export function sheetCounts(
+  result: Pick<GenerateResult, 'panels'>,
+  list: PriceList,
+  catalog: MaterialCatalog = allMaterials,
+): Record<string, number> {
+  return Object.fromEntries(
+    nestBoards(result, (id) => sheetSizeOf(id, list), catalog).map((b) => [
+      b.material,
+      b.nest.sheets.length,
+    ]),
+  );
+}
+
 export function computePrice(
   bom: BomLine[],
   catalog: MaterialCatalog,
   list: PriceList = priceListDemo,
   /** D-19: the product type, for its assembly price */
   productType?: string,
+  /** D-48: whole sheets per board (sheetCounts); used when the list bills boards by the sheet */
+  sheets?: Record<string, number>,
 ): PriceResult {
   const missing: string[] = [];
   const lines: PricedLine[] = bom.map((l) => {
+    if (l.kind === 'board' && list.boardBilling === 'sheets' && sheets?.[l.ref] !== undefined) {
+      const perM2 = boardPrice(l.ref, catalog, list);
+      if (perM2 === undefined) missing.push(l.ref);
+      const size = sheetSizeOf(l.ref, list);
+      const sheetPrice =
+        list.boardSheets?.[l.ref]?.price || ((perM2 ?? 0) * size.lengthMm * size.widthMm) / 1e6;
+      const n = sheets[l.ref]!;
+      return {
+        ...l,
+        sheets: n,
+        unitPrice: Math.round(sheetPrice),
+        cost: Math.round(n * sheetPrice),
+      };
+    }
     const unitPrice =
       l.kind === 'board'
         ? boardPrice(l.ref, catalog, list)

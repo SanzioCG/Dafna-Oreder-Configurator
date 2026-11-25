@@ -75357,10 +75357,98 @@ var pricelist_demo_default = {
   usdRate: 12900
 };
 
+// ../../packages/engine/src/nesting.ts
+var DEFAULT_SHEET = { lengthMm: 2800, widthMm: 2070 };
+var DEFAULT_KERF_MM = 4;
+var DEFAULT_TRIM_MM = 10;
+var r3 = (v) => Math.round(v * 1e3) / 1e3;
+function nestParts(parts, sheet = DEFAULT_SHEET, kerfMm = DEFAULT_KERF_MM, trimMm = DEFAULT_TRIM_MM) {
+  const W = sheet.lengthMm - 2 * trimMm + kerfMm;
+  const H = sheet.widthMm - 2 * trimMm + kerfMm;
+  const fits = (l, w) => l + kerfMm <= W && w + kerfMm <= H;
+  const tooLarge = [];
+  const todo = parts.filter((p) => {
+    const ok = fits(p.lengthMm, p.widthMm) || p.turn && fits(p.widthMm, p.lengthMm);
+    if (!ok) tooLarge.push(p.id);
+    return ok;
+  }).sort(
+    (a, b) => b.lengthMm * b.widthMm - a.lengthMm * a.widthMm || Math.max(b.lengthMm, b.widthMm) - Math.max(a.lengthMm, a.widthMm) || a.id.localeCompare(b.id)
+  );
+  const sheets = [];
+  for (const p of todo) {
+    const ways = [[p.lengthMm, p.widthMm, false]];
+    if (p.turn && p.lengthMm !== p.widthMm) ways.push([p.widthMm, p.lengthMm, true]);
+    let best = null;
+    for (let s2 = 0; s2 < sheets.length && best === null; s2++) {
+      const free = sheets[s2].free;
+      for (let f2 = 0; f2 < free.length; f2++) {
+        const fr2 = free[f2];
+        for (const [l2, w2, turned2] of ways) {
+          if (l2 + kerfMm > fr2.w || w2 + kerfMm > fr2.h) continue;
+          const score = fr2.w * fr2.h - (l2 + kerfMm) * (w2 + kerfMm) + Math.min(fr2.w - l2 - kerfMm, fr2.h - w2 - kerfMm) / 1e6;
+          if (best === null || score < best.score) best = { s: s2, f: f2, l: l2, w: w2, turned: turned2, score };
+        }
+      }
+    }
+    if (best === null) {
+      sheets.push({ free: [{ x: 0, y: 0, w: W, h: H }], placed: [] });
+      const [l2, w2, turned2] = ways.find(([l3, w3]) => l3 + kerfMm <= W && w3 + kerfMm <= H) ?? ways[0];
+      best = { s: sheets.length - 1, f: 0, l: l2, w: w2, turned: turned2, score: 0 };
+    }
+    const { s, f, l, w, turned } = best;
+    const sh = sheets[s];
+    const fr = sh.free[f];
+    sh.placed.push({ id: p.id, x: fr.x, y: fr.y, lengthMm: l, widthMm: w, turned });
+    const cl = l + kerfMm;
+    const cw = w + kerfMm;
+    const right = fr.w - cl;
+    const top = fr.h - cw;
+    const pieces = right < top ? [
+      { x: fr.x + cl, y: fr.y, w: right, h: cw },
+      { x: fr.x, y: fr.y + cw, w: fr.w, h: top }
+    ] : [
+      { x: fr.x + cl, y: fr.y, w: right, h: fr.h },
+      { x: fr.x, y: fr.y + cw, w: cl, h: top }
+    ];
+    sh.free.splice(f, 1, ...pieces.filter((r) => r.w > kerfMm && r.h > kerfMm));
+  }
+  const area = (ps) => ps.reduce((a, p) => a + p.lengthMm * p.widthMm, 0) / 1e6;
+  const sheetM2 = sheet.lengthMm * sheet.widthMm / 1e6;
+  const partsAreaM2 = sheets.reduce((a, s) => a + area(s.placed), 0);
+  const sheetsAreaM2 = sheets.length * sheetM2;
+  return {
+    sheet,
+    sheets: sheets.map((s) => s.placed),
+    tooLarge,
+    partsAreaM2: r3(partsAreaM2),
+    sheetsAreaM2: r3(sheetsAreaM2),
+    utilization: sheetsAreaM2 > 0 ? r3(partsAreaM2 / sheetsAreaM2) : 0,
+    lastSheetUse: sheets.length ? r3(area(sheets.at(-1).placed) / sheetM2) : 0
+  };
+}
+function panelPart(p, catalog = allMaterials) {
+  const m = getMaterial(catalog, p.material);
+  const plain = !p.grainDirection || m?.group === "plain" || m?.kind === "hdf";
+  return p.grainDirection === "width" && !plain ? { id: p.id, lengthMm: p.widthMm, widthMm: p.lengthMm, turn: false } : { id: p.id, lengthMm: p.lengthMm, widthMm: p.widthMm, turn: plain };
+}
+function nestBoards(result, sheetOf = () => DEFAULT_SHEET, catalog = allMaterials) {
+  const by = /* @__PURE__ */ new Map();
+  for (const p of result.panels) {
+    if (p.role === "frame") continue;
+    const list = by.get(p.material) ?? [];
+    list.push(panelPart(p, catalog));
+    by.set(p.material, list);
+  }
+  return [...by].map(([material, parts]) => ({
+    material,
+    nest: nestParts(parts, sheetOf(material))
+  }));
+}
+
 // ../../packages/engine/src/bom.ts
 var hardwareV1 = hardware_v1_default;
 var priceListDemo = pricelist_demo_default;
-var r3 = (v) => Math.round(v * 1e3) / 1e3;
+var r32 = (v) => Math.round(v * 1e3) / 1e3;
 function hingeCount(heightMm, hw = hardwareV1) {
   const rule = hw.hingeRule.find((r) => heightMm <= r.maxDoorHeightMm);
   return rule ? rule.count : (hw.hingeRule.at(-1)?.count ?? 2) + 1;
@@ -75412,7 +75500,7 @@ function computeBom(template, params, result, hw = hardwareV1) {
     addHw(extra, drawers);
   const railM = result.rails.reduce((m, r) => m + r.lengthMm / 1e3, 0);
   if (railM > 0) {
-    hardware.set("rail_oval_25", r3(railM));
+    hardware.set("rail_oval_25", r32(railM));
     addHw("rail_holder", 2 * result.rails.length);
   }
   addHw("castor_standard", result.panels.filter((p) => p.id.startsWith("castor-")).length);
@@ -75422,13 +75510,13 @@ function computeBom(template, params, result, hw = hardwareV1) {
     ...[...boards].map(([ref, qty]) => ({
       kind: "board",
       ref,
-      qty: r3(qty),
+      qty: r32(qty),
       unit: "m2"
     })),
     ...[...edges].map(([ref, qty]) => ({
       kind: "edge",
       ref,
-      qty: r3(qty),
+      qty: r32(qty),
       unit: "m"
     })),
     ...[...hardware].map(([ref, qty]) => ({
@@ -75448,9 +75536,34 @@ function boardPrice(id, catalog, list) {
   if (!m) return void 0;
   return list.boardPerM2ByThickness[String(m.thicknessMm)] ?? list.boardPerM2[m.kind];
 }
-function computePrice(bom, catalog, list = priceListDemo, productType) {
+function sheetSizeOf(id, list) {
+  const s = list.boardSheets?.[id];
+  return s && s.lengthMm > 0 && s.widthMm > 0 ? { lengthMm: s.lengthMm, widthMm: s.widthMm } : DEFAULT_SHEET;
+}
+function sheetCounts(result, list, catalog = allMaterials) {
+  return Object.fromEntries(
+    nestBoards(result, (id) => sheetSizeOf(id, list), catalog).map((b) => [
+      b.material,
+      b.nest.sheets.length
+    ])
+  );
+}
+function computePrice(bom, catalog, list = priceListDemo, productType, sheets) {
   const missing = [];
   const lines = bom.map((l) => {
+    if (l.kind === "board" && list.boardBilling === "sheets" && sheets?.[l.ref] !== void 0) {
+      const perM2 = boardPrice(l.ref, catalog, list);
+      if (perM2 === void 0) missing.push(l.ref);
+      const size = sheetSizeOf(l.ref, list);
+      const sheetPrice = list.boardSheets?.[l.ref]?.price || (perM2 ?? 0) * size.lengthMm * size.widthMm / 1e6;
+      const n3 = sheets[l.ref];
+      return {
+        ...l,
+        sheets: n3,
+        unitPrice: Math.round(sheetPrice),
+        cost: Math.round(n3 * sheetPrice)
+      };
+    }
     const unitPrice = l.kind === "board" ? boardPrice(l.ref, catalog, list) : l.kind === "edge" ? list.edgePerM : list.hardware[l.ref];
     if (unitPrice === void 0) missing.push(l.ref);
     const qty = l.kind === "board" ? l.qty * list.wasteFactor : l.qty;
@@ -76262,6 +76375,24 @@ function priceListToRows(list, updatedAt) {
   rows.push(["foyda_foiz", "", "Foyda, umumiy qiymatdan %", list.markupPct, "", "", ""]);
   rows.push(["ish_haqi_m2", "", "Ish haqi, 1 m\xB2 plita uchun", list.laborPerM2, "", "", ""]);
   rows.push(["kromka_m", "", "Kromka, 1 metr", list.edgePerM, "", "", ""]);
+  rows.push([
+    "chiqindi_foiz",
+    "",
+    "Chiqindi %, m\xB2 bo'yicha hisobda",
+    Math.round((list.wasteFactor - 1) * 100),
+    "",
+    "",
+    ""
+  ]);
+  rows.push([
+    "plita_hisobi",
+    "",
+    "Plita narxi: area = m\xB2 + chiqindi, sheets = butun listlar (raskroy)",
+    list.boardBilling ?? "area",
+    "",
+    "",
+    ""
+  ]);
   const erp = (id) => list.erpCodes?.[id] ?? "";
   for (const [type, v] of Object.entries(list.assembly ?? {}))
     rows.push(["yigish", type, "Yig'ish, 1 dona mahsulot", v, "", "", ""]);
@@ -76312,6 +76443,12 @@ function rowsToPriceList(rows) {
         break;
       case "kromka_m":
         if (v >= 0) list.edgePerM = v;
+        break;
+      case "chiqindi_foiz":
+        if (v >= 0 && v <= 100) list.wasteFactor = 1 + v / 100;
+        break;
+      case "plita_hisobi":
+        if (value === "area" || value === "sheets") list.boardBilling = value;
         break;
       case "yigish":
         if (id && v >= 0) list.assembly[id] = v;
@@ -76707,11 +76844,14 @@ async function handleQuote(req, deps2) {
   const { list } = await deps2.prices.get();
   const params = body.params;
   const result = generate(template, params);
+  const catalog = catalogForTemplate(template);
   const price = computePrice(
     computeBom(template, params, result),
-    catalogForTemplate(template),
+    catalog,
     list,
-    template.productType
+    template.productType,
+    // D-48: the raskroy (used when the list bills boards by the whole sheet)
+    list.boardBilling === "sheets" ? sheetCounts(result, list, catalog) : void 0
   );
   const quote = {
     total: price.total,
