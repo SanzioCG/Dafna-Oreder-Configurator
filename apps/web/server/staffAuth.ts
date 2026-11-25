@@ -206,7 +206,11 @@ export function rowsToStaff(rows: unknown[][]): StaffAccount[] {
 export class GoogleSheetsStaffStore implements StaffStore {
   private readonly tab: SheetTab;
   constructor(config: PriceSheetConfig) {
-    this.tab = new SheetTab(config, STAFF_TAB);
+    // D-46: the password hashes (column D) are hidden from people
+    this.tab = new SheetTab(config, STAFF_TAB, {
+      widths: [120, 180, 90, 120, 70, 140, 220, 140],
+      hidden: [3],
+    });
   }
   async load() {
     return rowsToStaff(await this.tab.read());

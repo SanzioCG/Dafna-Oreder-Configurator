@@ -14,7 +14,9 @@ import type { LeadRecord } from './types';
  * - the two columns the manager edits ("Holat", "Menejer izohi") are tinted and noted; every
  *   other cell warns before an accidental edit (warning only, nobody is locked out).
  */
-export const SHEET_FORMAT_VERSION = '2';
+export const SHEET_FORMAT_VERSION = '3';
+/** D-46: the header colour (Figma "Google Sheet": Dafna ink #191D24) */
+export const HEADER_BG = '#191d24';
 export const FORMAT_METADATA_KEY = 'dafna.sheetFormat';
 export const PROTECTION_DESCRIPTION = 'dafna: avtomatik ustunlar';
 
@@ -150,7 +152,7 @@ export function formatRequests(sheetId: number, existing: ExistingFormat): objec
         range: header,
         cell: {
           userEnteredFormat: {
-            backgroundColor: hex('#1b1c21'),
+            backgroundColor: hex(HEADER_BG),
             textFormat: { foregroundColor: hex('#ffffff'), bold: true, fontSize: 10 },
             verticalAlignment: 'MIDDLE',
             wrapStrategy: 'WRAP',
@@ -214,7 +216,7 @@ export function formatRequests(sheetId: number, existing: ExistingFormat): objec
           note: "Shu ustunni menejer to'ldiradi / o'zgartiradi.",
           userEnteredFormat: {
             backgroundColor: hex('#ffad1f'),
-            textFormat: { foregroundColor: hex('#1b1c21'), bold: true },
+            textFormat: { foregroundColor: hex(HEADER_BG), bold: true },
           },
         },
         fields: 'note,userEnteredFormat(backgroundColor,textFormat)',
@@ -278,6 +280,116 @@ export function formatRequests(sheetId: number, existing: ExistingFormat): objec
         developerMetadata: {
           metadataKey: FORMAT_METADATA_KEY,
           metadataValue: SHEET_FORMAT_VERSION,
+          location: { sheetId },
+          visibility: 'DOCUMENT',
+        },
+      },
+    },
+  ];
+}
+
+/* ---------- D-46: the program's other tabs (Narxlar, Katalog, Xodimlar) ---------- */
+
+/**
+ * The same look as "Arizalar" (Figma "Google Sheet / Ko'rinish qoidalari"): dark frozen header,
+ * zebra rows, widths, hidden columns; and a warning before a hand edit (these tabs are written by
+ * the manager page - a hand edit is overwritten by the next "Saqlash"). Applied once per tab
+ * (developer metadata TAB_FORMAT_KEY = TAB_FORMAT_VERSION); bump the version to re-format.
+ */
+export const TAB_FORMAT_VERSION = '1';
+export const TAB_FORMAT_KEY = 'dafna.tabFormat';
+export const TAB_PROTECTION = "dafna: dastur yozadi (o'zgartirish /manager sahifasida)";
+
+export interface TabLook {
+  /** column widths in pixels, from column A */
+  widths?: number[];
+  /** columns hidden from people (e.g. the password hashes) */
+  hidden?: number[];
+}
+
+export function tabFormatRequests(
+  sheetId: number,
+  columnCount: number,
+  existing: Pick<ExistingFormat, 'bandedRangeIds' | 'protectedRangeIds' | 'metadataIds'>,
+  look: TabLook = {},
+): object[] {
+  const all = { sheetId, startColumnIndex: 0, endColumnIndex: columnCount };
+  return [
+    ...existing.bandedRangeIds.map((bandedRangeId) => ({ deleteBanding: { bandedRangeId } })),
+    ...existing.protectedRangeIds.map((protectedRangeId) => ({
+      deleteProtectedRange: { protectedRangeId },
+    })),
+    ...existing.metadataIds.map((metadataId) => ({
+      deleteDeveloperMetadata: { dataFilter: { developerMetadataLookup: { metadataId } } },
+    })),
+    {
+      updateSheetProperties: {
+        properties: { sheetId, gridProperties: { frozenRowCount: 1 } },
+        fields: 'gridProperties.frozenRowCount',
+      },
+    },
+    {
+      repeatCell: {
+        range: { ...all, startRowIndex: 0, endRowIndex: 1 },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: hex(HEADER_BG),
+            textFormat: { foregroundColor: hex('#ffffff'), bold: true, fontSize: 10 },
+            verticalAlignment: 'MIDDLE',
+            wrapStrategy: 'WRAP',
+            padding: { top: 6, bottom: 6, left: 6, right: 6 },
+          },
+        },
+        fields:
+          'userEnteredFormat(backgroundColor,textFormat,verticalAlignment,wrapStrategy,padding)',
+      },
+    },
+    {
+      updateDimensionProperties: {
+        range: { sheetId, dimension: 'ROWS', startIndex: 0, endIndex: 1 },
+        properties: { pixelSize: 36 },
+        fields: 'pixelSize',
+      },
+    },
+    {
+      repeatCell: {
+        range: { ...all, startRowIndex: 1 },
+        cell: { userEnteredFormat: { verticalAlignment: 'MIDDLE', wrapStrategy: 'CLIP' } },
+        fields: 'userEnteredFormat(verticalAlignment,wrapStrategy)',
+      },
+    },
+    ...(look.widths ?? []).map((pixelSize, i) => ({
+      updateDimensionProperties: {
+        range: { sheetId, dimension: 'COLUMNS', startIndex: i, endIndex: i + 1 },
+        properties: { pixelSize },
+        fields: 'pixelSize',
+      },
+    })),
+    ...(look.hidden ?? []).map((i) => ({
+      updateDimensionProperties: {
+        range: { sheetId, dimension: 'COLUMNS', startIndex: i, endIndex: i + 1 },
+        properties: { hiddenByUser: true },
+        fields: 'hiddenByUser',
+      },
+    })),
+    {
+      addBanding: {
+        bandedRange: {
+          range: { ...all, startRowIndex: 1 },
+          rowProperties: { firstBandColor: hex('#ffffff'), secondBandColor: hex('#f6f7f9') },
+        },
+      },
+    },
+    {
+      addProtectedRange: {
+        protectedRange: { range: { sheetId }, description: TAB_PROTECTION, warningOnly: true },
+      },
+    },
+    {
+      createDeveloperMetadata: {
+        developerMetadata: {
+          metadataKey: TAB_FORMAT_KEY,
+          metadataValue: TAB_FORMAT_VERSION,
           location: { sheetId },
           visibility: 'DOCUMENT',
         },

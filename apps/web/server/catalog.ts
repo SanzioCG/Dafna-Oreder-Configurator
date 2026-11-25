@@ -406,7 +406,9 @@ export function rowsToCatalog(rows: unknown[][]): CatalogExtension {
 export class GoogleSheetsCatalogStore implements CatalogStore {
   private readonly tab: SheetTab;
   constructor(config: PriceSheetConfig) {
-    this.tab = new SheetTab(config, CATALOG_TAB);
+    this.tab = new SheetTab(config, CATALOG_TAB, {
+      widths: [90, 150, 220, 160, 130, 90, 80, 120, 160, 90, 130, 90, 90, 220, 260, 220],
+    });
   }
   async load() {
     return rowsToCatalog(await this.tab.read());

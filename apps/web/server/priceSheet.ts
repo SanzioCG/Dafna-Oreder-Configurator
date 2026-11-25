@@ -2,6 +2,13 @@ import { allMaterials, getMaterial, priceListDemo, type PriceList } from '@dafna
 import { uz } from '../src/i18n/uz';
 import type { PriceStore } from './prices';
 import { serviceAccountJwt, type ServiceAccount } from './sheets';
+import {
+  TAB_FORMAT_KEY,
+  TAB_FORMAT_VERSION,
+  TAB_PROTECTION,
+  tabFormatRequests,
+  type TabLook,
+} from './sheetFormat';
 
 /**
  * D-19: the price list in the Google Sheet, tab "Narxlar", as a readable table (one row per
@@ -146,10 +153,13 @@ export class SheetTab {
   private readonly now: () => Date;
   private token: { value: string; exp: number } | null = null;
   private tabReady = false;
+  private formatChecked = false;
 
   constructor(
     private readonly config: PriceSheetConfig,
     private readonly title: string,
+    /** D-46: the tab's look (header, zebra, widths, hidden columns), applied once */
+    private readonly look?: TabLook,
   ) {
     this.fetchImpl = config.fetch ?? fetch;
     this.now = config.now ?? (() => new Date());
@@ -223,13 +233,63 @@ export class SheetTab {
       method: 'PUT',
       body: { values: rows },
     });
+    await this.ensureFormat(rows[0]?.length ?? 1);
+  }
+
+  /**
+   * D-46: the tab's look, once (developer metadata). Never fails a save: a formatting error is
+   * swallowed - the data is already written.
+   */
+  private async ensureFormat(columnCount: number): Promise<void> {
+    if (!this.look || this.formatChecked) return;
+    try {
+      const meta = await this.api<{
+        sheets?: {
+          properties: { sheetId: number; title: string };
+          developerMetadata?: { metadataId: number; metadataKey: string; metadataValue: string }[];
+          bandedRanges?: { bandedRangeId: number }[];
+          protectedRanges?: { protectedRangeId: number; description?: string }[];
+        }[];
+      }>(
+        '?fields=sheets(properties(sheetId,title),developerMetadata(metadataId,metadataKey,metadataValue),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId,description))',
+      );
+      const own = meta.sheets?.find((s) => s.properties.title === this.title);
+      if (!own) return;
+      const marks = (own.developerMetadata ?? []).filter((m) => m.metadataKey === TAB_FORMAT_KEY);
+      if (marks.some((m) => m.metadataValue === TAB_FORMAT_VERSION)) {
+        this.formatChecked = true;
+        return;
+      }
+      await this.api(':batchUpdate', {
+        method: 'POST',
+        body: {
+          requests: tabFormatRequests(
+            own.properties.sheetId,
+            columnCount,
+            {
+              bandedRangeIds: (own.bandedRanges ?? []).map((b) => b.bandedRangeId),
+              protectedRangeIds: (own.protectedRanges ?? [])
+                .filter((p) => p.description === TAB_PROTECTION)
+                .map((p) => p.protectedRangeId),
+              metadataIds: marks.map((m) => m.metadataId),
+            },
+            this.look,
+          ),
+        },
+      });
+      this.formatChecked = true;
+    } catch {
+      // the look is cosmetic: the next save tries again
+    }
   }
 }
 
 export class GoogleSheetsPriceStore implements PriceStore {
   private readonly tab: SheetTab;
   constructor(config: PriceSheetConfig) {
-    this.tab = new SheetTab(config, PRICE_TAB);
+    this.tab = new SheetTab(config, PRICE_TAB, {
+      widths: [110, 170, 280, 120, 100, 160, 140],
+    });
   }
   async load() {
     return rowsToPriceList(await this.tab.read());

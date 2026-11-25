@@ -66022,7 +66022,8 @@ function parseTashkentTimestamp(s) {
 }
 
 // server/sheetFormat.ts
-var SHEET_FORMAT_VERSION = "2";
+var SHEET_FORMAT_VERSION = "3";
+var HEADER_BG = "#191d24";
 var FORMAT_METADATA_KEY = "dafna.sheetFormat";
 var PROTECTION_DESCRIPTION = "dafna: avtomatik ustunlar";
 function hex(h) {
@@ -66127,7 +66128,7 @@ function formatRequests(sheetId, existing) {
         range: header,
         cell: {
           userEnteredFormat: {
-            backgroundColor: hex("#1b1c21"),
+            backgroundColor: hex(HEADER_BG),
             textFormat: { foregroundColor: hex("#ffffff"), bold: true, fontSize: 10 },
             verticalAlignment: "MIDDLE",
             wrapStrategy: "WRAP",
@@ -66190,7 +66191,7 @@ function formatRequests(sheetId, existing) {
           note: "Shu ustunni menejer to'ldiradi / o'zgartiradi.",
           userEnteredFormat: {
             backgroundColor: hex("#ffad1f"),
-            textFormat: { foregroundColor: hex("#1b1c21"), bold: true }
+            textFormat: { foregroundColor: hex(HEADER_BG), bold: true }
           }
         },
         fields: "note,userEnteredFormat(backgroundColor,textFormat)"
@@ -66254,6 +66255,93 @@ function formatRequests(sheetId, existing) {
         developerMetadata: {
           metadataKey: FORMAT_METADATA_KEY,
           metadataValue: SHEET_FORMAT_VERSION,
+          location: { sheetId },
+          visibility: "DOCUMENT"
+        }
+      }
+    }
+  ];
+}
+var TAB_FORMAT_VERSION = "1";
+var TAB_FORMAT_KEY = "dafna.tabFormat";
+var TAB_PROTECTION = "dafna: dastur yozadi (o'zgartirish /manager sahifasida)";
+function tabFormatRequests(sheetId, columnCount, existing, look = {}) {
+  const all = { sheetId, startColumnIndex: 0, endColumnIndex: columnCount };
+  return [
+    ...existing.bandedRangeIds.map((bandedRangeId) => ({ deleteBanding: { bandedRangeId } })),
+    ...existing.protectedRangeIds.map((protectedRangeId) => ({
+      deleteProtectedRange: { protectedRangeId }
+    })),
+    ...existing.metadataIds.map((metadataId) => ({
+      deleteDeveloperMetadata: { dataFilter: { developerMetadataLookup: { metadataId } } }
+    })),
+    {
+      updateSheetProperties: {
+        properties: { sheetId, gridProperties: { frozenRowCount: 1 } },
+        fields: "gridProperties.frozenRowCount"
+      }
+    },
+    {
+      repeatCell: {
+        range: { ...all, startRowIndex: 0, endRowIndex: 1 },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: hex(HEADER_BG),
+            textFormat: { foregroundColor: hex("#ffffff"), bold: true, fontSize: 10 },
+            verticalAlignment: "MIDDLE",
+            wrapStrategy: "WRAP",
+            padding: { top: 6, bottom: 6, left: 6, right: 6 }
+          }
+        },
+        fields: "userEnteredFormat(backgroundColor,textFormat,verticalAlignment,wrapStrategy,padding)"
+      }
+    },
+    {
+      updateDimensionProperties: {
+        range: { sheetId, dimension: "ROWS", startIndex: 0, endIndex: 1 },
+        properties: { pixelSize: 36 },
+        fields: "pixelSize"
+      }
+    },
+    {
+      repeatCell: {
+        range: { ...all, startRowIndex: 1 },
+        cell: { userEnteredFormat: { verticalAlignment: "MIDDLE", wrapStrategy: "CLIP" } },
+        fields: "userEnteredFormat(verticalAlignment,wrapStrategy)"
+      }
+    },
+    ...(look.widths ?? []).map((pixelSize, i) => ({
+      updateDimensionProperties: {
+        range: { sheetId, dimension: "COLUMNS", startIndex: i, endIndex: i + 1 },
+        properties: { pixelSize },
+        fields: "pixelSize"
+      }
+    })),
+    ...(look.hidden ?? []).map((i) => ({
+      updateDimensionProperties: {
+        range: { sheetId, dimension: "COLUMNS", startIndex: i, endIndex: i + 1 },
+        properties: { hiddenByUser: true },
+        fields: "hiddenByUser"
+      }
+    })),
+    {
+      addBanding: {
+        bandedRange: {
+          range: { ...all, startRowIndex: 1 },
+          rowProperties: { firstBandColor: hex("#ffffff"), secondBandColor: hex("#f6f7f9") }
+        }
+      }
+    },
+    {
+      addProtectedRange: {
+        protectedRange: { range: { sheetId }, description: TAB_PROTECTION, warningOnly: true }
+      }
+    },
+    {
+      createDeveloperMetadata: {
+        developerMetadata: {
+          metadataKey: TAB_FORMAT_KEY,
+          metadataValue: TAB_FORMAT_VERSION,
           location: { sheetId },
           visibility: "DOCUMENT"
         }
@@ -66496,18 +66584,21 @@ var GoogleSheetsStore = class {
 var TOKEN_URL2 = "https://oauth2.googleapis.com/token";
 var API2 = "https://sheets.googleapis.com/v4/spreadsheets";
 var SheetTab = class {
-  constructor(config, title) {
+  constructor(config, title, look) {
     this.config = config;
     this.title = title;
+    this.look = look;
     this.fetchImpl = config.fetch ?? fetch;
     this.now = config.now ?? (() => /* @__PURE__ */ new Date());
   }
   config;
   title;
+  look;
   fetchImpl;
   now;
   token = null;
   tabReady = false;
+  formatChecked = false;
   async accessToken() {
     const nowSec = Math.floor(this.now().getTime() / 1e3);
     if (this.token && this.token.exp - 60 > nowSec) return this.token.value;
@@ -66568,6 +66659,43 @@ var SheetTab = class {
       method: "PUT",
       body: { values: rows }
     });
+    await this.ensureFormat(rows[0]?.length ?? 1);
+  }
+  /**
+   * D-46: the tab's look, once (developer metadata). Never fails a save: a formatting error is
+   * swallowed - the data is already written.
+   */
+  async ensureFormat(columnCount) {
+    if (!this.look || this.formatChecked) return;
+    try {
+      const meta = await this.api(
+        "?fields=sheets(properties(sheetId,title),developerMetadata(metadataId,metadataKey,metadataValue),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId,description))"
+      );
+      const own = meta.sheets?.find((s) => s.properties.title === this.title);
+      if (!own) return;
+      const marks = (own.developerMetadata ?? []).filter((m) => m.metadataKey === TAB_FORMAT_KEY);
+      if (marks.some((m) => m.metadataValue === TAB_FORMAT_VERSION)) {
+        this.formatChecked = true;
+        return;
+      }
+      await this.api(":batchUpdate", {
+        method: "POST",
+        body: {
+          requests: tabFormatRequests(
+            own.properties.sheetId,
+            columnCount,
+            {
+              bandedRangeIds: (own.bandedRanges ?? []).map((b) => b.bandedRangeId),
+              protectedRangeIds: (own.protectedRanges ?? []).filter((p) => p.description === TAB_PROTECTION).map((p) => p.protectedRangeId),
+              metadataIds: marks.map((m) => m.metadataId)
+            },
+            this.look
+          )
+        }
+      });
+      this.formatChecked = true;
+    } catch {
+    }
   }
 };
 
@@ -66736,7 +66864,9 @@ function rowsToCatalog(rows) {
 var GoogleSheetsCatalogStore = class {
   tab;
   constructor(config) {
-    this.tab = new SheetTab(config, CATALOG_TAB);
+    this.tab = new SheetTab(config, CATALOG_TAB, {
+      widths: [90, 150, 220, 160, 130, 90, 80, 120, 160, 90, 130, 90, 90, 220, 260, 220]
+    });
   }
   async load() {
     return rowsToCatalog(await this.tab.read());

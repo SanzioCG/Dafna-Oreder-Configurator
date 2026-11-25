@@ -459,8 +459,8 @@ var require_strings = __commonJS({
     exports.charFromCode = function(code) {
       return String.fromCharCode(code);
     };
-    exports.charFromHexCode = function(hex) {
-      return exports.charFromCode(parseInt(hex, 16));
+    exports.charFromHexCode = function(hex2) {
+      return exports.charFromCode(parseInt(hex2, 16));
     };
     exports.padStart = function(value, length, padChar) {
       var padding = "";
@@ -6672,8 +6672,8 @@ var require_PDFName = __commonJS({
     var Irregular_1 = require_Irregular();
     var utils_1 = require_utils2();
     var decodeName = function(name) {
-      return name.replace(/#([\dABCDEF]{2})/g, function(_, hex) {
-        return utils_1.charFromHexCode(hex);
+      return name.replace(/#([\dABCDEF]{2})/g, function(_, hex2) {
+        return utils_1.charFromHexCode(hex2);
       });
     };
     var isRegularChar = function(charCode) {
@@ -6701,7 +6701,7 @@ var require_PDFName = __commonJS({
         }
         PDFName2.prototype.asBytes = function() {
           var bytes = [];
-          var hex = "";
+          var hex2 = "";
           var escaped = false;
           var pushByte = function(byte2) {
             if (byte2 !== void 0)
@@ -6719,10 +6719,10 @@ var require_PDFName = __commonJS({
                 pushByte(byte);
             } else {
               if (byte >= CharCodes_1.default.Zero && byte <= CharCodes_1.default.Nine || byte >= CharCodes_1.default.a && byte <= CharCodes_1.default.f || byte >= CharCodes_1.default.A && byte <= CharCodes_1.default.F) {
-                hex += char;
-                if (hex.length === 2 || !(nextChar >= "0" && nextChar <= "9" || nextChar >= "a" && nextChar <= "f" || nextChar >= "A" && nextChar <= "F")) {
-                  pushByte(parseInt(hex, 16));
-                  hex = "";
+                hex2 += char;
+                if (hex2.length === 2 || !(nextChar >= "0" && nextChar <= "9" || nextChar >= "a" && nextChar <= "f" || nextChar >= "A" && nextChar <= "F")) {
+                  pushByte(parseInt(hex2, 16));
+                  hex2 = "";
                 }
               } else {
                 pushByte(byte);
@@ -8801,13 +8801,13 @@ var require_PDFHexString = __commonJS({
           return _this;
         }
         PDFHexString2.prototype.asBytes = function() {
-          var hex = this.value + (this.value.length % 2 === 1 ? "0" : "");
-          var hexLength = hex.length;
-          var bytes = new Uint8Array(hex.length / 2);
+          var hex2 = this.value + (this.value.length % 2 === 1 ? "0" : "");
+          var hexLength = hex2.length;
+          var bytes = new Uint8Array(hex2.length / 2);
           var hexOffset = 0;
           var bytesOffset = 0;
           while (hexOffset < hexLength) {
-            var byte = parseInt(hex.substring(hexOffset, hexOffset + 2), 16);
+            var byte = parseInt(hex2.substring(hexOffset, hexOffset + 2), 16);
             bytes[bytesOffset] = byte;
             hexOffset += 2;
             bytesOffset += 1;
@@ -8850,11 +8850,11 @@ var require_PDFHexString = __commonJS({
         };
         PDFHexString2.fromText = function(value) {
           var encoded = utils_1.utf16Encode(value);
-          var hex = "";
+          var hex2 = "";
           for (var idx = 0, len = encoded.length; idx < len; idx++) {
-            hex += utils_1.toHexStringOfMinLength(encoded[idx], 4);
+            hex2 += utils_1.toHexStringOfMinLength(encoded[idx], 4);
           }
-          return new PDFHexString2(hex);
+          return new PDFHexString2(hex2);
         };
         return PDFHexString2;
       })(PDFObject_1.default)
@@ -8998,8 +8998,8 @@ var require_CMap = __commonJS({
         var ls = unicode_1.lowSurrogate(codePoint);
         return "" + cmapHexString(hs) + cmapHexString(ls);
       }
-      var hex = utils_1.toHexString(codePoint);
-      var msg = "0x" + hex + " is not a valid UTF-8 or UTF-16 codepoint.";
+      var hex2 = utils_1.toHexString(codePoint);
+      var msg = "0x" + hex2 + " is not a valid UTF-8 or UTF-16 codepoint.";
       throw new Error(msg);
     };
   }
@@ -60671,6 +60671,100 @@ var LAST_COLUMN = columnLetter(COLUMNS.length - 1);
 // server/ids.ts
 var TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1e3;
 
+// server/sheetFormat.ts
+var HEADER_BG = "#191d24";
+function hex(h) {
+  const n3 = parseInt(h.replace("#", ""), 16);
+  return { red: (n3 >> 16 & 255) / 255, green: (n3 >> 8 & 255) / 255, blue: (n3 & 255) / 255 };
+}
+var TAB_FORMAT_VERSION = "1";
+var TAB_FORMAT_KEY = "dafna.tabFormat";
+var TAB_PROTECTION = "dafna: dastur yozadi (o'zgartirish /manager sahifasida)";
+function tabFormatRequests(sheetId, columnCount, existing, look = {}) {
+  const all = { sheetId, startColumnIndex: 0, endColumnIndex: columnCount };
+  return [
+    ...existing.bandedRangeIds.map((bandedRangeId) => ({ deleteBanding: { bandedRangeId } })),
+    ...existing.protectedRangeIds.map((protectedRangeId) => ({
+      deleteProtectedRange: { protectedRangeId }
+    })),
+    ...existing.metadataIds.map((metadataId) => ({
+      deleteDeveloperMetadata: { dataFilter: { developerMetadataLookup: { metadataId } } }
+    })),
+    {
+      updateSheetProperties: {
+        properties: { sheetId, gridProperties: { frozenRowCount: 1 } },
+        fields: "gridProperties.frozenRowCount"
+      }
+    },
+    {
+      repeatCell: {
+        range: { ...all, startRowIndex: 0, endRowIndex: 1 },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: hex(HEADER_BG),
+            textFormat: { foregroundColor: hex("#ffffff"), bold: true, fontSize: 10 },
+            verticalAlignment: "MIDDLE",
+            wrapStrategy: "WRAP",
+            padding: { top: 6, bottom: 6, left: 6, right: 6 }
+          }
+        },
+        fields: "userEnteredFormat(backgroundColor,textFormat,verticalAlignment,wrapStrategy,padding)"
+      }
+    },
+    {
+      updateDimensionProperties: {
+        range: { sheetId, dimension: "ROWS", startIndex: 0, endIndex: 1 },
+        properties: { pixelSize: 36 },
+        fields: "pixelSize"
+      }
+    },
+    {
+      repeatCell: {
+        range: { ...all, startRowIndex: 1 },
+        cell: { userEnteredFormat: { verticalAlignment: "MIDDLE", wrapStrategy: "CLIP" } },
+        fields: "userEnteredFormat(verticalAlignment,wrapStrategy)"
+      }
+    },
+    ...(look.widths ?? []).map((pixelSize, i) => ({
+      updateDimensionProperties: {
+        range: { sheetId, dimension: "COLUMNS", startIndex: i, endIndex: i + 1 },
+        properties: { pixelSize },
+        fields: "pixelSize"
+      }
+    })),
+    ...(look.hidden ?? []).map((i) => ({
+      updateDimensionProperties: {
+        range: { sheetId, dimension: "COLUMNS", startIndex: i, endIndex: i + 1 },
+        properties: { hiddenByUser: true },
+        fields: "hiddenByUser"
+      }
+    })),
+    {
+      addBanding: {
+        bandedRange: {
+          range: { ...all, startRowIndex: 1 },
+          rowProperties: { firstBandColor: hex("#ffffff"), secondBandColor: hex("#f6f7f9") }
+        }
+      }
+    },
+    {
+      addProtectedRange: {
+        protectedRange: { range: { sheetId }, description: TAB_PROTECTION, warningOnly: true }
+      }
+    },
+    {
+      createDeveloperMetadata: {
+        developerMetadata: {
+          metadataKey: TAB_FORMAT_KEY,
+          metadataValue: TAB_FORMAT_VERSION,
+          location: { sheetId },
+          visibility: "DOCUMENT"
+        }
+      }
+    }
+  ];
+}
+
 // server/sheets.ts
 var SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 var TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -60706,18 +60800,21 @@ function serviceAccountJwt(sa, nowSec) {
 var TOKEN_URL2 = "https://oauth2.googleapis.com/token";
 var API = "https://sheets.googleapis.com/v4/spreadsheets";
 var SheetTab = class {
-  constructor(config, title) {
+  constructor(config, title, look) {
     this.config = config;
     this.title = title;
+    this.look = look;
     this.fetchImpl = config.fetch ?? fetch;
     this.now = config.now ?? (() => /* @__PURE__ */ new Date());
   }
   config;
   title;
+  look;
   fetchImpl;
   now;
   token = null;
   tabReady = false;
+  formatChecked = false;
   async accessToken() {
     const nowSec = Math.floor(this.now().getTime() / 1e3);
     if (this.token && this.token.exp - 60 > nowSec) return this.token.value;
@@ -60778,6 +60875,43 @@ var SheetTab = class {
       method: "PUT",
       body: { values: rows }
     });
+    await this.ensureFormat(rows[0]?.length ?? 1);
+  }
+  /**
+   * D-46: the tab's look, once (developer metadata). Never fails a save: a formatting error is
+   * swallowed - the data is already written.
+   */
+  async ensureFormat(columnCount) {
+    if (!this.look || this.formatChecked) return;
+    try {
+      const meta = await this.api(
+        "?fields=sheets(properties(sheetId,title),developerMetadata(metadataId,metadataKey,metadataValue),bandedRanges(bandedRangeId),protectedRanges(protectedRangeId,description))"
+      );
+      const own = meta.sheets?.find((s) => s.properties.title === this.title);
+      if (!own) return;
+      const marks = (own.developerMetadata ?? []).filter((m) => m.metadataKey === TAB_FORMAT_KEY);
+      if (marks.some((m) => m.metadataValue === TAB_FORMAT_VERSION)) {
+        this.formatChecked = true;
+        return;
+      }
+      await this.api(":batchUpdate", {
+        method: "POST",
+        body: {
+          requests: tabFormatRequests(
+            own.properties.sheetId,
+            columnCount,
+            {
+              bandedRangeIds: (own.bandedRanges ?? []).map((b) => b.bandedRangeId),
+              protectedRangeIds: (own.protectedRanges ?? []).filter((p) => p.description === TAB_PROTECTION).map((p) => p.protectedRangeId),
+              metadataIds: marks.map((m) => m.metadataId)
+            },
+            this.look
+          )
+        }
+      });
+      this.formatChecked = true;
+    } catch {
+    }
   }
 };
 
@@ -60872,7 +61006,10 @@ function rowsToStaff(rows) {
 var GoogleSheetsStaffStore = class {
   tab;
   constructor(config) {
-    this.tab = new SheetTab(config, STAFF_TAB);
+    this.tab = new SheetTab(config, STAFF_TAB, {
+      widths: [120, 180, 90, 120, 70, 140, 220, 140],
+      hidden: [3]
+    });
   }
   async load() {
     return rowsToStaff(await this.tab.read());
