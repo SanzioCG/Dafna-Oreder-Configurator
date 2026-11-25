@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Dafna">
+  <!-- D-45: the site icon from the DAFNA logo: the D with its blue stem -->
+  <rect width="64" height="64" rx="14" fill="#191D24"/>
+  <rect x="14" y="13" width="10" height="38" fill="#009FE2"/>
+  <path d="M24 13H32C44 13 51 20.4 51 32C51 43.6 44 51 32 51H24V42H31.5C38 42 41.5 38.4 41.5 32C41.5 25.6 38 22 31.5 22H24Z" fill="#FFFFFF"/>
+</svg>
