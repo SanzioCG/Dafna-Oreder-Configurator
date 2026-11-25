@@ -4,6 +4,7 @@ import {
   ROOT_FOLDER,
   defaultGroup,
   erpFromEnv,
+  erpKindCounts,
   handleErp,
   resetKindTree,
   type ErpConfig,
@@ -234,5 +235,43 @@ describe('D-32 materials / hardware groups of the 1C kinds', () => {
     expect(await search({ group: 'hardware', groups: { [YECHIM]: 'other' } })).toEqual([]);
     // no group: the plain search
     expect((await search({})).map((i) => i.article)).toEqual(['L1', 'H1', 'X1']);
+  });
+
+  it('D-50: items per kind, the sub-kinds counted in their folders; read once, then cached', async () => {
+    resetKindTree();
+    const TOP = '55555555-5555-5555-5555-555555555555';
+    const EGGER = '66666666-6666-6666-6666-666666666666';
+    const KRONO = '77777777-7777-7777-7777-777777777777';
+    const urls: string[] = [];
+    const fetchImpl = (async (input: RequestInfo | URL) => {
+      const url = decodeURIComponent(String(input));
+      urls.push(url);
+      const value = url.includes('Catalog_ВидыНоменклатуры')
+        ? [
+            { Ref_Key: TOP, Description: 'ЛДСП', Parent_Key: ROOT_FOLDER },
+            { Ref_Key: EGGER, Description: 'Эггер 16 мм', Parent_Key: TOP },
+            { Ref_Key: KRONO, Description: 'Кроноспан', Parent_Key: TOP },
+          ]
+        : [
+            { ВидНоменклатуры_Key: EGGER },
+            { ВидНоменклатуры_Key: EGGER },
+            { ВидНоменклатуры_Key: KRONO },
+            { ВидНоменклатуры_Key: TOP },
+            { ВидНоменклатуры_Key: ROOT_FOLDER },
+          ];
+      return new Response(JSON.stringify({ value }));
+    }) as typeof fetch;
+    const c = cfg(fetchImpl);
+    expect(await erpKindCounts(c, 1000)).toEqual({ [TOP]: 4, [EGGER]: 2, [KRONO]: 1 });
+    // only the kind of each item is read (no names, no prices), folders and deleted left out
+    const items = urls.find((u) => u.includes('Catalog_Номенклатура'))!;
+    expect(items).toContain('$select=ВидНоменклатуры_Key');
+    expect(items).toContain('IsFolder eq false and DeletionMark eq false');
+    const n = urls.length;
+    await erpKindCounts(c, 2000);
+    expect(urls.length).toBe(n);
+    // through the API, for signed-in staff
+    const r = await handleErp(req({ action: 'counts' }), deps(c));
+    expect(((await r.json()) as { counts: Record<string, number> }).counts[TOP]).toBe(4);
   });
 });

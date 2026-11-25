@@ -211,6 +211,8 @@ export function ErpCatalogSection({
   const [children, setChildren] = useState<Record<string, ErpKind[]>>({});
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(['g:material']));
   const [loadingKind, setLoadingKind] = useState<string | null>(null);
+  /** D-50: items per kind (sub-kinds included); null until 1C answers (they come after the tree) */
+  const [counts, setCounts] = useState<Record<string, number> | null>(null);
   /** the kind whose items are shown (or a search) */
   const [selected, setSelected] = useState<{
     kind: ErpKind | null;
@@ -242,8 +244,27 @@ export function ErpCatalogSection({
 
   useEffect(() => {
     void loadKinds('');
+    // D-50: the numbers next to the folders (a slower read; the tree does not wait for it)
+    let live = true;
+    void api?.counts().then((r) => {
+      if (live && r.ok) setCounts(r.value);
+    });
+    return () => {
+      live = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api]);
+
+  /** D-50: a kind's items, or a group's (the sum of its top kinds) */
+  const countOf = (n: Node): number | null => {
+    if (!counts) return null;
+    if (n.kind) return counts[n.kind.key] ?? 0;
+    if (n.group)
+      return (children[''] ?? [])
+        .filter((k) => groupOfKind(k) === n.group)
+        .reduce((sum, k) => sum + (counts[k.key] ?? 0), 0);
+    return null;
+  };
 
   // the items of the selected kind (a search fills the rows itself)
   useEffect(() => {
@@ -427,6 +448,11 @@ export function ErpCatalogSection({
             <Folder className="mgr-icon" aria-hidden />
           )}
           <span className="mgr-tree-name">{n.name}</span>
+          {countOf(n) !== null && (
+            <span className="mgr-tree-count" data-testid={`erp-count-${n.name}`}>
+              {countOf(n)}
+            </span>
+          )}
         </button>
         {isOpen && (
           <ul>

@@ -10,6 +10,7 @@ import type { RateLimiter } from './rateLimit';
  *
  *   POST /api/erp (x-manager-pin) {action: 'search', q}         -> {items: ErpItem[]}
  *   POST /api/erp (x-manager-pin) {action: 'prices', articles}  -> {prices: {article: ErpPrice}}
+ *   POST /api/erp {action: 'counts'}  -> {counts: {kindKey: items incl. sub-kinds}} (D-50)
  *
  * Env: EMAN_1C_TOKEN (secret, Vercel only), EMAN_1C_URL (optional, default the eman_materials
  * OData root), EMAN_1C_PRICE_TYPE (optional, the price type GUID; default Dafna's retail type).
@@ -203,12 +204,58 @@ export async function kindTree(cfg: ErpConfig, now = Date.now()) {
       }
       return { top: top ? { key: top.key, name: top.name } : null, path: names.join(' › ') };
     },
+    /** D-50: the folder a kind is in ('' at the top) */
+    parentOf(key: string): string {
+      return nodes.get(key)?.parent ?? '';
+    },
   };
 }
 
 /** test hook */
 export function resetKindTree() {
   treeCache = null;
+  countCache = null;
+}
+
+/**
+ * D-50: how many items each kind holds, its sub-kinds included (the numbers next to the folders
+ * of "1C katalogi"). One read of the kind of every item (no names, no prices), page by page,
+ * kept per warm instance for 10 minutes. Read only: nothing is written to 1C.
+ */
+let countCache: { at: number; url: string; counts: Record<string, number> } | null = null;
+const COUNT_PAGE = 5000;
+
+export async function erpKindCounts(
+  cfg: ErpConfig,
+  now = Date.now(),
+): Promise<Record<string, number>> {
+  if (countCache && countCache.url === cfg.url && now - countCache.at <= 10 * 60_000)
+    return countCache.counts;
+  const tree = await kindTree(cfg, now);
+  const own = new Map<string, number>();
+  // at most 40 pages (200 000 items)
+  for (let page = 0; page < 40; page++) {
+    const rows = await odata<{ ВидНоменклатуры_Key?: string }>(cfg, 'Catalog_Номенклатура', {
+      $filter: 'IsFolder eq false and DeletionMark eq false',
+      $select: 'ВидНоменклатуры_Key',
+      $orderby: 'Ref_Key',
+      $top: String(COUNT_PAGE),
+      $skip: String(page * COUNT_PAGE),
+    });
+    for (const r of rows) {
+      const k = r.ВидНоменклатуры_Key;
+      if (k && k !== ROOT_FOLDER) own.set(k, (own.get(k) ?? 0) + 1);
+    }
+    if (rows.length < COUNT_PAGE) break;
+  }
+  const counts: Record<string, number> = {};
+  for (const [kind, n] of own)
+    for (let k = kind, depth = 0; k && k !== ROOT_FOLDER && depth < 20; depth++) {
+      counts[k] = (counts[k] ?? 0) + n;
+      k = tree.parentOf(k);
+    }
+  countCache = { at: now, url: cfg.url, counts };
+  return counts;
 }
 
 const chunks = <T>(xs: T[], n: number) =>
@@ -469,6 +516,9 @@ export async function handleErp(req: Request, deps: ErpDeps): Promise<Response> 
       );
       if (!url) return json(404, { error: { code: 'no_picture' } });
       return json(200, { url });
+    }
+    if (body.action === 'counts') {
+      return json(200, { counts: await erpKindCounts(deps.erp) });
     }
     if (body.action === 'kinds') {
       const parent = typeof body.parent === 'string' ? body.parent : ROOT_FOLDER;

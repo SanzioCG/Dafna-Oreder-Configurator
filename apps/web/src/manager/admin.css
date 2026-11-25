@@ -1610,3 +1610,14 @@
   font-size: 12px;
   line-height: 18px;
 }
+/* D-50: items per folder in the 1C tree */
+.mgr-tree-count {
+  margin-left: auto;
+  padding-left: 8px;
+  color: var(--adm-text-3);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-tree-item.active .mgr-tree-count {
+  color: inherit;
+}

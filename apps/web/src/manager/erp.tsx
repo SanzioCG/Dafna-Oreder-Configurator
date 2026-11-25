@@ -77,6 +77,8 @@ export interface ErpApi {
   copyPicture: (article: string) => Promise<ErpOutcome<string>>;
   /** D-31: the kinds under a kind folder ('' = the top) */
   kinds: (parent: string) => Promise<ErpOutcome<ErpKindRow[]>>;
+  /** D-50: items per kind, sub-kinds included (the numbers next to the folders) */
+  counts: () => Promise<ErpOutcome<Record<string, number>>>;
   /** D-31: a page of the items of a kind, with price and stock */
   items: (
     kind: string,
@@ -120,6 +122,8 @@ export function erpApi(
         (d) => d.kinds as ErpKindRow[] | undefined,
         fetchImpl,
       ),
+    counts: () =>
+      post({ action: 'counts' }, (d) => d.counts as Record<string, number> | undefined, fetchImpl),
     items: (kind, skip) =>
       post(
         { action: 'items', kind, skip },

@@ -61314,8 +61314,42 @@ async function kindTree(cfg, now = Date.now()) {
         k = node.parent;
       }
       return { top: top ? { key: top.key, name: top.name } : null, path: names.join(" \u203A ") };
+    },
+    /** D-50: the folder a kind is in ('' at the top) */
+    parentOf(key) {
+      return nodes.get(key)?.parent ?? "";
     }
   };
+}
+var countCache = null;
+var COUNT_PAGE = 5e3;
+async function erpKindCounts(cfg, now = Date.now()) {
+  if (countCache && countCache.url === cfg.url && now - countCache.at <= 10 * 6e4)
+    return countCache.counts;
+  const tree = await kindTree(cfg, now);
+  const own = /* @__PURE__ */ new Map();
+  for (let page = 0; page < 40; page++) {
+    const rows = await odata(cfg, "Catalog_\u041D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u0430", {
+      $filter: "IsFolder eq false and DeletionMark eq false",
+      $select: "\u0412\u0438\u0434\u041D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u044B_Key",
+      $orderby: "Ref_Key",
+      $top: String(COUNT_PAGE),
+      $skip: String(page * COUNT_PAGE)
+    });
+    for (const r of rows) {
+      const k = r.\u0412\u0438\u0434\u041D\u043E\u043C\u0435\u043D\u043A\u043B\u0430\u0442\u0443\u0440\u044B_Key;
+      if (k && k !== ROOT_FOLDER) own.set(k, (own.get(k) ?? 0) + 1);
+    }
+    if (rows.length < COUNT_PAGE) break;
+  }
+  const counts = {};
+  for (const [kind, n3] of own)
+    for (let k = kind, depth = 0; k && k !== ROOT_FOLDER && depth < 20; depth++) {
+      counts[k] = (counts[k] ?? 0) + n3;
+      k = tree.parentOf(k);
+    }
+  countCache = { at: now, url: cfg.url, counts };
+  return counts;
 }
 var chunks = (xs, n3) => Array.from({ length: Math.ceil(xs.length / n3) }, (_, i) => xs.slice(i * n3, i * n3 + n3));
 async function erpPrices(cfg, articles) {
@@ -61505,6 +61539,9 @@ async function handleErp(req, deps) {
       );
       if (!url) return json(404, { error: { code: "no_picture" } });
       return json(200, { url });
+    }
+    if (body.action === "counts") {
+      return json(200, { counts: await erpKindCounts(deps.erp) });
     }
     if (body.action === "kinds") {
       const parent = typeof body.parent === "string" ? body.parent : ROOT_FOLDER;
