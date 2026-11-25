@@ -3093,3 +3093,25 @@ p {
   font-size: var(--fs-sm);
   font-weight: var(--fw-bold);
 }
+
+/* D-44: the website's "Arizangiz yuborildi": the PDF as a link; on a phone no QR (it cannot scan
+   its own screen); in the review on a phone the 3D buttons give way to the action buttons */
+.submitted-pdf {
+  text-decoration: none;
+}
+.submitted-item .submitted-pdf {
+  margin-top: var(--space-2);
+}
+@media (max-width: 768px) {
+  .app.site .submitted-qr,
+  .app.site .submitted-item .qr-code {
+    display: none;
+  }
+  .app.site.presenting .viewer-actions {
+    display: none;
+  }
+}
+/* D-44: once the review buttons are there, "O'tkazib yuborish" has nothing left to skip */
+.app.site .viewer:has(.present-actions) .present-skip {
+  display: none;
+}

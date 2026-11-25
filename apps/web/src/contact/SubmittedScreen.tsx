@@ -21,6 +21,12 @@ interface Props {
    */
   items?: { id: string; name: string; line: string; quantity: number; assemblyPath?: string }[];
   onFinish: () => void;
+  /**
+   * D-44: the website - no countdown (nobody is reset at home), "Yangi loyiha boshlash", and the
+   * assembly instructions as a link (a phone cannot scan its own screen; a computer also shows
+   * the QR for the phone)
+   */
+  site?: boolean;
 }
 
 /**
@@ -35,6 +41,7 @@ export function SubmittedScreen({
   assemblyPath,
   items = [],
   onFinish,
+  site = false,
 }: Props) {
   const multi = items.length > 1;
   const { t } = useI18n();
@@ -45,6 +52,7 @@ export function SubmittedScreen({
 
   useEffect(() => {
     buttonRef.current?.focus();
+    if (site) return;
     const started = Date.now();
     const timer = window.setInterval(() => {
       const remaining = SUBMITTED_COUNTDOWN_S - Math.floor((Date.now() - started) / 1000);
@@ -55,7 +63,18 @@ export function SubmittedScreen({
       }
     }, 250);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [site]);
+  const pdfLink = (path: string) => (
+    <a
+      className="btn btn-secondary btn-wide submitted-pdf"
+      href={new URL(path, window.location.origin).href}
+      target="_blank"
+      rel="noreferrer"
+      data-testid="submitted-pdf"
+    >
+      {t('submitted.openPdf')}
+    </a>
+  );
 
   const colors = summary.colorsLine;
 
@@ -98,6 +117,7 @@ export function SubmittedScreen({
                   <span className="muted">
                     {it.id} · {it.line}
                   </span>
+                  {site && it.assemblyPath && pdfLink(it.assemblyPath)}
                 </p>
               </li>
             ))}
@@ -120,6 +140,7 @@ export function SubmittedScreen({
             </p>
           </div>
         )}
+        {!multi && site && assemblyPath && pdfLink(assemblyPath)}
         <Button
           ref={buttonRef}
           variant="primary"
@@ -128,11 +149,17 @@ export function SubmittedScreen({
           onClick={onFinish}
           data-testid="submitted-finish"
         >
-          {t('submitted.finish')}
+          {t(site ? 'submitted.newProject' : 'submitted.finish')}
         </Button>
-        <p className="muted submitted-countdown" aria-live="off" data-testid="submitted-countdown">
-          {t('submitted.countdown', { s: left })}
-        </p>
+        {!site && (
+          <p
+            className="muted submitted-countdown"
+            aria-live="off"
+            data-testid="submitted-countdown"
+          >
+            {t('submitted.countdown', { s: left })}
+          </p>
+        )}
       </div>
     </div>
   );

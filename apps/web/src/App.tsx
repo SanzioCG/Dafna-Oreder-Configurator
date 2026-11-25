@@ -338,6 +338,7 @@ function Configurator({
             {...(submission.items ? { items: submission.items } : {})}
             summary={summarizeParams(config.params, lang, config.template)}
             onFinish={onFinish}
+            site={!kiosk}
           />
         )}
         {mode === 'customer' && inPresentation && kiosk && (

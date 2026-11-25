@@ -95,6 +95,8 @@ export const uz = {
   'site.call': "Qo'ng'iroq qilish",
   'site.telegram': "Telegram'da yozish",
   'nav.nextLabel': 'Keyingi: {label}',
+  'submitted.openPdf': "Yig'ish ko'rsatmasini ochish (PDF)",
+  'submitted.newProject': 'Yangi loyiha boshlash',
   'nav.back': 'Orqaga',
   'nav.readyReview': "Tayyor — ko'rib chiqish",
   'consultant.call': 'Konsultant chaqirish',

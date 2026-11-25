@@ -99,6 +99,8 @@ export const ru: Messages = {
   'site.call': 'Позвонить',
   'site.telegram': 'Написать в Telegram',
   'nav.nextLabel': 'Далее: {label}',
+  'submitted.openPdf': 'Открыть инструкцию по сборке (PDF)',
+  'submitted.newProject': 'Начать новый проект',
   'nav.back': 'Назад',
   'nav.next': 'Далее',
   'nav.nextSoon': 'Следующие шаги скоро',

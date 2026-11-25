@@ -65,3 +65,31 @@ describe('D-43 the website (konfigurator.dafna.uz) vs a shop kiosk', () => {
     expect(document.documentElement.dataset.theme).toBe('dark');
   });
 });
+
+describe('D-44 "Arizangiz yuborildi" on the website', () => {
+  it('no countdown, "Yangi loyiha boshlash", the assembly PDF as a link', async () => {
+    const { SubmittedScreen } = await import('./contact/SubmittedScreen');
+    const { I18nProvider } = await import('./i18n/I18n');
+    const onFinish = vi.fn();
+    vi.useFakeTimers();
+    render(
+      <I18nProvider initial="uz">
+        <SubmittedScreen
+          id="DFN-261125-AB12"
+          summary={{ sizeCm: '100 × 210 × 60 sm', colorsLine: 'Oq' } as never}
+          assemblyPath="/api/assembly?id=DFN-261125-AB12&t=x"
+          onFinish={onFinish}
+          site
+        />
+      </I18nProvider>,
+    );
+    vi.advanceTimersByTime(120_000);
+    vi.useRealTimers();
+    expect(onFinish).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('submitted-countdown')).toBeNull();
+    expect(screen.getByTestId('submitted-finish').textContent).toBe(uz['submitted.newProject']);
+    const pdf = screen.getByTestId('submitted-pdf') as HTMLAnchorElement;
+    expect(pdf.href).toContain('/api/assembly?id=DFN-261125-AB12');
+    expect(pdf.target).toBe('_blank');
+  });
+});
