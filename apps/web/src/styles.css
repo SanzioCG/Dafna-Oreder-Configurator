@@ -2674,9 +2674,10 @@ p {
     border-radius: 1.5rem 1.5rem 0 0;
     padding: var(--space-5) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom));
   }
+  /* D-49: the 3D takes ~40 % of the phone's height (260 px on a small phone, 384 px at most) */
   .app.site .viewer {
     flex: none;
-    height: 16.25rem;
+    height: clamp(16.25rem, 40dvh, 24rem);
   }
   .app.site.presenting .viewer {
     flex: 1;
@@ -3114,4 +3115,95 @@ p {
 /* D-44: once the review buttons are there, "O'tkazib yuborish" has nothing left to skip */
 .app.site .viewer:has(.present-actions) .present-skip {
   display: none;
+}
+
+/* D-49: the mechanism menu on a phone is a bottom sheet (Figma "Mobile / 5b Mexanizm tanlash"):
+   it rises from the bottom over a dimmed page, a handle on top, "Yopish" as a pill, one model a row */
+.hw-close-label {
+  display: none;
+}
+@keyframes hw-sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+@media (max-width: 768px) {
+  .hw-backdrop {
+    padding: 0;
+    place-items: end stretch;
+    background: rgb(0 0 0 / 0.4);
+  }
+  .hw-sheet {
+    width: 100%;
+    max-height: calc(100dvh - 4.5rem);
+    border-radius: 1.5rem 1.5rem 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    animation: hw-sheet-up 0.22s ease-out;
+  }
+  .hw-sheet::before {
+    content: '';
+    flex: none;
+    align-self: center;
+    width: 2.5rem;
+    height: 4px;
+    margin-top: var(--space-2);
+    border-radius: 2px;
+    background: color-mix(in srgb, var(--ink) 25%, transparent);
+  }
+  .hw-sheet-head {
+    align-items: flex-start;
+    padding: var(--space-3) var(--space-4) var(--space-3);
+  }
+  .hw-sheet-head h2 {
+    font-size: var(--fs-xl);
+  }
+  .hw-sheet-close {
+    flex: none;
+    min-height: 2.75rem;
+    padding: 0 var(--space-4);
+  }
+  .hw-sheet-close svg {
+    display: none;
+  }
+  .hw-close-label {
+    display: inline;
+  }
+  .hw-brands {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0 var(--space-4) var(--space-3);
+  }
+  .hw-chip {
+    flex: none;
+  }
+  .hw-sheet-body {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    padding: 0 var(--space-4) var(--space-5);
+  }
+  .hw-brand-name {
+    font-size: var(--fs-lg);
+  }
+  .hw-grid {
+    grid-template-columns: 1fr;
+  }
+  .hw-model {
+    align-items: center;
+    text-align: center;
+  }
+  .hw-model .mech-photo {
+    height: 9rem;
+  }
+  .hw-model-tags {
+    justify-content: center;
+  }
+}
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .hw-sheet {
+    animation: none;
+  }
 }

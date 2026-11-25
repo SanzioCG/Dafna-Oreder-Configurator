@@ -19,6 +19,7 @@ export interface HardwareChoice {
  * mechanism grouped by brand (brand chips filter the list), each with a big picture, its model,
  * a one-line hint and a soft-close mark. Picking a model selects it and closes the sheet.
  * Closes with the X button, the backdrop or Escape; nothing changes until a model is picked.
+ * D-49: on a phone it is a bottom sheet (a handle, rounded top, one model per row).
  */
 export function HardwarePicker({
   kind,
@@ -79,6 +80,10 @@ export function HardwarePicker({
             onClick={onClose}
           >
             <CloseIcon />
+            {/* D-49: on a phone the sheet closes with a "Yopish" pill (Figma "5b Mexanizm tanlash") */}
+            <span className="hw-close-label" aria-hidden="true">
+              {t('hw.close')}
+            </span>
           </button>
         </header>
         {groups.length > 1 && (
