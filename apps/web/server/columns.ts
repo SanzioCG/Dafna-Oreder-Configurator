@@ -36,6 +36,8 @@ export const COLUMNS: { key: keyof LeadRecord; header: string }[] = [
   { key: 'quantity', header: 'Soni' },
   // D-47: who changed the status on the manager page (appended: existing sheets keep theirs)
   { key: 'manager', header: 'Menejer' },
+  // D-54: who the application is given to (an operator's login; appended)
+  { key: 'assignee', header: "Mas'ul" },
 ];
 
 export const HEADERS = COLUMNS.map((c) => c.header);

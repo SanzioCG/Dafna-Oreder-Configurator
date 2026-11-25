@@ -5,6 +5,7 @@ import { CachedCatalog, GoogleSheetsCatalogStore } from './catalog';
 import { GoogleSheetsPriceStore } from './priceSheet';
 import { CachedPrices, tashkentMinute } from './prices';
 import {
+  assignees,
   CachedStaff,
   GoogleSheetsStaffStore,
   resendMailer,
@@ -155,3 +156,6 @@ export function authFromEnv(env: Env): AuthDeps {
  * the password is still the admin's temporary one)
  */
 export const authOfEnv = (env: Env) => (req: Request) => workingUser(req, authFromEnv(env));
+
+/** D-54: who an application can be given to (the "Xodimlar" tab, cached like the sign-in) */
+export const peopleOfEnv = (env: Env) => async () => assignees(await authFromEnv(env).staff.get());

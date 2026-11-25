@@ -34,6 +34,7 @@ const lead = (templateId: string, over: Partial<LeadRecord> = {}): LeadRecord =>
   orderItem: '',
   quantity: 1,
   manager: '',
+  assignee: '',
   ...over,
 });
 

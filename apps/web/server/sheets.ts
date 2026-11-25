@@ -201,7 +201,7 @@ export class GoogleSheetsStore implements LeadStore {
   /** D-47: the manager page writes the status / note and who changed them */
   async updateByManager(
     ref: number,
-    patch: { status?: string; managerNote?: string; manager: string },
+    patch: { status?: string; managerNote?: string; assignee?: string; manager: string },
   ): Promise<void> {
     const at = (key: keyof LeadRecord) =>
       `${SHEET_TITLE}!${columnLetter(COLUMNS.findIndex((c) => c.key === key))}${ref}`;
@@ -209,6 +209,8 @@ export class GoogleSheetsStore implements LeadStore {
     if (patch.status !== undefined) data.push({ range: at('status'), values: [[patch.status]] });
     if (patch.managerNote !== undefined)
       data.push({ range: at('managerNote'), values: [[patch.managerNote]] });
+    if (patch.assignee !== undefined)
+      data.push({ range: at('assignee'), values: [[patch.assignee]] });
     await this.api(`/values:batchUpdate`, {
       method: 'POST',
       body: { valueInputOption: 'RAW', data },

@@ -1,4 +1,5 @@
 import type { AuthOf } from './prices';
+import type { StaffUser } from './staffAuth';
 
 /**
  * Tests only (D-38): a stand-in for the session cookie - a request carrying one of `keys` in
@@ -11,3 +12,9 @@ export const headerAuth =
     const k = req.headers.get('x-test-staff');
     return k && keys.includes(k) ? { login: 'test', name: 'Test', role: 'manager' } : null;
   };
+
+/** D-54: tests of the roles - the x-test-staff header names one of `users` */
+export const usersAuth =
+  (users: Record<string, StaffUser>): AuthOf =>
+  async (req) =>
+    users[req.headers.get('x-test-staff') ?? ''] ?? null;

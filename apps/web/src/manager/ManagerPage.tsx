@@ -5,7 +5,15 @@ import {
   type PriceList,
 } from '@dafna/engine';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { authError, getMe, signIn, signOut, type StaffUser } from '../auth/staffSession';
+import {
+  ROLE_LABEL,
+  authError,
+  getMe,
+  signIn,
+  signOut,
+  type Role,
+  type StaffUser,
+} from '../auth/staffSession';
 import {
   ClipboardList,
   Database,
@@ -49,6 +57,8 @@ export type { CatalogDraft } from './model';
  * - Xizmatlar: work and services per m² of board, per metre of edge band, per product or %;
  * - Foyda va narx: the overall profit % and the resulting price of each product.
  * The kiosk price is computed from these on the server; customers only see the final number.
+ * D-54 roles: the admin sees everything; a manager everything but "Xodimlar"; an operator only
+ * "Bosh sahifa" and "Buyurtmalar" with the applications given to them (no catalogue, no prices).
  * Nothing in the catalog is ever deleted (only hidden), so stored applications regenerate.
  * Board prices will come from Dafna's 1C (by the 1C code); until then they are typed here.
  * An internal page for Dafna's office: Uzbek only.
@@ -61,9 +71,11 @@ interface NavItem {
   id: Section;
   label: string;
   icon: LucideIcon;
-  /** D-38: the admin only */
-  adminOnly?: boolean;
+  /** D-38 / D-54: who sees it (unset = every role) */
+  roles?: Role[];
 }
+/** D-54: the catalogue and prices are the office's, not an operator's */
+const OFFICE: Role[] = ['admin', 'manager'];
 /** D-42: the admin panel's menu (Figma "Admin"): D-47 orders, catalogue, then settings */
 const NAV: { group: string; items: NavItem[] }[] = [
   {
@@ -76,17 +88,17 @@ const NAV: { group: string; items: NavItem[] }[] = [
   {
     group: 'Katalog',
     items: [
-      { id: 'erp', label: '1C katalogi', icon: Database },
-      { id: 'materials', label: 'Materiallar', icon: Layers },
-      { id: 'hardware', label: 'Furnitura', icon: Wrench },
-      { id: 'services', label: 'Xizmatlar', icon: Scissors },
+      { id: 'erp', label: '1C katalogi', icon: Database, roles: OFFICE },
+      { id: 'materials', label: 'Materiallar', icon: Layers, roles: OFFICE },
+      { id: 'hardware', label: 'Furnitura', icon: Wrench, roles: OFFICE },
+      { id: 'services', label: 'Xizmatlar', icon: Scissors, roles: OFFICE },
     ],
   },
   {
     group: 'Sozlamalar',
     items: [
-      { id: 'profit', label: 'Foyda va narx', icon: Percent },
-      { id: 'staff', label: 'Xodimlar', icon: Users, adminOnly: true },
+      { id: 'profit', label: 'Foyda va narx', icon: Percent, roles: OFFICE },
+      { id: 'staff', label: 'Xodimlar', icon: Users, roles: ['admin'] },
     ],
   },
 ];
@@ -152,6 +164,11 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const load = async (who: StaffUser) => {
     if (who.mustChange) return setPending(who);
     setPending(null);
+    // D-54: an operator works only on their applications - no price list, no catalogue
+    if (who.role === 'operator') {
+      setSection('home');
+      return setUser(who);
+    }
     const r = await managerLoad(fetchImpl);
     if (!r.ok) return setError(errorText(r));
     takeCatalog(r.catalog ?? EMPTY_EXTENSION);
@@ -276,7 +293,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
         fetchImpl={fetchImpl}
       />
     );
-  if (!user || !list) {
+  if (!user || (!list && user.role !== 'operator')) {
     if (checking) return <main className="mgr-page mgr-login" aria-busy="true" />;
     if (forgot) return <ForgotForm onBack={() => setForgot(false)} fetchImpl={fetchImpl} />;
     return (
@@ -328,7 +345,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
 
   const status = dirty
     ? "Saqlanmagan o'zgarishlar bor"
-    : list.demo || !updatedAt
+    : !list || list.demo || !updatedAt
       ? "Narxlar hali saqlanmagan: saytda sinov narxlari ko'rinmoqda"
       : `Oxirgi saqlash: ${updatedAt}`;
 
@@ -341,12 +358,15 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
             <span>Admin</span>
           </div>
           <nav aria-label="Bo'limlar">
-            {NAV.map((g) => (
-              <div className="mgr-nav-group" key={g.group}>
-                <p className="mgr-nav-title">{g.group}</p>
-                {g.items
-                  .filter((i) => !i.adminOnly || user.role === 'admin')
-                  .map(({ id, label, icon: Icon }) => (
+            {NAV.map((g) => ({
+              ...g,
+              items: g.items.filter((i) => !i.roles || i.roles.includes(user.role)),
+            }))
+              .filter((g) => g.items.length > 0)
+              .map((g) => (
+                <div className="mgr-nav-group" key={g.group}>
+                  <p className="mgr-nav-title">{g.group}</p>
+                  {g.items.map(({ id, label, icon: Icon }) => (
                     <button
                       key={id}
                       type="button"
@@ -359,8 +379,8 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
                       <span>{label}</span>
                     </button>
                   ))}
-              </div>
-            ))}
+                </div>
+              ))}
           </nav>
           <div className="mgr-user" data-testid="mgr-user">
             <div className="mgr-user-who">
@@ -369,7 +389,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               </span>
               <span>
                 <strong>{user.name}</strong>
-                <small>{user.role === 'admin' ? 'Admin' : 'Menejer'}</small>
+                <small>{ROLE_LABEL[user.role]}</small>
               </span>
             </div>
             {user.login !== 'admin' && (
@@ -402,7 +422,7 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
               <strong>{LABEL[section]}</strong>
             </nav>
             {/* D-47: the catalogue's buttons (an unsaved change still shows on the other pages) */}
-            {(!OWN_SAVE.includes(section) || dirty) && (
+            {list && (!OWN_SAVE.includes(section) || dirty) && (
               <>
                 <p className={dirty ? 'mgr-status dirty' : 'mgr-status'} data-testid="mgr-updated">
                   {status}
@@ -453,11 +473,12 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
             {section === 'orders' && (
               <OrdersSection
                 fetchImpl={fetchImpl}
+                role={user.role}
                 openId={openOrder}
                 onOpened={() => setOpenOrder(null)}
               />
             )}
-            {section === 'materials' && (
+            {section === 'materials' && list && (
               <MaterialsSection
                 list={list}
                 edit={edit}
@@ -467,10 +488,10 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
                 onFromErp={() => setSection('erp')}
               />
             )}
-            {section === 'erp' && (
+            {section === 'erp' && list && (
               <ErpCatalogSection list={list} draft={draft} setDraft={setDraft} />
             )}
-            {section === 'hardware' && (
+            {section === 'hardware' && list && (
               <HardwareSection
                 list={list}
                 edit={edit}
@@ -479,8 +500,8 @@ export function ManagerPage({ fetchImpl }: { fetchImpl?: typeof fetch }) {
                 uploadTexture={(id, image) => managerUploadTexture(id, image, fetchImpl)}
               />
             )}
-            {section === 'services' && <ServicesSection list={list} edit={edit} />}
-            {section === 'profit' && <ProfitSection list={list} edit={edit} />}
+            {section === 'services' && list && <ServicesSection list={list} edit={edit} />}
+            {section === 'profit' && list && <ProfitSection list={list} edit={edit} />}
             {section === 'staff' && user.role === 'admin' && <StaffSection fetchImpl={fetchImpl} />}
           </main>
         </div>

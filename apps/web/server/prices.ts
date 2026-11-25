@@ -13,7 +13,7 @@ import {
 } from '@dafna/engine';
 import { mergeCatalog, type CachedCatalog, type CatalogStore, type ErpLink } from './catalog';
 import type { RateLimiter } from './rateLimit';
-import type { StaffUser } from './staffAuth';
+import { isOperator, type StaffUser } from './staffAuth';
 
 /** D-38: the signed-in staff member of a request (session cookie), or null */
 export type AuthOf = (req: Request) => Promise<StaffUser | null>;
@@ -148,7 +148,9 @@ export async function handleQuote(req: Request, deps: QuoteDeps): Promise<Respon
     demo: price.demo,
     priceListVersion: price.priceListVersion,
   };
-  const staff = deps.breakdownWithoutPin || (deps.auth ? (await deps.auth(req)) !== null : false);
+  // D-54: the cost breakdown is for the office (admin, manager), never an operator
+  const who = deps.auth ? await deps.auth(req) : null;
+  const staff = deps.breakdownWithoutPin || (who !== null && !isOperator(who));
   if (staff) quote.breakdown = price;
   return json(200, quote);
 }
@@ -299,7 +301,10 @@ export async function handleManager(req: Request, deps: ManagerDeps): Promise<Re
   if (req.method !== 'GET' && req.method !== 'PUT' && req.method !== 'POST')
     return json(405, { error: { code: 'method_not_allowed' } });
   if (!deps.limiter.take(clientIp(req))) return json(429, { error: { code: 'rate_limited' } });
-  if (!(await deps.auth(req))) return json(401, { error: { code: 'unauthorized' } });
+  const user = await deps.auth(req);
+  if (!user) return json(401, { error: { code: 'unauthorized' } });
+  // D-54: the catalogue and prices are the office's (admin, manager)
+  if (isOperator(user)) return json(403, { error: { code: 'forbidden' } });
 
   if (req.method === 'POST') {
     // D-21: POST /api/manager (x-material-id, image body) -> {url}; saved with the catalog later

@@ -63412,7 +63412,9 @@ var COLUMNS = [
   { key: "orderItem", header: "Buyurtmada" },
   { key: "quantity", header: "Soni" },
   // D-47: who changed the status on the manager page (appended: existing sheets keep theirs)
-  { key: "manager", header: "Menejer" }
+  { key: "manager", header: "Menejer" },
+  // D-54: who the application is given to (an operator's login; appended)
+  { key: "assignee", header: "Mas'ul" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
@@ -64136,6 +64138,162 @@ var GoogleSheetsCatalogStore = class {
   }
 };
 
+// server/staffAuth.ts
+import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+var ROLES = ["admin", "manager", "operator"];
+var isOperator = (u) => u?.role === "operator";
+var ADMIN_LOGIN = "admin";
+var LOGIN_RE = /^[a-z0-9._-]{3,32}$/;
+var EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i;
+var SESSION_COOKIE = "dafna_staff";
+var SESSION_MS = 12 * 36e5;
+var RESET_MS = 30 * 6e4;
+var fingerprint = (s) => createHash("sha256").update(s).digest("base64url").slice(0, 12);
+function readSession(token, secret, now, purpose) {
+  const [body, mac] = token.split(".");
+  if (!body || !mac) return null;
+  const want = createHmac("sha256", secret).update(body).digest();
+  const got = Buffer.from(mac, "base64url");
+  if (got.length !== want.length || !timingSafeEqual(got, want)) return null;
+  try {
+    const s = JSON.parse(Buffer.from(body, "base64url").toString());
+    if (typeof s.l !== "string" || typeof s.v !== "string" || typeof s.e !== "number") return null;
+    if (s.p !== purpose) return null;
+    return s.e > now ? s : null;
+  } catch {
+    return null;
+  }
+}
+function cookieOf(req, name) {
+  for (const part2 of (req.headers.get("cookie") ?? "").split(";")) {
+    const [k, ...v] = part2.trim().split("=");
+    if (k === name) return v.join("=");
+  }
+  return null;
+}
+function sessionSecretFrom(privateKey) {
+  return createHash("sha256").update(`dafna-staff-session|${privateKey}`).digest("hex");
+}
+var STAFF_TAB = "Xodimlar";
+var HEADER = [
+  "login",
+  "ism",
+  "rol",
+  "parol (xesh)",
+  "faol",
+  "o'zgargan",
+  "email",
+  "vaqtinchalik parol"
+];
+function staffToRows(list) {
+  return [
+    HEADER,
+    ...list.map((a) => [
+      a.login,
+      a.name,
+      a.role,
+      a.hash,
+      a.active ? "ha" : "yo'q",
+      a.updatedAt,
+      a.email,
+      a.mustChange ? "ha" : "yo'q"
+    ])
+  ];
+}
+function rowsToStaff(rows) {
+  const out = [];
+  for (const r of rows.slice(1)) {
+    const [login, name, role, hash, active, updatedAt, email, mustChange] = r.map(
+      (c) => String(c ?? "").trim()
+    );
+    if (!login || !LOGIN_RE.test(login) || !hash) continue;
+    if (!ROLES.includes(role)) continue;
+    out.push({
+      login,
+      name: name || login,
+      role,
+      hash,
+      active: active !== "yo'q",
+      updatedAt: updatedAt ?? "",
+      email: email && EMAIL_RE.test(email) ? email.toLowerCase() : "",
+      mustChange: mustChange === "ha"
+    });
+  }
+  return out;
+}
+var GoogleSheetsStaffStore = class {
+  tab;
+  constructor(config) {
+    this.tab = new SheetTab(config, STAFF_TAB, {
+      widths: [120, 180, 90, 120, 70, 140, 220, 140],
+      hidden: [3]
+    });
+  }
+  async load() {
+    return rowsToStaff(await this.tab.read());
+  }
+  async save(list) {
+    await this.tab.write(staffToRows(list));
+  }
+};
+var CachedStaff = class {
+  constructor(store, ttlMs = 3e4, now = Date.now) {
+    this.store = store;
+    this.ttlMs = ttlMs;
+    this.now = now;
+  }
+  store;
+  ttlMs;
+  now;
+  cached = null;
+  async get() {
+    const t = this.now();
+    if (!this.cached || t - this.cached.at >= this.ttlMs)
+      this.cached = { list: await this.store.load(), at: t };
+    return this.cached.list;
+  }
+  async save(list) {
+    await this.store.save(list);
+    this.cached = { list, at: this.now() };
+  }
+};
+function resendMailer(apiKey, from, fetchImpl = fetch) {
+  return async (mail) => {
+    try {
+      const res = await fetchImpl("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+        body: JSON.stringify({ from, ...mail }),
+        signal: AbortSignal.timeout(1e4)
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  };
+}
+var adminUser = { login: ADMIN_LOGIN, name: "Admin", role: "admin" };
+var publicOf = (a) => ({
+  login: a.login,
+  name: a.name,
+  role: a.role,
+  ...a.mustChange ? { mustChange: true } : {}
+});
+async function sessionUser(req, deps2) {
+  const token = cookieOf(req, SESSION_COOKIE);
+  if (!token) return null;
+  const s = readSession(token, deps2.secret, deps2.now());
+  if (!s) return null;
+  if (s.l === ADMIN_LOGIN)
+    return deps2.adminPassword && s.v === fingerprint(`admin|${deps2.adminPassword}`) ? adminUser : null;
+  const a = (await deps2.staff.get()).find((x) => x.login === s.l);
+  return a && a.active && fingerprint(a.hash) === s.v ? publicOf(a) : null;
+}
+async function workingUser(req, deps2) {
+  const u = await sessionUser(req, deps2);
+  return u && !u.mustChange ? u : null;
+}
+
 // server/prices.ts
 var CachedPrices = class {
   constructor(store, ttlMs = 6e4, now = Date.now) {
@@ -64288,7 +64446,9 @@ async function handleManager(req, deps2) {
   if (req.method !== "GET" && req.method !== "PUT" && req.method !== "POST")
     return json(405, { error: { code: "method_not_allowed" } });
   if (!deps2.limiter.take(clientIp(req))) return json(429, { error: { code: "rate_limited" } });
-  if (!await deps2.auth(req)) return json(401, { error: { code: "unauthorized" } });
+  const user = await deps2.auth(req);
+  if (!user) return json(401, { error: { code: "unauthorized" } });
+  if (isOperator(user)) return json(403, { error: { code: "forbidden" } });
   if (req.method === "POST") {
     if (!deps2.putTexture) return json(503, { error: { code: "storage_not_configured" } });
     const id = req.headers.get("x-material-id") ?? "";
@@ -64350,161 +64510,6 @@ async function handleManager(req, deps2) {
   await deps2.store.save(parsed.list, updatedAt);
   deps2.prices.set(parsed.list, updatedAt);
   return json(200, { ok: true, list: parsed.list, updatedAt, catalog });
-}
-
-// server/staffAuth.ts
-import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-var ROLES = ["admin", "manager"];
-var ADMIN_LOGIN = "admin";
-var LOGIN_RE = /^[a-z0-9._-]{3,32}$/;
-var EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i;
-var SESSION_COOKIE = "dafna_staff";
-var SESSION_MS = 12 * 36e5;
-var RESET_MS = 30 * 6e4;
-var fingerprint = (s) => createHash("sha256").update(s).digest("base64url").slice(0, 12);
-function readSession(token, secret, now, purpose) {
-  const [body, mac] = token.split(".");
-  if (!body || !mac) return null;
-  const want = createHmac("sha256", secret).update(body).digest();
-  const got = Buffer.from(mac, "base64url");
-  if (got.length !== want.length || !timingSafeEqual(got, want)) return null;
-  try {
-    const s = JSON.parse(Buffer.from(body, "base64url").toString());
-    if (typeof s.l !== "string" || typeof s.v !== "string" || typeof s.e !== "number") return null;
-    if (s.p !== purpose) return null;
-    return s.e > now ? s : null;
-  } catch {
-    return null;
-  }
-}
-function cookieOf(req, name) {
-  for (const part2 of (req.headers.get("cookie") ?? "").split(";")) {
-    const [k, ...v] = part2.trim().split("=");
-    if (k === name) return v.join("=");
-  }
-  return null;
-}
-function sessionSecretFrom(privateKey) {
-  return createHash("sha256").update(`dafna-staff-session|${privateKey}`).digest("hex");
-}
-var STAFF_TAB = "Xodimlar";
-var HEADER = [
-  "login",
-  "ism",
-  "rol",
-  "parol (xesh)",
-  "faol",
-  "o'zgargan",
-  "email",
-  "vaqtinchalik parol"
-];
-function staffToRows(list) {
-  return [
-    HEADER,
-    ...list.map((a) => [
-      a.login,
-      a.name,
-      a.role,
-      a.hash,
-      a.active ? "ha" : "yo'q",
-      a.updatedAt,
-      a.email,
-      a.mustChange ? "ha" : "yo'q"
-    ])
-  ];
-}
-function rowsToStaff(rows) {
-  const out = [];
-  for (const r of rows.slice(1)) {
-    const [login, name, role, hash, active, updatedAt, email, mustChange] = r.map(
-      (c) => String(c ?? "").trim()
-    );
-    if (!login || !LOGIN_RE.test(login) || !hash) continue;
-    if (!ROLES.includes(role)) continue;
-    out.push({
-      login,
-      name: name || login,
-      role,
-      hash,
-      active: active !== "yo'q",
-      updatedAt: updatedAt ?? "",
-      email: email && EMAIL_RE.test(email) ? email.toLowerCase() : "",
-      mustChange: mustChange === "ha"
-    });
-  }
-  return out;
-}
-var GoogleSheetsStaffStore = class {
-  tab;
-  constructor(config) {
-    this.tab = new SheetTab(config, STAFF_TAB, {
-      widths: [120, 180, 90, 120, 70, 140, 220, 140],
-      hidden: [3]
-    });
-  }
-  async load() {
-    return rowsToStaff(await this.tab.read());
-  }
-  async save(list) {
-    await this.tab.write(staffToRows(list));
-  }
-};
-var CachedStaff = class {
-  constructor(store, ttlMs = 3e4, now = Date.now) {
-    this.store = store;
-    this.ttlMs = ttlMs;
-    this.now = now;
-  }
-  store;
-  ttlMs;
-  now;
-  cached = null;
-  async get() {
-    const t = this.now();
-    if (!this.cached || t - this.cached.at >= this.ttlMs)
-      this.cached = { list: await this.store.load(), at: t };
-    return this.cached.list;
-  }
-  async save(list) {
-    await this.store.save(list);
-    this.cached = { list, at: this.now() };
-  }
-};
-function resendMailer(apiKey, from, fetchImpl = fetch) {
-  return async (mail) => {
-    try {
-      const res = await fetchImpl("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
-        body: JSON.stringify({ from, ...mail }),
-        signal: AbortSignal.timeout(1e4)
-      });
-      return res.ok;
-    } catch {
-      return false;
-    }
-  };
-}
-var adminUser = { login: ADMIN_LOGIN, name: "Admin", role: "admin" };
-var publicOf = (a) => ({
-  login: a.login,
-  name: a.name,
-  role: a.role,
-  ...a.mustChange ? { mustChange: true } : {}
-});
-async function sessionUser(req, deps2) {
-  const token = cookieOf(req, SESSION_COOKIE);
-  if (!token) return null;
-  const s = readSession(token, deps2.secret, deps2.now());
-  if (!s) return null;
-  if (s.l === ADMIN_LOGIN)
-    return deps2.adminPassword && s.v === fingerprint(`admin|${deps2.adminPassword}`) ? adminUser : null;
-  const a = (await deps2.staff.get()).find((x) => x.login === s.l);
-  return a && a.active && fingerprint(a.hash) === s.v ? publicOf(a) : null;
-}
-async function workingUser(req, deps2) {
-  const u = await sessionUser(req, deps2);
-  return u && !u.mustChange ? u : null;
 }
 
 // server/rateLimit.ts

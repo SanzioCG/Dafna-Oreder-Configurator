@@ -28,9 +28,27 @@ import type { RateLimiter } from './rateLimit';
  *   POST /api/auth {action: 'staff'}                       -> {staff} (admin)
  *   POST /api/auth {action: 'addStaff', login, name, role, password, email?}        (admin)
  *   POST /api/auth {action: 'updateStaff', login, name?, role?, active?, password?, email?} (admin)
+ *
+ * D-54 roles: the admin (everything, the staff list), the manager (every application, gives
+ * them to operators; the catalogue and prices) and the operator (only the applications given to
+ * them: status and note - no catalogue, no prices, no costs).
  */
-export type Role = 'admin' | 'manager';
-export const ROLES: Role[] = ['admin', 'manager'];
+export type Role = 'admin' | 'manager' | 'operator';
+export const ROLES: Role[] = ['admin', 'manager', 'operator'];
+
+/** D-54: an operator works only on the applications given to them */
+export const isOperator = (u: Pick<StaffUser, 'role'> | null | undefined) => u?.role === 'operator';
+
+/** D-54: who an application can be given to (Mas'ul): active managers and operators */
+export interface Assignee {
+  login: string;
+  name: string;
+  role: Role;
+}
+export const assignees = (list: StaffAccount[]): Assignee[] =>
+  list
+    .filter((a) => a.active && (a.role === 'operator' || a.role === 'manager'))
+    .map((a) => ({ login: a.login, name: a.name, role: a.role }));
 
 export interface StaffUser {
   login: string;

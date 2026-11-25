@@ -59,6 +59,8 @@ export interface LeadRecord {
   quantity: number;
   /** D-47: the staff member who last changed the status / note on the manager page */
   manager: string;
+  /** D-54: the login of the operator (or manager) the application is given to; '' = nobody */
+  assignee: string;
 }
 
 export interface StoredLead extends LeadRecord {
@@ -77,10 +79,10 @@ export interface LeadStore {
   listForRetry(): Promise<StoredLead[]>;
   /** D-47: every application (the manager page's "Buyurtmalar") */
   listAll(): Promise<StoredLead[]>;
-  /** D-47: the manager's status / note on a row, and who made the change */
+  /** D-47: the manager's status / note on a row, and who made the change (D-54: the assignee) */
   updateByManager(
     ref: number,
-    patch: { status?: string; managerNote?: string; manager: string },
+    patch: { status?: string; managerNote?: string; assignee?: string; manager: string },
   ): Promise<void>;
 }
 

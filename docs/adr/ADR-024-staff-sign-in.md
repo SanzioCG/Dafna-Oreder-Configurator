@@ -54,3 +54,23 @@ Founder: "I am the admin; I give the managers a login and a password, and take t
   Resend (DNS records), so it is switched on after the domain is bought.
 - The built-in `admin` changes the password only in Vercel (`ADMIN_PASSWORD`).
 - "Xodimlar" tab columns: login, ism, rol, parol (xesh), faol, o'zgargan, email, vaqtinchalik parol.
+
+## Update D-54 (2026-11-25): operators, and who has each application
+
+Founder: "I am the admin, then the manager; the manager gives the applications to operators."
+
+- Three roles: **admin** (everything, plus "Xodimlar"), **manager** (every application; gives
+  each one to someone; the catalogue, 1C and prices as before) and **operator** (only the
+  applications given to them: status and note). A new person is an operator unless the admin
+  chooses otherwise (the least access).
+- Each application has a **"Mas'ul"** — the login of the operator (or manager) who has it: a new
+  column **AB** of "Arizalar" (appended; the grid is widened and the header written by the
+  existing schema check; sheet format version 6). The admin / a manager sets it in the row of
+  "Buyurtmalar" or in its drawer; only active managers and operators can be chosen; '' = nobody.
+  "Menejer" (AA) keeps recording who last changed the row.
+- The server enforces it: `GET /api/orders` gives an operator only the rows whose "Mas'ul" is
+  their login (no sheet link, no staff list); an operator may change the status / note of those
+  rows only (`not_yours`) and never "Mas'ul" (`forbidden`). `/api/manager` and `/api/erp` refuse
+  an operator (403) and `/api/quote` gives an operator no cost breakdown.
+- The page shows an operator only "Bosh sahifa" and "Buyurtmalar"; the price list is not loaded.
+- Accounts are still added by the admin only.

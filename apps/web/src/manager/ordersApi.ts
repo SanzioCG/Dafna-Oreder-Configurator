@@ -1,3 +1,4 @@
+import type { Role } from '../auth/staffSession';
 import { formatPhone } from '../lead/phone';
 
 /**
@@ -37,6 +38,8 @@ export interface OrderRow {
   managerNote: string;
   /** who last changed the status / note */
   manager: string;
+  /** D-54: the login of who has the application ("Mas'ul"); '' = nobody yet */
+  assignee: string;
   orderId: string;
   orderItem: string;
   quantity: number;
@@ -69,10 +72,19 @@ async function call<T>(
   }
 }
 
+/** D-54: who an application can be given to (active managers and operators) */
+export interface Person {
+  login: string;
+  name: string;
+  role: Role;
+}
+
 export interface OrdersList {
   orders: OrderRow[];
-  /** "Google Sheetda ochish" (null in dev) */
+  /** "Google Sheetda ochish" (null in dev and for an operator) */
   sheetUrl: string | null;
+  /** D-54: empty for an operator (they only see their own applications) */
+  people: Person[];
 }
 
 export const listOrders = (fetchImpl?: typeof fetch) =>
@@ -80,14 +92,18 @@ export const listOrders = (fetchImpl?: typeof fetch) =>
     { method: 'GET' },
     (d) =>
       Array.isArray(d.orders)
-        ? { orders: d.orders as OrderRow[], sheetUrl: (d.sheetUrl as string | null) ?? null }
+        ? {
+            orders: d.orders as OrderRow[],
+            sheetUrl: (d.sheetUrl as string | null) ?? null,
+            people: Array.isArray(d.people) ? (d.people as Person[]) : [],
+          }
         : undefined,
     fetchImpl,
   );
 
 export const updateOrder = (
   row: Pick<OrderRow, 'ref' | 'id'>,
-  patch: { status?: string; managerNote?: string },
+  patch: { status?: string; managerNote?: string; assignee?: string },
   fetchImpl?: typeof fetch,
 ) =>
   call<OrderRow>(
@@ -101,6 +117,9 @@ export const ORDER_ERRORS: Record<string, string> = {
   row_moved:
     "Jadval qo'lda o'zgartirilgan (qatorlar surilgan): sahifani yangilab, qaytadan urinib ko'ring",
   invalid_status: "Bunday holat yo'q",
+  forbidden: 'Arizani kimga berishni menejer hal qiladi',
+  not_yours: 'Bu ariza endi sizda emas (menejer boshqa xodimga bergan): sahifani yangilang',
+  invalid_assignee: 'Bu xodim topilmadi yoki bloklangan: sahifani yangilang',
   server_misconfigured: 'Google Sheet ulanmagan (Vercel sozlamalari)',
   network: "Server bilan bog'lanib bo'lmadi. Qaytadan urinib ko'ring",
 };

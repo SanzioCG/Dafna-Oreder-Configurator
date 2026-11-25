@@ -1,5 +1,6 @@
 import { copyPicture, emanPicture } from './emanSite';
 import type { AuthOf } from './prices';
+import { isOperator } from './staffAuth';
 import type { RateLimiter } from './rateLimit';
 
 /**
@@ -446,7 +447,10 @@ function clientIp(req: Request): string {
 export async function handleErp(req: Request, deps: ErpDeps): Promise<Response> {
   if (req.method !== 'POST') return json(405, { error: { code: 'method_not_allowed' } });
   if (!deps.limiter.take(clientIp(req))) return json(429, { error: { code: 'rate_limited' } });
-  if (!(await deps.auth(req))) return json(401, { error: { code: 'unauthorized' } });
+  const user = await deps.auth(req);
+  if (!user) return json(401, { error: { code: 'unauthorized' } });
+  // D-54: 1C is read by the office (admin, manager), not by operators
+  if (isOperator(user)) return json(403, { error: { code: 'forbidden' } });
   if (!deps.erp) return json(503, { error: { code: 'erp_not_configured' } });
   let body: {
     action?: unknown;

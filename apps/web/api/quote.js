@@ -77487,7 +77487,9 @@ var COLUMNS = [
   { key: "orderItem", header: "Buyurtmada" },
   { key: "quantity", header: "Soni" },
   // D-47: who changed the status on the manager page (appended: existing sheets keep theirs)
-  { key: "manager", header: "Menejer" }
+  { key: "manager", header: "Menejer" },
+  // D-54: who the application is given to (an operator's login; appended)
+  { key: "assignee", header: "Mas'ul" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
@@ -78069,84 +78071,10 @@ var GoogleSheetsCatalogStore = class {
   }
 };
 
-// server/prices.ts
-var CachedPrices = class {
-  constructor(store, ttlMs = 6e4, now = Date.now) {
-    this.store = store;
-    this.ttlMs = ttlMs;
-    this.now = now;
-  }
-  store;
-  ttlMs;
-  now;
-  cached = null;
-  async get() {
-    const t = this.now();
-    if (this.cached && t - this.cached.at < this.ttlMs) return this.cached;
-    const saved = await this.store.load();
-    this.cached = {
-      list: saved?.list ?? priceListDemo,
-      updatedAt: saved?.updatedAt ?? null,
-      at: t
-    };
-    return this.cached;
-  }
-  /** after a save: this instance uses the new list at once (others within ttlMs) */
-  set(list, updatedAt) {
-    this.cached = { list, updatedAt, at: this.now() };
-  }
-};
-var json = (status, body) => new Response(JSON.stringify(body), {
-  status,
-  headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" }
-});
-var MAX_BODY = 2e4;
-async function handleQuote(req, deps2) {
-  if (req.method !== "POST") return json(405, { error: { code: "method_not_allowed" } });
-  let body;
-  try {
-    const text = await req.text();
-    if (text.length > MAX_BODY) return json(413, { error: { code: "too_large" } });
-    body = JSON.parse(text);
-  } catch {
-    return json(400, { error: { code: "invalid_request" } });
-  }
-  const { templateId, templateVersion } = body;
-  const versions = typeof templateId === "string" && Object.hasOwn(PRODUCT_ARCHIVE, templateId) ? PRODUCT_ARCHIVE[templateId] : void 0;
-  const template = versions && typeof templateVersion === "string" && Object.hasOwn(versions, templateVersion) ? versions[templateVersion] : void 0;
-  if (!template || typeof body.params !== "object" || body.params === null)
-    return json(400, { error: { code: "invalid_request" } });
-  await deps2.catalog?.get();
-  const { list } = await deps2.prices.get();
-  const params = body.params;
-  const result = generate(template, params);
-  const catalog = catalogForTemplate(template);
-  const price = computePrice(
-    computeBom(template, params, result),
-    catalog,
-    list,
-    template.productType,
-    // D-48: the raskroy (used when the list bills boards by the whole sheet)
-    list.boardBilling === "sheets" ? sheetCounts(result, list, catalog) : void 0
-  );
-  const quote = {
-    total: price.total,
-    currency: price.currency,
-    demo: price.demo,
-    priceListVersion: price.priceListVersion
-  };
-  const staff = deps2.breakdownWithoutPin || (deps2.auth ? await deps2.auth(req) !== null : false);
-  if (staff) quote.breakdown = price;
-  return json(200, quote);
-}
-var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
-function tashkentMinute(d) {
-  return new Date(d.getTime() + 5 * 36e5).toISOString().slice(0, 16).replace("T", " ");
-}
-
 // server/staffAuth.ts
 import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-var ROLES = ["admin", "manager"];
+var ROLES = ["admin", "manager", "operator"];
+var isOperator = (u) => u?.role === "operator";
 var ADMIN_LOGIN = "admin";
 var LOGIN_RE = /^[a-z0-9._-]{3,32}$/;
 var EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i;
@@ -78297,6 +78225,82 @@ async function sessionUser(req, deps2) {
 async function workingUser(req, deps2) {
   const u = await sessionUser(req, deps2);
   return u && !u.mustChange ? u : null;
+}
+
+// server/prices.ts
+var CachedPrices = class {
+  constructor(store, ttlMs = 6e4, now = Date.now) {
+    this.store = store;
+    this.ttlMs = ttlMs;
+    this.now = now;
+  }
+  store;
+  ttlMs;
+  now;
+  cached = null;
+  async get() {
+    const t = this.now();
+    if (this.cached && t - this.cached.at < this.ttlMs) return this.cached;
+    const saved = await this.store.load();
+    this.cached = {
+      list: saved?.list ?? priceListDemo,
+      updatedAt: saved?.updatedAt ?? null,
+      at: t
+    };
+    return this.cached;
+  }
+  /** after a save: this instance uses the new list at once (others within ttlMs) */
+  set(list, updatedAt) {
+    this.cached = { list, updatedAt, at: this.now() };
+  }
+};
+var json = (status, body) => new Response(JSON.stringify(body), {
+  status,
+  headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" }
+});
+var MAX_BODY = 2e4;
+async function handleQuote(req, deps2) {
+  if (req.method !== "POST") return json(405, { error: { code: "method_not_allowed" } });
+  let body;
+  try {
+    const text = await req.text();
+    if (text.length > MAX_BODY) return json(413, { error: { code: "too_large" } });
+    body = JSON.parse(text);
+  } catch {
+    return json(400, { error: { code: "invalid_request" } });
+  }
+  const { templateId, templateVersion } = body;
+  const versions = typeof templateId === "string" && Object.hasOwn(PRODUCT_ARCHIVE, templateId) ? PRODUCT_ARCHIVE[templateId] : void 0;
+  const template = versions && typeof templateVersion === "string" && Object.hasOwn(versions, templateVersion) ? versions[templateVersion] : void 0;
+  if (!template || typeof body.params !== "object" || body.params === null)
+    return json(400, { error: { code: "invalid_request" } });
+  await deps2.catalog?.get();
+  const { list } = await deps2.prices.get();
+  const params = body.params;
+  const result = generate(template, params);
+  const catalog = catalogForTemplate(template);
+  const price = computePrice(
+    computeBom(template, params, result),
+    catalog,
+    list,
+    template.productType,
+    // D-48: the raskroy (used when the list bills boards by the whole sheet)
+    list.boardBilling === "sheets" ? sheetCounts(result, list, catalog) : void 0
+  );
+  const quote = {
+    total: price.total,
+    currency: price.currency,
+    demo: price.demo,
+    priceListVersion: price.priceListVersion
+  };
+  const who = deps2.auth ? await deps2.auth(req) : null;
+  const staff = deps2.breakdownWithoutPin || who !== null && !isOperator(who);
+  if (staff) quote.breakdown = price;
+  return json(200, quote);
+}
+var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
+function tashkentMinute(d) {
+  return new Date(d.getTime() + 5 * 36e5).toISOString().slice(0, 16).replace("T", " ");
 }
 
 // server/rateLimit.ts

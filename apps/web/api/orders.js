@@ -60649,7 +60649,9 @@ var COLUMNS = [
   { key: "orderItem", header: "Buyurtmada" },
   { key: "quantity", header: "Soni" },
   // D-47: who changed the status on the manager page (appended: existing sheets keep theirs)
-  { key: "manager", header: "Menejer" }
+  { key: "manager", header: "Menejer" },
+  // D-54: who the application is given to (an operator's login; appended)
+  { key: "assignee", header: "Mas'ul" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
@@ -60699,7 +60701,7 @@ function parseTashkentTimestamp(s) {
 }
 
 // server/sheetFormat.ts
-var SHEET_FORMAT_VERSION = "5";
+var SHEET_FORMAT_VERSION = "6";
 var HEADER_BG = "#191d24";
 var FORMAT_METADATA_KEY = "dafna.sheetFormat";
 var PROTECTION_DESCRIPTION = "dafna: avtomatik ustunlar";
@@ -60739,7 +60741,8 @@ var COLUMN_WIDTHS = {
   orderId: 130,
   orderItem: 90,
   quantity: 60,
-  manager: 130
+  manager: 130,
+  assignee: 120
 };
 var HIDDEN_KEYS = [
   "paramsJson",
@@ -61183,6 +61186,8 @@ var GoogleSheetsStore = class {
     if (patch.status !== void 0) data.push({ range: at("status"), values: [[patch.status]] });
     if (patch.managerNote !== void 0)
       data.push({ range: at("managerNote"), values: [[patch.managerNote]] });
+    if (patch.assignee !== void 0)
+      data.push({ range: at("assignee"), values: [[patch.assignee]] });
     await this.api(`/values:batchUpdate`, {
       method: "POST",
       body: { valueInputOption: "RAW", data }
@@ -61415,15 +61420,11 @@ var SheetTab = class {
   }
 };
 
-// server/prices.ts
-var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
-function tashkentMinute(d) {
-  return new Date(d.getTime() + 5 * 36e5).toISOString().slice(0, 16).replace("T", " ");
-}
-
 // server/staffAuth.ts
 import { createHash as createHash2, createHmac as createHmac2, randomBytes, scryptSync, timingSafeEqual as timingSafeEqual2 } from "node:crypto";
-var ROLES = ["admin", "manager"];
+var ROLES = ["admin", "manager", "operator"];
+var isOperator = (u) => u?.role === "operator";
+var assignees = (list) => list.filter((a) => a.active && (a.role === "operator" || a.role === "manager")).map((a) => ({ login: a.login, name: a.name, role: a.role }));
 var ADMIN_LOGIN = "admin";
 var LOGIN_RE = /^[a-z0-9._-]{3,32}$/;
 var EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i;
@@ -61576,6 +61577,12 @@ async function workingUser(req, deps2) {
   return u && !u.mustChange ? u : null;
 }
 
+// server/prices.ts
+var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
+function tashkentMinute(d) {
+  return new Date(d.getTime() + 5 * 36e5).toISOString().slice(0, 16).replace("T", " ");
+}
+
 // server/rateLimit.ts
 var RateLimiter = class {
   constructor(limit, windowMs, now = Date.now) {
@@ -61642,6 +61649,7 @@ function authFromEnv(env) {
   return authSingleton;
 }
 var authOfEnv = (env) => (req) => workingUser(req, authFromEnv(env));
+var peopleOfEnv = (env) => async () => assignees(await authFromEnv(env).staff.get());
 
 // server/orders.ts
 var toOrderRow = (r, linkSecret) => ({
@@ -61661,6 +61669,7 @@ var toOrderRow = (r, linkSecret) => ({
   telegram: r.telegram,
   managerNote: r.managerNote,
   manager: r.manager ?? "",
+  assignee: r.assignee ?? "",
   orderId: r.orderId,
   orderItem: r.orderItem,
   quantity: r.quantity,
@@ -61673,10 +61682,14 @@ var json = (status, body) => new Response(JSON.stringify(body), {
 async function handleOrders(req, deps2) {
   const user = await deps2.auth(req);
   if (!user) return json(401, { error: { code: "unauthorized" } });
+  const operator = isOperator(user);
   if (req.method === "GET") {
-    const rows = (await deps2.store.listAll()).filter((r) => r.id);
+    const rows = (await deps2.store.listAll()).filter(
+      (r) => r.id && (!operator || r.assignee === user.login)
+    );
     const orders = rows.map((r) => toOrderRow(r, deps2.linkSecret)).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-    return json(200, { orders, sheetUrl: deps2.sheetUrl });
+    if (operator) return json(200, { orders, sheetUrl: null, people: [] });
+    return json(200, { orders, sheetUrl: deps2.sheetUrl, people: await deps2.people?.() ?? [] });
   }
   if (req.method !== "POST") return json(405, { error: { code: "method_not_allowed" } });
   let body;
@@ -61694,15 +61707,23 @@ async function handleOrders(req, deps2) {
   if (status !== void 0 && !LEAD_STATUSES.includes(status))
     return json(400, { error: { code: "invalid_status" } });
   const managerNote = body.managerNote === void 0 ? void 0 : String(body.managerNote).slice(0, 1e3);
+  const assignee = body.assignee === void 0 ? void 0 : String(body.assignee).trim().toLowerCase();
+  if (assignee !== void 0) {
+    if (operator) return json(403, { error: { code: "forbidden" } });
+    if (assignee !== "" && !(await deps2.people?.() ?? []).some((p) => p.login === assignee))
+      return json(400, { error: { code: "invalid_assignee" } });
+  }
   const row = (await deps2.store.listAll()).find((r) => r.ref === ref);
   if (!row || row.id !== body.id) return json(409, { error: { code: "row_moved" } });
-  await deps2.store.updateByManager(ref, { status, managerNote, manager: user.name });
+  if (operator && row.assignee !== user.login) return json(403, { error: { code: "not_yours" } });
+  await deps2.store.updateByManager(ref, { status, managerNote, assignee, manager: user.name });
   return json(200, {
     order: toOrderRow(
       {
         ...row,
         ...status !== void 0 ? { status } : {},
         ...managerNote !== void 0 ? { managerNote } : {},
+        ...assignee !== void 0 ? { assignee } : {},
         manager: user.name
       },
       deps2.linkSecret
@@ -61725,6 +61746,7 @@ function handle(request) {
     store: storeFromEnv(process.env),
     auth: authOfEnv(process.env),
     linkSecret: linkSecretFromEnv(process.env),
+    people: peopleOfEnv(process.env),
     sheetUrl: `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}/edit`
   };
   return handleOrders(request, deps);

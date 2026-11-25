@@ -10,7 +10,7 @@ import {
   type ErpConfig,
 } from './erp1c';
 import { RateLimiter } from './rateLimit';
-import { headerAuth } from './testAuth';
+import { headerAuth, usersAuth } from './testAuth';
 
 /** D-30: Dafna's 1C (OData, read-only) for the manager page, with a fake 1C */
 const KEY = '115514ae-80f4-4095-9117-42bae0a43d76';
@@ -79,6 +79,16 @@ describe('D-30 /api/erp (1C for the manager page)', () => {
     const { fetchImpl, urls } = fake1C();
     const r = await handleErp(req({ action: 'search', q: 'master' }, '9999'), deps(cfg(fetchImpl)));
     expect(r.status).toBe(401);
+    expect(urls).toEqual([]);
+  });
+
+  it('D-54: not for an operator (1C is read by the office)', async () => {
+    const { fetchImpl, urls } = fake1C();
+    const r = await handleErp(req({ action: 'search', q: 'master' }, 'op'), {
+      ...deps(cfg(fetchImpl)),
+      auth: usersAuth({ op: { login: 'aziz', name: 'Aziz', role: 'operator' } }),
+    });
+    expect(r.status).toBe(403);
     expect(urls).toEqual([]);
   });
 

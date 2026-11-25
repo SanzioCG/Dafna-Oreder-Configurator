@@ -2,7 +2,7 @@
  * Vercel Function entry: GET / POST /api/orders (D-47: the applications of the Google Sheet for
  * the manager page's "Buyurtmalar"). Bundled by scripts/build-api.mjs into api/orders.js.
  */
-import { authOfEnv, linkSecretFromEnv, storeFromEnv } from '../config';
+import { authOfEnv, linkSecretFromEnv, peopleOfEnv, storeFromEnv } from '../config';
 import { handleOrders, type OrdersDeps } from '../orders';
 
 let deps: OrdersDeps | null = null;
@@ -20,6 +20,7 @@ function handle(request: Request): Promise<Response> {
     store: storeFromEnv(process.env),
     auth: authOfEnv(process.env),
     linkSecret: linkSecretFromEnv(process.env),
+    people: peopleOfEnv(process.env),
     sheetUrl: `https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_SHEET_ID}/edit`,
   };
   return handleOrders(request, deps);

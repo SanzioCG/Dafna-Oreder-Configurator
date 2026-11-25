@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '../ui/Button';
 import {
+  ROLE_LABEL,
   addStaff,
   authError,
   listStaff,
@@ -10,15 +11,14 @@ import {
   type StaffRow,
 } from '../auth/staffSession';
 
-const ROLE_LABEL: Record<Role, string> = { admin: 'Admin', manager: 'Menejer' };
-
 /**
  * D-38 "Xodimlar" (admin only): who may sign in to this page. Accounts are never deleted, only
  * blocked; a new password ends the person's open sessions. The built-in "admin" (Vercel
  * ADMIN_PASSWORD) is not in this list. D-39: the password the admin gives is temporary (the
  * person sets their own on the first sign-in); the e-mail is for "Parolni unutdim".
+ * D-54: a new person is an operator unless chosen otherwise (the least access).
  */
-const EMPTY = { login: '', name: '', role: 'manager' as Role, password: '', email: '' };
+const EMPTY = { login: '', name: '', role: 'operator' as Role, password: '', email: '' };
 export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
   const [rows, setRows] = useState<StaffRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +84,19 @@ export function StaffSection({ fetchImpl }: { fetchImpl?: typeof fetch }) {
             Xodim o&apos;chirilmaydi, faqat bloklanadi. Siz bergan parol vaqtinchalik: xodim
             birinchi kirishda o&apos;z parolini qo&apos;yadi. Email «Parolni unutdim» uchun kerak.
           </p>
+          <ul className="mgr-note mgr-roles" data-testid="staff-roles">
+            <li>
+              <strong>Admin</strong> — hammasi, xodimlar ham.
+            </li>
+            <li>
+              <strong>Menejer</strong> — barcha arizalar, ularni operatorlarga beradi; katalog va
+              narxlar.
+            </li>
+            <li>
+              <strong>Operator</strong> — faqat o&apos;ziga berilgan arizalar: mijozga
+              qo&apos;ng&apos;iroq, holat va izoh. Narx va katalogni ko&apos;rmaydi.
+            </li>
+          </ul>
         </div>
         <Button variant="primary" onClick={() => setAdding(true)} data-testid="staff-new">
           + Yangi xodim

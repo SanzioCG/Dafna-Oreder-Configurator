@@ -12,7 +12,7 @@ import {
   type QuoteDeps,
 } from './prices';
 import { RateLimiter } from './rateLimit';
-import { headerAuth } from './testAuth';
+import { headerAuth, usersAuth } from './testAuth';
 
 const quoteReq = (body: unknown, headers: Record<string, string> = {}) =>
   new Request('http://x/api/quote', {
@@ -124,6 +124,20 @@ describe('D-19 /api/manager: the price list for signed-in staff (D-38)', () => {
     const { manager } = setup();
     expect((await handleManager(managerReq('GET', null), manager)).status).toBe(401);
     expect((await handleManager(managerReq('GET', '1234'), manager)).status).toBe(401);
+  });
+
+  it('D-54: an operator gets neither the price list nor the cost breakdown', async () => {
+    const { manager, quote } = setup();
+    const auth = usersAuth({ op: { login: 'aziz', name: 'Aziz', role: 'operator' } });
+    const asOperator = { ...manager, auth };
+    expect((await handleManager(managerReq('GET', 'op'), asOperator)).status).toBe(403);
+    expect((await handleManager(managerReq('PUT', 'op', { list: live }), asOperator)).status).toBe(
+      403,
+    );
+    const r = await handleQuote(quoteReq(wardrobe, { 'x-test-staff': 'op' }), { ...quote, auth });
+    const body = (await r.json()) as QuoteBody;
+    expect(body.total).toBeGreaterThan(0);
+    expect(body.breakdown).toBeUndefined();
   });
 
   it('saves the list; the kiosk price follows it at once and is no longer DEMO', async () => {

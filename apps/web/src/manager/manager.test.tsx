@@ -27,10 +27,28 @@ interface Call {
   body: unknown;
 }
 
-/** a fake /api/auth + /api/manager (D-38): staff "aziz" / "aziz-pass-1", keeps what is PUT */
+/**
+ * a fake /api/auth + /api/manager (D-38): staff "aziz" / "aziz-pass-1" (a manager), keeps what is
+ * PUT; D-54: "dilnoza" / "dilnoza-pass-1" is an operator
+ */
+const STAFF: Record<
+  string,
+  { password: string; user: { login: string; name: string; role: string } }
+> = {
+  aziz: { password: 'aziz-pass-1', user: { login: 'aziz', name: 'Aziz', role: 'manager' } },
+  dilnoza: {
+    password: 'dilnoza-pass-1',
+    user: { login: 'dilnoza', name: 'Dilnoza', role: 'operator' },
+  },
+};
+const PEOPLE = [
+  { login: 'dilnoza', name: 'Dilnoza', role: 'operator' },
+  { login: 'aziz', name: 'Aziz', role: 'manager' },
+];
 function fakeManagerApi() {
   const calls: Call[] = [];
   let signedIn = false;
+  let me = STAFF.aziz!.user;
   let saved: { list: unknown; updatedAt: string } | null = null;
   // the server's append-only merge, simplified: new entries get ids
   let catalog: CatalogExtension = EMPTY_EXTENSION;
@@ -41,6 +59,7 @@ function fakeManagerApi() {
       product: 'Stol',
       status: 'Tasdiqlandi',
       kiosk: 'k1',
+      assignee: 'dilnoza',
     }),
   ];
   const impl = (async (url: string, init: RequestInit) => {
@@ -48,11 +67,11 @@ function fakeManagerApi() {
     if (url === '/api/auth') {
       const a = init.body ? (JSON.parse(String(init.body)) as Record<string, string>) : {};
       calls.push({ url, method: String(init.method), headers, body: a });
-      if (a.action === 'login' && a.login === 'aziz' && a.password === 'aziz-pass-1') {
+      const account = a.action === 'login' ? STAFF[a.login ?? ''] : undefined;
+      if (account && account.password === a.password) {
         signedIn = true;
-        return new Response(
-          JSON.stringify({ user: { login: 'aziz', name: 'Aziz', role: 'manager' } }),
-        );
+        me = account.user;
+        return new Response(JSON.stringify({ user: me }));
       }
       if (a.action === 'logout') {
         signedIn = false;
@@ -72,11 +91,23 @@ function fakeManagerApi() {
         const o = orders.find((x) => x.ref === Number(b!.ref) && x.id === b!.id);
         if (!o)
           return new Response(JSON.stringify({ error: { code: 'row_moved' } }), { status: 409 });
-        Object.assign(o, b!.status ? { status: b!.status } : {}, { manager: 'Aziz' });
+        Object.assign(o, b!.status ? { status: b!.status } : {}, { manager: me.name });
         if (b!.managerNote !== undefined) o.managerNote = b!.managerNote;
+        if (b!.assignee !== undefined) o.assignee = b!.assignee;
         return new Response(JSON.stringify({ order: o }));
       }
-      return new Response(JSON.stringify({ orders, sheetUrl: 'https://docs.google.com/x' }));
+      // D-54: an operator gets only their own applications
+      if (me.role === 'operator')
+        return new Response(
+          JSON.stringify({
+            orders: orders.filter((o) => o.assignee === me.login),
+            sheetUrl: null,
+            people: [],
+          }),
+        );
+      return new Response(
+        JSON.stringify({ orders, sheetUrl: 'https://docs.google.com/x', people: PEOPLE }),
+      );
     }
     const body = init.body
       ? (JSON.parse(String(init.body)) as { list: unknown; catalog?: CatalogExtension })
@@ -84,6 +115,8 @@ function fakeManagerApi() {
     calls.push({ url, method: String(init.method), headers, body });
     if (!signedIn)
       return new Response(JSON.stringify({ error: { code: 'unauthorized' } }), { status: 401 });
+    if (me.role === 'operator')
+      return new Response(JSON.stringify({ error: { code: 'forbidden' } }), { status: 403 });
     if (init.method === 'PUT') {
       if (body!.catalog)
         catalog = {
@@ -126,6 +159,7 @@ const order = (
   telegram: 'sent',
   managerNote: '',
   manager: '',
+  assignee: '',
   orderId: id,
   orderItem: '1/1',
   quantity: 1,
@@ -138,8 +172,8 @@ const openCatalog = async () => {
   await screen.findByTestId('mgr-save');
 };
 
-const login = async (password: string) => {
-  fireEvent.change(await screen.findByTestId('mgr-login'), { target: { value: 'aziz' } });
+const login = async (password: string, name = 'aziz') => {
+  fireEvent.change(await screen.findByTestId('mgr-login'), { target: { value: name } });
   fireEvent.change(screen.getByTestId('mgr-password'), { target: { value: password } });
   fireEvent.click(screen.getByRole('button', { name: 'Kirish' }));
 };
@@ -375,8 +409,11 @@ describe('D-47 "Bosh sahifa" and "Buyurtmalar"', () => {
     fireEvent.change(screen.getByTestId('order-note'), { target: { value: "Ertaga o'lchov" } });
     fireEvent.click(screen.getByTestId('order-save'));
     await waitFor(() =>
-      expect(screen.getByTestId('orders-row-DFN-251125-AAAA').textContent).toContain('Aziz'),
+      expect(screen.getByTestId('orders-row-DFN-251125-AAAA').textContent).toContain(
+        "Qo'ng'iroq qilindi",
+      ),
     );
+    expect(screen.getByTestId('order-drawer').textContent).toContain('Oxirgi o‘zgartirganAziz');
     const post = api.calls.find((c) => c.url === '/api/orders' && c.method === 'POST')!;
     expect(post.body).toEqual({
       ref: 3,
@@ -411,6 +448,75 @@ describe('D-47 "Bosh sahifa" and "Buyurtmalar"', () => {
     fireEvent.change(screen.getByTestId('orders-source'), { target: { value: 'kiosk' } });
     expect(screen.queryByTestId('orders-row-DFN-251125-AAAA')).toBeNull();
     expect(screen.getByTestId('orders-range').textContent).toContain('1–1 / 1');
+  });
+});
+
+describe('D-54 roles: a manager gives applications to operators', () => {
+  it("a manager gives an application to an operator in its row; the Mas'ul filter finds it", async () => {
+    const api = fakeManagerApi();
+    render(
+      <ThemeProvider>
+        <ManagerPage fetchImpl={api.impl} />
+      </ThemeProvider>,
+    );
+    await login('aziz-pass-1');
+    fireEvent.click(await screen.findByTestId('mgr-tab-orders'));
+    const select = (await screen.findByTestId(
+      'orders-assign-DFN-251125-AAAA',
+    )) as HTMLSelectElement;
+    expect(select.value).toBe('');
+    expect([...select.options].map((o) => o.textContent)).toEqual([
+      '— Biriktirilmagan —',
+      'Dilnoza',
+      'Aziz',
+    ]);
+    fireEvent.change(screen.getByTestId('orders-who'), { target: { value: 'none' } });
+    expect(screen.queryByTestId('orders-row-DFN-251101-BBBB')).toBeNull();
+    fireEvent.change(select, { target: { value: 'dilnoza' } });
+    await waitFor(() => expect(screen.queryByTestId('orders-row-DFN-251125-AAAA')).toBeNull());
+    const post = api.calls.find((c) => c.url === '/api/orders' && c.method === 'POST')!;
+    expect(post.body).toEqual({ ref: 3, id: 'DFN-251125-AAAA', assignee: 'dilnoza' });
+    fireEvent.change(screen.getByTestId('orders-who'), { target: { value: 'dilnoza' } });
+    expect(screen.getByTestId('orders-range').textContent).toContain('1–2 / 2');
+    // the drawer gives it too
+    fireEvent.click(screen.getByTestId('orders-row-DFN-251101-BBBB'));
+    expect((screen.getByTestId('order-assignee') as HTMLSelectElement).value).toBe('dilnoza');
+  });
+
+  it('an operator sees only "Bosh sahifa" and "Buyurtmalar", only their own, never prices', async () => {
+    const api = fakeManagerApi();
+    render(
+      <ThemeProvider>
+        <ManagerPage fetchImpl={api.impl} />
+      </ThemeProvider>,
+    );
+    await login('dilnoza-pass-1', 'dilnoza');
+    await screen.findByTestId('mgr-home');
+    expect(screen.getByTestId('mgr-user').textContent).toContain('Operator');
+    expect(screen.getAllByTestId(/^mgr-tab-/).map((b) => b.dataset.testid)).toEqual([
+      'mgr-tab-home',
+      'mgr-tab-orders',
+    ]);
+    // the price list is never asked for
+    expect(api.calls.some((c) => c.url === '/api/manager')).toBe(false);
+    fireEvent.click(screen.getByTestId('mgr-tab-orders'));
+    await screen.findByTestId('orders-row-DFN-251101-BBBB');
+    expect(screen.queryByTestId('orders-row-DFN-251125-AAAA')).toBeNull();
+    expect(screen.queryByTestId('orders-assign-DFN-251101-BBBB')).toBeNull();
+    expect(screen.queryByTestId('orders-who')).toBeNull();
+    expect(screen.queryByTestId('orders-sheet')).toBeNull();
+    expect(screen.queryByTestId('mgr-save')).toBeNull();
+    fireEvent.click(screen.getByTestId('orders-row-DFN-251101-BBBB'));
+    expect(screen.queryByTestId('order-assignee')).toBeNull();
+    fireEvent.change(screen.getByTestId('order-note'), { target: { value: "Qo'ng'iroq qildim" } });
+    fireEvent.click(screen.getByTestId('order-save'));
+    await screen.findByText('Jadvalga yozildi');
+    const post = api.calls.find((c) => c.url === '/api/orders' && c.method === 'POST')!;
+    expect(post.body).toEqual({
+      ref: 2,
+      id: 'DFN-251101-BBBB',
+      managerNote: "Qo'ng'iroq qildim",
+    });
   });
 });
 

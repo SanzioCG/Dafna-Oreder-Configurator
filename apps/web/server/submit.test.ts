@@ -125,6 +125,7 @@ describe('sheet row mapping', () => {
       'Soni',
       // D-47: who changed the status on the manager page
       'Menejer',
+      "Mas'ul",
     ]);
   });
 

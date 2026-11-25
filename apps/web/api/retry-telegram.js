@@ -66145,7 +66145,9 @@ var COLUMNS = [
   { key: "orderItem", header: "Buyurtmada" },
   { key: "quantity", header: "Soni" },
   // D-47: who changed the status on the manager page (appended: existing sheets keep theirs)
-  { key: "manager", header: "Menejer" }
+  { key: "manager", header: "Menejer" },
+  // D-54: who the application is given to (an operator's login; appended)
+  { key: "assignee", header: "Mas'ul" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
@@ -66195,7 +66197,7 @@ function parseTashkentTimestamp(s) {
 }
 
 // server/sheetFormat.ts
-var SHEET_FORMAT_VERSION = "5";
+var SHEET_FORMAT_VERSION = "6";
 var HEADER_BG = "#191d24";
 var FORMAT_METADATA_KEY = "dafna.sheetFormat";
 var PROTECTION_DESCRIPTION = "dafna: avtomatik ustunlar";
@@ -66235,7 +66237,8 @@ var COLUMN_WIDTHS = {
   orderId: 130,
   orderItem: 90,
   quantity: 60,
-  manager: 130
+  manager: 130,
+  assignee: 120
 };
 var HIDDEN_KEYS = [
   "paramsJson",
@@ -66679,6 +66682,8 @@ var GoogleSheetsStore = class {
     if (patch.status !== void 0) data.push({ range: at("status"), values: [[patch.status]] });
     if (patch.managerNote !== void 0)
       data.push({ range: at("managerNote"), values: [[patch.managerNote]] });
+    if (patch.assignee !== void 0)
+      data.push({ range: at("assignee"), values: [[patch.assignee]] });
     await this.api(`/values:batchUpdate`, {
       method: "POST",
       body: { valueInputOption: "RAW", data }
@@ -67088,12 +67093,12 @@ var GoogleSheetsCatalogStore = class {
   }
 };
 
-// server/prices.ts
-var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
-
 // server/staffAuth.ts
 var SESSION_MS = 12 * 36e5;
 var RESET_MS = 30 * 6e4;
+
+// server/prices.ts
+var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
 
 // server/telegram.ts
 var escapeHtml = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");

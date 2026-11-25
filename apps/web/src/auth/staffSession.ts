@@ -1,11 +1,17 @@
 /**
- * D-38: client of /api/auth - staff sign-in (admin, manager) and the staff list. Customers never
+ * D-38: client of /api/auth - staff sign-in (admin, manager, D-54 operator) and the staff list. Customers never
  * sign in. The session is an HttpOnly cookie set by the server: the page never sees it, and every
  * same-origin request (/api/manager, /api/erp, /api/quote) carries it by itself.
  */
 export const AUTH_URL = '/api/auth';
 
-export type Role = 'admin' | 'manager';
+/** D-54: admin (everything), manager (every application, the catalogue), operator (own applications) */
+export type Role = 'admin' | 'manager' | 'operator';
+export const ROLE_LABEL: Record<Role, string> = {
+  admin: 'Admin',
+  manager: 'Menejer',
+  operator: 'Operator',
+};
 export interface StaffUser {
   login: string;
   name: string;

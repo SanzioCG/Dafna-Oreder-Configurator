@@ -60634,7 +60634,9 @@ var COLUMNS = [
   { key: "orderItem", header: "Buyurtmada" },
   { key: "quantity", header: "Soni" },
   // D-47: who changed the status on the manager page (appended: existing sheets keep theirs)
-  { key: "manager", header: "Menejer" }
+  { key: "manager", header: "Menejer" },
+  // D-54: who the application is given to (an operator's login; appended)
+  { key: "assignee", header: "Mas'ul" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
@@ -60894,15 +60896,9 @@ var SheetTab = class {
   }
 };
 
-// server/prices.ts
-var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
-function tashkentMinute(d) {
-  return new Date(d.getTime() + 5 * 36e5).toISOString().slice(0, 16).replace("T", " ");
-}
-
 // server/staffAuth.ts
 import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-var ROLES = ["admin", "manager"];
+var ROLES = ["admin", "manager", "operator"];
 var ADMIN_LOGIN = "admin";
 var LOGIN_RE = /^[a-z0-9._-]{3,32}$/;
 var EMAIL_RE = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i;
@@ -61279,6 +61275,12 @@ async function handleAuth(req, deps) {
     return json(200, { staff: listOut(next) });
   }
   return json(400, { error: { code: "invalid_request" } });
+}
+
+// server/prices.ts
+var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
+function tashkentMinute(d) {
+  return new Date(d.getTime() + 5 * 36e5).toISOString().slice(0, 16).replace("T", " ");
 }
 
 // server/rateLimit.ts

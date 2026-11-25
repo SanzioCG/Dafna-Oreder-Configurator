@@ -270,6 +270,7 @@ export async function handleSubmit(req: Request, deps: SubmitDeps): Promise<Resp
         telegram: 'pending',
         managerNote: '',
         manager: '',
+        assignee: '',
         paramsJson: JSON.stringify(resolved.params),
         schemaVersion: ORDER_SCHEMA_VERSION,
         templateVersion: tpl.templateVersion,

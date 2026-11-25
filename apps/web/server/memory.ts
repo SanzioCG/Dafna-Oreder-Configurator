@@ -44,12 +44,13 @@ export class MemoryLeadStore implements LeadStore {
   }
   async updateByManager(
     ref: number,
-    patch: { status?: string; managerNote?: string; manager: string },
+    patch: { status?: string; managerNote?: string; assignee?: string; manager: string },
   ) {
     const row = this.rows.find((r) => r.ref === ref);
     if (!row) return;
     if (patch.status !== undefined) row.status = patch.status;
     if (patch.managerNote !== undefined) row.managerNote = patch.managerNote;
+    if (patch.assignee !== undefined) row.assignee = patch.assignee;
     row.manager = patch.manager;
   }
 }

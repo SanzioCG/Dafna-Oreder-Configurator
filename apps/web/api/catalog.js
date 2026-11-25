@@ -62825,7 +62825,9 @@ var COLUMNS = [
   { key: "orderItem", header: "Buyurtmada" },
   { key: "quantity", header: "Soni" },
   // D-47: who changed the status on the manager page (appended: existing sheets keep theirs)
-  { key: "manager", header: "Menejer" }
+  { key: "manager", header: "Menejer" },
+  // D-54: who the application is given to (an operator's login; appended)
+  { key: "assignee", header: "Mas'ul" }
 ];
 var HEADERS = COLUMNS.map((c) => c.header);
 var STATUS_COLUMN_INDEX = COLUMNS.findIndex((c) => c.key === "status");
@@ -63298,12 +63300,12 @@ var OLD = {
 };
 var NEW = { top: (0, import_pdf_lib3.rgb)(1, 0.9, 0.7), front: (0, import_pdf_lib3.rgb)(1, 0.82, 0.52), right: (0, import_pdf_lib3.rgb)(0.95, 0.7, 0.33) };
 
-// server/prices.ts
-var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
-
 // server/staffAuth.ts
 var SESSION_MS = 12 * 36e5;
 var RESET_MS = 30 * 6e4;
+
+// server/prices.ts
+var TEXTURE_MAX_BYTES = 3 * 1024 * 1024;
 
 // server/config.ts
 var IP_LIMIT = { limit: 20, windowMs: 10 * 60 * 1e3 };

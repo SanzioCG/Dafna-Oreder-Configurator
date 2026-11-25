@@ -11,7 +11,14 @@ import {
   tashkentMinute,
 } from './prices';
 import { RateLimiter } from './rateLimit';
-import { CachedStaff, MemoryStaffStore, handleAuth, workingUser, type AuthDeps } from './staffAuth';
+import {
+  CachedStaff,
+  MemoryStaffStore,
+  assignees,
+  handleAuth,
+  workingUser,
+  type AuthDeps,
+} from './staffAuth';
 import { handleSubmit, type SubmitDeps } from './submit';
 import { handleOrders } from './orders';
 
@@ -201,6 +208,7 @@ export function createDevOrdersHandler() {
         auth: devAuthOf,
         sheetUrl: null,
         linkSecret: DEV_LINK_SECRET,
+        people: async () => assignees(await devAuth.staff.get()),
       }),
     '/api/orders',
   );

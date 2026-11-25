@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { MemoryLeadStore } from './memory';
 import { handleOrders, type OrderRow } from './orders';
-import { headerAuth } from './testAuth';
+import { headerAuth, usersAuth } from './testAuth';
 import type { LeadRecord } from './types';
 
 const lead = (id: string, createdAt: string, extra: Partial<LeadRecord> = {}): LeadRecord => ({
@@ -32,6 +32,7 @@ const lead = (id: string, createdAt: string, extra: Partial<LeadRecord> = {}): L
   orderItem: '',
   quantity: 1,
   manager: '',
+  assignee: '',
   ...extra,
 });
 
@@ -94,5 +95,115 @@ describe('D-47 "Buyurtmalar": the applications for signed-in staff', () => {
       deps,
     );
     expect(moved.status).toBe(409);
+  });
+});
+
+describe('D-54 roles: the office gives applications to operators', () => {
+  const users = {
+    adm: { login: 'admin', name: 'Admin', role: 'admin' as const },
+    man: { login: 'malika', name: 'Malika', role: 'manager' as const },
+    op1: { login: 'aziz', name: 'Aziz', role: 'operator' as const },
+    op2: { login: 'dilnoza', name: 'Dilnoza', role: 'operator' as const },
+  };
+  const people = [
+    { login: 'malika', name: 'Malika', role: 'manager' as const },
+    { login: 'aziz', name: 'Aziz', role: 'operator' as const },
+    { login: 'dilnoza', name: 'Dilnoza', role: 'operator' as const },
+  ];
+  async function roles() {
+    const store = new MemoryLeadStore();
+    await store.append(lead('DFN-1', '2026-11-24 10:00:00', { assignee: 'aziz' }));
+    await store.append(lead('DFN-2', '2026-11-25 09:30:00'));
+    const deps = {
+      store,
+      auth: usersAuth(users),
+      sheetUrl: 'https://docs.google.com/x',
+      people: async () => people,
+    };
+    return { store, deps };
+  }
+  const list = async (deps: Parameters<typeof handleOrders>[1], key: string) =>
+    (await (await handleOrders(req('GET', undefined, key), deps)).json()) as {
+      orders: OrderRow[];
+      sheetUrl: string | null;
+      people: unknown[];
+    };
+
+  it('the admin and managers see every application and who can take one', async () => {
+    const { deps } = await roles();
+    for (const key of ['adm', 'man']) {
+      const body = await list(deps, key);
+      expect(body.orders.map((o) => [o.id, o.assignee])).toEqual([
+        ['DFN-2', ''],
+        ['DFN-1', 'aziz'],
+      ]);
+      expect(body.people).toEqual(people);
+      expect(body.sheetUrl).toBe('https://docs.google.com/x');
+    }
+  });
+
+  it('an operator sees only what was given to them - no sheet link, no staff list', async () => {
+    const { deps } = await roles();
+    const aziz = await list(deps, 'op1');
+    expect(aziz.orders.map((o) => o.id)).toEqual(['DFN-1']);
+    expect(aziz).toMatchObject({ sheetUrl: null, people: [] });
+    expect((await list(deps, 'op2')).orders).toEqual([]);
+  });
+
+  it('a manager gives an application to an operator (written to the sheet), or takes it back', async () => {
+    const { store, deps } = await roles();
+    const ok = await handleOrders(
+      req('POST', { ref: 3, id: 'DFN-2', assignee: ' Dilnoza ' }, 'man'),
+      deps,
+    );
+    expect(ok.status).toBe(200);
+    expect(((await ok.json()) as { order: OrderRow }).order).toMatchObject({
+      assignee: 'dilnoza',
+      manager: 'Malika',
+    });
+    expect(store.rows[1]).toMatchObject({ assignee: 'dilnoza', manager: 'Malika' });
+    expect((await list(deps, 'op2')).orders.map((o) => o.id)).toEqual(['DFN-2']);
+    // back to nobody
+    await handleOrders(req('POST', { ref: 3, id: 'DFN-2', assignee: '' }, 'adm'), deps);
+    expect(store.rows[1]!.assignee).toBe('');
+  });
+
+  it('only to an active manager / operator', async () => {
+    const { deps } = await roles();
+    for (const assignee of ['admin', 'ghost'])
+      expect(
+        (await handleOrders(req('POST', { ref: 3, id: 'DFN-2', assignee }, 'man'), deps)).status,
+      ).toBe(400);
+  });
+
+  it('an operator changes the status / note of their own applications only, never who has them', async () => {
+    const { store, deps } = await roles();
+    const own = await handleOrders(
+      req(
+        'POST',
+        { ref: 2, id: 'DFN-1', status: "Qo'ng'iroq qilindi", managerNote: 'Ertaga' },
+        'op1',
+      ),
+      deps,
+    );
+    expect(own.status).toBe(200);
+    expect(store.rows[0]).toMatchObject({
+      status: "Qo'ng'iroq qilindi",
+      managerNote: 'Ertaga',
+      manager: 'Aziz',
+      assignee: 'aziz',
+    });
+    const other = await handleOrders(
+      req('POST', { ref: 3, id: 'DFN-2', status: 'Tasdiqlandi' }, 'op1'),
+      deps,
+    );
+    expect(other.status).toBe(403);
+    expect(store.rows[1]!.status).toBe('Yangi');
+    const pass = await handleOrders(
+      req('POST', { ref: 2, id: 'DFN-1', assignee: 'dilnoza' }, 'op1'),
+      deps,
+    );
+    expect(pass.status).toBe(403);
+    expect(store.rows[0]!.assignee).toBe('aziz');
   });
 });

@@ -35,6 +35,7 @@ const LEAD: LeadRecord = {
   orderItem: '',
   quantity: 1,
   manager: '',
+  assignee: '',
 };
 
 /** the parts of a Sheets batchUpdate request the tests look at */
@@ -401,8 +402,16 @@ describe('Google Sheets store', () => {
       { range: `${SHEET_TITLE}!N3`, values: [['sent']] },
       { range: `${SHEET_TITLE}!U3`, values: [[3]] },
     ]);
-    // D-8: + Mahsulot, templateId; D-25: + Buyurtma, Buyurtmada, Soni; D-47: + Menejer
-    expect(LAST_COLUMN).toBe('AA');
+    // D-54: the manager page writes who changed it (AA) and who has it now (AB, "Mas'ul")
+    await store.updateByManager(3, { status: 'Tasdiqlandi', assignee: 'aziz', manager: 'Malika' });
+    const byManager = f.calls.filter((c) => c.url.endsWith('/values:batchUpdate')).at(-1)!;
+    expect((byManager.body as { data: unknown[] }).data).toEqual([
+      { range: `${SHEET_TITLE}!AA3`, values: [['Malika']] },
+      { range: `${SHEET_TITLE}!C3`, values: [['Tasdiqlandi']] },
+      { range: `${SHEET_TITLE}!AB3`, values: [['aziz']] },
+    ]);
+    // D-8: + Mahsulot, templateId; D-25: + Buyurtma, Buyurtmada, Soni; D-47: + Menejer; D-54: + Mas'ul
+    expect(LAST_COLUMN).toBe('AB');
   });
 
   it('D-47: column letters past Z; a 26-column tab is widened before the header is read', async () => {
@@ -430,13 +439,13 @@ describe('Google Sheets store', () => {
       JSON.stringify(c.body ?? '').includes('appendDimension'),
     );
     const header = f.calls.findIndex((c) =>
-      c.url.includes(encodeURIComponent(`${SHEET_TITLE}!A1:AA1`)),
+      c.url.includes(encodeURIComponent(`${SHEET_TITLE}!A1:AB1`)),
     );
     expect(widen).toBeGreaterThan(-1);
     expect(widen).toBeLessThan(header);
     expect(
       (f.calls[widen]!.body as { requests: { appendDimension: unknown }[] }).requests[0]!
         .appendDimension,
-    ).toEqual({ sheetId: 7, dimension: 'COLUMNS', length: 1 });
+    ).toEqual({ sheetId: 7, dimension: 'COLUMNS', length: 2 });
   });
 });

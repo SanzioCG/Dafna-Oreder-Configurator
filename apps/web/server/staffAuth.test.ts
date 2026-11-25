@@ -4,6 +4,7 @@ import {
   CachedStaff,
   MemoryStaffStore,
   SESSION_COOKIE,
+  assignees,
   SESSION_MS,
   handleAuth,
   hashPassword,
@@ -172,6 +173,36 @@ describe('D-38 staff sign-in', () => {
     expect(r.status).toBe(429);
     const out = await handleAuth(post({ action: 'logout' }), deps);
     expect(out.headers.get('set-cookie')).toContain('Max-Age=0');
+  });
+
+  it('D-54: the admin adds an operator; the operator cannot manage staff; the tab keeps the role', async () => {
+    const { deps, store } = setup();
+    const admin = (await signIn(deps, 'admin', 'very-secret-admin'))!;
+    const add = (login: string, role: string) =>
+      handleAuth(
+        post({ action: 'addStaff', login, name: login, role, password: 'long-enough' }, admin),
+        deps,
+      );
+    expect((await add('aziz', 'operator')).status).toBe(200);
+    expect((await add('malika', 'manager')).status).toBe(200);
+    expect((await add('boss', 'admin')).status).toBe(200);
+    expect(rowsToStaff(staffToRows(store.saved)).map((a) => a.role)).toEqual([
+      'operator',
+      'manager',
+      'admin',
+    ]);
+    // the operator sets their own password, then still cannot see the staff list
+    const temp = (await signIn(deps, 'aziz', 'long-enough'))!;
+    const changed = await handleAuth(
+      post({ action: 'changePassword', old: 'long-enough', password: 'aziz-own-pass' }, temp),
+      deps,
+    );
+    const aziz = changed.headers.get('set-cookie')!.split(';')[0]!;
+    expect(await workingUser(get(aziz), deps)).toMatchObject({ role: 'operator' });
+    expect((await handleAuth(post({ action: 'staff' }, aziz), deps)).status).toBe(403);
+    // who an application can be given to: active managers and operators (not admins, not blocked)
+    await handleAuth(post({ action: 'updateStaff', login: 'malika', active: false }, admin), deps);
+    expect(assignees(store.saved)).toEqual([{ login: 'aziz', name: 'aziz', role: 'operator' }]);
   });
 
   it('the "Xodimlar" tab round-trips; broken rows are skipped', () => {
