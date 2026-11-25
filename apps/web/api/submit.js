@@ -66058,7 +66058,7 @@ function makeApplicationId(idempotencyKey, now, salt = 0) {
 }
 
 // server/sheetFormat.ts
-var SHEET_FORMAT_VERSION = "3";
+var SHEET_FORMAT_VERSION = "4";
 var HEADER_BG = "#191d24";
 var FORMAT_METADATA_KEY = "dafna.sheetFormat";
 var PROTECTION_DESCRIPTION = "dafna: avtomatik ustunlar";
@@ -66181,12 +66181,19 @@ function formatRequests(sheetId, existing) {
         fields: "pixelSize"
       }
     },
-    // data: middle-aligned, clipped by default; long texts wrap
+    // data: middle-aligned, clipped by default; long texts wrap; D-46: plain 10 pt text (a
+    // bold set by hand is reset - only the ID stays bold, Figma "Google Sheet")
     {
       repeatCell: {
         range: data,
-        cell: { userEnteredFormat: { verticalAlignment: "MIDDLE", wrapStrategy: "CLIP" } },
-        fields: "userEnteredFormat(verticalAlignment,wrapStrategy)"
+        cell: {
+          userEnteredFormat: {
+            verticalAlignment: "MIDDLE",
+            wrapStrategy: "CLIP",
+            textFormat: { bold: false, fontSize: 10 }
+          }
+        },
+        fields: "userEnteredFormat(verticalAlignment,wrapStrategy,textFormat.bold,textFormat.fontSize)"
       }
     },
     ...WRAPPED_KEYS.map((k) => ({
@@ -66204,11 +66211,11 @@ function formatRequests(sheetId, existing) {
         fields: "userEnteredFormat.textFormat.bold"
       }
     },
-    // editable columns: centred status chip, tinted note column
+    // editable columns: the status on the left (Figma), tinted note column
     {
       repeatCell: {
         range: column(STATUS_COLUMN_INDEX),
-        cell: { userEnteredFormat: { horizontalAlignment: "CENTER" } },
+        cell: { userEnteredFormat: { horizontalAlignment: "LEFT" } },
         fields: "userEnteredFormat.horizontalAlignment"
       }
     },

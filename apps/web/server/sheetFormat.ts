@@ -14,7 +14,7 @@ import type { LeadRecord } from './types';
  * - the two columns the manager edits ("Holat", "Menejer izohi") are tinted and noted; every
  *   other cell warns before an accidental edit (warning only, nobody is locked out).
  */
-export const SHEET_FORMAT_VERSION = '3';
+export const SHEET_FORMAT_VERSION = '4';
 /** D-46: the header colour (Figma "Google Sheet": Dafna ink #191D24) */
 export const HEADER_BG = '#191d24';
 export const FORMAT_METADATA_KEY = 'dafna.sheetFormat';
@@ -170,12 +170,20 @@ export function formatRequests(sheetId: number, existing: ExistingFormat): objec
         fields: 'pixelSize',
       },
     },
-    // data: middle-aligned, clipped by default; long texts wrap
+    // data: middle-aligned, clipped by default; long texts wrap; D-46: plain 10 pt text (a
+    // bold set by hand is reset - only the ID stays bold, Figma "Google Sheet")
     {
       repeatCell: {
         range: data,
-        cell: { userEnteredFormat: { verticalAlignment: 'MIDDLE', wrapStrategy: 'CLIP' } },
-        fields: 'userEnteredFormat(verticalAlignment,wrapStrategy)',
+        cell: {
+          userEnteredFormat: {
+            verticalAlignment: 'MIDDLE',
+            wrapStrategy: 'CLIP',
+            textFormat: { bold: false, fontSize: 10 },
+          },
+        },
+        fields:
+          'userEnteredFormat(verticalAlignment,wrapStrategy,textFormat.bold,textFormat.fontSize)',
       },
     },
     ...WRAPPED_KEYS.map((k) => ({
@@ -193,11 +201,11 @@ export function formatRequests(sheetId: number, existing: ExistingFormat): objec
         fields: 'userEnteredFormat.textFormat.bold',
       },
     },
-    // editable columns: centred status chip, tinted note column
+    // editable columns: the status on the left (Figma), tinted note column
     {
       repeatCell: {
         range: column(STATUS_COLUMN_INDEX),
-        cell: { userEnteredFormat: { horizontalAlignment: 'CENTER' } },
+        cell: { userEnteredFormat: { horizontalAlignment: 'LEFT' } },
         fields: 'userEnteredFormat.horizontalAlignment',
       },
     },
