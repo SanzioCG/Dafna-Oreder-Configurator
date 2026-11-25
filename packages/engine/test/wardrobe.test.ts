@@ -236,6 +236,8 @@ describe('sections=auto', () => {
   });
 });
 
+// D-51: validate() checks the current template - its sides stand 2 mm in from each end, so the
+// inside is 4 mm narrower than width - (n + 1) x 16
 describe('SHELF_SPAN warning', () => {
   it('triggers once per section wider than 900 mm', () => {
     const issues = validate({
@@ -251,29 +253,29 @@ describe('SHELF_SPAN warning', () => {
         severity: 'warning',
         paramKey: 'sections',
         messageKey: 'issue.SHELF_SPAN',
-        values: { sectionIndex: 0, sectionNumber: 1, innerWidthMm: 1176, maxMm: 900 },
+        values: { sectionIndex: 0, sectionNumber: 1, innerWidthMm: 1174, maxMm: 900 },
       },
       {
         code: 'SHELF_SPAN',
         severity: 'warning',
         paramKey: 'sections',
         messageKey: 'issue.SHELF_SPAN',
-        values: { sectionIndex: 1, sectionNumber: 2, innerWidthMm: 1176, maxMm: 900 },
+        values: { sectionIndex: 1, sectionNumber: 2, innerWidthMm: 1174, maxMm: 900 },
       },
     ]);
   });
 
   it('does not trigger at exactly 900 mm, triggers at 901 mm', () => {
-    expect(validate({ ...defaultParams(T), doors: 'none', width: 932, sections: 1 })).toEqual([]);
-    const w = validate({ ...defaultParams(T), doors: 'none', width: 933, sections: 1 });
+    expect(validate({ ...defaultParams(T), doors: 'none', width: 936, sections: 1 })).toEqual([]);
+    const w = validate({ ...defaultParams(T), doors: 'none', width: 937, sections: 1 });
     expect(w.map((i) => [i.code, i.values.innerWidthMm])).toEqual([['SHELF_SPAN', 901]]);
   });
 
   it('only warns for the sections that exceed (uneven remainder)', () => {
-    // 1837 - 3*16 = 1789 -> [895, 894] ok; 1853 - 48 = 1805 -> [903, 902] both warn
+    // 1841 - 4 - 3*16 = 1789 -> [895, 894] ok; 1857 - 52 = 1805 -> [903, 902] both warn
     const one = { ...defaultParams(T), doors: 'none', carcasses: '1' };
-    expect(validate({ ...one, width: 1837, sections: 2 })).toEqual([]);
-    expect(validate({ ...one, width: 1853, sections: 2 }).length).toBe(2);
+    expect(validate({ ...one, width: 1841, sections: 2 })).toEqual([]);
+    expect(validate({ ...one, width: 1857, sections: 2 }).length).toBe(2);
   });
 
   it('is a warning, so geometry is still generated', () => {

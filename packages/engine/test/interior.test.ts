@@ -182,10 +182,11 @@ describe('internal drawers', () => {
   });
 
   it('DRAWER_SECTION_TOO_WIDE when the front would exceed 900 mm', () => {
-    // front = inner - 2 x 13: inner 926 -> 900 ok, 927 -> 901 warn (1 section, no doors)
+    // front = inner - 2 x 13: inner 926 -> 900 ok, 927 -> 901 warn (1 section, no doors;
+    // D-51: the current sides stand 2 mm in from each end, inner = width - 4 - 32)
     const ok = validate({
       ...defaultParams(T),
-      width: 958,
+      width: 962,
       sections: 1,
       doors: 'none',
       interior1: 'drawers_shelves',
@@ -193,7 +194,7 @@ describe('internal drawers', () => {
     expect(ok.map((i) => i.code)).toEqual(['SHELF_SPAN']);
     const wide = validate({
       ...defaultParams(T),
-      width: 959,
+      width: 963,
       sections: 1,
       doors: 'none',
       interior1: 'drawers_shelves',

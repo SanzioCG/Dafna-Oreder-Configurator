@@ -575,6 +575,19 @@ function buildLester(template: Template, L: Layout) {
     const boxH = n(template, 'drawerBoxHeightMm');
     const len = slide(template, zFront - (backRear + t) - n(template, 'drawerBackClearanceMm'));
     const hdf = L.backT;
+    // D-51 (template 0.7.0+, rule drawer-bottom-in-grooves, Bazis "Tum mobil" 348 x 457): the
+    // bottom sits in the sides' grooves above their lower edge and runs into the front's groove;
+    // the back stands on it, 2 mm from the box's rear. Before: flat under the box, box-long.
+    const grooved = template.constructionRules.some((r) => r.id === 'drawer-bottom-in-grooves');
+    const bottom = grooved
+      ? {
+          upMm: n(template, 'drawerBottomUpMm'),
+          depthMm: len - n(template, 'drawerBottomRearGapMm') + n(template, 'drawerBottomGrooveMm'),
+          zMm:
+            zFront +
+            (n(template, 'drawerBottomGrooveMm') - len + n(template, 'drawerBottomRearGapMm')) / 2,
+        }
+      : { upMm: 0, depthMm: len, zMm: zFront - len / 2 };
     [0, 1, 2].forEach((i) => {
       const id = `s1-drawer-${i + 1}`;
       const fy = half(fy0 + i * (h + gap));
@@ -641,10 +654,10 @@ function buildLester(template: Template, L: Layout) {
             id: `${id}-bottom`,
             role: 'drawer_bottom',
             lengthMm: boxW - 2 * t + 2 * n(template, 'drawerBottomGrooveMm'),
-            widthMm: len,
+            widthMm: bottom.depthMm,
             thicknessMm: hdf,
             material: L.back,
-            position: [W / 2, by - boxH / 2 + hdf / 2, zBox],
+            position: [W / 2, by - boxH / 2 + bottom.upMm + hdf / 2, bottom.zMm],
             rotation: ROT_FLAT,
             banding: 'none',
             band: thick,

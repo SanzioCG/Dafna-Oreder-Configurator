@@ -58628,10 +58628,10 @@ function blobPutter(token, fetchImpl = fetch) {
   };
 }
 
-// ../../packages/engine/templates/wardrobe.v14.json
-var wardrobe_v14_default = {
+// ../../packages/engine/templates/wardrobe.v15.json
+var wardrobe_v15_default = {
   templateId: "wardrobe",
-  templateVersion: "0.15.0",
+  templateVersion: "0.16.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -59320,6 +59320,18 @@ var wardrobe_v14_default = {
       unit: "mm",
       unconfirmed: false,
       note: "A partition hidden behind inset doors: its front edge 1 mm behind the doors, as the shelves (Dafna's Bazis models (docs/production/bazis/ANALIZ.md: Offis 377.5 mm leaves, sectional pedestal 3 mm between leaves), founder 2026-11-23)."
+    },
+    sideInsetMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: false,
+      note: `D-51: the sides stand 2 mm in from the ends of the top and bottom (each carcass; "shkaf garderob \u043B\u0435\u0441\u0442\u0435\u0440": sides X 2..18 / 474..490 under a 492 top) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    sideFrontShortMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: false,
+      note: "D-51: the sides (and partitions) are 2 mm short of the top / bottom front edge (398 vs 400); inset doors are flush with the sides, shelves measured from them (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
     }
   },
   constructionRules: [
@@ -59422,14 +59434,19 @@ var wardrobe_v14_default = {
       id: "ergonomics-gost-13025",
       unconfirmed: false,
       note: "D-7: long_hang / short_hang / short_hang_drawers follow GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB: rail top <= 1900 from the floor and >= 50 below the shelf above; >= 1400 (long) / >= 900 (short) below the rail top; inner depth >= 560 for a rail; top drawer edge <= 1250; shelves >= 170 apart; space above the rail that fits a >= 170 compartment becomes an antresol (rarely used items, GOST table 6 note)."
+    },
+    {
+      id: "lester-side-inset",
+      unconfirmed: false,
+      note: "D-51 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right): sides 2 mm in from the carcass ends and 2 mm short at the front; the inside, the back in its groove and the inset doors follow (the inside is 4 mm narrower per carcass; a 492 wide one-door Lester: back 472, door 450)."
     }
   ]
 };
 
-// ../../packages/engine/templates/pedestal.v6.json
-var pedestal_v6_default = {
+// ../../packages/engine/templates/pedestal.v7.json
+var pedestal_v7_default = {
   templateId: "pedestal",
-  templateVersion: "0.6.0",
+  templateVersion: "0.7.0",
   productType: "pedestal",
   generator: "pedestal-v1",
   units: "mm",
@@ -59813,6 +59830,18 @@ var pedestal_v6_default = {
       value: "pvc_0_6_19",
       unconfirmed: false,
       note: `0.6 mm x 19 ("\u041A\u0440\u043E\u043C\u043A\u0430 19/0.6") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    drawerBottomUpMm: {
+      value: 10,
+      unit: "mm",
+      unconfirmed: false,
+      note: `D-51: the drawer's HDF bottom lies in the box sides' groove 10 mm above their lower edge ("Tum mobil": the groove ~11.5 mm up to its middle) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    drawerBottomRearGapMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: false,
+      note: "D-51: the bottom ends 2 mm before the box rear (the back stands on it); with drawerBottomGrooveMm into the front the bottom is 450 - 2 + 9 = 457 long (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
     }
   },
   constructionRules: [
@@ -59830,6 +59859,11 @@ var pedestal_v6_default = {
       id: "pedestal-fronts",
       unconfirmed: true,
       note: "Fronts overlay the sides (full overlay), equal 3 mm gaps; drawer boxes on side slides."
+    },
+    {
+      id: "drawer-bottom-in-grooves",
+      unconfirmed: false,
+      note: `D-51 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right, "Tum mobil" \u0414\u043D\u043E.\u044F\u0449 HDF 348 x 457): the drawer bottom in the side grooves above the box's lower edge and 9 mm into the front's groove (the front is the box front wall), 2 mm short of the rear.`
     }
   ]
 };
@@ -60141,8 +60175,8 @@ var desk_v5_default = {
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v14_default;
-var pedestalTemplate = pedestal_v6_default;
+var wardrobeTemplate = wardrobe_v15_default;
+var pedestalTemplate = pedestal_v7_default;
 var deskTemplate = desk_v5_default;
 var PRODUCT_TEMPLATES = {
   wardrobe: wardrobeTemplate,
@@ -61950,6 +61984,12 @@ function buildLester(template, L) {
     const boxH = n2(template, "drawerBoxHeightMm");
     const len = slide(template, zFront - (backRear + t) - n2(template, "drawerBackClearanceMm"));
     const hdf = L.backT;
+    const grooved = template.constructionRules.some((r) => r.id === "drawer-bottom-in-grooves");
+    const bottom = grooved ? {
+      upMm: n2(template, "drawerBottomUpMm"),
+      depthMm: len - n2(template, "drawerBottomRearGapMm") + n2(template, "drawerBottomGrooveMm"),
+      zMm: zFront + (n2(template, "drawerBottomGrooveMm") - len + n2(template, "drawerBottomRearGapMm")) / 2
+    } : { upMm: 0, depthMm: len, zMm: zFront - len / 2 };
     [0, 1, 2].forEach((i) => {
       const id = `s1-drawer-${i + 1}`;
       const fy = half(fy0 + i * (h + gap));
@@ -62016,10 +62056,10 @@ function buildLester(template, L) {
             id: `${id}-bottom`,
             role: "drawer_bottom",
             lengthMm: boxW - 2 * t + 2 * n2(template, "drawerBottomGrooveMm"),
-            widthMm: len,
+            widthMm: bottom.depthMm,
             thicknessMm: hdf,
             material: L.back,
-            position: [W / 2, by - boxH / 2 + hdf / 2, zBox],
+            position: [W / 2, by - boxH / 2 + bottom.upMm + hdf / 2, bottom.zMm],
             rotation: ROT_FLAT,
             banding: "none",
             band: thick,
@@ -62121,7 +62161,8 @@ var TEMPLATE_CATALOG = {
   // D-26: feet (metal_black) need catalog 1.1.0 (= 1.0.0 + more)
   "0.13.0": materialsV1_1.catalogVersion,
   "0.14.0": materialsV1_1.catalogVersion,
-  "0.15.0": materialsV1_1.catalogVersion
+  "0.15.0": materialsV1_1.catalogVersion,
+  "0.16.0": materialsV1_1.catalogVersion
 };
 
 // ../../packages/engine/catalog/hardware.v1.json

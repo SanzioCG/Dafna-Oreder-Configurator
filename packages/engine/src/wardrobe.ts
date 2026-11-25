@@ -122,6 +122,24 @@ export interface WardrobeLayout {
   interiorBackZMm: number;
   /** D-26: the thin edge band of the less visible edges (null = one band) */
   thinBand: { bandId: string; thicknessMm: number } | null;
+  /**
+   * D-51 (template 0.16.0+, rule lester-side-inset, Bazis): the sides stand this far in from the
+   * ends of the top / bottom (each carcass) and are this much short of the carcass front
+   */
+  sideInsetMm: number;
+  sideFrontShortMm: number;
+  /** Z of the sides' front edge (= carcassFrontZMm - sideFrontShortMm): inset doors, shelves */
+  interiorFrontZMm: number;
+}
+
+/** D-51: the Lester sides 2 mm in from the ends and 2 mm short at the front (0 / 0 before) */
+function sideInset(template: Template): { endMm: number; frontMm: number } {
+  if (!template.constructionRules.some((r) => r.id === 'lester-side-inset'))
+    return { endMm: 0, frontMm: 0 };
+  return {
+    endMm: getNumberConstant(template, 'sideInsetMm'),
+    frontMm: getNumberConstant(template, 'sideFrontShortMm'),
+  };
 }
 
 /** Split `total` whole millimetres into `n` parts differing by at most 1 mm (extra mm leftmost). */
@@ -184,11 +202,15 @@ function doorPlanFor(
   // D-22 (template 0.12.0+): inset doors sit inside the openings with their own gap
   const inset = params.doorMount === 'inset';
   const gap = getNumberConstant(template, inset ? 'insetDoorGapMm' : 'doorGapEdgeMm');
+  // D-51: the left side's inner face and the boundary at a split move in with the side inset
+  const e = sideInset(template).endMm;
   return (inset ? planInsetDoors : planDoors)({
     widthMm,
     t,
     innerWidths,
     splitAfter,
+    x0: e + t,
+    splitGap: 2 * t + 2 * e,
     preset: String(params.doors),
     overrides: innerWidths.map((_, i) => {
       const o = params[`doorSection${i + 1}`];
@@ -310,13 +332,18 @@ export function computeLayout(
   // D-15 (template 0.10.0+): wide wardrobes are two carcasses, split at the middle boundary
   const splitWanted = carcassSplit(template, params, widthMm);
   const splitFor = (n: number) => (splitWanted && n >= 2 ? Math.ceil(n / 2) - 1 : null);
+  // D-51: the side insets narrow the inside (2e per carcass: both ends, and both at a split)
+  const { endMm: sideE, frontMm: sideF } = sideInset(template);
   const innerFor = (n: number) =>
-    distributeEvenly(innerTotal(widthMm, t, n) - (splitFor(n) !== null ? t : 0), n);
+    distributeEvenly(
+      innerTotal(widthMm - 2 * sideE, t, n) - (splitFor(n) !== null ? t + 2 * sideE : 0),
+      n,
+    );
   const sectionCount =
     params.sections === 'auto'
       ? autoSectionCount(
           template,
-          widthMm,
+          widthMm - 2 * sideE,
           t,
           (n) =>
             params.doors === 'none' ||
@@ -365,7 +392,7 @@ export function computeLayout(
     doorGapEdgeMm,
     ...(insetDoors ? { insetDoors: true } : {}),
   };
-  let xs = t;
+  let xs = sideE + t;
   const interior = sectionInnerWidthsMm.map((innerW, index) => {
     const box: SectionBox = {
       index,
@@ -374,11 +401,11 @@ export function computeLayout(
       yBottom: plinthHeightMm + t,
       yTop: heightMm - t,
       zBack: interiorBackZMm,
-      innerDepth: carcassDepthMm - (interiorBackZMm - backStackMm) - doorDepthIn(index),
+      innerDepth: carcassDepthMm - (interiorBackZMm - backStackMm) - doorDepthIn(index) - sideF,
       t,
       ...shelfSetbackFor(index),
     };
-    xs += innerW + (index === splitAfter ? 2 * t : t);
+    xs += innerW + (index === splitAfter ? 2 * t + 2 * sideE : t);
     const choice = params[`interior${index + 1}`];
     return resolveInterior(
       box,
@@ -438,6 +465,9 @@ export function computeLayout(
     backGrooveMm,
     backGrooveDepthMm: backGrooveMm > 0 ? getNumberConstant(template, 'backGrooveDepthMm') : 0,
     interiorBackZMm,
+    sideInsetMm: sideE,
+    sideFrontShortMm: sideF,
+    interiorFrontZMm: backStackMm + carcassDepthMm - sideF,
     thinBand:
       template.constants.edgeBandThinId !== undefined
         ? {
@@ -541,6 +571,7 @@ function layoutIssues(layout: WardrobeLayout): Issue[] {
       if (code === 'RAIL_DEPTH_SHORT') {
         values.innerDepthMm =
           layout.carcassDepthMm -
+          layout.sideFrontShortMm -
           (layout.insetDoors && layout.doorTypes[index] !== 'none' ? layout.doorThicknessMm : 0);
         values.minMm = layout.interiorMin.railDepth;
       } else if (code === 'RAIL_HEIGHT_SHORT') {
@@ -599,13 +630,13 @@ export function validate(
 function buildSections(layout: WardrobeLayout): Section[] {
   const t = layout.panelThicknessMm;
   const sections: Section[] = [];
-  let x = t;
+  let x = layout.sideInsetMm + t;
   layout.sectionInnerWidthsMm.forEach((w, index) => {
     sections.push({
       index,
       innerWidthMm: w,
       innerHeightMm: layout.carcassHeightMm - 2 * t,
-      innerDepthMm: layout.carcassDepthMm,
+      innerDepthMm: layout.carcassDepthMm - layout.sideFrontShortMm,
       xStartMm: x,
       doorType: layout.doorTypes[index] ?? 'none',
       preset: layout.interior[index]?.preset ?? 'empty',
@@ -615,7 +646,7 @@ function buildSections(layout: WardrobeLayout): Section[] {
       drawers: layout.interior[index]?.drawers ?? [],
       clearHangingHeightMm: layout.interior[index]?.clearHangingHeightMm ?? null,
     });
-    x += w + (index === layout.splitAfter ? 2 * t : t);
+    x += w + (index === layout.splitAfter ? 2 * t + 2 * layout.sideInsetMm : t);
   });
   return sections;
 }
@@ -639,6 +670,9 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
   const zC = layout.carcassBackZMm;
   const zMid = zC + Dc / 2;
   const corpus = layout.corpusMaterial.id;
+  // D-51: the sides in from the carcass ends (e) and short of its front (f)
+  const e = layout.sideInsetMm;
+  const f = layout.sideFrontShortMm;
 
   // ADR-009: side panels run the full height to the floor (with or without plinth); the
   // carcass bottom rests on the plinth strips, which sit between the sides.
@@ -647,12 +681,13 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
   const splitSection = split === null ? null : sections[split];
   // outer face of the left carcass's right side
   const xSplit = splitSection ? splitSection.xStartMm + splitSection.innerWidthMm + t : null;
+  // D-51: with inset sides the left carcass ends e beyond its right side
   const carcasses: [number, number][] =
     xSplit === null
       ? [[0, W]]
       : [
-          [0, xSplit],
-          [xSplit, W],
+          [0, xSplit + e],
+          [xSplit + e, W],
         ];
   const suffix = (i: number) => (carcasses.length > 1 ? `-${i + 1}` : '');
   // D-22: with the top on the sides, the sides end under it
@@ -663,23 +698,26 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
     id,
     role: 'side',
     lengthMm: sideH,
-    widthMm: Dc,
+    widthMm: Dc - f,
     thicknessMm: t,
     material: corpus,
-    position: [x, sideY0 + sideH / 2, zMid],
+    position: [x, sideY0 + sideH / 2, zC + (Dc - f) / 2],
     rotation: ROT_VERTICAL_YZ,
   });
 
-  const panels: BasePanel[] = [side('side-left', t / 2), side('side-right', W - t / 2)];
+  const panels: BasePanel[] = [side('side-left', e + t / 2), side('side-right', W - e - t / 2)];
   if (xSplit !== null) {
-    panels.push(side('side-split-left', xSplit - t / 2), side('side-split-right', xSplit + t / 2));
+    panels.push(
+      side('side-split-left', xSplit - t / 2),
+      side('side-split-right', xSplit + 2 * e + t / 2),
+    );
   }
   carcasses.forEach(([x0, x1], i) => {
     panels.push(
       {
         id: `bottom${suffix(i)}`,
         role: 'bottom',
-        lengthMm: x1 - x0 - (layout.bottomFull ? 0 : 2 * t),
+        lengthMm: x1 - x0 - (layout.bottomFull ? 0 : 2 * t + 2 * e),
         widthMm: Dc,
         thicknessMm: t,
         material: corpus,
@@ -689,7 +727,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
       {
         id: `top${suffix(i)}`,
         role: 'top',
-        lengthMm: x1 - x0 - (layout.topOverSides ? 0 : 2 * t),
+        lengthMm: x1 - x0 - (layout.topOverSides ? 0 : 2 * t + 2 * e),
         widthMm: Dc,
         thicknessMm: t,
         material: corpus,
@@ -708,7 +746,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
     const behind = layout.hiddenPartitions[s.index]
       ? layout.doorThicknessMm + layout.partitionBehindDoorMm
       : 0;
-    const pDepth = Dc - (pz0 - zC) - behind;
+    const pDepth = Dc - f - (pz0 - zC) - behind;
     panels.push({
       id: `partition-${s.index + 1}`,
       role: 'partition',
@@ -730,7 +768,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
       panels.push({
         id: `back${suffix(i)}`,
         role: 'back',
-        lengthMm: g > 0 ? x1 - x0 - 2 * t + into : x1 - x0,
+        lengthMm: g > 0 ? x1 - x0 - 2 * t - 2 * e + into : x1 - x0,
         widthMm: g > 0 ? Hc - 2 * t + into : Hc,
         thicknessMm: tb,
         material: layout.backMaterial.id,
@@ -766,17 +804,21 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
         {
           id: `plinth-front${suffix(i)}`,
           role: 'plinth',
-          lengthMm: x1 - x0 - 2 * t,
+          lengthMm: x1 - x0 - 2 * t - 2 * e,
           widthMm: ph,
           thicknessMm: t,
           material: corpus,
-          position: [(x0 + x1) / 2, ph / 2, layout.carcassFrontZMm - layout.plinthRecessMm - t / 2],
+          position: [
+            (x0 + x1) / 2,
+            ph / 2,
+            layout.carcassFrontZMm - f - layout.plinthRecessMm - t / 2,
+          ],
           rotation: ROT_VERTICAL_XY,
         },
         {
           id: `plinth-back${suffix(i)}`,
           role: 'plinth',
-          lengthMm: x1 - x0 - 2 * t,
+          lengthMm: x1 - x0 - 2 * t - 2 * e,
           widthMm: ph,
           thicknessMm: t,
           material: corpus,
@@ -795,7 +837,8 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
     // D-22: an inset leaf starts on the bottom board and is flush with the carcass front
     const bottomY = ph + (layout.insetDoors ? t : 0) + layout.doorGapEdgeMm;
     const leafY = lower ? bottomY + leafH / 2 : ph + Hc / 2;
-    const frontZ = layout.insetDoors ? layout.carcassFrontZMm : layout.depthMm;
+    // D-51: an inset leaf is flush with the sides' front edge
+    const frontZ = layout.insetDoors ? layout.interiorFrontZMm : layout.depthMm;
     panels.push({
       id: leaf.id,
       role: 'door',
@@ -818,7 +861,7 @@ function buildCarcassAndDoors(layout: WardrobeLayout, sections: Section[]): Base
 function buildInterior(layout: WardrobeLayout, sections: Section[]): BasePanel[] {
   const t = layout.panelThicknessMm;
   const zBack = layout.interiorBackZMm;
-  const zFront = layout.carcassFrontZMm;
+  const zFront = layout.interiorFrontZMm;
   const corpus = layout.corpusMaterial.id;
   const hdf = layout.backMaterial;
   const out: BasePanel[] = [];

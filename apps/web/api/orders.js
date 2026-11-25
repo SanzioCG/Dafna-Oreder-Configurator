@@ -60397,6 +60397,12 @@ function buildLester(template, L) {
     const boxH = n2(template, "drawerBoxHeightMm");
     const len = slide(template, zFront - (backRear + t) - n2(template, "drawerBackClearanceMm"));
     const hdf = L.backT;
+    const grooved = template.constructionRules.some((r) => r.id === "drawer-bottom-in-grooves");
+    const bottom = grooved ? {
+      upMm: n2(template, "drawerBottomUpMm"),
+      depthMm: len - n2(template, "drawerBottomRearGapMm") + n2(template, "drawerBottomGrooveMm"),
+      zMm: zFront + (n2(template, "drawerBottomGrooveMm") - len + n2(template, "drawerBottomRearGapMm")) / 2
+    } : { upMm: 0, depthMm: len, zMm: zFront - len / 2 };
     [0, 1, 2].forEach((i) => {
       const id = `s1-drawer-${i + 1}`;
       const fy = half(fy0 + i * (h + gap));
@@ -60463,10 +60469,10 @@ function buildLester(template, L) {
             id: `${id}-bottom`,
             role: "drawer_bottom",
             lengthMm: boxW - 2 * t + 2 * n2(template, "drawerBottomGrooveMm"),
-            widthMm: len,
+            widthMm: bottom.depthMm,
             thicknessMm: hdf,
             material: L.back,
-            position: [W / 2, by - boxH / 2 + hdf / 2, zBox],
+            position: [W / 2, by - boxH / 2 + bottom.upMm + hdf / 2, bottom.zMm],
             rotation: ROT_FLAT,
             banding: "none",
             band: thick,
@@ -60568,7 +60574,8 @@ var TEMPLATE_CATALOG = {
   // D-26: feet (metal_black) need catalog 1.1.0 (= 1.0.0 + more)
   "0.13.0": materialsV1_1.catalogVersion,
   "0.14.0": materialsV1_1.catalogVersion,
-  "0.15.0": materialsV1_1.catalogVersion
+  "0.15.0": materialsV1_1.catalogVersion,
+  "0.16.0": materialsV1_1.catalogVersion
 };
 
 // server/assemblyPdf.ts

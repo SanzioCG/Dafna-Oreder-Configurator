@@ -31,15 +31,16 @@ describe('D-27 inset doors span the partitions (template 0.14.0)', () => {
     const r = gen({ width: 1000, height: 2100, depth: 600, sections: 2, doors: 'all_single' });
     expect(r.issues.filter((i) => i.severity === 'error')).toEqual([]);
     const [a, b] = doors(r);
-    expect(edges(a!)[0]).toBe(16 + 3);
-    expect(edges(b!)[1]).toBe(1000 - 16 - 3);
+    // D-51 (0.16.0): the sides stand 2 mm in from the ends and 2 mm short at the front
+    expect(edges(a!)[0]).toBe(2 + 16 + 3);
+    expect(edges(b!)[1]).toBe(1000 - 2 - 16 - 3);
     expect(edges(b!)[0]! - edges(a!)[1]!).toBe(3);
-    expect(a!.lengthMm + b!.lengthMm).toBe(1000 - 32 - 9);
+    expect(a!.lengthMm + b!.lengthMm).toBe(1000 - 4 - 32 - 9);
     const partition = r.panels.find((p) => p.id === 'partition-1')!;
-    // 600 deep, back in a groove (12 + 3), 16 mm door + 1 mm in front
-    expect(partition.widthMm).toBe(600 - 15 - 17);
+    // 600 deep, back in a groove (12 + 3), the sides' 2 mm, 16 mm door + 1 mm in front
+    expect(partition.widthMm).toBe(600 - 15 - 2 - 17);
     const front = partition.position[2] + partition.widthMm / 2;
-    expect(front).toBe(600 - 17);
+    expect(front).toBe(600 - 2 - 17);
     expect(a!.hingeMount).toBe('inset');
     expect(b!.hingeMount).toBe('inset');
   });
@@ -65,8 +66,8 @@ describe('D-27 inset doors span the partitions (template 0.14.0)', () => {
     });
     const p1 = r.panels.find((p) => p.id === 'partition-1')!;
     const p2 = r.panels.find((p) => p.id === 'partition-2')!;
-    expect(p1.widthMm).toBe(600 - 15 - 17);
-    expect(p2.widthMm).toBe(600 - 15);
+    expect(p1.widthMm).toBe(600 - 15 - 2 - 17);
+    expect(p2.widthMm).toBe(600 - 15 - 2);
     const right = doors(r).at(-1)!;
     expect(edges(right)[1]).toBe(p2.position[0] - 8 - 3);
   });

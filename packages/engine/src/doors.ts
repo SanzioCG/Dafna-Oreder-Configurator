@@ -58,6 +58,12 @@ export interface DoorPlanInput {
   spanPartitions?: boolean;
   /** D-27: sections whose door covers only the lower part (books_lower) never join a run */
   lowerOnly?: boolean[];
+  /**
+   * D-51: the inner face of the left side (default t; the Lester sides stand 2 mm in from the
+   * ends, so e + t) and the boundary at a D-15 split (default 2t; with the insets 2t + 2e)
+   */
+  x0?: number;
+  splitGap?: number;
 }
 
 export interface DoorPlan {
@@ -146,7 +152,7 @@ export function planInsetDoors(input: DoorPlanInput): DoorPlan {
     return { types, source, leaves: spanInsetLeaves(input, types), singleLeafWidths };
   }
   const leaves: DoorLeaf[] = [];
-  let xStart = t;
+  let xStart = input.x0 ?? t;
   innerWidths.forEach((inner, i) => {
     const type = types[i] as DoorType;
     const num = i + 1;
@@ -182,7 +188,7 @@ export function planInsetDoors(input: DoorPlanInput): DoorPlan {
         widthMm: inner - 2 * g,
       });
     }
-    xStart += inner + (i === splitAfter ? 2 * t : t);
+    xStart += inner + (i === splitAfter ? (input.splitGap ?? 2 * t) : t);
   });
   return { types, source, leaves, singleLeafWidths };
 }
@@ -214,10 +220,10 @@ function spanInsetLeaves(input: DoorPlanInput, types: readonly DoorType[]): Door
   const lowerOnly = input.lowerOnly ?? [];
   const hidden = (i: number) => partitionHidden(i, types, lowerOnly, splitAfter);
   const x0: number[] = [];
-  let xs = t;
+  let xs = input.x0 ?? t;
   innerWidths.forEach((inner, i) => {
     x0.push(xs);
-    xs += inner + (i === splitAfter ? 2 * t : t);
+    xs += inner + (i === splitAfter ? (input.splitGap ?? 2 * t) : t);
   });
   const left = (i: number) =>
     i > 0 && hidden(i - 1) ? (x0[i] as number) - t / 2 : (x0[i] as number);
@@ -293,12 +299,12 @@ export function planDoors(input: DoorPlanInput): DoorPlan {
   const n = innerWidths.length;
   const splitAfter = input.splitAfter ?? null;
   // boundary after section i: one partition (t) or, at a D-15 split, two carcass sides (2t)
-  const bt = (i: number) => (i === splitAfter ? 2 * t : t);
+  const bt = (i: number) => (i === splitAfter ? (input.splitGap ?? 2 * t) : t);
 
   // coverage of each section (boundary centre lines / outer edges)
   const left: number[] = [];
   const right: number[] = [];
-  let xStart = t;
+  let xStart = input.x0 ?? t;
   innerWidths.forEach((inner, i) => {
     left.push(i === 0 ? 0 : xStart - bt(i - 1) / 2);
     right.push(i === n - 1 ? W : xStart + inner + bt(i) / 2);

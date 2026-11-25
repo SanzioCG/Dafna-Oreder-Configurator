@@ -1,5 +1,5 @@
-import wardrobeV14Json from '../templates/wardrobe.v14.json' with { type: 'json' };
-import pedestalV6Json from '../templates/pedestal.v6.json' with { type: 'json' };
+import wardrobeV15Json from '../templates/wardrobe.v15.json' with { type: 'json' };
+import pedestalV7Json from '../templates/pedestal.v7.json' with { type: 'json' };
 import deskV5Json from '../templates/desk.v5.json' with { type: 'json' };
 import type {
   Material,
@@ -11,7 +11,8 @@ import type {
 } from './types.js';
 
 /**
- * The current wardrobe (shkaf) template: v14 (templateVersion 0.15.0, D-28: Samet hinges and
+ * The current wardrobe (shkaf) template: v15 (templateVersion 0.16.0, D-51: the sides 2 mm in
+ * from the ends and 2 mm short at the front, as in Bazis). v14 (0.15.0, D-28: Samet hinges and
  * slides from Dafna's stock report). v13 (0.14.0, D-27: inset doors span
  * the partitions between doored sections; the partitions stand behind them). v12 (0.13.0, D-26: Dafna's Bazis models -
  * feet, back in a groove, two edge bands, inset doors by default). v11 (0.12.0, D-22: the technologist's
@@ -22,10 +23,10 @@ import type {
  * GOST 13025.1-85 storage presets, catalog 1.0.0, same generator). Older templates are archived
  * (regenerate.ts); older order drafts are migrated with migrateOrderDraft().
  */
-export const wardrobeTemplate: Template = wardrobeV14Json as Template;
+export const wardrobeTemplate: Template = wardrobeV15Json as Template;
 
-/** D-8: office pedestal (ofis tumbasi), template 0.6.0 (D-28: Samet slides; D-26: Bazis "Tum mobil" construction) (pedestal.ts, ADR-014). */
-export const pedestalTemplate: Template = pedestalV6Json as Template;
+/** D-8: office pedestal (ofis tumbasi), template 0.7.0 (D-51: the drawer bottom in grooves, 348 x 457 as in Bazis; D-28: Samet slides; D-26: Bazis "Tum mobil" construction) (pedestal.ts, ADR-014). */
+export const pedestalTemplate: Template = pedestalV7Json as Template;
 
 /** D-8: office / writing desk (stol), template 0.5.0 (D-36: the modesty panel on the front, shortest layer outermost, as in Bazis; D-26: two full top sheets, double legs, stepped modesty panel) (desk.ts, ADR-014). */
 export const deskTemplate: Template = deskV5Json as Template;

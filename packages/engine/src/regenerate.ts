@@ -13,12 +13,14 @@ import wardrobeV11Json from '../templates/wardrobe.v11.json' with { type: 'json'
 import wardrobeV12Json from '../templates/wardrobe.v12.json' with { type: 'json' };
 import wardrobeV13Json from '../templates/wardrobe.v13.json' with { type: 'json' };
 import wardrobeV14Json from '../templates/wardrobe.v14.json' with { type: 'json' };
+import wardrobeV15Json from '../templates/wardrobe.v15.json' with { type: 'json' };
 import pedestalV1Json from '../templates/pedestal.v1.json' with { type: 'json' };
 import pedestalV2Json from '../templates/pedestal.v2.json' with { type: 'json' };
 import pedestalV3Json from '../templates/pedestal.v3.json' with { type: 'json' };
 import pedestalV4Json from '../templates/pedestal.v4.json' with { type: 'json' };
 import pedestalV5Json from '../templates/pedestal.v5.json' with { type: 'json' };
 import pedestalV6Json from '../templates/pedestal.v6.json' with { type: 'json' };
+import pedestalV7Json from '../templates/pedestal.v7.json' with { type: 'json' };
 import deskV1Json from '../templates/desk.v1.json' with { type: 'json' };
 import deskV2Json from '../templates/desk.v2.json' with { type: 'json' };
 import deskV3Json from '../templates/desk.v3.json' with { type: 'json' };
@@ -52,6 +54,7 @@ export const TEMPLATE_ARCHIVE: Readonly<Record<string, Template>> = {
   '0.13.0': wardrobeV12Json as Template,
   '0.14.0': wardrobeV13Json as Template,
   '0.15.0': wardrobeV14Json as Template,
+  '0.16.0': wardrobeV15Json as Template,
 };
 
 /** Material catalogs by catalogVersion (same rule: archived, never edited). */
@@ -74,6 +77,7 @@ export const PRODUCT_ARCHIVE: Readonly<Record<string, Readonly<Record<string, Te
     '0.4.0': pedestalV4Json as Template,
     '0.5.0': pedestalV5Json as Template,
     '0.6.0': pedestalV6Json as Template,
+    '0.7.0': pedestalV7Json as Template,
   },
   desk: {
     '0.1.0': deskV1Json as Template,
@@ -106,6 +110,7 @@ export const TEMPLATE_CATALOG: Readonly<Record<string, string>> = {
   '0.13.0': materialsV1_1.catalogVersion,
   '0.14.0': materialsV1_1.catalogVersion,
   '0.15.0': materialsV1_1.catalogVersion,
+  '0.16.0': materialsV1_1.catalogVersion,
 };
 
 type Generator = (template: Template, params: unknown, catalog: MaterialCatalog) => GenerateResult;

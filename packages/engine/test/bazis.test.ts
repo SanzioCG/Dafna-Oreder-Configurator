@@ -179,6 +179,104 @@ describe('D-26 mobile pedestal as in "Tum mobil" (template 0.5.0)', () => {
   });
 });
 
+describe('D-51 wardrobe sides as in "shkaf garderob лестер" (template 0.16.0)', () => {
+  const cur = (over: Params = {}): GenerateResult =>
+    generate(
+      wardrobeTemplate,
+      resolveParams(wardrobeTemplate, { ...defaultParams(wardrobeTemplate), ...over }).params,
+    );
+  const edgesX = (p: Panel) => [
+    p.position[0] - p.thicknessMm / 2,
+    p.position[0] + p.thicknessMm / 2,
+  ];
+
+  it('the sides 2 mm in from the ends and 2 mm short at the front; back, door and shelves follow', () => {
+    // one section with two inset leaves (Bazis: 492 x 1830 x 400, X 2..18 / 474..490, one leaf)
+    const W = 600;
+    const r = cur({ width: W, height: 2000, depth: 450, sections: 1 });
+    expect(r.issues.filter((i) => i.severity === 'error')).toEqual([]);
+    const top = panel(r, 'top');
+    const topFront = top.position[2] + top.widthMm / 2;
+    expect(top.lengthMm).toBe(W);
+    expect(edgesX(panel(r, 'side-left'))).toEqual([2, 18]);
+    expect(edgesX(panel(r, 'side-right'))).toEqual([W - 18, W - 2]);
+    const side = panel(r, 'side-left');
+    expect(side.widthMm).toBe(top.widthMm - 2);
+    expect(side.position[2] + side.widthMm / 2).toBe(topFront - 2);
+    // the back in its groove: inner width + 2 x 8 (Bazis 492 -> 472)
+    expect(panel(r, 'back').lengthMm).toBe(W - 2 * (2 + 16) + 16);
+    // the inset leaves: 3 mm from the sides and between, flush with the sides' front edge
+    // (Bazis, one leaf: 492 - 2 x 18 - 2 x 3 = 450)
+    const leaves = r.panels
+      .filter((p) => p.role === 'door')
+      .sort((a, b) => a.position[0] - b.position[0]);
+    expect(leaves).toHaveLength(2);
+    expect(leaves[0]!.position[0] - leaves[0]!.lengthMm / 2).toBe(18 + 3);
+    expect(leaves[1]!.position[0] + leaves[1]!.lengthMm / 2).toBe(W - 18 - 3);
+    expect(leaves[0]!.lengthMm + leaves[1]!.lengthMm).toBe(W - 2 * (2 + 16) - 3 * 3);
+    for (const d of leaves) expect(d.position[2] + d.thicknessMm / 2).toBe(topFront - 2);
+    expect(r.sections[0]!.xStartMm).toBe(18);
+    expect(r.sections[0]!.innerWidthMm).toBe(W - 36);
+    for (const sh of r.panels.filter((p) => p.role === 'shelf'))
+      expect(sh.position[2] + sh.widthMm / 2).toBeLessThanOrEqual(topFront - 2 - 16);
+  });
+
+  it('two carcasses: each has its sides 2 mm in; nothing overlaps', () => {
+    const r = cur({ width: 2000, sections: 'auto', carcasses: '2' });
+    const [t1, t2] = [panel(r, 'top-1'), panel(r, 'top-2')];
+    const end1 = t1.position[0] + t1.lengthMm / 2;
+    expect(t2.position[0] - t2.lengthMm / 2).toBe(end1);
+    expect(edgesX(panel(r, 'side-split-left'))[1]).toBe(end1 - 2);
+    expect(edgesX(panel(r, 'side-split-right'))[0]).toBe(end1 + 2);
+    const box = (p: Panel) => {
+      const r0 = p.rotation.join(',');
+      const e =
+        r0 === '0,0,90'
+          ? [p.thicknessMm, p.lengthMm, p.widthMm]
+          : r0 === '90,0,0'
+            ? [p.lengthMm, p.widthMm, p.thicknessMm]
+            : [p.lengthMm, p.thicknessMm, p.widthMm];
+      return {
+        min: p.position.map((c, k) => c - e[k]! / 2),
+        max: p.position.map((c, k) => c + e[k]! / 2),
+      };
+    };
+    const boards = r.panels.filter((p) => p.role !== 'frame' && p.role !== 'back');
+    for (let i = 0; i < boards.length; i++)
+      for (let j = i + 1; j < boards.length; j++) {
+        const [A, B] = [box(boards[i]!), box(boards[j]!)];
+        const hit = [0, 1, 2].every(
+          (k) => A.min[k]! < B.max[k]! - 0.01 && B.min[k]! < A.max[k]! - 0.01,
+        );
+        expect(hit, `${boards[i]!.id} x ${boards[j]!.id}`).toBe(false);
+      }
+  });
+
+  it('a 0.15.0 application keeps its sides (stored applications regenerate exactly)', () => {
+    const v15 = TEMPLATE_ARCHIVE['0.15.0']!;
+    const r = generate(v15, defaultParams(v15));
+    expect(edgesX(r.panels.find((p) => p.id === 'side-left')!)).toEqual([0, 16]);
+  });
+});
+
+describe('D-51 pedestal drawer bottom as in "Tum mobil" (template 0.7.0)', () => {
+  const r = generate(pedestalTemplate, defaultParams(pedestalTemplate));
+  const by = (id: string) => r.panels.find((p) => p.id === id)!;
+
+  it('HDF 348 x 457 in the side grooves 10 mm up, 9 mm into the front, 2 mm short of the rear', () => {
+    const b = by('s1-drawer-1-bottom');
+    expect([b.lengthMm, b.widthMm, b.thicknessMm]).toEqual([348, 457, 3]);
+    const side = by('s1-drawer-1-side-left');
+    const boxBottom = side.position[1] - 60;
+    expect(b.position[1] - 1.5).toBe(boxBottom + 10);
+    const front = by('s1-drawer-1-front');
+    const frontBack = front.position[2] - 8;
+    expect(b.position[2] + b.widthMm / 2).toBe(frontBack + 9);
+    const boxRear = side.position[2] - side.widthMm / 2;
+    expect(b.position[2] - b.widthMm / 2).toBe(boxRear + 2);
+  });
+});
+
 describe('D-26 / D-36 desk as in "stol 1500" (template 0.5.0)', () => {
   const r = generate(deskTemplate, { ...defaultParams(deskTemplate), width: 1500 });
   const by = (id: string) => r.panels.find((p) => p.id === id)!;

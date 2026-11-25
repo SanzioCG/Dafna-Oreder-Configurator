@@ -58596,10 +58596,10 @@ var require_fontkit_umd = __commonJS({
   }
 });
 
-// ../../packages/engine/templates/wardrobe.v14.json
-var wardrobe_v14_default = {
+// ../../packages/engine/templates/wardrobe.v15.json
+var wardrobe_v15_default = {
   templateId: "wardrobe",
-  templateVersion: "0.15.0",
+  templateVersion: "0.16.0",
   productType: "wardrobe",
   generator: "wardrobe-carcass-v4",
   units: "mm",
@@ -59288,6 +59288,18 @@ var wardrobe_v14_default = {
       unit: "mm",
       unconfirmed: false,
       note: "A partition hidden behind inset doors: its front edge 1 mm behind the doors, as the shelves (Dafna's Bazis models (docs/production/bazis/ANALIZ.md: Offis 377.5 mm leaves, sectional pedestal 3 mm between leaves), founder 2026-11-23)."
+    },
+    sideInsetMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: false,
+      note: `D-51: the sides stand 2 mm in from the ends of the top and bottom (each carcass; "shkaf garderob \u043B\u0435\u0441\u0442\u0435\u0440": sides X 2..18 / 474..490 under a 492 top) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    sideFrontShortMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: false,
+      note: "D-51: the sides (and partitions) are 2 mm short of the top / bottom front edge (398 vs 400); inset doors are flush with the sides, shelves measured from them (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
     }
   },
   constructionRules: [
@@ -59390,14 +59402,19 @@ var wardrobe_v14_default = {
       id: "ergonomics-gost-13025",
       unconfirmed: false,
       note: "D-7: long_hang / short_hang / short_hang_drawers follow GOST 13025.1-85 \xAB\u041C\u0435\u0431\u0435\u043B\u044C \u0431\u044B\u0442\u043E\u0432\u0430\u044F. \u0424\u0443\u043D\u043A\u0446\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0435 \u0440\u0430\u0437\u043C\u0435\u0440\u044B \u043E\u0442\u0434\u0435\u043B\u0435\u043D\u0438\u0439 \u0434\u043B\u044F \u0445\u0440\u0430\u043D\u0435\u043D\u0438\u044F\xBB: rail top <= 1900 from the floor and >= 50 below the shelf above; >= 1400 (long) / >= 900 (short) below the rail top; inner depth >= 560 for a rail; top drawer edge <= 1250; shelves >= 170 apart; space above the rail that fits a >= 170 compartment becomes an antresol (rarely used items, GOST table 6 note)."
+    },
+    {
+      id: "lester-side-inset",
+      unconfirmed: false,
+      note: "D-51 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right): sides 2 mm in from the carcass ends and 2 mm short at the front; the inside, the back in its groove and the inset doors follow (the inside is 4 mm narrower per carcass; a 492 wide one-door Lester: back 472, door 450)."
     }
   ]
 };
 
-// ../../packages/engine/templates/pedestal.v6.json
-var pedestal_v6_default = {
+// ../../packages/engine/templates/pedestal.v7.json
+var pedestal_v7_default = {
   templateId: "pedestal",
-  templateVersion: "0.6.0",
+  templateVersion: "0.7.0",
   productType: "pedestal",
   generator: "pedestal-v1",
   units: "mm",
@@ -59781,6 +59798,18 @@ var pedestal_v6_default = {
       value: "pvc_0_6_19",
       unconfirmed: false,
       note: `0.6 mm x 19 ("\u041A\u0440\u043E\u043C\u043A\u0430 19/0.6") (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    drawerBottomUpMm: {
+      value: 10,
+      unit: "mm",
+      unconfirmed: false,
+      note: `D-51: the drawer's HDF bottom lies in the box sides' groove 10 mm above their lower edge ("Tum mobil": the groove ~11.5 mm up to its middle) (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right).`
+    },
+    drawerBottomRearGapMm: {
+      value: 2,
+      unit: "mm",
+      unconfirmed: false,
+      note: "D-51: the bottom ends 2 mm before the box rear (the back stands on it); with drawerBottomGrooveMm into the front the bottom is 450 - 2 + 9 = 457 long (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right)."
     }
   },
   constructionRules: [
@@ -59798,6 +59827,11 @@ var pedestal_v6_default = {
       id: "pedestal-fronts",
       unconfirmed: true,
       note: "Fronts overlay the sides (full overlay), equal 3 mm gaps; drawer boxes on side slides."
+    },
+    {
+      id: "drawer-bottom-in-grooves",
+      unconfirmed: false,
+      note: `D-51 (Dafna's Bazis models (docs/production/bazis/ANALIZ.md), founder 2026-11-23: Bazis is right, "Tum mobil" \u0414\u043D\u043E.\u044F\u0449 HDF 348 x 457): the drawer bottom in the side grooves above the box's lower edge and 9 mm into the front's groove (the front is the box front wall), 2 mm short of the rear.`
     }
   ]
 };
@@ -60109,8 +60143,8 @@ var desk_v5_default = {
 };
 
 // ../../packages/engine/src/template.ts
-var wardrobeTemplate = wardrobe_v14_default;
-var pedestalTemplate = pedestal_v6_default;
+var wardrobeTemplate = wardrobe_v15_default;
+var pedestalTemplate = pedestal_v7_default;
 var deskTemplate = desk_v5_default;
 var PRODUCT_TEMPLATES = {
   wardrobe: wardrobeTemplate,
@@ -61194,7 +61228,7 @@ function planInsetDoors(input) {
     return { types, source, leaves: spanInsetLeaves(input, types), singleLeafWidths };
   }
   const leaves = [];
-  let xStart = t3;
+  let xStart = input.x0 ?? t3;
   innerWidths.forEach((inner, i) => {
     const type = types[i];
     const num2 = i + 1;
@@ -61230,7 +61264,7 @@ function planInsetDoors(input) {
         widthMm: inner - 2 * g
       });
     }
-    xStart += inner + (i === splitAfter ? 2 * t3 : t3);
+    xStart += inner + (i === splitAfter ? input.splitGap ?? 2 * t3 : t3);
   });
   return { types, source, leaves, singleLeafWidths };
 }
@@ -61245,10 +61279,10 @@ function spanInsetLeaves(input, types) {
   const lowerOnly = input.lowerOnly ?? [];
   const hidden = (i) => partitionHidden(i, types, lowerOnly, splitAfter);
   const x0 = [];
-  let xs = t3;
+  let xs = input.x0 ?? t3;
   innerWidths.forEach((inner, i) => {
     x0.push(xs);
-    xs += inner + (i === splitAfter ? 2 * t3 : t3);
+    xs += inner + (i === splitAfter ? input.splitGap ?? 2 * t3 : t3);
   });
   const left = (i) => i > 0 && hidden(i - 1) ? x0[i] - t3 / 2 : x0[i];
   const right = (i) => hidden(i) ? x0[i] + innerWidths[i] + t3 / 2 : x0[i] + innerWidths[i];
@@ -61315,10 +61349,10 @@ function planDoors(input) {
   const { widthMm: W, t: t3, innerWidths, gapEdge, gapBetween } = input;
   const n3 = innerWidths.length;
   const splitAfter = input.splitAfter ?? null;
-  const bt = (i) => i === splitAfter ? 2 * t3 : t3;
+  const bt = (i) => i === splitAfter ? input.splitGap ?? 2 * t3 : t3;
   const left = [];
   const right = [];
-  let xStart = t3;
+  let xStart = input.x0 ?? t3;
   innerWidths.forEach((inner, i) => {
     left.push(i === 0 ? 0 : xStart - bt(i - 1) / 2);
     right.push(i === n3 - 1 ? W : xStart + inner + bt(i) / 2);
@@ -61637,6 +61671,14 @@ var ROT_HORIZONTAL = [0, 0, 0];
 var ROT_VERTICAL_YZ = [0, 0, 90];
 var ROT_VERTICAL_XY = [90, 0, 0];
 var SAME_AS_CORPUS = "same_as_corpus";
+function sideInset(template) {
+  if (!template.constructionRules.some((r) => r.id === "lester-side-inset"))
+    return { endMm: 0, frontMm: 0 };
+  return {
+    endMm: getNumberConstant(template, "sideInsetMm"),
+    frontMm: getNumberConstant(template, "sideFrontShortMm")
+  };
+}
 function distributeEvenly(total, n3) {
   const base2 = Math.floor(total / n3);
   const remainder = total - base2 * n3;
@@ -61666,11 +61708,14 @@ function autoSectionCount(template, widthMm, t3, acceptable = () => true) {
 function doorPlanFor(template, params, widthMm, t3, innerWidths, splitAfter = null) {
   const inset = params.doorMount === "inset";
   const gap = getNumberConstant(template, inset ? "insetDoorGapMm" : "doorGapEdgeMm");
+  const e = sideInset(template).endMm;
   return (inset ? planInsetDoors : planDoors)({
     widthMm,
     t: t3,
     innerWidths,
     splitAfter,
+    x0: e + t3,
+    splitGap: 2 * t3 + 2 * e,
     preset: String(params.doors),
     overrides: innerWidths.map((_, i) => {
       const o = params[`doorSection${i + 1}`];
@@ -61769,10 +61814,14 @@ function computeLayout(template, params, catalog = currentCatalog) {
   const maxSingleLeafWidthMm = getNumberConstant(template, "maxSingleLeafWidthMm");
   const splitWanted = carcassSplit(template, params, widthMm);
   const splitFor = (n3) => splitWanted && n3 >= 2 ? Math.ceil(n3 / 2) - 1 : null;
-  const innerFor = (n3) => distributeEvenly(innerTotal(widthMm, t3, n3) - (splitFor(n3) !== null ? t3 : 0), n3);
+  const { endMm: sideE, frontMm: sideF } = sideInset(template);
+  const innerFor = (n3) => distributeEvenly(
+    innerTotal(widthMm - 2 * sideE, t3, n3) - (splitFor(n3) !== null ? t3 + 2 * sideE : 0),
+    n3
+  );
   const sectionCount = params.sections === "auto" ? autoSectionCount(
     template,
-    widthMm,
+    widthMm - 2 * sideE,
     t3,
     (n3) => params.doors === "none" || doorPlanValid(
       doorPlanFor(template, params, widthMm, t3, innerFor(n3), splitFor(n3)),
@@ -61807,7 +61856,7 @@ function computeLayout(template, params, catalog = currentCatalog) {
     doorGapEdgeMm,
     ...insetDoors ? { insetDoors: true } : {}
   };
-  let xs = t3;
+  let xs = sideE + t3;
   const interior = sectionInnerWidthsMm.map((innerW, index) => {
     const box = {
       index,
@@ -61816,11 +61865,11 @@ function computeLayout(template, params, catalog = currentCatalog) {
       yBottom: plinthHeightMm + t3,
       yTop: heightMm - t3,
       zBack: interiorBackZMm,
-      innerDepth: carcassDepthMm - (interiorBackZMm - backStackMm) - doorDepthIn(index),
+      innerDepth: carcassDepthMm - (interiorBackZMm - backStackMm) - doorDepthIn(index) - sideF,
       t: t3,
       ...shelfSetbackFor(index)
     };
-    xs += innerW + (index === splitAfter ? 2 * t3 : t3);
+    xs += innerW + (index === splitAfter ? 2 * t3 + 2 * sideE : t3);
     const choice = params[`interior${index + 1}`];
     return resolveInterior(
       box,
@@ -61872,6 +61921,9 @@ function computeLayout(template, params, catalog = currentCatalog) {
     backGrooveMm,
     backGrooveDepthMm: backGrooveMm > 0 ? getNumberConstant(template, "backGrooveDepthMm") : 0,
     interiorBackZMm,
+    sideInsetMm: sideE,
+    sideFrontShortMm: sideF,
+    interiorFrontZMm: backStackMm + carcassDepthMm - sideF,
     thinBand: template.constants.edgeBandThinId !== void 0 ? {
       bandId: getStringConstant(template, "edgeBandThinId"),
       thicknessMm: getNumberConstant(template, "edgeBandThinMm")
@@ -61963,7 +62015,7 @@ function layoutIssues(layout) {
         preset: plan.preset
       };
       if (code === "RAIL_DEPTH_SHORT") {
-        values.innerDepthMm = layout.carcassDepthMm - (layout.insetDoors && layout.doorTypes[index] !== "none" ? layout.doorThicknessMm : 0);
+        values.innerDepthMm = layout.carcassDepthMm - layout.sideFrontShortMm - (layout.insetDoors && layout.doorTypes[index] !== "none" ? layout.doorThicknessMm : 0);
         values.minMm = layout.interiorMin.railDepth;
       } else if (code === "RAIL_HEIGHT_SHORT") {
         values.clearHangingHeightMm = plan.clearHangingHeightMm ?? 0;
@@ -62008,13 +62060,13 @@ function validate(params, template = wardrobeTemplate, catalogIn) {
 function buildSections(layout) {
   const t3 = layout.panelThicknessMm;
   const sections = [];
-  let x = t3;
+  let x = layout.sideInsetMm + t3;
   layout.sectionInnerWidthsMm.forEach((w, index) => {
     sections.push({
       index,
       innerWidthMm: w,
       innerHeightMm: layout.carcassHeightMm - 2 * t3,
-      innerDepthMm: layout.carcassDepthMm,
+      innerDepthMm: layout.carcassDepthMm - layout.sideFrontShortMm,
       xStartMm: x,
       doorType: layout.doorTypes[index] ?? "none",
       preset: layout.interior[index]?.preset ?? "empty",
@@ -62024,7 +62076,7 @@ function buildSections(layout) {
       drawers: layout.interior[index]?.drawers ?? [],
       clearHangingHeightMm: layout.interior[index]?.clearHangingHeightMm ?? null
     });
-    x += w + (index === layout.splitAfter ? 2 * t3 : t3);
+    x += w + (index === layout.splitAfter ? 2 * t3 + 2 * layout.sideInsetMm : t3);
   });
   return sections;
 }
@@ -62043,12 +62095,14 @@ function buildCarcassAndDoors(layout, sections) {
   const zC = layout.carcassBackZMm;
   const zMid = zC + Dc / 2;
   const corpus = layout.corpusMaterial.id;
+  const e = layout.sideInsetMm;
+  const f = layout.sideFrontShortMm;
   const split = layout.splitAfter;
   const splitSection = split === null ? null : sections[split];
   const xSplit = splitSection ? splitSection.xStartMm + splitSection.innerWidthMm + t3 : null;
   const carcasses = xSplit === null ? [[0, W]] : [
-    [0, xSplit],
-    [xSplit, W]
+    [0, xSplit + e],
+    [xSplit + e, W]
   ];
   const suffix = (i) => carcasses.length > 1 ? `-${i + 1}` : "";
   const sideY0 = layout.bottomFull ? ph + t3 : 0;
@@ -62057,22 +62111,25 @@ function buildCarcassAndDoors(layout, sections) {
     id,
     role: "side",
     lengthMm: sideH,
-    widthMm: Dc,
+    widthMm: Dc - f,
     thicknessMm: t3,
     material: corpus,
-    position: [x, sideY0 + sideH / 2, zMid],
+    position: [x, sideY0 + sideH / 2, zC + (Dc - f) / 2],
     rotation: ROT_VERTICAL_YZ
   });
-  const panels = [side("side-left", t3 / 2), side("side-right", W - t3 / 2)];
+  const panels = [side("side-left", e + t3 / 2), side("side-right", W - e - t3 / 2)];
   if (xSplit !== null) {
-    panels.push(side("side-split-left", xSplit - t3 / 2), side("side-split-right", xSplit + t3 / 2));
+    panels.push(
+      side("side-split-left", xSplit - t3 / 2),
+      side("side-split-right", xSplit + 2 * e + t3 / 2)
+    );
   }
   carcasses.forEach(([x0, x1], i) => {
     panels.push(
       {
         id: `bottom${suffix(i)}`,
         role: "bottom",
-        lengthMm: x1 - x0 - (layout.bottomFull ? 0 : 2 * t3),
+        lengthMm: x1 - x0 - (layout.bottomFull ? 0 : 2 * t3 + 2 * e),
         widthMm: Dc,
         thicknessMm: t3,
         material: corpus,
@@ -62082,7 +62139,7 @@ function buildCarcassAndDoors(layout, sections) {
       {
         id: `top${suffix(i)}`,
         role: "top",
-        lengthMm: x1 - x0 - (layout.topOverSides ? 0 : 2 * t3),
+        lengthMm: x1 - x0 - (layout.topOverSides ? 0 : 2 * t3 + 2 * e),
         widthMm: Dc,
         thicknessMm: t3,
         material: corpus,
@@ -62095,7 +62152,7 @@ function buildCarcassAndDoors(layout, sections) {
     if (s.index === split) continue;
     const pz0 = layout.backGrooveMm > 0 ? layout.interiorBackZMm : zC;
     const behind = layout.hiddenPartitions[s.index] ? layout.doorThicknessMm + layout.partitionBehindDoorMm : 0;
-    const pDepth = Dc - (pz0 - zC) - behind;
+    const pDepth = Dc - f - (pz0 - zC) - behind;
     panels.push({
       id: `partition-${s.index + 1}`,
       role: "partition",
@@ -62115,7 +62172,7 @@ function buildCarcassAndDoors(layout, sections) {
       panels.push({
         id: `back${suffix(i)}`,
         role: "back",
-        lengthMm: g > 0 ? x1 - x0 - 2 * t3 + into : x1 - x0,
+        lengthMm: g > 0 ? x1 - x0 - 2 * t3 - 2 * e + into : x1 - x0,
         widthMm: g > 0 ? Hc - 2 * t3 + into : Hc,
         thicknessMm: tb,
         material: layout.backMaterial.id,
@@ -62125,7 +62182,7 @@ function buildCarcassAndDoors(layout, sections) {
     });
   }
   if (layout.feetHeightMm > 0) {
-    const f = layout.feetHeightMm;
+    const f2 = layout.feetHeightMm;
     const inset = layout.feetInsetMm;
     carcasses.forEach(([x0, x1], i) => {
       [x0 + inset, x1 - inset].forEach(
@@ -62134,8 +62191,8 @@ function buildCarcassAndDoors(layout, sections) {
             metalBox(
               `foot${suffix(i)}-${a * 2 + b + 1}`,
               FOOT_MATERIAL,
-              [24, f, 24],
-              [x, f / 2, z]
+              [24, f2, 24],
+              [x, f2 / 2, z]
             )
           )
         )
@@ -62148,17 +62205,21 @@ function buildCarcassAndDoors(layout, sections) {
         {
           id: `plinth-front${suffix(i)}`,
           role: "plinth",
-          lengthMm: x1 - x0 - 2 * t3,
+          lengthMm: x1 - x0 - 2 * t3 - 2 * e,
           widthMm: ph,
           thicknessMm: t3,
           material: corpus,
-          position: [(x0 + x1) / 2, ph / 2, layout.carcassFrontZMm - layout.plinthRecessMm - t3 / 2],
+          position: [
+            (x0 + x1) / 2,
+            ph / 2,
+            layout.carcassFrontZMm - f - layout.plinthRecessMm - t3 / 2
+          ],
           rotation: ROT_VERTICAL_XY
         },
         {
           id: `plinth-back${suffix(i)}`,
           role: "plinth",
-          lengthMm: x1 - x0 - 2 * t3,
+          lengthMm: x1 - x0 - 2 * t3 - 2 * e,
           widthMm: ph,
           thicknessMm: t3,
           material: corpus,
@@ -62174,7 +62235,7 @@ function buildCarcassAndDoors(layout, sections) {
     const leafH = lower ? layout.lowerDoorHeightMm : layout.doorHeightMm;
     const bottomY = ph + (layout.insetDoors ? t3 : 0) + layout.doorGapEdgeMm;
     const leafY = lower ? bottomY + leafH / 2 : ph + Hc / 2;
-    const frontZ = layout.insetDoors ? layout.carcassFrontZMm : layout.depthMm;
+    const frontZ = layout.insetDoors ? layout.interiorFrontZMm : layout.depthMm;
     panels.push({
       id: leaf.id,
       role: "door",
@@ -62194,7 +62255,7 @@ function buildCarcassAndDoors(layout, sections) {
 function buildInterior(layout, sections) {
   const t3 = layout.panelThicknessMm;
   const zBack = layout.interiorBackZMm;
-  const zFront = layout.carcassFrontZMm;
+  const zFront = layout.interiorFrontZMm;
   const corpus = layout.corpusMaterial.id;
   const hdf = layout.backMaterial;
   const out = [];
@@ -63173,6 +63234,12 @@ function buildLester(template, L) {
     const boxH = n2(template, "drawerBoxHeightMm");
     const len = slide(template, zFront - (backRear + t3) - n2(template, "drawerBackClearanceMm"));
     const hdf = L.backT;
+    const grooved = template.constructionRules.some((r) => r.id === "drawer-bottom-in-grooves");
+    const bottom = grooved ? {
+      upMm: n2(template, "drawerBottomUpMm"),
+      depthMm: len - n2(template, "drawerBottomRearGapMm") + n2(template, "drawerBottomGrooveMm"),
+      zMm: zFront + (n2(template, "drawerBottomGrooveMm") - len + n2(template, "drawerBottomRearGapMm")) / 2
+    } : { upMm: 0, depthMm: len, zMm: zFront - len / 2 };
     [0, 1, 2].forEach((i) => {
       const id = `s1-drawer-${i + 1}`;
       const fy = half(fy0 + i * (h + gap));
@@ -63239,10 +63306,10 @@ function buildLester(template, L) {
             id: `${id}-bottom`,
             role: "drawer_bottom",
             lengthMm: boxW - 2 * t3 + 2 * n2(template, "drawerBottomGrooveMm"),
-            widthMm: len,
+            widthMm: bottom.depthMm,
             thicknessMm: hdf,
             material: L.back,
-            position: [W / 2, by - boxH / 2 + hdf / 2, zBox],
+            position: [W / 2, by - boxH / 2 + bottom.upMm + hdf / 2, bottom.zMm],
             rotation: ROT_FLAT,
             banding: "none",
             band: thick,
@@ -63344,7 +63411,8 @@ var TEMPLATE_CATALOG = {
   // D-26: feet (metal_black) need catalog 1.1.0 (= 1.0.0 + more)
   "0.13.0": materialsV1_1.catalogVersion,
   "0.14.0": materialsV1_1.catalogVersion,
-  "0.15.0": materialsV1_1.catalogVersion
+  "0.15.0": materialsV1_1.catalogVersion,
+  "0.16.0": materialsV1_1.catalogVersion
 };
 
 // ../../packages/engine/catalog/hardware.v1.json

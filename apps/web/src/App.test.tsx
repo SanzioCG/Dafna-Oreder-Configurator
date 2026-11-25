@@ -429,7 +429,8 @@ describe('units', () => {
     expect(document.querySelector('[data-dim="width"]')?.textContent).toBe('150 sm');
     expect(screen.getByTestId('summary').textContent).toContain('150 × 210 × 60 sm');
     fireEvent.click(tab(uz['step.interior']));
-    expect(document.querySelector('[data-dim="section-0"]')?.textContent).toBe('73 sm');
+    // D-51: the sides stand 2 mm in from the ends: (1500 - 4 - 3 x 16) / 2 = 724 mm
+    expect(document.querySelector('[data-dim="section-0"]')?.textContent).toBe('72 sm');
     cleanup();
     setUrl('?mode=staff');
     render(<App />);

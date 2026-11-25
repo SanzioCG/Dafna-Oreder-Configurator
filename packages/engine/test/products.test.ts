@@ -27,6 +27,8 @@ import desk3 from './fixtures/applications/desk.0.3.0.w1500-framed-top.json' wit
 import ped5Default from './fixtures/applications/pedestal.0.5.0.default.json' with { type: 'json' };
 // D-28: Samet slides
 import ped6Default from './fixtures/applications/pedestal.0.6.0.default.json' with { type: 'json' };
+// D-51: the drawer bottom in grooves (348 x 457)
+import ped7Default from './fixtures/applications/pedestal.0.7.0.default.json' with { type: 'json' };
 import desk4 from './fixtures/applications/desk.0.4.0.w1500-bazis.json' with { type: 'json' };
 import desk5 from './fixtures/applications/desk.0.5.0.w1500-modesty-front.json' with { type: 'json' };
 
@@ -48,14 +50,14 @@ function bbox(p: Panel) {
 }
 
 describe('D-8 office pedestal (ofis tumbasi)', () => {
-  it('template 0.6.0, catalog 1.1.0, Dafna sizes 430 × 550 × 550 (D-17); no A4 file drawer (D-22)', () => {
+  it('template 0.7.0, catalog 1.1.0, Dafna sizes 430 × 550 × 550 (D-17); no A4 file drawer (D-22)', () => {
     expect(PED.parameters.find((p) => p.key === 'layout')?.options).toEqual([
       'drawers3',
       'door_shelf',
     ]);
     expect([PED.templateId, PED.templateVersion, PED.productType]).toEqual([
       'pedestal',
-      '0.6.0',
+      '0.7.0',
       'pedestal',
     ]);
     expect(catalogForTemplate(PED).catalogVersion).toBe('1.1.0');
@@ -265,6 +267,7 @@ describe('D-8 reproducibility per product', () => {
     'desk 0.3.0 1500 framed 16 mm top': ['desk', desk3],
     'pedestal 0.5.0 default (Bazis)': ['pedestal', ped5Default],
     'pedestal 0.6.0 default (Samet)': ['pedestal', ped6Default],
+    'pedestal 0.7.0 default (drawer bottom in grooves)': ['pedestal', ped7Default],
     'desk 0.4.0 1500 (Bazis)': ['desk', desk4],
     'desk 0.5.0 1500 (modesty panel on the front)': ['desk', desk5],
   } as const;
