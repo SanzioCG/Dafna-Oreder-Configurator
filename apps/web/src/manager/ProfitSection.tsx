@@ -155,7 +155,10 @@ function priced(t: Template, params: Params, list: PriceList) {
 
 const boardName = (id: string) => {
   const m = getMaterial(allMaterials, id);
-  return m ? `${translate('uz', m.decorName)} ${m.thicknessMm}` : id;
+  if (!m) return id;
+  const name = translate('uz', m.decorName);
+  // a 1C name already says its thickness ("… 16мм")
+  return /\d\s*(мм|mm)(?![a-zа-я])/i.test(name) ? name : `${name} ${m.thicknessMm}`;
 };
 
 /** the default model of each product, priced with the list being edited */

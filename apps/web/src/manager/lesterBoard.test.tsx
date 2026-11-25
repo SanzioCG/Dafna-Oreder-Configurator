@@ -58,6 +58,8 @@ describe('D-52 the comparison board', () => {
     fireEvent.change(screen.getByTestId('mgr-lester-board'), { target: { value: 'x_m1' } });
     const ofis = screen.getByTestId('mgr-lester-board-ofis').textContent!;
     expect(ofis).toContain('Железный камень');
+    // the thickness once: the 1C name already says "16мм"
+    expect(ofis).not.toContain('16мм 16');
     expect(ofis).toContain('narxi kiritilmagan');
     const stol = screen.getByTestId('mgr-lester-board-stol').textContent!;
     expect(stol).toContain('Кашемир');
